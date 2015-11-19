@@ -1,0 +1,95 @@
+\documentclass{beamer}
+\usepackage{color}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{comment}
+\usepackage{tikz}
+\usepackage{pgfpict2e}
+\usepackage{verbatim}
+\usepackage{textcomp}
+\usepackage{amsmath}
+\usepackage{listings}	
+\usepackage{enumerate}
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage{latexsym}    % to get LASY symbols
+\usepackage{graphicx}    % to insert PostScript figures
+\usepackage{cite}
+\usepackage{rotating}    % for sideways tables/figures
+\usepackage{xspace}
+\usepackage{subfigure}
+\usepackage[labelformat=empty]{caption}
+\usepackage{algpseudocode}
+
+
+\usetikzlibrary{matrix,arrows,decorations.pathmorphing}
+\usetikzlibrary{positioning}
+\newcommand{\myunit}{1 cm}
+\newcommand{\hhlline}[3]{\draw (#1-#2-1.south west) -- (#1-#2-#3.south east);}
+\newcommand{\toplline}[3]{\draw (#1-#2-1.north west) -- (#1-#2-#3.north east);}
+\newcommand{\Ab}{\textbf{A}}
+\newcommand{\Bb}{\textbf{B}}
+\newcommand{\Cb}{\textbf{C}}
+\newcommand{\tilep}{\texttt{tile}\xspace}
+\newcommand{\inp}{\texttt{in}\xspace}
+\newcommand{\dbp}{\texttt{db}\xspace}
+\newcommand{\shapep}{\texttt{shape}\xspace}
+
+
+
+\tikzset{
+  node style sp/.style={draw,circle},
+  node style ge/.style={circle},
+  arrow style mul/.style={draw,sloped,midway,fill=white},
+  arrow style plus/.style={midway,sloped,fill=white},
+}
+
+\definecolor{titleColor}{RGB}{0,179,0}
+\definecolor{emphasizeColor}{RGB}{179,0,0}
+\definecolor{otherColor}{RGB}{0,0,179}
+\renewenvironment<>{example}[1][Example]{\begin{flushleft}\textcolor{otherColor}{#1}\\}{\end{flushleft}}
+\usepackage{tikz}
+\newcommand{\topline}{%
+  \tikz[remember picture,overlay] {%
+  \draw[black,solid] ([yshift=-30pt]current page.north west)
+  -- ([yshift=-30pt,xshift=\paperwidth]current page.north west);
+  }
+}
+
+\usetheme{boxes}
+\usefonttheme{serif}
+\usecolortheme{dove}
+\beamertemplatenavigationsymbolsempty
+
+%\setbeamerfont{page number in head/foot}{size=\large}
+%\setbeamertemplate{footline}[frame number]
+
+\setbeamertemplate{frametitle}
+{
+    \vspace{10pt}
+    \insertframetitle
+    \topline
+}
+
+
+\title{Title}
+\setbeamerfont{author}{shape=\itshape,family=\rmfamily}
+\setbeamercolor{title}{fg=titleColor}
+\setbeamercolor{frametitle}{fg=titleColor}
+\setbeamercolor{example}{fg=otherColor}
+\subtitle{Subtitle}
+%\author{Luc De Raedt, \underline{Sergey Paramonov}, Matthijs van Leeuwen}
+\author{Sergey Paramonov}
+\institute{KU Leuven}
+\date{\today}
+\newtheorem{opr}{Definition}[section]
+\begin{document}
+
+\begin{frame}
+  \frametitle{}
+\end{frame}
+
+\end{document}
