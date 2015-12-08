@@ -1,0 +1,67 @@
+\documentclass[a4paper]{article}
+
+% Essentials
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\usepackage[table]{xcolor}
+%\usepackage{latexsym,graphicx,graphics,epsfig}
+
+
+% Hyperlinks
+\hypersetup{
+    colorlinks,
+    linkcolor={red},
+    citecolor={blue},
+    urlcolor={blue}
+}
+
+% Optional but very useful
+\usepackage[tmargin=3.5cm, bmargin=3.5cm, lmargin=3cm, rmargin=3cm]{geometry}
+\usepackage{amsmath,amsthm,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{tabularx,booktabs,multirow}
+\usepackage{longtable}
+\usepackage{url}
+\usepackage{enumitem}
+\usepackage{todonotes}
+\usepackage{caption}
+
+% Title
+\title{Excel Constraints}
+\date{\today}
+
+% Indentation
+\setlength\parindent{0pt}
+
+\begin{document}
+
+\maketitle
+
+% Content
+
+\section{Demo example} % (fold)
+\label{sec:demo_example}
+The annotated example demonstrates the most used constraints in Excel which we aim to identify automatically.
+
+% section demo_example (end)
+\begin{description}
+	\item[Aggregates] Aggregate functions like sum, max, average, ...
+	\item[Conditional aggregates] Aggregates that use a filter on their input
+	\item[Series] Ranges of integer numbers, ascending or descending
+	\item[Lookups] Exact or fuzzy lookups that use a key to find a corresponding value
+	\item[Ranks] Uses values to determine an order
+	\item[Structural constraints] Foreign keys to test value consistency between ranges
+	\item[Previous] Uses row values and the previous value to compute the current value
+\end{description}
+
+\begin{figure}
+  \centering
+    \includegraphics[width=1\linewidth]{../Demo.png}
+  \label{fig:demo}
+\end{figure}
+
+\end{document}
