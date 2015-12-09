@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1449572421 "Description.tex" "Description.pdf" "Description" 1449572422
+["pdflatex"] 1449681596 "Description.tex" "Description.pdf" "Description" 1449681597
   "../Demo.png" 1449571988 309966 fd502539404149b7359313e73f4922ce ""
   "/usr/local/texlive/2013/texmf-dist/fonts/map/fontname/texfonts.map" 1272929888 3287 e6b82fe08f5336d4d5ebc73fb1152e87 ""
   "/usr/local/texlive/2013/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
@@ -26,6 +26,7 @@
   "/usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb" 1248133631 35752 024fb6c41858982481f6968b5fc26508 ""
   "/usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb" 1248133631 32722 d7379af29a190c3f453aba36302ff5a9 ""
   "/usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb" 1248133631 32362 179c33bbf43f19adbb3825bb4e36e57a ""
+  "/usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1248133631 32569 5e5ddc8df908dea60932f3c484a54c0d ""
   "/usr/local/texlive/2013/texmf-dist/tex/context/base/supp-pdf.mkii" 1337017135 71627 94eb9990bed73c364d7f53f960cc8c5b ""
   "/usr/local/texlive/2013/texmf-dist/tex/generic/babel-english/english.ldf" 1367878877 6963 2e0cb3d93aa64508bdb0db58ae900d97 ""
   "/usr/local/texlive/2013/texmf-dist/tex/generic/babel/babel.def" 1368743226 42950 b2c89311c96d7b70c24e1365a2fa51ee ""
@@ -97,6 +98,7 @@
   "/usr/local/texlive/2013/texmf-dist/tex/latex/base/article.cls" 1254151887 20571 b8bd218bf2e18b4f5817ee643cd9c515 ""
   "/usr/local/texlive/2013/texmf-dist/tex/latex/base/ifthen.sty" 1254151887 5022 2ec7815b07dc68e65542e23a180bc839 ""
   "/usr/local/texlive/2013/texmf-dist/tex/latex/base/inputenc.sty" 1254151887 4388 1cb2ca8d423695bd22ea8d126c276f33 ""
+  "/usr/local/texlive/2013/texmf-dist/tex/latex/base/omscmr.fd" 1254151887 2109 c400bd6c901edc4a09e4d53fcffd3b3c ""
   "/usr/local/texlive/2013/texmf-dist/tex/latex/base/omsenc.dfu" 1254151887 1868 39c80c053f689193a1ca9a83d05b2744 ""
   "/usr/local/texlive/2013/texmf-dist/tex/latex/base/ot1enc.dfu" 1254151887 2620 9a36ef7e0369aa29d9d298a6bf19588e ""
   "/usr/local/texlive/2013/texmf-dist/tex/latex/base/size10.clo" 1254151887 9042 248dfba326a1b8733d6bb8e0a3ac1e49 ""
@@ -152,11 +154,11 @@
   "/usr/local/texlive/2013/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1369923225 1072746 3ce1f23f203cb4a0015ca3c8411dee4a ""
   "/usr/local/texlive/2013/texmf-var/web2c/pdftex/pdflatex.fmt" 1383830520 3827029 6b43629904950f96ec75ed69f68f800a ""
   "/usr/local/texlive/2013/texmf.cnf" 1369923207 577 cbc827f6294276973a1952e86e8ad73a ""
-  "Description.aux" 1449572422 1136 17efed60bdd32c0978eab546e62d7613 ""
-  "Description.out" 1449572422 47 63ef9db09db5d34d004c274624be929f ""
-  "Description.tex" 1449572420 1697 8390d2efca56145974826d8cd5e52417 ""
+  "Description.aux" 1449681597 1494 6cfd33a3b85c6a101c1e4bb97b2c085d ""
+  "Description.out" 1449681597 136 2d877d4913f5456d2c27522b7a5eb520 ""
+  "Description.tex" 1449681594 2892 f32b00b389aa5b9aa1eb5cd79f6b34fd ""
   (generated)
   "Description.log"
+  "Description.pdf"
   "Description.out"
   "Description.aux"
-  "Description.pdf"
