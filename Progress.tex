@@ -237,7 +237,9 @@ In this specific case it is worth noting that this constraint can also be expres
 This constraint makes a different assumption about which columns are considered input and which are considered output.
 If no additional information is given, the algorithm could decide to provide both (redundant) constraints, or make a decision based on generality / specificity or a heuristic.
 
-\section{Constraint-view Algorithm}
+{\color{gray}
+\section{Constraint-view Algorithm (see sec~\ref{sec:algorithm2.0} for newer version)}
+
 \subsection{Input}
 The input to the algorithm consists of a set of version spaces~$S$ describing a hierarchical set of vectors.
 
@@ -256,6 +258,49 @@ In this case we will assume that a constraint~$c \in C$ has be selected to be le
  	\item For every free variable~$x$ in~$c$, prune~$S$ to obtain candidate values~$S_x$ using the properties that have been calculated so far: repeat:
  	\item For every version space~$s$ in~$S_x$, choose~$s$ as a value for $x$ and proceed
  	\item Use~$\rho_2$ to return the 
- \end{itemize} 
+ \end{itemize}
+}
+
+\section{Algorithm 2.0}
+\label{sec:algorithm2.0}
+
+\subsection{Concepts \& Issues}
+In order to abstract from the details of an excel sheet or CSV file, we use the notation introduced previously and reason about vectors and groups (powersets of vectors).
+Based on the bias of the algorithm the powerset maybe be restricted to, for example, continuous ranges.
+\\\\
+Currently, transformations and dependencies between constraints are not really included in the algorithm.
+They would, however, be useful for expressivity and eliminating redundancy, respectively.
+
+\subsection*{Step 1: Group detection}
+$\textit{CSV / Excel} \rightarrow \textit{Set of groups}$\\\\
+In this step the input CSV / Excel file is analyzed and partitioned into a set of groups.
+Preliminarily this step will be performed manually but it should be automized eventually.
+
+\subsection*{Step 2: Constraint detection}
+$\textit{Set of groups} \rightarrow \textit{Set of constraints}$\\\\
+In this step all constraints that satisfy the data and the bias are detected and returned.
+The main bias that will have to be accounted for is whether to return all, all most specific or all most general constraints.
+
+\subsubsection*{Step 2.1: Constraint selection}
+This step repeatedly selects a constraint template.
+Constraints are found for every template and the constraints that have been found already are used to prune the results for the current template.
+
+\subsubsection*{Step 2.2: Group selection}
+The group selection step repeatedly assigns groups to the different free variables present in the constraint template.
+It uses properties of the groups and preconditions on the variables imposed by the constraint template to avoid impossible assignments.
+This step is either implemented directly or as a CSP.
+
+\subsubsection*{Step 2.3: Subset selection}
+The last step within constraint detection finds assignments of subgroups to variables such that they satisfy the constraint template.
+It uses properties and the actually data to perform this step efficiently.
+This step is realised by translating the assignment problem to a constraint-specific CSP that includes the actual data.
+
+\subsection*{Step 3: Heuristic filtering}
+$\textit{Set of constraints} \rightarrow \textit{Set of relevant constraints}$\\\\
+In this last step the set of constraints is filtered and optionally ranked in order such that only relevant constraints are returned.
+So far we have identified three (increasingly difficult) steps to find a heuristic.
+First, rule of thumb heuristics can be used to prune some unlikely constraints.
+In a second step, dependencies in the data can be used to identify useful constraints.
+Finally, we can also attempt to learn what constraints are used frequently and how from existing data.
 
 \end{document}
