@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.1.5)  14 JAN 2016 22:15
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2016.1.5)  8 MAR 2016 14:44
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1097,7 +1097,7 @@ File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 57.
 
-<../Demo.png, id=44, 597.1911pt x 845.0772pt>
+<../Demo.png, id=60, 597.1911pt x 845.0772pt>
 File: ../Demo.png Graphic file (type png)
  <use ../Demo.png>
 Package pdftex.def Info: ../Demo.png used on input line 93.
@@ -1107,20 +1107,20 @@ Package pdftex.def Info: ../Demo.png used on input line 93.
 {/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2 <../
 Demo.png>]
 [3] [4] [5]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 239.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 239.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 260.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 260.
  (./Description.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 239.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 239.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 260.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 260.
 Package rerunfilecheck Info: File `Description.out' has not changed.
-(rerunfilecheck)             Checksum: 1722958FFEF6113F0807D3D358ACE1A4;486.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 239.
+(rerunfilecheck)             Checksum: 65043A62150FC72D612136E0F74EE064;714.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 260.
  ) 
 Here is how much of TeX's memory you used:
- 19136 strings out of 493089
- 349434 string characters out of 6134843
- 434343 words of memory out of 5000000
- 22229 multiletter control sequences out of 15000+600000
+ 19144 strings out of 493089
+ 349544 string characters out of 6134843
+ 434346 words of memory out of 5000000
+ 22233 multiletter control sequences out of 15000+600000
  12547 words of font info for 48 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  62i,9n,92p,441b,370s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1134,10 +1134,10 @@ ocal/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/loc
 al/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/
 texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/t
 exlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on Description.pdf (5 pages, 542264 bytes).
+Output written on Description.pdf (5 pages, 546875 bytes).
 PDF statistics:
- 141 PDF objects out of 1000 (max. 8388607)
- 120 compressed objects within 2 object streams
- 34 named destinations out of 1000 (max. 500000)
- 90 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 160 PDF objects out of 1000 (max. 8388607)
+ 139 compressed objects within 2 object streams
+ 38 named destinations out of 1000 (max. 500000)
+ 122 words of extra memory for PDF output out of 10000 (max. 10000000)
 

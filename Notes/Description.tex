@@ -236,4 +236,25 @@ In this specific case it is worth noting that this constraint can also be expres
 This constraint makes a different assumption about which columns are considered input and which are considered output.
 If no additional information is given, the algorithm could decide to provide both (redundant) constraints, or make a decision based on generality / specificity or a heuristic.
 
+\section{Constraint-view Algorithm}
+\subsection{Input}
+The input to the algorithm consists of a set of version spaces~$S$ describing a hierarchical set of vectors.
+
+Additionally the user specifies if he wants the most general, specific or all solutions.
+This bias is captured is captured in the refinement operator~$\rho_2$ which traverses version spaces based on the bias.
+
+Implicitly this algorithm also uses a catalogue of constraints~$C$, an oracle~$O$ to calculate constraints and background knowledg~$B$ about 1) constraints and 2) properties.
+
+\subsection{Output}
+This algorithm~$\rho_1$ returns a set of constraints where the variables are instantiated by (sub-)version spaces contained in~$S$.
+
+\subsection{Method}
+In this case we will assume that a constraint~$c \in C$ has be selected to be learned.
+
+\begin{itemize}
+ 	\item For every free variable~$x$ in~$c$, prune~$S$ to obtain candidate values~$S_x$ using the properties that have been calculated so far: repeat:
+ 	\item For every version space~$s$ in~$S_x$, choose~$s$ as a value for $x$ and proceed
+ 	\item Use~$\rho_2$ to return the 
+ \end{itemize} 
+
 \end{document}
