@@ -1,6 +1,0 @@
-num(1). num(2).
-
-numa(2). numa(3).
-
-
-numb(C) :- numa(A), num(B), C=A+B.
