@@ -11,6 +11,8 @@ element_X(vx3,1,1).  element_X(vx3,2,1).  element_X(vx3,3,1). element_X(vx3,4,1)
 1 { selected_Y(V) : rel_Y(_,V) } 1.
 0 { selected_X(V)} 1 :-  rel_X(_,V) .
 
+:- selected_Y(V), selected_X(V).
+
 y_vector(Py,Wy) :- selected_Y(Vy), element_Y(Vy,Py,Wy).
 
 sum_X(Pos,Val) :- Val = #sum{X,V: element_X(V,Pos,X), selected_X(V) }, y_vector(Pos,_).
