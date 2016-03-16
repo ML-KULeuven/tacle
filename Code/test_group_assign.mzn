@@ -25,7 +25,7 @@ constraint g_rows[X] > 1;
 %%% constraints Theory TGen
 constraint x_numeric -> g_numeric[X];
 constraint y_numeric -> g_numeric[Y];
-constraint x_vector -> (g_rows[X] == 1 \/ g_columns[X] == 1);
-constraint y_vector -> (g_rows[Y] == 1 \/ g_columns[Y] == 1);
+constraint x_vector -> (g_rows[X] >= 1 \/ g_columns[X] >= 1);
+constraint y_vector -> (g_rows[Y] >= 1 \/ g_columns[Y] >= 1);
 
 solve satisfy;
