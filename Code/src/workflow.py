@@ -1,6 +1,9 @@
 from idp import IDP
 from parser import *
 from group_assign import *
+from constraint_search import find_constraints
+from constraint import SumColumn
+import argparse
 
 
 def main(csv_file, groups_file):
@@ -11,7 +14,6 @@ def main(csv_file, groups_file):
 
 
 def arg_parser():
-	import argparse
 	p = argparse.ArgumentParser()
 	p.add_argument('csv_file')
 	p.add_argument('groups_file')

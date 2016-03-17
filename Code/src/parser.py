@@ -31,6 +31,7 @@ class Bounds:
         def columns(self):
                 return self.bounds[3] - self.bounds[2] + 1
 
+
         def __repr__(self):
                 return str(self.bounds)
 
@@ -92,6 +93,9 @@ class Group:
                 return GType.float
             else:
                 return GType.string
+
+        def lenght(self):
+          return self.bounds.columns() if self.row else self.bounds.rows()
 
 
 
