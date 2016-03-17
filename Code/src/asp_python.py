@@ -23,10 +23,15 @@ class ASPConstraintVisitor(ConstraintVisitor):
     if Y.row == False:
       Ydata = Ydata.T
 
-    for i,v in enumerate(Ydata):
-      print("id:",i, 'data',yid(i))
+    for i,vs in enumerate(Ydata):
+      print("rel_Y({pos},{vid}).".format(pos=i,vid=self.yid(i)), end=" ")
+      for j,v in enumerate(vs):
+          print("element_Y({vid},{pos},{val})".format(vid=self.yid(i),pos=j,val=v), end=" ")
+      print(" ")
+          
+    
 
-    max_shift = X.bounds.columns() - Y.lenght()
+    max_shift = X.bounds.columns() - Y.length()
     
     print("max_shift:", max_shift)
 
