@@ -39,11 +39,12 @@ class IDPGroupGenerationVisitor(ConstraintVisitor):
 		g_rows = {(G1, 4); (G2, 4); (G3, 4); (G4, 4); (G5, 4); (G6, 4); (G7, 4)}
 		g_numeric = {G1; G3; G5; G6; G7}
 		"""
-		groups = "{" + "; ".join(list(self.groups.keys())) + "}"
+		groups = "Group = {" + "; ".join(list(self.groups.keys())) + "}"
 		length = self.extract_tuple("g_length", Group.length)
 		columns = self.extract_tuple("g_columns", Group.columns)
-		rows = self.extract_tuple("g_numeric", Group.rows)
-		return "\n".join([groups, length, columns, rows, constraint_structure])
+		rows = self.extract_tuple("g_rows", Group.rows)
+		numeric = "g_numeric = {" + "; ".join([k for k, g in self.groups.items() if g.is_numeric()]) + "}"
+		return "\n".join([groups, length, columns, rows, numeric, constraint_structure])
 
 	def extract_tuple(self, name, f):
 		length = name + " = {" + "; ".join(["(" + k + ", " + str(f(g)) + ")" for k, g in self.groups.items()]) + "}"

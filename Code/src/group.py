@@ -89,3 +89,6 @@ class Group:
 
 	def rows(self):
 		return self.bounds.rows()
+
+	def is_numeric(self):
+		return self.dtype is GType.float or self.dtype is GType.int
