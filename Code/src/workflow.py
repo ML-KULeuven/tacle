@@ -1,11 +1,13 @@
+from idp import IDP
 from parser import *
 from group_assign import *
 
 
 def main(csv_file, groups_file):
 	groups = get_groups_tables(csv_file, groups_file)
-	print(len(groups))
-	print(find_groups(SumColumn(), IDP(), groups))
+	assignments = find_groups(SumColumn(), IDP(), groups)
+	constraints = find_constraints(SumColumn(), assignments)
+	print(constraints)
 
 
 def arg_parser():

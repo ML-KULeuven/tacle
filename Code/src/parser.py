@@ -112,7 +112,7 @@ def get_groups_tables(csv_file, groups_file):
                 for group_description in json_data["Groups"]:
                         table = tables[group_description["Table"]]
                         groups.append(create_group(group_description["Bounds"], table))
-        return groups 
+        return groups
 
 
 def create_group(bounds_list, table):
