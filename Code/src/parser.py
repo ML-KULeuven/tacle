@@ -58,7 +58,6 @@ class Group:
                 self.row    = row
                 self.data   = self._get_group_data()
                 self.dtype  = self.infer_type()
-                print(self.dtype)
 
         def __repr__(self):
                 repr_str = "Table: " + str(self.table) + " Bounds: " + str(self.bounds) + " Row: " + str(self.row)
@@ -86,7 +85,6 @@ class Group:
 
         def infer_type(self):
             flat = self.data.flatten()
-            print(flat)
             dtype = max(list(map(self._infer_type_scalar,flat)))
             if dtype == 0:
                 return GType.int
