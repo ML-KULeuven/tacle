@@ -5,6 +5,7 @@ from constraint import *
 from group import *
 from engine import Engine, run_command
 
+
 class IDPGroupGenerationVisitor(ConstraintVisitor):
 	def __init__(self, engine, groups: {Group}):
 		super().__init__()
