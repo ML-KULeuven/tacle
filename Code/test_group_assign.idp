@@ -6,47 +6,46 @@ vocabulary V {
     g_columns(Group):Num
     g_rows(Group):Num
     g_numeric(Group)
-    /*g_overlap(Group, Group)*/
-    
+
     type Var
     vector(Var)
     length(Var):Num
     columns(Var):Num
     rows(Var):Num
     numeric(Var)
-    
+
     assign(Var):Group
-    /*overlap(Group, Group)*/
-    
+}
+
+vocabulary VConstraint {
+    extern vocabulary V
+
     X:Var
     Y:Var
 }
 
-theory TVar : V {
+theory TVar : VConstraint {
     length(Y) = columns(X).
     rows(X) > 1.
 }
 
 theory TGen : V {
-    /*!g1[Group], g2[Group] : overlap(g1, g2) <=> g_overlap(g1, g2) | g_overlap(g2, g1) | g1 = g2.
-    
-    !v1[Var], v2[Var] : v1 ~= v2 <=> ~overlap(assign(v1), assign(v2)).*/
     !v[Var] : columns(v) =< g_columns(assign(v)).
     !v[Var] : rows(v) =< g_rows(assign(v)).
     !v[Var] : numeric(v) <=> g_numeric(assign(v)).
+    !v[Var] : length(v) = g_length(assign(v)).
     
     !v[Var] : vector(v) <=> rows(v) = 1 | columns(v) = 1.
 }
 
-structure S : V {
+structure S : VConstraint {
     Num = {1..100}
     Group = {G1; G2; G3; G4; G5; G6; G7}
     g_length = {(G1, 4); (G2, 4); (G3, 4); (G4, 4); (G5, 4); (G6, 5); (G7, 4)}
     g_columns = {(G1, 1); (G2, 1); (G3, 6); (G4, 1); (G5, 2); (G6, 5); (G7, 5)}
     g_rows = {(G1, 4); (G2, 4); (G3, 4); (G4, 4); (G5, 4); (G6, 4); (G7, 4)}
     g_numeric = {G1; G3; G5; G6; G7}
-    /*g_overlap = {(G6, G7)}*/
-    
+
     Var = {X; Y}
     X = X
     Y = Y
@@ -59,8 +58,6 @@ vocabulary Vout {
 }
 
 procedure main(){
-    /*stdoptions.verbosity.grounding = 3
-    stdoptions.verbosity.solving = 3*/
     stdoptions.nbmodels = 0
     printmodels(modelexpand(merge(TVar, TGen), S, Vout))
 }
