@@ -45,7 +45,7 @@ class ASPConstraintVisitor(ConstraintVisitor):
     tmp_filename = "tmp/asp_tmp{i}.asp".format(i=i)
     print(tmp_filename)
     test_file = open(tmp_filename,"w")
-    Xdata = X.get_group_data()
+    Xdata = X.get_group_data().T
     Ydata = Y.get_group_data()
     if Y.row == False:
       Ydata = Ydata.T
