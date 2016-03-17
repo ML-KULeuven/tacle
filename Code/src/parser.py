@@ -1,4 +1,3 @@
-import csv
 import json
 import numpy as np
 import pandas as pd
@@ -58,8 +57,7 @@ class Group:
 		self.data = self._get_group_data()
 
 	def __repr__(self):
-		# repr_str = "Table: " + str(self.table)  + " Bounds: " + str(self.bounds) + " Row: " + str(self.row)
-		repr_str = str(self.get_group_data())
+		repr_str = "Table: " + str(self.table) + " Bounds: " + str(self.bounds) + " Row: " + str(self.row)
 		return repr_str
 
 	def _get_group_data(self):
@@ -85,7 +83,6 @@ def get_groups_tables(csv_file, groups_file):
 		for group_description in json_data["Groups"]:
 			table = tables[group_description["Table"]]
 			groups.append(create_group(group_description["Bounds"], table))
-	print(groups)
 	return groups, tables
 
 
