@@ -14,7 +14,8 @@ class ASPConstraintVisitor(ConstraintVisitor):
           solutions = self.handle_sum_column_data_in_column(X,Y)
   
 
-  def create_y_vector():
+  def create_y_vector(self):
+    pass
 
   def handle_sum_column_data_in_column(self,X,Y):
     Ydata = Y.get_group_data()
