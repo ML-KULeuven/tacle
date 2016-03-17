@@ -1,0 +1,36 @@
+vocabulary V {
+    type Num isa nat
+
+    type Group
+    g_length(Group):Num
+    g_columns(Group):Num
+    g_rows(Group):Num
+    g_numeric(Group)
+
+    type Var
+    vector(Var)
+    length(Var):Num
+    columns(Var):Num
+    rows(Var):Num
+    numeric(Var)
+
+    assign(Var):Group
+}
+
+theory TGen : V {
+    !v[Var] : columns(v) =< g_columns(assign(v)).
+    !v[Var] : rows(v) =< g_rows(assign(v)).
+    !v[Var] : numeric(v) <=> g_numeric(assign(v)).
+    !v[Var] : length(v) = g_length(assign(v)).
+
+    !v[Var] : vector(v) <=> rows(v) = 1 | columns(v) = 1.
+}
+
+vocabulary Vout {
+    extern V::assign/1:1
+}
+
+procedure main(){
+    stdoptions.nbmodels = 0
+    printmodels(modelexpand(merge(TVar, TGen), S, Vout))
+}
