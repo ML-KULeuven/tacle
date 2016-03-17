@@ -12,7 +12,6 @@ def main(csv_file, groups_file):
 	groups = get_groups_tables(csv_file, groups_file)
 	constraint = SumColumn()
 	assignments = find_groups(constraint, IDP(), groups)
-	print([a.keys() for a in assignments])
 	constraints = find_constraints(constraint, assignments)
 	print(constraints)
 
