@@ -5,6 +5,7 @@ from constraint import *
 from group import *
 from engine import Engine, run_command
 
+
 class IDPGroupGenerationVisitor(ConstraintVisitor):
 	def __init__(self, engine, groups: {Group}):
 		super().__init__()
@@ -34,7 +35,6 @@ class IDP(Engine):
 		group_dictionary = {}
 		for i, g in enumerate(groups):
 			group_dictionary["G" + str(i + 1)] = g
-		print(group_dictionary.keys())
 		visitor = IDPGroupGenerationVisitor(self, group_dictionary)
 		return [{k: group_dictionary[n] for k, n in dictionary.items()} for dictionary in visitor.visit(constraint)]
 
