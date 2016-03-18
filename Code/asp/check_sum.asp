@@ -1,6 +1,3 @@
-range(0..NNN).
-
-
 1 { shift(X)      : range(X)   } 1. % shift takes one value from 0 to N
 1 { selected_Y(V) : rel_Y(_,V) } 1.
 
