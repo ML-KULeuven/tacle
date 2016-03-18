@@ -30,7 +30,7 @@ vocabulary Vout {
     extern V::assign/1:1
 }
 
-procedure main(){
+procedure main() {
     stdoptions.nbmodels = 0
     printmodels(modelexpand(merge(TVar, TGen), S, Vout))
 }

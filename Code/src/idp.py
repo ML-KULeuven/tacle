@@ -13,42 +13,49 @@ class IDPGroupGenerationVisitor(ConstraintVisitor):
 		self.groups = groups
 
 	def visit_sum_column(self, constraint: SumColumn) -> [{}]:
-		print(self.create_structure("Nothing"))
-		return self.extract_assignment(constraint.get_variables(), ["idp/group/assign.idp", "idp/group/sum_column.idp"])
+		files = [local("idp/group/assign.idp"), local("idp/group/sum_column.idp")]
+		structure = self.create_structure(constraint)
+		return self.extract_assignment(constraint.get_variables(), files, structure)
 
-	def extract_assignment(self, variables, files):
+	def extract_assignment(self, variables, files, structure):
 		assignments = []
 		assign_pattern = re.compile(r".*assign = .*")
-		patterns = [(var, re.compile(r'.*assign = .*"' + var + '"->"(G\d+)".*')) for var in variables]
-		for line in [b.decode("utf-8") for b in self.engine.execute_local(files)]:
+		patterns = [(var, re.compile(r'.*assign = .*"' + var.get_name() + '"->"(G\d+)".*')) for var in variables]
+		for line in iter(self.engine.execute(files, structure).splitlines()):
 			if assign_pattern.match(line):
 				a = {}
 				for var, pattern in patterns:
 					match = pattern.match(line)
 					if match is not None:
-						a[var] = match.group(1)
+						a[var.get_name()] = match.group(1)
 				assignments.append(a)
 		return assignments
 
-	def create_structure(self, constraint_structure):
-		"""
-		Num = {1..100}
-		Group = {G1; G2; G3; G4; G5; G6; G7}
-		g_length = {(G1, 4); (G2, 4); (G3, 4); (G4, 4); (G5, 4); (G6, 5); (G7, 4)}
-		g_columns = {(G1, 1); (G2, 1); (G3, 6); (G4, 1); (G5, 2); (G6, 5); (G7, 5)}
-		g_rows = {(G1, 4); (G2, 4); (G3, 4); (G4, 4); (G5, 4); (G6, 4); (G7, 4)}
-		g_numeric = {G1; G3; G5; G6; G7}
-		"""
-		groups = "Group = {" + "; ".join(list(self.groups.keys())) + "}"
-		length = self.extract_tuple("g_length", Group.length)
-		columns = self.extract_tuple("g_columns", Group.columns)
-		rows = self.extract_tuple("g_rows", Group.rows)
-		numeric = "g_numeric = {" + "; ".join([k for k, g in self.groups.items() if g.is_numeric()]) + "}"
-		return "\n".join([groups, length, columns, rows, numeric, constraint_structure])
+	def create_structure(self, constraint: Constraint):
+		variables = constraint.get_variables()
+		groups = self.groups
 
-	def extract_tuple(self, name, f):
-		length = name + " = {" + "; ".join(["(" + k + ", " + str(f(g)) + ")" for k, g in self.groups.items()]) + "}"
-		return length
+		def lambda_filter(f):
+			return map(Variable.get_name, filter(f, variables))
+
+		parts = [
+			self._structure("Var", [v.get_name() for v in variables]),
+			"\n".join([v.get_name() + " = " + v.get_name() for v in variables]),
+			self._structure("vector", lambda_filter(Variable.is_vector)),
+			self._structure("numeric", lambda_filter(Variable.is_numeric)),
+			self._structure("Num", ["1.." + str(max(map(lambda g: max(g.columns(), g.rows()), groups.values())))]),
+			self._structure("Group", list(groups.keys())), self._group_structure("g_length", Group.length),
+			self._group_structure("g_columns", Group.columns), self._group_structure("g_rows", Group.rows),
+			self._structure("g_numeric", [k for k, g in groups.items() if g.is_numeric()])
+		]
+		return "\nstructure S : VConstraint {\n" + "\n".join(parts) + "\n}"
+
+	@staticmethod
+	def _structure(name, members):
+		return name + " = {" + "; ".join(members) + "}"
+
+	def _group_structure(self, name, method):
+		return self._structure(name, ["(" + k + ", " + str(method(g)) + ")" for k, g in self.groups.items()])
 
 
 class IDP(Engine):
@@ -58,11 +65,16 @@ class IDP(Engine):
 			group_dictionary["G" + str(i + 1)] = g
 		visitor = IDPGroupGenerationVisitor(self, group_dictionary)
 		assignments = visitor.visit(constraint)
-		print([list(d.values()) for d in assignments])
+		print("Assignments:\n", [list(d.values()) for d in assignments])
 		return [{k: group_dictionary[n] for k, n in dictionary.items()} for dictionary in assignments]
 
-	def execute_local(self, files: []):
-		return self.execute([os.path.dirname(os.path.realpath(__file__)) + "/../" + file for file in files])
+	def execute_local(self, files: [], structure):
+		return self.execute([local(file) for file in files], structure)
 
-	def execute(self, files: []):
-		return run_command(["idp"] + files)
+	def execute(self, files: [], structure):
+		data = "\n".join(["include \"" + file + "\"" for file in files])
+		return run_command(["idp"], input_data=data + structure)
+
+
+def local(filename):
+	return os.path.dirname(os.path.realpath(__file__)) + "/../" + filename

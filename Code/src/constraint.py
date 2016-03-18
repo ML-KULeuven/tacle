@@ -1,3 +1,22 @@
+class Variable:
+	def __init__(self, name, vector=False, numeric=False):
+		self.name = name
+		self.vector = vector
+		self.numeric = numeric
+
+	def __str__(self):
+		return self.name + "[Var]"
+
+	def get_name(self):
+		return self.name
+
+	def is_vector(self):
+		return self.vector
+
+	def is_numeric(self):
+		return self.numeric
+
+
 class Constraint:
 	def __init__(self, name, variables):
 		self.name = name
@@ -15,7 +34,8 @@ class Constraint:
 
 class SumColumn(Constraint):
 	def __init__(self):
-		Constraint.__init__(self, "Y = SUM(X)", ["X", "Y"])
+		variables = [Variable("X", numeric=True), Variable("Y", vector=True, numeric=True)]
+		Constraint.__init__(self, "Y = SUM(X)", variables)
 
 	def accept(self, visitor):
 		return visitor.visit_sum_column(self)
