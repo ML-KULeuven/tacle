@@ -1,11 +1,9 @@
 from constraint import Constraint
+from engine import Engine
 from parser import Group
-from asp_python import ASPConstraintVisitor
 
 
-def find_constraints(constraint: Constraint, assignments: [{Group}]):
-  asp_visitor = ASPConstraintVisitor(assignments)	
-  output      = asp_visitor.visit(constraint)
-  return output
-
-
+def find_constraints(engine: Engine, constraint: Constraint, assignments: [{Group}]):
+	# asp_visitor = ASPConstraintVisitor(assignments)
+	# output      = asp_visitor.visit(constraint)
+	return engine.find_constraints(constraint, assignments)

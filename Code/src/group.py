@@ -1,5 +1,7 @@
 from enum import Enum
 
+import numpy
+
 
 class Bounds:
 	def __init__(self, bounds_list):
@@ -39,6 +41,15 @@ class GType(Enum):
 	string = 2
 
 
+def cast(gtype: GType, value):
+	if gtype == GType.int:
+		return int(value)
+	elif gtype == GType.float:
+		return float(value)
+	elif gtype == GType.string:
+		return str(value)
+	raise ValueError("Unexpected GType: " + str(gtype))
+
 class Group:
 	def __init__(self, table, bounds, row):
 		self.table = table
@@ -46,6 +57,8 @@ class Group:
 		self.row = row
 		self.data = self._get_group_data()
 		self.dtype = self.infer_type()
+		f = numpy.vectorize(lambda x: cast(self.dtype, x))
+		self.data = f(self.data)
 
 	def __repr__(self):
 		repr_str = "Table: " + str(self.table) + " Bounds: " + str(self.bounds) + " Row: " + str(self.row)
@@ -89,6 +102,9 @@ class Group:
 
 	def rows(self):
 		return self.bounds.rows()
+
+	def vectors(self):
+		return self.rows() if self.row else self.columns()
 
 	def is_numeric(self):
 		return self.dtype is GType.float or self.dtype is GType.int

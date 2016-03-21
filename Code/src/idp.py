@@ -1,9 +1,8 @@
-import os
 import re
 
 from constraint import *
 from group import *
-from engine import Engine, run_command
+from engine import Engine, run_command, local
 
 
 class IDPGroupGenerationVisitor(ConstraintVisitor):
@@ -68,13 +67,10 @@ class IDP(Engine):
 		print("Assignments:\n", [list(d.values()) for d in assignments])
 		return [{k: group_dictionary[n] for k, n in dictionary.items()} for dictionary in assignments]
 
-	def execute_local(self, files: [], structure):
-		return self.execute([local(file) for file in files], structure)
+	def find_constraints(self, constraint: Constraint, assignments: [{Group}]) -> [{Group}]:
+		raise NotImplementedError()
 
-	def execute(self, files: [], structure):
+	@staticmethod
+	def execute(files: [], structure):
 		data = "\n".join(["include \"" + file + "\"" for file in files])
 		return run_command(["idp"], input_data=data + structure)
-
-
-def local(filename):
-	return os.path.dirname(os.path.realpath(__file__)) + "/../" + filename

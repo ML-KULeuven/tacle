@@ -1,3 +1,4 @@
+import os
 from subprocess import Popen, PIPE, STDOUT
 
 from constraint import *
@@ -11,6 +12,9 @@ class Engine:
 	def generate_groups(self, constraint: Constraint, groups: [Group]) -> [[Group]]:
 		raise NotImplementedError()
 
+	def find_constraints(self, constraint: Constraint, assignments: [{Group}]) -> [{(Group, int)}]:
+		raise NotImplementedError()
+
 
 def run_command(command, input_data=None):
 	if isinstance(input_data, str):
@@ -22,3 +26,7 @@ def run_command(command, input_data=None):
 
 	# noinspection PyUnresolvedReferences
 	return data[0].decode("utf-8")
+
+
+def local(filename):
+	return os.path.dirname(os.path.realpath(__file__)) + "/../" + filename

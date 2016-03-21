@@ -5,19 +5,14 @@ import pandas as pd
 from group import Bounds, Table, Group
 
 
-class Parser:
-	def __init__(self):
-		pass
-
-	def parse(self, filename):
-		with open(filename, "r") as file:
-			data = np.array(pd.read_csv(file))
-			return data
+def parse(filename):
+	with open(filename, "r") as file:
+		data = np.array(pd.read_csv(file, header=None))
+		return data
 
 
 def get_groups_tables(csv_file, groups_file):
-	parser = Parser()
-	data = parser.parse(csv_file)
+	data = parse(csv_file)
 	tables = {}
 	groups = []
 	with open(groups_file, "r") as group_file:
