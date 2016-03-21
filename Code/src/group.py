@@ -108,3 +108,6 @@ class Group:
 
 	def is_numeric(self):
 		return self.dtype is GType.float or self.dtype is GType.int
+
+	def row_oriented(self):
+		return self.row

@@ -1,31 +1,23 @@
-%%% data
-%int maxNum = 100;
+%%% groups
 int: nG = 7;
 array [1..nG] of int: g_length = [4, 4, 4, 4, 4, 5, 4];
 array [1..nG] of int: g_columns = [1, 1, 6, 1, 2, 5, 5];
 array [1..nG] of int: g_rows = [4, 4, 4, 4, 4, 4, 4];
 array [1..nG] of bool: g_numeric = [true, false, true, false, true, true, true];
-% numeric = {X; Y}
-bool: x_numeric = true;
-bool: y_numeric = true;
-% vector = {Y}
-bool: x_vector = false;
-bool: y_vector = true;
+array [1..nG] of bool: g_row_orientation = [false, false, false, false, false, true, false];
 
+%%% variables
+int: nV = 2;
+array [1..nV] of bool: v_numeric = [true, true];
+array [1..nV] of bool: v_vector = [false, true];
 
-%%% vars, should be an array to to ease x_numeric etc
-var 1..nG: X;
-var 1..nG: Y;
+array [1..nV] of var int: assign;
 
+%%% constraints
+constraint not g_row_orientation[assign[1]] -> g_length[assign[2]] <= g_columns[assign[1]];
+constraint g_row_orientation[assign[1]] -> g_length[assign[2]] = g_columns[assign[1]];
+constraint g_rows[assign[1]] > 1;
 
-%%% constraints Theory TVar
-constraint g_length[Y] <= g_columns[X];
-constraint g_rows[X] > 1;
-
-%%% constraints Theory TGen
-constraint x_numeric -> g_numeric[X];
-constraint y_numeric -> g_numeric[Y];
-constraint x_vector -> (g_rows[X] >= 1 \/ g_columns[X] >= 1);
-constraint y_vector -> (g_rows[Y] >= 1 \/ g_columns[Y] >= 1);
+constraint forall(v in 1..nV)(v_numeric[v] -> g_numeric[assign[v]]);
 
 solve satisfy;
