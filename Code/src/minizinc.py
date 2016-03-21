@@ -1,13 +1,12 @@
 import os
-import tempfile
-
 import re
+import tempfile
 
 from numpy import transpose
 
 from constraint import ConstraintVisitor, SumColumn, Constraint, Variable
 from engine import Engine, local, run_command
-from group import Group, Bounds
+from group import Group
 
 
 class MinizincGroupGenerationVisitor(ConstraintVisitor):
@@ -48,8 +47,8 @@ class MinizincGroupGenerationVisitor(ConstraintVisitor):
 			return "\n".join(parts) + "\n\n"
 
 	@staticmethod
-	def _group_data(size, dtype, name, method, collection):
-		fstring = "array [1..{}] of " + dtype + ": {} = [{}];"
+	def _group_data(size, var_type, name, method, collection):
+		fstring = "array [1..{}] of " + var_type + ": {} = [{}];"
 		return fstring.format(size, name, ", ".join([str(method(el)).lower() for el in collection]))
 
 	@staticmethod
@@ -96,14 +95,14 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 			"y_length = {};".format(y_group.length()),
 			"is_same_group = {};".format(str(x_group == y_group).lower()),
 			"x_data = {};".format(self.generate_group(x_group)),
-			"y_data = {};".format(self.generate_group(y_group, vectorize=True))
+			"y_data = {};".format(self.generate_group(y_group, to_vector=True))
 		]
 		return "\n".join(parts)
 
 	@staticmethod
-	def generate_group(group, vectorize=False):
+	def generate_group(group, to_vector=False):
 		data = group.get_group_data()
-		if vectorize and not group.row:
+		if to_vector and not group.row:
 			data = transpose(data)
 		group_data = " | ".join([", ".join(map(str, column)) for column in data.tolist()])
 		return "[| {} |]".format(group_data)

@@ -22,8 +22,6 @@ def run_command(command, input_data=None):
 	p = Popen(command, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
 	data = p.communicate(input=input_data)
 
-	# output = subprocess.check_output(command)
-
 	# noinspection PyUnresolvedReferences
 	return data[0].decode("utf-8")
 

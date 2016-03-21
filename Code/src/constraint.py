@@ -43,6 +43,7 @@ class SumColumn(Constraint):
 	def to_string(self, assignment):
 		return self.name.format(**assignment)
 
+
 class ConstraintVisitor:
 	def __init__(self):
 		pass
