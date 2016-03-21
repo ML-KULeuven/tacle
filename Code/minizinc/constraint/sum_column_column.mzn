@@ -21,4 +21,7 @@ constraint
     y_data[y_selected, i] = sum(j in 1..x_rows) (x_data[j, (x_start + i - 1)])
   );
 
+output ["X["++show(x_start)++":"++show(x_start+y_length-1)++"]\n"++
+        "Y["++show(y_selected)++":"++show(y_selected)++"]\n"];
+
 solve satisfy;

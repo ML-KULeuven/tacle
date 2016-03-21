@@ -1,12 +1,9 @@
-from constraint import SumColumn
+import argparse
+
 from constraint_search import find_constraints
-from idp import IDP
+from group_assign import *
 from minizinc import Minizinc
 from parser import *
-from group_assign import *
-from constraint_search import find_constraints
-from constraint import SumColumn
-import argparse
 
 
 def main(csv_file, groups_file):
@@ -14,7 +11,7 @@ def main(csv_file, groups_file):
 	constraint = SumColumn()
 	assignments = find_groups(constraint, Minizinc(), groups)
 	constraints = find_constraints(Minizinc(), constraint, assignments)
-	print("Constraints:\n", constraints)
+	print("Constraints:\n" + "\n".join([constraint.to_string(solution) for solution in constraints]))
 
 
 def arg_parser():

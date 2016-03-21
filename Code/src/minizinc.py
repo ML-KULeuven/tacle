@@ -7,7 +7,7 @@ from numpy import transpose
 
 from constraint import ConstraintVisitor, SumColumn, Constraint, Variable
 from engine import Engine, local, run_command
-from group import Group
+from group import Group, Bounds
 
 
 class MinizincGroupGenerationVisitor(ConstraintVisitor):
@@ -79,11 +79,11 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 			orientation = "row" if assignment["X"].row else "column"
 			model_file = local("minizinc/constraint/sum_column_{}.mzn".format(orientation))
 			output, command = self.engine.execute(model_file, data_file=data_file.name)
-			# TODO delete file
 			if error_pattern.search(output):
 				print("ERROR:\n{}\n".format(command), output)
 			elif not unsatisfiable_pattern.search(output):
-				results += self.parse_results(constraint.get_variables(), output)
+				results += self.parse_results(constraint.get_variables(), assignment, output)
+				data_file.delete()
 		return results
 
 	def generate_data(self, assignment: {Group}):
@@ -108,11 +108,17 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 		group_data = " | ".join([", ".join(map(str, column)) for column in data.tolist()])
 		return "[| {} |]".format(group_data)
 
-	def parse_results(self, variables, output):
+	@staticmethod
+	def parse_results(variables, assignment, output):
+		v_patterns = [r"{}\[(\d+):(\d+)\]".format(v.name) for v in variables]
 		results = []
-		column_pattern = re.compile(r"y_selected = (\d+);\nx_start = (\d+)")
+		column_pattern = re.compile(r"" + "\n".join(v_patterns))
 		for match in column_pattern.finditer(output):
-			results.append({variables[0].name: match.group(2), variables[1].name: match.group(1)})
+			solution = {}
+			for i, v in enumerate(variables):
+				b = (int(match.group(1 + 2 * i)), int(match.group(2 + 2 * i)))
+				solution[v.name] = assignment[v.name].vector_subset(b[0], b[1])
+			results.append(solution)
 		return results
 
 

@@ -28,7 +28,7 @@ constraint
     y_data[y_selected, i] = sum(j in 1..x_rows) ( (j in x_start..x_end)*(x_data[j, i]) )
   );
 
-output ["Y vector: "++show(y_selected)++"\n"++
-        "X range: "++show(x_start)++".."++show(x_end)];
+output ["X["++show(x_start)++":"++show(x_end)++"]\n"++
+        "Y["++show(y_selected)++":"++show(y_selected)++"]\n"];
 
 solve satisfy;
