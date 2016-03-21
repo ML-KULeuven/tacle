@@ -25,7 +25,8 @@ class Bounds:
 
 
 class Table:
-	def __init__(self, data, rows, columns):
+	def __init__(self, name, data, rows, columns):
+		self.name = name
 		self.data = data
 		self.rows = rows
 		self.columns = columns
@@ -33,6 +34,9 @@ class Table:
 	def __repr__(self):
 		repr_str = "Data: " + str(self.data) + " Rows: " + str(self.rows) + " Column: " + str(self.columns)
 		return repr_str
+
+	def __str__(self):
+		return self.name
 
 
 class GType(Enum):
@@ -63,6 +67,9 @@ class Group:
 	def __repr__(self):
 		repr_str = "Table: " + str(self.table) + " Bounds: " + str(self.bounds) + " Row: " + str(self.row)
 		return repr_str
+
+	def __str__(self):
+		return self.table.name
 
 	def _get_group_data(self):
 		data = self.table.data

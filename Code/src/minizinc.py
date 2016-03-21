@@ -19,7 +19,7 @@ class MinizincGroupGenerationVisitor(ConstraintVisitor):
 	def visit_sum_column(self, constraint: SumColumn):
 		data = self.generate_data() + self.generate_constraints(local("minizinc/group/sum_column.mzn"), constraint)
 		model_file = TempFile(data, "mzn")
-		assignments = self.parse_assignments(constraint.get_variables(), self.engine.execute(model_file.name))
+		assignments = self.parse_assignments(constraint.get_variables(), self.engine.execute(model_file.name)[0])
 		model_file.delete()
 		return [{v: self.groups[int(g) - 1] for v, g in assignment.items()} for assignment in assignments]
 
@@ -61,7 +61,6 @@ class MinizincGroupGenerationVisitor(ConstraintVisitor):
 		for line in assigns:
 			match = pattern.match(line)
 			assignments.append({var.get_name(): match.group(i + 1) for i, var in enumerate(variables)})
-		print(assignments)
 		return assignments
 
 
@@ -72,12 +71,20 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 		self.assignments = assignments
 
 	def visit_sum_column(self, constraint: SumColumn):
+		unsatisfiable_pattern = re.compile(r".*UNSATISFIABLE.*")
+		error_pattern = re.compile(r".*error.*")
+		results = []
 		for assignment in self.assignments:
 			data_file = TempFile(self.generate_data(assignment), "dzn")
 			orientation = "row" if assignment["X"].row else "column"
 			model_file = local("minizinc/constraint/sum_column_{}.mzn".format(orientation))
-			print("OUTPUT:")
-			print(self.engine.execute(model_file, data_file=data_file.name))
+			output, command = self.engine.execute(model_file, data_file=data_file.name)
+			# TODO delete file
+			if error_pattern.search(output):
+				print("ERROR:\n{}\n".format(command), output)
+			elif not unsatisfiable_pattern.search(output):
+				results += self.parse_results(constraint.get_variables(), output)
+		return results
 
 	def generate_data(self, assignment: {Group}):
 		x_group = assignment["X"]
@@ -101,6 +108,13 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 		group_data = " | ".join([", ".join(map(str, column)) for column in data.tolist()])
 		return "[| {} |]".format(group_data)
 
+	def parse_results(self, variables, output):
+		results = []
+		column_pattern = re.compile(r"y_selected = (\d+);\nx_start = (\d+)")
+		for match in column_pattern.finditer(output):
+			results.append({variables[0].name: match.group(2), variables[1].name: match.group(1)})
+		return results
+
 
 class Minizinc(Engine):
 	def generate_groups(self, constraint: Constraint, groups: [Group]) -> [[Group]]:
@@ -112,8 +126,7 @@ class Minizinc(Engine):
 	@staticmethod
 	def execute(model_file, data_file=None):
 		command = ["mzn-gecode", "-a"] + ([] if data_file is None else ["-d", data_file]) + [model_file]
-		print(" ".join(command))
-		return run_command(command)
+		return run_command(command), " ".join(command)
 
 
 class TempFile:

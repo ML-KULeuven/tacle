@@ -14,7 +14,7 @@ def main(csv_file, groups_file):
 	constraint = SumColumn()
 	assignments = find_groups(constraint, Minizinc(), groups)
 	constraints = find_constraints(Minizinc(), constraint, assignments)
-	print(constraints)
+	print("Constraints:\n", constraints)
 
 
 def arg_parser():
