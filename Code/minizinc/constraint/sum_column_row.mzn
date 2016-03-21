@@ -25,7 +25,7 @@ constraint x_columns = y_length;
 constraint
   forall(i in 1..y_length) (
     % not valid: y_data[y_selected, i] = sum(j in x_start..x_end) (x_data[j, i])
-    y_data[y_selected, i] = sum(j in 1..x_rows) ( int2float(bool2int(x_start <= j /\ j <= x_end))*(x_data[j, i]) )
+    y_data[y_selected, i] = sum(j in 1..x_rows) ( (j in x_start..x_end)*(x_data[j, i]) )
   );
 
 output ["Y vector: "++show(y_selected)++"\n"++
