@@ -11,7 +11,7 @@ bool: is_same_group;
 
 var 1..y_vectors: y_selected;                       % selected vector in the y-group
 var 1..x_rows: x_start;   % start of the x-group selection
-var 1..x_rows: x_end;   % start of the x-group selection
+var 1..x_rows: x_end;   % end of the x-group selection
 
 constraint x_end > x_start;
 constraint x_columns = y_length;
@@ -24,7 +24,11 @@ constraint x_columns = y_length;
 % columnwise sum over array that represent columns
 constraint
   forall(i in 1..y_length) (
-    y_data[y_selected, i] = sum(j in x_start..x_end) (x_data[j, i])
+    % not valid: y_data[y_selected, i] = sum(j in x_start..x_end) (x_data[j, i])
+    y_data[y_selected, i] = sum(j in 1..x_rows) ( int2float(bool2int(x_start <= j /\ j <= x_end))*(x_data[j, i]) )
   );
+
+output ["Y vector: "++show(y_selected)++"\n"++
+        "X range: "++show(x_start)++".."++show(x_end)];
 
 solve satisfy;
