@@ -12,7 +12,13 @@ class Engine:
 	def generate_groups(self, constraint: Constraint, groups: [Group]) -> [[Group]]:
 		raise NotImplementedError()
 
+	def supports_group_generation(self, constraint: Constraint):
+		raise NotImplementedError()
+
 	def find_constraints(self, constraint: Constraint, assignments: [{Group}]) -> [{(Group, int)}]:
+		raise NotImplementedError()
+
+	def supports_constraint_search(self, constraint: Constraint):
 		raise NotImplementedError()
 
 
