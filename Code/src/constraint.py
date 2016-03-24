@@ -28,6 +28,9 @@ class Constraint:
 	def get_variables(self):
 		return self.variables
 
+	def to_string(self, assignment):
+		return self.name.format(**assignment)
+
 	def __str__(self):
 		return self.name
 
@@ -35,10 +38,19 @@ class Constraint:
 class SumColumn(Constraint):
 	def __init__(self):
 		variables = [Variable("X", numeric=True), Variable("Y", vector=True, numeric=True)]
-		Constraint.__init__(self, "Y = SUM(X)", variables)
+		super().__init__("{Y} = SUM({X}, col)", variables)
 
 	def accept(self, visitor):
 		return visitor.visit_sum_column(self)
+
+
+class SumRow(Constraint):
+	def __init__(self):
+		variables = [Variable("X", numeric=True), Variable("Y", vector=True, numeric=True)]
+		super().__init__("{Y} = SUM({X}, row)", variables)
+
+	def accept(self, visitor):
+		return visitor.visit_sum_row(self)
 
 
 class ConstraintVisitor:
@@ -49,4 +61,7 @@ class ConstraintVisitor:
 		return constraint.accept(self)
 
 	def visit_sum_column(self, constraint: SumColumn):
+		raise NotImplementedError()
+
+	def visit_sum_row(self, constraint: SumRow):
 		raise NotImplementedError()

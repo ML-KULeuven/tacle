@@ -10,7 +10,7 @@ array [1..y_vectors, 1..y_length] of float: y_data;
 bool: is_same_group;
 
 var 1..y_vectors: y_selected;                       % selected vector in the y-group
-var 1..(x_columns - y_length + 1): x_start;   % start of the x-group selection
+var 1..(x_rows - y_length + 1): x_start;   % start of the x-group selection
 
 % make sure that the groups don't overlap if they are the same
 %constraint is_same_group -> (G1_sel < G2_start \/ G2_start+L12-1 < G1_sel);
@@ -18,7 +18,7 @@ var 1..(x_columns - y_length + 1): x_start;   % start of the x-group selection
 % columnwise sum over array that represent columns
 constraint
   forall(i in 1..y_length) (
-    y_data[y_selected, i] = sum(j in 1..x_rows) (x_data[j, (x_start + i - 1)])
+    y_data[y_selected, i] = sum(j in 1..x_columns) (x_data[(x_start + i - 1), j])
   );
 
 output ["X["++show(x_start)++":"++show(x_start+y_length-1)++"]\n"++

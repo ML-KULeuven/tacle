@@ -1,13 +1,15 @@
 import os
-import tempfile
-
 import re
+import tempfile
 
 from numpy import transpose
 
-from constraint import ConstraintVisitor, SumColumn, Constraint, Variable
+from constraint import ConstraintVisitor, SumColumn, Constraint, Variable, SumRow
 from engine import Engine, local, run_command
 from group import Group
+
+unsatisfiable_pattern = re.compile(r".*UNSATISFIABLE.*")
+error_pattern = re.compile(r".*error.*")
 
 
 class MinizincGroupGenerationVisitor(ConstraintVisitor):
@@ -17,9 +19,15 @@ class MinizincGroupGenerationVisitor(ConstraintVisitor):
 		self.groups = groups
 
 	def visit_sum_column(self, constraint: SumColumn):
-		data = self.generate_data() + self.generate_constraints(local("minizinc/group/sum_column.mzn"), constraint)
+		return self.generate_groups(constraint, local("minizinc/group/sum_column.mzn"))
+
+	def visit_sum_row(self, constraint: SumRow):
+		return self.generate_groups(constraint, local("minizinc/group/sum_row.mzn"))
+
+	def generate_groups(self, constraint, filename):
+		data = self.generate_data() + self.generate_constraints(filename, constraint)
 		model_file = TempFile(data, "mzn")
-		assignments = self.parse_assignments(constraint.get_variables(), self.engine.execute(model_file.name))
+		assignments = self.parse_assignments(constraint.get_variables(), self.engine.execute(model_file.name)[0])
 		model_file.delete()
 		return [{v: self.groups[int(g) - 1] for v, g in assignment.items()} for assignment in assignments]
 
@@ -48,8 +56,8 @@ class MinizincGroupGenerationVisitor(ConstraintVisitor):
 			return "\n".join(parts) + "\n\n"
 
 	@staticmethod
-	def _group_data(size, dtype, name, method, collection):
-		fstring = "array [1..{}] of " + dtype + ": {} = [{}];"
+	def _group_data(size, var_type, name, method, collection):
+		fstring = "array [1..{}] of " + var_type + ": {} = [{}];"
 		return fstring.format(size, name, ", ".join([str(method(el)).lower() for el in collection]))
 
 	@staticmethod
@@ -61,7 +69,6 @@ class MinizincGroupGenerationVisitor(ConstraintVisitor):
 		for line in assigns:
 			match = pattern.match(line)
 			assignments.append({var.get_name(): match.group(i + 1) for i, var in enumerate(variables)})
-		print(assignments)
 		return assignments
 
 
@@ -72,12 +79,27 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 		self.assignments = assignments
 
 	def visit_sum_column(self, constraint: SumColumn):
-		for assignment in self.assignments:
-			data_file = TempFile(self.generate_data(assignment), "dzn")
-			orientation = "row" if assignment["X"].row else "column"
-			model_file = local("minizinc/constraint/sum_column_{}.mzn".format(orientation))
-			print("OUTPUT:")
-			print(self.engine.execute(model_file, data_file=data_file.name))
+		filename = "minizinc/constraint/sum_column_{}.mzn"
+		assignment_tuples = [(a, local(filename.format("row" if a["X"].row else "column"))) for a in self.assignments]
+		results = [self.find_constraints(a, f, constraint) for a, f in assignment_tuples]
+		return [item for constraints in results for item in constraints]
+
+	def visit_sum_row(self, constraint: SumRow):
+		filename = "minizinc/constraint/sum_row_{}.mzn"
+		assignment_tuples = [(a, local(filename.format("row" if a["X"].row else "column"))) for a in self.assignments]
+		results = [self.find_constraints(a, f, constraint) for a, f in assignment_tuples]
+		return [item for constraints in results for item in constraints]
+
+	def find_constraints(self, assignment, file, constraint):
+		results = []
+		data_file = TempFile(self.generate_data(assignment), "dzn")
+		output, command = self.engine.execute(file, data_file=data_file.name)
+		if error_pattern.search(output):
+			print("ERROR:\n{}\n".format(command), output)
+		elif not unsatisfiable_pattern.search(output):
+			results += self.parse_results(constraint.get_variables(), assignment, output)
+			data_file.delete()
+		return results
 
 	def generate_data(self, assignment: {Group}):
 		x_group = assignment["X"]
@@ -89,17 +111,30 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 			"y_length = {};".format(y_group.length()),
 			"is_same_group = {};".format(str(x_group == y_group).lower()),
 			"x_data = {};".format(self.generate_group(x_group)),
-			"y_data = {};".format(self.generate_group(y_group, vectorize=True))
+			"y_data = {};".format(self.generate_group(y_group, to_vector=True))
 		]
 		return "\n".join(parts)
 
 	@staticmethod
-	def generate_group(group, vectorize=False):
+	def generate_group(group, to_vector=False):
 		data = group.get_group_data()
-		if vectorize and not group.row:
+		if to_vector and not group.row:
 			data = transpose(data)
 		group_data = " | ".join([", ".join(map(str, column)) for column in data.tolist()])
 		return "[| {} |]".format(group_data)
+
+	@staticmethod
+	def parse_results(variables, assignment, output):
+		v_patterns = [r"{}\[(\d+):(\d+)\]".format(v.name) for v in variables]
+		results = []
+		column_pattern = re.compile(r"" + "\n".join(v_patterns))
+		for match in column_pattern.finditer(output):
+			solution = {}
+			for i, v in enumerate(variables):
+				b = (int(match.group(1 + 2 * i)), int(match.group(2 + 2 * i)))
+				solution[v.name] = assignment[v.name].vector_subset(b[0], b[1])
+			results.append(solution)
+		return results
 
 
 class Minizinc(Engine):
@@ -112,8 +147,7 @@ class Minizinc(Engine):
 	@staticmethod
 	def execute(model_file, data_file=None):
 		command = ["mzn-gecode", "-a"] + ([] if data_file is None else ["-d", data_file]) + [model_file]
-		print(" ".join(command))
-		return run_command(command)
+		return run_command(command), " ".join(command)
 
 
 class TempFile:

@@ -20,7 +20,8 @@ def get_groups_tables(csv_file, groups_file):
 		for table_description in json_data["Tables"]:
 			bounds = Bounds(table_description["Bounds"])
 			data_subset = bounds.subset(data)
-			tables[table_description["Name"]] = Table(data_subset, bounds.rows(), bounds.columns())
+			name = table_description["Name"]
+			tables[name] = Table(name, data_subset, bounds.rows(), bounds.columns())
 		for group_description in json_data["Groups"]:
 			table = tables[group_description["Table"]]
 			groups.append(create_group(group_description["Bounds"], table))
