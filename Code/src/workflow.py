@@ -7,7 +7,9 @@ from group_assign import *
 from internal import Internal
 from minizinc import Minizinc
 from parser import *
-
+from aspengine import ASP
+from group_assign import *
+from constraint import SumColumn
 
 def main(csv_file, groups_file):
 	engines = [Internal(), Minizinc()]
