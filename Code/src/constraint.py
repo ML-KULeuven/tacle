@@ -1,8 +1,9 @@
 class Variable:
-	def __init__(self, name, vector=False, numeric=False, textual=True):
+	def __init__(self, name, vector=False, numeric=False, textual=True, integer=False):
 		self.name = name
 		self.vector = vector
 		self.numeric = numeric
+		self.integer = integer
 		self.textual = textual
 
 	def __str__(self):
@@ -15,6 +16,9 @@ class Variable:
 		return self.vector
 
 	def is_numeric(self):
+		return self.numeric
+
+	def is_integer(self):
 		return self.numeric
 
 	def is_textual(self):
@@ -91,6 +95,15 @@ class AllDifferent(Constraint):
 		return visitor.visit_all_different(self)
 
 
+class Rank(Constraint):
+	def __init__(self):
+		variables = [Variable("X", vector=True, numeric=True), Variable("Y", vector=True, integer=True)]
+		super().__init__("rank", "{Y} = RANK({X})", variables)
+
+	def accept(self, visitor):
+		return visitor.visit_rank(self)
+
+
 class ConstraintVisitor:
 	def __init__(self):
 		pass
@@ -111,4 +124,7 @@ class ConstraintVisitor:
 		raise NotImplementedError()
 
 	def visit_all_different(self, constraint: AllDifferent):
+		raise NotImplementedError()
+
+	def visit_all_rank(self, constraint: AllDifferent):
 		raise NotImplementedError()

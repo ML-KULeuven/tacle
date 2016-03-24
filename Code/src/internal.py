@@ -81,10 +81,10 @@ class InternalConstraintVisitor(ConstraintVisitor):
 
 
 class Internal(Engine):
-	def generate_groups(self, constraint: Constraint, groups: [Group]) -> [[Group]]:
+	def generate_groups(self, constraint: Constraint, groups: [Group], solutions) -> [[Group]]:
 		return InternalGroupGenerationVisitor(groups).visit(constraint)
 
-	def find_constraints(self, constraint: Constraint, assignments: [{Group}]) -> [{(Group, int)}]:
+	def find_constraints(self, constraint: Constraint, assignments: [{Group}], solutions) -> [{(Group, int)}]:
 		return InternalConstraintVisitor(assignments).visit(constraint)
 
 	def supports_group_generation(self, constraint: Constraint):

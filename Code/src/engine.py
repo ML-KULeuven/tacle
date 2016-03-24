@@ -9,13 +9,13 @@ class Engine:
 	def __init__(self):
 		super().__init__()
 
-	def generate_groups(self, constraint: Constraint, groups: [Group]) -> [[Group]]:
+	def generate_groups(self, constraint: Constraint, groups: [Group], solutions) -> [[Group]]:
 		raise NotImplementedError()
 
 	def supports_group_generation(self, constraint: Constraint):
 		raise NotImplementedError()
 
-	def find_constraints(self, constraint: Constraint, assignments: [{Group}]) -> [{(Group, int)}]:
+	def find_constraints(self, constraint: Constraint, assignments: [{Group}], solutions) -> [{(Group, int)}]:
 		raise NotImplementedError()
 
 	def supports_constraint_search(self, constraint: Constraint):

@@ -35,6 +35,11 @@ class Bounds:
 			b(self.bounds[3] if c2 is None else self.bounds[2] + c2 - 1, 2)
 		])
 
+	def contains(self, bounds):
+		r1, r2, c1, c2 = bounds.bounds
+		sr1, sr2, sc1, sc2 = self.bounds
+		return sr1 <= r1 and sr2 >= r2 and sc1 <= c1 and sc2 >= c2
+
 	def __repr__(self):
 		return str(self.bounds)
 
@@ -156,6 +161,9 @@ class Group:
 
 	def get_vector(self, i):
 		return self.data[i, :] if self.row else self.data[:, i]
+
+	def is_subgroup(self, group):
+		return self.table == group.table and self.bounds.contains(group.bounds)
 
 	def vector_subset(self, start, end):
 		l = [start, end] + [None, None] if self.row else [None, None] + [start, end]

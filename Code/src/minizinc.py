@@ -161,10 +161,10 @@ class Minizinc(Engine):
 	def supports_constraint_search(self, constraint: Constraint):
 		return constraint in [SumColumn(), SumRow()]
 
-	def generate_groups(self, constraint: Constraint, groups: [Group]) -> [[Group]]:
+	def generate_groups(self, constraint: Constraint, groups: [Group], solutions) -> [[Group]]:
 		return MinizincGroupGenerationVisitor(self, groups, {}).visit(constraint)
 
-	def find_constraints(self, constraint: Constraint, assignments: [{Group}]) -> [{Group}]:
+	def find_constraints(self, constraint: Constraint, assignments: [{Group}], solutions) -> [{Group}]:
 		return MinizincConstraintVisitor(self, assignments).visit(constraint)
 
 	@staticmethod
