@@ -8,6 +8,9 @@ from constraint import ConstraintVisitor, SumColumn, Constraint, Variable
 from engine import Engine, local, run_command
 from group import Group
 
+unsatisfiable_pattern = re.compile(r".*UNSATISFIABLE.*")
+error_pattern = re.compile(r".*error.*")
+
 
 class MinizincGroupGenerationVisitor(ConstraintVisitor):
 	def __init__(self, engine, groups: {Group}):
@@ -70,19 +73,20 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 		self.assignments = assignments
 
 	def visit_sum_column(self, constraint: SumColumn):
-		unsatisfiable_pattern = re.compile(r".*UNSATISFIABLE.*")
-		error_pattern = re.compile(r".*error.*")
+		results = [self.find_constraints(assignment, constraint) for assignment in self.assignments]
+		return [item for constraints in results for item in constraints]
+
+	def find_constraints(self, assignment, constraint):
 		results = []
-		for assignment in self.assignments:
-			data_file = TempFile(self.generate_data(assignment), "dzn")
-			orientation = "row" if assignment["X"].row else "column"
-			model_file = local("minizinc/constraint/sum_column_{}.mzn".format(orientation))
-			output, command = self.engine.execute(model_file, data_file=data_file.name)
-			if error_pattern.search(output):
-				print("ERROR:\n{}\n".format(command), output)
-			elif not unsatisfiable_pattern.search(output):
-				results += self.parse_results(constraint.get_variables(), assignment, output)
-				data_file.delete()
+		data_file = TempFile(self.generate_data(assignment), "dzn")
+		orientation = "row" if assignment["X"].row else "column"
+		model_file = local("minizinc/constraint/sum_column_{}.mzn".format(orientation))
+		output, command = self.engine.execute(model_file, data_file=data_file.name)
+		if error_pattern.search(output):
+			print("ERROR:\n{}\n".format(command), output)
+		elif not unsatisfiable_pattern.search(output):
+			results += self.parse_results(constraint.get_variables(), assignment, output)
+			data_file.delete()
 		return results
 
 	def generate_data(self, assignment: {Group}):
