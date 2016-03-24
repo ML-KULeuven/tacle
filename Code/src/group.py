@@ -139,6 +139,9 @@ class Group:
 	def is_numeric(self):
 		return self.dtype is GType.float or self.dtype is GType.int
 
+	def is_string_data(self):
+		return self.dtype is GType.string
+
 	def row_oriented(self):
 		return self.row
 
