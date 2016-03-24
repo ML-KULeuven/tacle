@@ -139,11 +139,23 @@ class Group:
 	def is_numeric(self):
 		return self.dtype is GType.float or self.dtype is GType.int
 
+	def is_integer(self):
+		return self.dtype is GType.int
+
+	def is_float(self):
+		return self.dtype is GType.int
+
+	def is_textual(self):
+		return self.dtype is GType.string
+
 	def row_oriented(self):
 		return self.row
 
 	def subgroup(self, bounds):
 		return Group(self.table, self.bounds.combine(bounds), self.row)
+
+	def get_vector(self, i):
+		return self.data[i, :] if self.row else self.data[:, i]
 
 	def vector_subset(self, start, end):
 		l = [start, end] + [None, None] if self.row else [None, None] + [start, end]

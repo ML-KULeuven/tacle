@@ -1,13 +1,4 @@
-int: x_columns;
-int: x_rows;
-
-int: y_vectors;
-int: y_length;
-
-array [1..x_rows, 1..x_columns] of float: x_data;
-array [1..y_vectors, 1..y_length] of float: y_data;
-
-bool: is_same_group;
+include "layout.mzn";
 
 var 1..y_vectors: y_selected;                       % selected vector in the y-group
 var 1..(x_rows - y_length + 1): x_start;   % start of the x-group selection

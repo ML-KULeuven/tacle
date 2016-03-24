@@ -4,7 +4,7 @@ import tempfile
 
 from numpy import transpose
 
-from constraint import ConstraintVisitor, SumColumn, Constraint, Variable, SumRow
+from constraint import ConstraintVisitor, SumColumn, Constraint, Variable, SumRow, Permutation, Series, AllDifferent
 from engine import Engine, local, run_command
 from group import Group
 
@@ -13,16 +13,26 @@ error_pattern = re.compile(r".*error.*")
 
 
 class MinizincGroupGenerationVisitor(ConstraintVisitor):
-	def __init__(self, engine, groups: {Group}):
+	def __init__(self, engine, groups: {Group}, solutions):
 		super().__init__()
 		self.engine = engine
 		self.groups = groups
+		self.solutions = solutions
 
 	def visit_sum_column(self, constraint: SumColumn):
 		return self.generate_groups(constraint, local("minizinc/group/sum_column.mzn"))
 
 	def visit_sum_row(self, constraint: SumRow):
 		return self.generate_groups(constraint, local("minizinc/group/sum_row.mzn"))
+
+	def visit_permutation(self, constraint: Permutation):
+		pass
+
+	def visit_series(self, constraint: Series):
+		pass
+
+	def visit_all_different(self, constraint: AllDifferent):
+		pass
 
 	def generate_groups(self, constraint, filename):
 		data = self.generate_data() + self.generate_constraints(filename, constraint)
@@ -82,17 +92,20 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 		filename = "minizinc/constraint/sum_column_{}.mzn"
 		assignment_tuples = [(a, local(filename.format("row" if a["X"].row else "column"))) for a in self.assignments]
 		results = [self.find_constraints(a, f, constraint) for a, f in assignment_tuples]
-		return [item for constraints in results for item in constraints]
+		return [item for solutions in results for item in solutions]
 
 	def visit_sum_row(self, constraint: SumRow):
 		filename = "minizinc/constraint/sum_row_{}.mzn"
 		assignment_tuples = [(a, local(filename.format("row" if a["X"].row else "column"))) for a in self.assignments]
 		results = [self.find_constraints(a, f, constraint) for a, f in assignment_tuples]
-		return [item for constraints in results for item in constraints]
+		return [item for solutions in results for item in solutions]
+
+	def visit_permutation(self, constraint: Permutation):
+		pass
 
 	def find_constraints(self, assignment, file, constraint):
 		results = []
-		data_file = TempFile(self.generate_data(assignment), "dzn")
+		data_file = TempFile(self.generate_data(assignment, constraint.get_variables()), "dzn")
 		output, command = self.engine.execute(file, data_file=data_file.name)
 		if error_pattern.search(output):
 			print("ERROR:\n{}\n".format(command), output)
@@ -101,18 +114,22 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 			data_file.delete()
 		return results
 
-	def generate_data(self, assignment: {Group}):
-		x_group = assignment["X"]
-		y_group = assignment["Y"]
-		parts = [
-			"x_columns = {};".format(x_group.columns()),
-			"x_rows = {};".format(x_group.rows()),
-			"y_vectors = {};".format(y_group.vectors()),
-			"y_length = {};".format(y_group.length()),
-			"is_same_group = {};".format(str(x_group == y_group).lower()),
-			"x_data = {};".format(self.generate_group(x_group)),
-			"y_data = {};".format(self.generate_group(y_group, to_vector=True))
-		]
+	def generate_data(self, assignment: {Group}, variables: [Variable]):
+		parts = []
+		for variable in variables:
+			group = assignment[variable.name]
+			to_vector = variable.is_vector()
+			if variable.is_vector():
+				parts += [
+					"{}_vectors = {};".format(variable.name.lower(), group.vectors()),
+					"{}_length = {};".format(variable.name.lower(), group.length()),
+				]
+			else:
+				parts += [
+					"{}_columns = {};".format(variable.name.lower(), group.columns()),
+					"{}_rows = {};".format(variable.name.lower(), group.rows()),
+				]
+			parts.append("{}_data = {};".format(variable.name.lower(), self.generate_group(group, to_vector=to_vector)))
 		return "\n".join(parts)
 
 	@staticmethod
@@ -138,8 +155,14 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 
 
 class Minizinc(Engine):
+	def supports_group_generation(self, constraint: Constraint):
+		return constraint in [SumColumn(), SumRow()]
+
+	def supports_constraint_search(self, constraint: Constraint):
+		return constraint in [SumColumn(), SumRow()]
+
 	def generate_groups(self, constraint: Constraint, groups: [Group]) -> [[Group]]:
-		return MinizincGroupGenerationVisitor(self, groups).visit(constraint)
+		return MinizincGroupGenerationVisitor(self, groups, {}).visit(constraint)
 
 	def find_constraints(self, constraint: Constraint, assignments: [{Group}]) -> [{Group}]:
 		return MinizincConstraintVisitor(self, assignments).visit(constraint)
