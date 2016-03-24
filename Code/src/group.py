@@ -31,7 +31,7 @@ class Table:
 		self.columns = columns
 
 	def __repr__(self):
-		repr_str = "Data: " + str(self.data) + " Rows: " + str(self.rows) + " Column: " + str(self.columns)
+		repr_str = "Data:\n" + str(self.data) + "\nRows: " + str(self.rows) + "\nColumn: " + str(self.columns)
 		return repr_str
 
 
@@ -61,7 +61,7 @@ class Group:
 		self.data = f(self.data)
 
 	def __repr__(self):
-		repr_str = "Table: " + str(self.table) + " Bounds: " + str(self.bounds) + " Row: " + str(self.row)
+		repr_str = "Table: \n" + str(self.table) + "\nBounds: " + str(self.bounds) + "\nRow: " + str(self.row)
 		return repr_str
 
 	def _get_group_data(self):
