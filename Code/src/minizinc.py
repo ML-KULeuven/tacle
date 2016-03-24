@@ -4,7 +4,7 @@ import tempfile
 
 from numpy import transpose
 
-from constraint import ConstraintVisitor, SumColumn, Constraint, Variable
+from constraint import ConstraintVisitor, SumColumn, Constraint, Variable, SumRow
 from engine import Engine, local, run_command
 from group import Group
 
@@ -19,7 +19,13 @@ class MinizincGroupGenerationVisitor(ConstraintVisitor):
 		self.groups = groups
 
 	def visit_sum_column(self, constraint: SumColumn):
-		data = self.generate_data() + self.generate_constraints(local("minizinc/group/sum_column.mzn"), constraint)
+		return self.generate_groups(constraint, local("minizinc/group/sum_column.mzn"))
+
+	def visit_sum_row(self, constraint: SumRow):
+		return self.generate_groups(constraint, local("minizinc/group/sum_row.mzn"))
+
+	def generate_groups(self, constraint, filename):
+		data = self.generate_data() + self.generate_constraints(filename, constraint)
 		model_file = TempFile(data, "mzn")
 		assignments = self.parse_assignments(constraint.get_variables(), self.engine.execute(model_file.name)[0])
 		model_file.delete()
@@ -73,15 +79,21 @@ class MinizincConstraintVisitor(ConstraintVisitor):
 		self.assignments = assignments
 
 	def visit_sum_column(self, constraint: SumColumn):
-		results = [self.find_constraints(assignment, constraint) for assignment in self.assignments]
+		filename = "minizinc/constraint/sum_column_{}.mzn"
+		assignment_tuples = [(a, local(filename.format("row" if a["X"].row else "column"))) for a in self.assignments]
+		results = [self.find_constraints(a, f, constraint) for a, f in assignment_tuples]
 		return [item for constraints in results for item in constraints]
 
-	def find_constraints(self, assignment, constraint):
+	def visit_sum_row(self, constraint: SumRow):
+		filename = "minizinc/constraint/sum_row_{}.mzn"
+		assignment_tuples = [(a, local(filename.format("row" if a["X"].row else "column"))) for a in self.assignments]
+		results = [self.find_constraints(a, f, constraint) for a, f in assignment_tuples]
+		return [item for constraints in results for item in constraints]
+
+	def find_constraints(self, assignment, file, constraint):
 		results = []
 		data_file = TempFile(self.generate_data(assignment), "dzn")
-		orientation = "row" if assignment["X"].row else "column"
-		model_file = local("minizinc/constraint/sum_column_{}.mzn".format(orientation))
-		output, command = self.engine.execute(model_file, data_file=data_file.name)
+		output, command = self.engine.execute(file, data_file=data_file.name)
 		if error_pattern.search(output):
 			print("ERROR:\n{}\n".format(command), output)
 		elif not unsatisfiable_pattern.search(output):

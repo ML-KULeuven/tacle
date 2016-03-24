@@ -30,9 +30,9 @@ class Bounds:
 		b = lambda x, offset: min(max(x, self.bounds[offset]), self.bounds[offset + 1])
 		return Bounds([
 			b(self.bounds[0] + r1 - 1, 0),
-			b(self.bounds[1] if r2 is None else self.bounds[0] + r2 - r1, 0),
+			b(self.bounds[1] if r2 is None else self.bounds[0] + r2 - 1, 0),
 			b(self.bounds[2] + c1 - 1, 2),
-			b(self.bounds[3] if c2 is None else self.bounds[2] + c2 - c1, 2)
+			b(self.bounds[3] if c2 is None else self.bounds[2] + c2 - 1, 2)
 		])
 
 	def __repr__(self):

@@ -11,10 +11,12 @@ from parser import *
 def main(csv_file, groups_file):
 	t = time.time()
 	groups = get_groups_tables(csv_file, groups_file)
-	constraint = SumColumn()
-	assignments = find_groups(constraint, Minizinc(), groups)
-	constraints = find_constraints(Minizinc(), constraint, assignments)
-	print("Constraints:\n" + "\n".join([constraint.to_string(solution) for solution in constraints]))
+	constraints = [SumColumn(), SumRow()]
+	assignments = [find_groups(constraint, Minizinc(), groups) for constraint in constraints]
+	solutions = [find_constraints(Minizinc(), c, a) for c, a in zip(constraints, assignments)]
+
+	print("Constraints:")
+	print("\n".join(["\n".join([c.to_string(s) for s in l]) for c, l in zip(constraints, solutions)]))
 	print(time.time() - t)
 
 
