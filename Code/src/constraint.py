@@ -126,5 +126,5 @@ class ConstraintVisitor:
 	def visit_all_different(self, constraint: AllDifferent):
 		raise NotImplementedError()
 
-	def visit_all_rank(self, constraint: AllDifferent):
+	def visit_rank(self, constraint: AllDifferent):
 		raise NotImplementedError()

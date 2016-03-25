@@ -18,7 +18,7 @@ def main(csv_file, groups_file):
 
 	solutions = Solutions()
 	t_origin = time.time()
-	constraints = [Permutation(), Series(), AllDifferent(), SumColumn(), SumRow()]
+	constraints = [Permutation(), Series(), AllDifferent(), SumColumn(), SumRow(), Rank()]
 	for constraint in constraints:
 		t_start = time.time()
 		assignments = find_groups(constraint, assignment_engine(engines, constraint), groups, solutions)
