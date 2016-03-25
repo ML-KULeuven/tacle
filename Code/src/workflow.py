@@ -45,6 +45,7 @@ def assignment_engine(engines, constraint):
 
 
 def solution_engine(engines, constraint):
+
   if len(engines) == 0:
     raise Exception("Could not find an engine for " + str(constraint))
   engine = engines[0]
@@ -52,7 +53,6 @@ def solution_engine(engines, constraint):
     return assignment_engine(engines[1:], constraint)
   print(type(engine))
   return engine
-
 
 def arg_parser():
   p = argparse.ArgumentParser()
