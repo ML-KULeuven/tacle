@@ -35,6 +35,16 @@ class Bounds:
 			b(self.bounds[3] if c2 is None else self.bounds[2] + c2 - 1, 2)
 		])
 
+	def contains(self, bounds):
+		r1, r2, c1, c2 = bounds.bounds
+		sr1, sr2, sc1, sc2 = self.bounds
+		return sr1 <= r1 and sr2 >= r2 and sc1 <= c1 and sc2 >= c2
+
+	def overlaps_with(self, bounds):
+		r1, r2, c1, c2 = bounds.bounds
+		sr1, sr2, sc1, sc2 = self.bounds
+		return not (r2 < sr1 or r1 > sr2 or c2 < sc1 or c1 > sc2)
+
 	def __repr__(self):
 		return str(self.bounds)
 
@@ -155,7 +165,15 @@ class Group:
 		return Group(self.table, self.bounds.combine(bounds), self.row)
 
 	def get_vector(self, i):
-		return self.data[i, :] if self.row else self.data[:, i]
+		return self.data[i - 1, :] if self.row else self.data[:, i - 1]
+
+	def is_subgroup(self, group):
+		return self.table == group.table and self.bounds.contains(group.bounds)
+
+	def overlaps_with(self, group):
+		if self.table != group.table:
+			return False
+		return self.bounds.overlaps_with(group.bounds)
 
 	def vector_subset(self, start, end):
 		l = [start, end] + [None, None] if self.row else [None, None] + [start, end]

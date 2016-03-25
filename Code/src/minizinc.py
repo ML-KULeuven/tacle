@@ -153,6 +153,84 @@ class MinizincConstraintVisitor(ConstraintVisitor):
         solution[v.name] = assignment[v.name].vector_subset(b[0], b[1])
       results.append(solution)
     return results
+=======
+	def __init__(self, engine, groups: {Group}, solutions):
+		super().__init__()
+		self.engine = engine
+		self.groups = groups
+		self.solutions = solutions
+
+	def visit_sum_column(self, constraint: SumColumn):
+		return self._get_assignments(constraint, local("minizinc/group/sum_column.mzn"))
+
+	def visit_sum_row(self, constraint: SumRow):
+		return self._get_assignments(constraint, local("minizinc/group/sum_row.mzn"))
+
+	def visit_permutation(self, constraint: Permutation):
+		pass
+
+	def visit_series(self, constraint: Series):
+		pass
+
+	def visit_all_different(self, constraint: AllDifferent):
+		pass
+
+	def visit_rank(self, constraint: AllDifferent):
+		return self._get_assignments(constraint, local("minizinc/group/rank.mzn"))
+
+	def _get_assignments(self, constraint, filename):
+		generator = MinizincCodeGenerator()
+		parser = MinizincOutputParser(constraint.get_variables())
+		data = generator.generate_group_properties(self.groups) + generator.generate_constraints(constraint, filename)
+		model_file = TempFile(data, "mzn")
+		assignments = parser.parse_assignments(self.groups, self.engine.execute(model_file.name)[0])
+		model_file.delete()
+		return assignments
+
+
+class MinizincConstraintVisitor(ConstraintVisitor):
+	def __init__(self, engine, assignments: [{Group}]):
+		super().__init__()
+		self.engine = engine
+		self.assignments = assignments
+
+	def visit_sum_column(self, constraint: SumColumn):
+		filename = "minizinc/constraint/sum_column_{}.mzn"
+		assignment_tuples = [(a, local(filename.format("row" if a["X"].row else "column"))) for a in self.assignments]
+		results = [self._find_constraints(a, f, constraint) for a, f in assignment_tuples]
+		return [item for solutions in results for item in solutions]
+
+	def visit_sum_row(self, constraint: SumRow):
+		filename = "minizinc/constraint/sum_row_{}.mzn"
+		assignment_tuples = [(a, local(filename.format("row" if a["X"].row else "column"))) for a in self.assignments]
+		results = [self._find_constraints(a, f, constraint) for a, f in assignment_tuples]
+		return [item for solutions in results for item in solutions]
+
+	def visit_permutation(self, constraint: Permutation):
+		pass
+
+	def visit_rank(self, constraint: AllDifferent):
+		pass
+
+	def visit_all_different(self, constraint: AllDifferent):
+		pass
+
+	def visit_series(self, constraint: Series):
+		pass
+
+	def _find_constraints(self, assignment, file, constraint):
+		generator = MinizincCodeGenerator()
+		parser = MinizincOutputParser(constraint.get_variables())
+		results = []
+		data_file = TempFile(generator.generate_data(assignment, constraint.get_variables()), "dzn")
+		output, command = self.engine.execute(file, data_file=data_file.name)
+		if error_pattern.search(output):
+			print("ERROR:\n{}\n".format(command), output)
+		elif not unsatisfiable_pattern.search(output):
+			results += parser.parse_solutions(assignment, output)
+			data_file.delete()
+		return results
+>>>>>>> c04ce074664256551c84359895e3af115895878a
 
 
 class Minizinc(Engine):

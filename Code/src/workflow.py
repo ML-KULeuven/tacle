@@ -7,9 +7,10 @@ from group_assign import *
 from internal import Internal
 from minizinc import Minizinc
 from parser import *
-from aspengine import ASP
 from group_assign import *
 from constraint import SumColumn
+from solutions import Solutions
+
 
 def main(csv_file, groups_file):
         engines = [Internal(), Minizinc()]
@@ -30,6 +31,25 @@ def main(csv_file, groups_file):
 
         format_string = "Total: {0:.2f}, Group parsing: {1:.3f}, Assignments: {2:.3f}, Solutions: {3:.3f}"
         print(format_string.format(ts - t, tg - t, ta - tg, ts - ta))
+	engines = [Internal(), Minizinc()]
+	groups = get_groups_tables(csv_file, groups_file)
+
+	solutions = Solutions()
+	t_origin = time.time()
+	constraints = [Permutation(), Series(), AllDifferent(), SumColumn(), SumRow(), Rank(), ForeignKey()]
+	for constraint in constraints:
+		t_start = time.time()
+		assignments = find_groups(constraint, assignment_engine(engines, constraint), groups, solutions)
+		t_assign = time.time()
+		engine = solution_engine(engines, constraint)
+		solutions.add(constraint, find_constraints(engine, constraint, assignments, solutions))
+		t_end = time.time()
+		f_string = "{name} [assignment time: {assign:.3f}, solving time: {solve:.3f}]"
+		print(f_string.format(name=constraint.name.capitalize(), assign=t_assign - t_start, solve=t_end - t_assign))
+		print("\n".join(["\t" + constraint.to_string(s) for s in solutions.get_solutions(constraint)]))
+		print()
+
+	print("Total: {0:.3f}".format(time.time() - t_origin))
 
 
 def assignment_engine(engines, constraint):
