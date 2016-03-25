@@ -115,6 +115,43 @@ class ForeignKey(Constraint):
 		return visitor.visit_foreign_key(self)
 
 
+class ConstraintHandler:
+	def __init__(self):
+		self.next = None
+
+	def can_handle(self, constraint: Constraint):
+		if self.can_apply(constraint):
+			return True
+		elif self.next is not None:
+			return self.next.can_handle()
+		else:
+			return False
+
+	def handle(self, constraint: Constraint):
+		if self.can_handle(constraint):
+			return self.apply(constraint)
+		elif self.next is not None:
+			return self.next.handle(constraint)
+		else:
+			raise Exception("No handler found for {}".format(str(constraint)))
+
+	def can_apply(self, constrain: Constraint):
+		raise NotImplementedError()
+
+	def apply(self, constraint: Constraint):
+		raise NotImplementedError()
+
+	def add(self, handler):
+		if self.next is None:
+			self.next = handler
+		else:
+			self.next.add(handler)
+
+	@staticmethod
+	def empty():
+		return type("ConstraintHandler", ConstraintHandler, {"can_handle": lambda self, constraint: False})
+
+
 class ConstraintVisitor:
 	def __init__(self):
 		pass

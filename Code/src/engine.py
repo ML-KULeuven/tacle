@@ -8,6 +8,14 @@ from group import *
 class Engine:
 	def __init__(self):
 		super().__init__()
+		self.assignment_handler = ConstraintHandler.empty()
+		self.solving_handler = ConstraintHandler.empty()
+
+	def add_assignment_handler(self, handler: ConstraintHandler):
+		self.assignment_handler.add(handler)
+
+	def add_solving_handler(self, handler: ConstraintHandler):
+		self.solving_handler.add(handler)
 
 	def generate_groups(self, constraint: Constraint, groups: [Group], solutions) -> [[Group]]:
 		raise NotImplementedError()
