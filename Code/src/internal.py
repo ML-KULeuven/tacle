@@ -1,6 +1,7 @@
 import numpy
 
-from constraint import Constraint, ConstraintVisitor, Series, SumColumn, AllDifferent, SumRow, Permutation, Rank
+from constraint import Constraint, ConstraintVisitor, Series, SumColumn, AllDifferent, SumRow, Permutation, Rank, \
+	ForeignKey
 from engine import Engine
 from group import Group
 
@@ -32,6 +33,14 @@ class InternalGroupGenerationVisitor(ConstraintVisitor):
 			for x_group in filter(Group.is_numeric, self.groups):
 				if x_group.length() == y_group.length():
 					assignments.append({"Y": y_group, "X": x_group})
+		return assignments
+
+	def visit_foreign_key(self, constraint: ForeignKey):
+		assignments = []
+		for pk_group in self.solutions.get_property_groups(AllDifferent()):
+			for fk_group in filter(Group.is_textual, self.groups):
+				if not pk_group.is_subgroup(fk_group):
+					assignments.append({constraint.pk.name: pk_group, constraint.fk.name: fk_group})
 		return assignments
 
 
@@ -79,7 +88,7 @@ class InternalConstraintVisitor(ConstraintVisitor):
 		for assignment in self.assignments:
 			y_group = assignment["Y"]
 			x_group = assignment["X"]
-			for i in range(1, y_group.vectors() + 1):
+			for i in range(1, y_group.vectors() + 1): # TODO invert
 				for j in range(1, x_group.vectors() + 1):
 					x_v = x_group.vector_subset(j, j)
 					y_v = y_group.vector_subset(i, i)
@@ -87,6 +96,24 @@ class InternalConstraintVisitor(ConstraintVisitor):
 						indices = numpy.argsort(x_group.get_vector(j)) + 1
 						if all(indices[::-1] == y_group.get_vector(i)):
 							solutions.append({"X": x_v, "Y": y_v})
+		return solutions
+
+	def visit_foreign_key(self, constraint: ForeignKey):
+		solutions = []
+		for assignment in self.assignments:
+			pk_group = assignment[constraint.pk.name]
+			fk_group = assignment[constraint.fk.name]
+
+			fk_vectors = [fk_group.vector_subset(j, j) for j in range(1, fk_group.vectors() + 1)]
+			fk_sets = map(lambda v: (v, set(v.get_vector(1))), fk_vectors)
+
+			pk_vectors = [pk_group.vector_subset(j, j) for j in range(1, pk_group.vectors() + 1)]
+			pk_sets = map(lambda v: (v, set(v.get_vector(1))), pk_vectors)
+
+			for (pk, pk_set) in pk_sets:
+				for (fk, fk_set) in fk_sets:
+					if not pk.overlaps_with(fk) and pk_set >= fk_set:
+						solutions.append({constraint.pk.name: pk, constraint.fk.name: fk})
 		return solutions
 
 	@staticmethod
@@ -114,7 +141,7 @@ class Internal(Engine):
 		return InternalConstraintVisitor(assignments).visit(constraint)
 
 	def supports_group_generation(self, constraint: Constraint):
-		return constraint in [Permutation(), AllDifferent(), Series(), Rank()]
+		return constraint in [Permutation(), AllDifferent(), Series(), Rank(), ForeignKey()]
 
 	def supports_constraint_search(self, constraint: Constraint):
-		return constraint in [Permutation(), AllDifferent(), Series(), Rank()]
+		return constraint in [Permutation(), AllDifferent(), Series(), Rank(), ForeignKey()]

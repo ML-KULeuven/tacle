@@ -104,6 +104,17 @@ class Rank(Constraint):
 		return visitor.visit_rank(self)
 
 
+class ForeignKey(Constraint):
+	pk = Variable("PK", vector=True, textual=True)
+	fk = Variable("FK", vector=True, textual=True)
+
+	def __init__(self):
+		super().__init__("foreign-key", "{FK} -> {PK}", [self.pk, self.fk])
+
+	def accept(self, visitor):
+		return visitor.visit_foreign_key(self)
+
+
 class ConstraintVisitor:
 	def __init__(self):
 		pass
@@ -127,4 +138,7 @@ class ConstraintVisitor:
 		raise NotImplementedError()
 
 	def visit_rank(self, constraint: AllDifferent):
+		raise NotImplementedError()
+
+	def visit_foreign_key(self, constraint: ForeignKey):
 		raise NotImplementedError()
