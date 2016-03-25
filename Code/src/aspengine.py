@@ -11,7 +11,17 @@ import re
 class ASP(Engine):
 
   def find_constraints(self, constraint: Constraint, assignments: [{Group}]) -> [{Group}]:
+    print("test2")
     return ASPConstraintVisitor(assignments).visit(constraint)
+
+  def supports_group_generation(self, constraint: Constraint):
+    print("test")
+    return False
+
+  def supports_constraint_search(self, constraint: Constraint):
+    print("test3")
+    return constraint in [SumColumn(), SumRow()]
+
 
 
 class ASPConstraintVisitor(ConstraintVisitor):
@@ -20,6 +30,7 @@ class ASPConstraintVisitor(ConstraintVisitor):
     self.assignments = assignments
 
   def visit_sum_column(self, constraint: SumColumn):
+    solutions = []
     print("Processing col sum...")
     for i,xy_dict in enumerate(self.assignments):
       X = xy_dict["X"]
@@ -29,10 +40,13 @@ class ASPConstraintVisitor(ConstraintVisitor):
         if SAT:
           selected_y, x_positions = SAT
           print("X COLUMN GROUP","SAT","X",X,"X Positions: ",x_positions,"Y",Y,"selected y vector",selected_y, sep="\n")
+          solution = {"X":X.vector_subset(min(x_positions),max(x_positions)),"Y":Y.get_vector(selected_y)}
+          solutions.append(solution)
       else: #X.row == True    
         SAT = self.handle_sum_column_data_in_rows(X,Y,i)
         if SAT:
           print("X ROW GROUP","SAT","X",X,"Y",Y,sep="\n")
+          solutions.append(solution)
 
   def visit_sum_row(self, constraint: SumRow):
     print("Processing row sum...")
