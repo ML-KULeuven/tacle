@@ -48,7 +48,7 @@ def solution_engine(engines, constraint):
 		raise Exception("Could not find an engine for " + str(constraint))
 	engine = engines[0]
 	while not engine.supports_constraint_search(constraint):
-		return assignment_engine(engines[1:], constraint)
+		return solution_engine(engines[1:], constraint)
 	return engine
 
 
