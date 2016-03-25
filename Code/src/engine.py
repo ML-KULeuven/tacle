@@ -5,6 +5,17 @@ from constraint import *
 from group import *
 
 
+class AssignmentConstraintHandler(ConstraintHandler):
+	def __init__(self):
+		super().__init__()
+
+	def can_apply(self, constrain: Constraint):
+		raise NotImplementedError()
+
+	def apply(self, constraint: Constraint):
+		raise NotImplementedError()
+
+
 class Engine:
 	def __init__(self):
 		super().__init__()
@@ -18,16 +29,16 @@ class Engine:
 		self.solving_handler.add(handler)
 
 	def generate_groups(self, constraint: Constraint, groups: [Group], solutions) -> [[Group]]:
-		raise NotImplementedError()
+		self.assignment_handler.handle()
 
 	def supports_group_generation(self, constraint: Constraint):
-		raise NotImplementedError()
+		return self.assignment_handler.can_handle(constraint)
 
 	def find_constraints(self, constraint: Constraint, assignments: [{Group}], solutions) -> [{(Group, int)}]:
 		raise NotImplementedError()
 
 	def supports_constraint_search(self, constraint: Constraint):
-		raise NotImplementedError()
+		return self.solving_handler.can_handle(constraint)
 
 
 def run_command(command, input_data=None):
