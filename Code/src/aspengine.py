@@ -13,20 +13,23 @@ class AspSolvingStrategy(DictSolvingStrategy):
         super().__init__()
 
         def sum_columns(constraint, assignments, solutions):
+            solutions = []
             print("Processing col sum...")
-            for i, xy_dict in enumerate(assignments):
-                X = xy_dict["X"]
-                Y = xy_dict["Y"]
-                if X.row == False:
-                    SAT = self.handle_sum_column_data_in_column(X, Y, i)
-                    if SAT:
-                        selected_y, x_positions = SAT
-                        print("X COLUMN GROUP", "SAT", "X", X, "X Positions: ", x_positions, "Y", Y, "selected y vector",
-                              selected_y, sep="\n")
-                else:  # X.row == True
-                    SAT = self.handle_sum_column_data_in_rows(X, Y, i)
-                    if SAT:
-                        print("X ROW GROUP", "SAT", "X", X, "Y", Y, sep="\n")
+            for i,xy_dict in enumerate(assignments):
+              X = xy_dict["X"]
+              Y = xy_dict["Y"]
+              if X.row == False:
+                SAT = self.handle_sum_column_data_in_column(X,Y,i)
+                if SAT:
+                  selected_y, x_positions = SAT
+                  print("X COLUMN GROUP","SAT","X",X,"X Positions: ",x_positions,"Y",Y,"selected y vector",selected_y, sep="\n")
+                  solution = {"X":X.vector_subset(min(x_positions),max(x_positions)),"Y":Y.get_vector(selected_y)}
+                  solutions.append(solution)
+              else: #X.row == True
+                SAT = self.handle_sum_column_data_in_rows(X,Y,i)
+                if SAT:
+                  print("X ROW GROUP","SAT","X",X,"Y",Y,sep="\n")
+                  solutions.append(solution)
 
         def sum_rows(constraint, assignments, solutions):
             print("Processing row sum...")
