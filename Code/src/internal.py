@@ -1,147 +1,129 @@
 import numpy
 
-from constraint import Constraint, ConstraintVisitor, Series, SumColumn, AllDifferent, SumRow, Permutation, Rank, \
-	ForeignKey
-from engine import Engine
+from constraint import *
 from group import Group
+from strategy import DictAssignmentStrategy, DictSolvingStrategy
 
 
-class InternalGroupGenerationVisitor(ConstraintVisitor):
-	def __init__(self, groups, solutions):
-		super().__init__()
-		self.groups = groups
-		self.solutions = solutions
+class InternalAssignmentStrategy(DictAssignmentStrategy):
+    def __init__(self):
+        super().__init__()
 
-	def visit_series(self, constraint: Series):
-		return [{constraint.get_variables()[0].name: g} for g in filter(Group.is_integer, self.groups)]
+        def series(constraint, groups, solutions):
+            return [{constraint.get_variables()[0].name: g} for g in filter(Group.is_integer, groups)]
 
-	def visit_sum_column(self, constraint: SumColumn):
-		pass
+        def all_different(constraint, groups, solutions):
+            return [{constraint.get_variables()[0].name: g} for g in filter(Group.is_textual, groups)]
 
-	def visit_all_different(self, constraint: AllDifferent):
-		return [{constraint.get_variables()[0].name: g} for g in filter(Group.is_textual, self.groups)]
+        def permutation(constraint, groups, solutions):
+            return [{constraint.get_variables()[0].name: g} for g in filter(Group.is_integer, groups)]
 
-	def visit_sum_row(self, constraint: SumRow):
-		pass
+        def rank(constraint, groups, solutions):
+            assignments = []
+            for y_group in solutions.get_property_groups(Permutation()):
+                for x_group in filter(Group.is_numeric, groups):
+                    if x_group.length() == y_group.length():
+                        assignments.append({"Y": y_group, "X": x_group})
+            return assignments
 
-	def visit_permutation(self, constraint: Permutation):
-		return [{constraint.get_variables()[0].name: g} for g in filter(Group.is_integer, self.groups)]
+        def foreign_keys(constraint, groups, solutions):
+            assignments = []
+            for pk_group in solutions.get_property_groups(AllDifferent()):
+                for fk_group in filter(Group.is_textual, groups):
+                    if not pk_group.is_subgroup(fk_group):
+                        assignments.append({constraint.pk.name: pk_group, constraint.fk.name: fk_group})
+            return assignments
 
-	def visit_rank(self, constraint: AllDifferent):
-		assignments = []
-		for y_group in self.solutions.get_property_groups(Permutation()):
-			for x_group in filter(Group.is_numeric, self.groups):
-				if x_group.length() == y_group.length():
-					assignments.append({"Y": y_group, "X": x_group})
-		return assignments
-
-	def visit_foreign_key(self, constraint: ForeignKey):
-		assignments = []
-		for pk_group in self.solutions.get_property_groups(AllDifferent()):
-			for fk_group in filter(Group.is_textual, self.groups):
-				if not pk_group.is_subgroup(fk_group):
-					assignments.append({constraint.pk.name: pk_group, constraint.fk.name: fk_group})
-		return assignments
+        self.add_strategy(Series(), series)
+        self.add_strategy(AllDifferent(), all_different)
+        self.add_strategy(Permutation(), permutation)
+        self.add_strategy(Rank(), rank)
+        self.add_strategy(ForeignKey(), foreign_keys)
 
 
-class InternalConstraintVisitor(ConstraintVisitor):
-	def __init__(self, assignments):
-		super().__init__()
-		self.assignments = assignments
+class InternalSolvingStrategy(DictSolvingStrategy):
+    def __init__(self):
+        super().__init__()
 
-	def visit_series(self, constraint: Series):
-		results = []
-		variable = constraint.get_variables()[0]
-		for group in [assignment[variable.name] for assignment in self.assignments]:
-				for i in range(1, group.vectors() + 1):
-					if self.test_list(group.get_vector(i)):
-						results.append({variable.name: group.vector_subset(i, i)})
-		return results
+        def series(constraint, assignments, solutions):
+            results = []
+            variable = constraint.get_variables()[0]
+            for group in [assignment[variable.name] for assignment in assignments]:
+                for i in range(1, group.vectors() + 1):
+                    if self.test_list(group.get_vector(i)):
+                        results.append({variable.name: group.vector_subset(i, i)})
+            return results
 
-	def visit_sum_column(self, constraint: SumColumn):
-		pass
+        def all_different(constraint, assignments, solutions):
+            results = []
+            variable = constraint.get_variables()[0]
+            for group in [assignment[variable.name] for assignment in assignments]:
+                for i in range(1, group.vectors() + 1):
+                    vector = group.get_vector(i)
+                    if len(set(vector)) == len(vector):
+                        results.append({variable.name: group.vector_subset(i, i)})
+            return results
 
-	def visit_all_different(self, constraint: AllDifferent):
-		results = []
-		variable = constraint.get_variables()[0]
-		for group in [assignment[variable.name] for assignment in self.assignments]:
-			for i in range(1, group.vectors() + 1):
-				vector = group.get_vector(i)
-				if len(set(vector)) == len(vector):
-					results.append({variable.name: group.vector_subset(i, i)})
-		return results
+        def permutation(constraint, assignments, solutions):
+            results = []
+            variable = constraint.get_variables()[0]
+            for group in [assignment[variable.name] for assignment in assignments]:
+                for i in range(1, group.vectors() + 1):
+                    if self.test_set(group.get_vector(i)):
+                        results.append({variable.name: group.vector_subset(i, i)})
+            return results
 
-	def visit_sum_row(self, constraint: SumRow):
-		pass
+        def rank(constraint, assignments, solutions):
+            solutions = []
+            for assignment in assignments:
+                y_group = assignment["Y"]
+                x_group = assignment["X"]
+                for i in range(1, y_group.vectors() + 1):  # TODO invert
+                    for j in range(1, x_group.vectors() + 1):
+                        x_v = x_group.vector_subset(j, j)
+                        y_v = y_group.vector_subset(i, i)
+                        if not x_v.overlaps_with(y_v):
+                            indices = numpy.argsort(x_group.get_vector(j)) + 1
+                            if all(indices[::-1] == y_group.get_vector(i)):
+                                solutions.append({"X": x_v, "Y": y_v})
+            return solutions
 
-	def visit_permutation(self, constraint: Permutation):
-		results = []
-		variable = constraint.get_variables()[0]
-		for group in [assignment[variable.name] for assignment in self.assignments]:
-			for i in range(1, group.vectors() + 1):
-				if self.test_set(group.get_vector(i)):
-					results.append({variable.name: group.vector_subset(i, i)})
-		return results
+        def foreign_keys(constraint, assignments, solutions):
+            solutions = []
+            for assignment in assignments:
+                pk_group = assignment[constraint.pk.name]
+                fk_group = assignment[constraint.fk.name]
 
-	def visit_rank(self, constraint: AllDifferent):
-		solutions = []
-		for assignment in self.assignments:
-			y_group = assignment["Y"]
-			x_group = assignment["X"]
-			for i in range(1, y_group.vectors() + 1): # TODO invert
-				for j in range(1, x_group.vectors() + 1):
-					x_v = x_group.vector_subset(j, j)
-					y_v = y_group.vector_subset(i, i)
-					if not x_v.overlaps_with(y_v):
-						indices = numpy.argsort(x_group.get_vector(j)) + 1
-						if all(indices[::-1] == y_group.get_vector(i)):
-							solutions.append({"X": x_v, "Y": y_v})
-		return solutions
+                fk_vectors = [fk_group.vector_subset(j, j) for j in range(1, fk_group.vectors() + 1)]
+                fk_sets = map(lambda v: (v, set(v.get_vector(1))), fk_vectors)
 
-	def visit_foreign_key(self, constraint: ForeignKey):
-		solutions = []
-		for assignment in self.assignments:
-			pk_group = assignment[constraint.pk.name]
-			fk_group = assignment[constraint.fk.name]
+                pk_vectors = [pk_group.vector_subset(j, j) for j in range(1, pk_group.vectors() + 1)]
+                pk_sets = map(lambda v: (v, set(v.get_vector(1))), pk_vectors)
 
-			fk_vectors = [fk_group.vector_subset(j, j) for j in range(1, fk_group.vectors() + 1)]
-			fk_sets = map(lambda v: (v, set(v.get_vector(1))), fk_vectors)
+                for (pk, pk_set) in pk_sets:
+                    for (fk, fk_set) in fk_sets:
+                        if not pk.overlaps_with(fk) and pk_set >= fk_set:
+                            solutions.append({constraint.pk.name: pk, constraint.fk.name: fk})
+            return solutions
 
-			pk_vectors = [pk_group.vector_subset(j, j) for j in range(1, pk_group.vectors() + 1)]
-			pk_sets = map(lambda v: (v, set(v.get_vector(1))), pk_vectors)
+        self.add_strategy(Series(), series)
+        self.add_strategy(AllDifferent(), all_different)
+        self.add_strategy(Permutation(), permutation)
+        self.add_strategy(Rank(), rank)
+        self.add_strategy(ForeignKey(), foreign_keys)
 
-			for (pk, pk_set) in pk_sets:
-				for (fk, fk_set) in fk_sets:
-					if not pk.overlaps_with(fk) and pk_set >= fk_set:
-						solutions.append({constraint.pk.name: pk, constraint.fk.name: fk})
-		return solutions
+    @staticmethod
+    def test_set(vector):
+        number_set = set(range(1, len(vector) + 1))
+        for i in range(len(vector)):
+            if not vector[i] in number_set:
+                return False
+            number_set.remove(vector[i])
+        return True
 
-	@staticmethod
-	def test_set(vector):
-		number_set = set(range(1, len(vector) + 1))
-		for i in range(len(vector)):
-			if not vector[i] in number_set:
-				return False
-			number_set.remove(vector[i])
-		return True
-
-	@staticmethod
-	def test_list(vector):
-		for i in range(len(vector)):
-			if not vector[i] == i + 1:
-				return False
-		return True
-
-
-class Internal(Engine):
-	def generate_groups(self, constraint: Constraint, groups: [Group], solutions) -> [[Group]]:
-		return InternalGroupGenerationVisitor(groups, solutions).visit(constraint)
-
-	def find_constraints(self, constraint: Constraint, assignments: [{Group}], solutions) -> [{(Group, int)}]:
-		return InternalConstraintVisitor(assignments).visit(constraint)
-
-	def supports_group_generation(self, constraint: Constraint):
-		return constraint in [Permutation(), AllDifferent(), Series(), Rank(), ForeignKey()]
-
-	def supports_constraint_search(self, constraint: Constraint):
-		return constraint in [Permutation(), AllDifferent(), Series(), Rank(), ForeignKey()]
+    @staticmethod
+    def test_list(vector):
+        for i in range(len(vector)):
+            if not vector[i] == i + 1:
+                return False
+        return True

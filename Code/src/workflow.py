@@ -1,63 +1,60 @@
 import argparse
-
 import time
 
-from constraint_search import find_constraints
-from group_assign import *
-from internal import Internal
-from minizinc import Minizinc
-from parser import *
-from group_assign import *
-from constraint import SumColumn
+from aspengine import AspSolvingStrategy
+from idp import IdpAssignmentStrategy
+from internal import InternalAssignmentStrategy, InternalSolvingStrategy
+from constraint import *
+from minizinc import MinizincAssignmentStrategy
+from minizinc import MinizincSolvingStrategy
+from parser import get_groups_tables
 from solutions import Solutions
+from strategy import StrategyManager
 
 
 def main(csv_file, groups_file):
-	engines = [Internal(), Minizinc()]
-	groups = get_groups_tables(csv_file, groups_file)
+    manager = get_manager()
+    groups = get_groups_tables(csv_file, groups_file)
 
-	solutions = Solutions()
-	t_origin = time.time()
-	constraints = [Permutation(), Series(), AllDifferent(), SumColumn(), SumRow(), Rank(), ForeignKey()]
-	for constraint in constraints:
-		t_start = time.time()
-		assignments = find_groups(constraint, assignment_engine(engines, constraint), groups, solutions)
-		t_assign = time.time()
-		engine = solution_engine(engines, constraint)
-		solutions.add(constraint, find_constraints(engine, constraint, assignments, solutions))
-		t_end = time.time()
-		f_string = "{name} [assignment time: {assign:.3f}, solving time: {solve:.3f}]"
-		print(f_string.format(name=constraint.name.capitalize(), assign=t_assign - t_start, solve=t_end - t_assign))
-		print("\n".join(["\t" + constraint.to_string(s) for s in solutions.get_solutions(constraint)]))
-		print()
+    solutions = Solutions()
+    t_origin = time.time()
+    constraints = [Permutation(), Series(), AllDifferent(), SumColumn(), SumRow(), Rank(), ForeignKey()]
+    for constraint in constraints:
+        if not manager.supports_assignments_for(constraint):
+            print("No assignment strategy for {}\n".format(constraint))
+        elif not manager.supports_solving_for(constraint):
+            print("No solving strategy for {}\n".format(constraint))
+        else:
+            t_start = time.time()
+            assignments = manager.find_assignments(constraint, groups, solutions)
+            t_assign = time.time()
+            solutions.add(constraint, manager.find_solutions(constraint, assignments, solutions))
+            t_end = time.time()
+            f_string = "{name} [assignment time: {assign:.3f}, solving time: {solve:.3f}]"
+            print(f_string.format(name=constraint.name.capitalize(), assign=t_assign - t_start, solve=t_end - t_assign))
+            print("\n".join(["\t" + constraint.to_string(s) for s in solutions.get_solutions(constraint)]))
+            print()
 
-	print("Total: {0:.3f}".format(time.time() - t_origin))
-
-
-def assignment_engine(engines, constraint):
-	if len(engines) == 0:
-		raise Exception("Could not find an engine for " + str(constraint))
-	engine = engines[0]
-	while not engine.supports_group_generation(constraint):
-		return assignment_engine(engines[1:], constraint)
-	return engine
+    print("Total: {0:.3f}".format(time.time() - t_origin))
 
 
-def solution_engine(engines, constraint):
-	if len(engines) == 0:
-		raise Exception("Could not find an engine for " + str(constraint))
-	engine = engines[0]
-	while not engine.supports_constraint_search(constraint):
-		return solution_engine(engines[1:], constraint)
-	return engine
+def get_manager():
+    manager = StrategyManager()
+    manager.add_assignment_strategy(InternalAssignmentStrategy())
+    manager.add_solving_strategy(InternalSolvingStrategy())
+    manager.add_assignment_strategy(IdpAssignmentStrategy())
+    manager.add_assignment_strategy(MinizincAssignmentStrategy())
+    # manager.add_solving_strategy(AspSolvingStrategy())
+    manager.add_solving_strategy(MinizincSolvingStrategy())
+    return manager
 
 
 def arg_parser():
-	p = argparse.ArgumentParser()
-	p.add_argument('csv_file')
-	p.add_argument('groups_file')
-	return p
+    p = argparse.ArgumentParser()
+    p.add_argument('csv_file')
+    p.add_argument('groups_file')
+    return p
 
 
 if __name__ == '__main__':
-	main(**vars(arg_parser().parse_args()))
+    main(**vars(arg_parser().parse_args()))
