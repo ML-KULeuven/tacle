@@ -113,32 +113,3 @@ class ForeignKey(Constraint):
 
 	def accept(self, visitor):
 		return visitor.visit_foreign_key(self)
-
-
-class ConstraintVisitor:
-	def __init__(self):
-		pass
-
-	def visit(self, constraint: Constraint):
-		return constraint.accept(self)
-
-	def visit_sum_column(self, constraint: SumColumn):
-		raise NotImplementedError()
-
-	def visit_sum_row(self, constraint: SumRow):
-		raise NotImplementedError()
-
-	def visit_permutation(self, constraint: Permutation):
-		raise NotImplementedError()
-
-	def visit_series(self, constraint: Series):
-		raise NotImplementedError()
-
-	def visit_all_different(self, constraint: AllDifferent):
-		raise NotImplementedError()
-
-	def visit_rank(self, constraint: AllDifferent):
-		raise NotImplementedError()
-
-	def visit_foreign_key(self, constraint: ForeignKey):
-		raise NotImplementedError()

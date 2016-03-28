@@ -1,25 +1,6 @@
 import os
+import tempfile
 from subprocess import Popen, PIPE, STDOUT
-
-from constraint import *
-from group import *
-
-
-class Engine:
-	def __init__(self):
-		super().__init__()
-
-	def generate_groups(self, constraint: Constraint, groups: [Group], solutions) -> [[Group]]:
-		raise NotImplementedError()
-
-	def supports_group_generation(self, constraint: Constraint):
-		raise NotImplementedError()
-
-	def find_constraints(self, constraint: Constraint, assignments: [{Group}], solutions) -> [{(Group, int)}]:
-		raise NotImplementedError()
-
-	def supports_constraint_search(self, constraint: Constraint):
-		raise NotImplementedError()
 
 
 def run_command(command, input_data=None):
@@ -34,3 +15,14 @@ def run_command(command, input_data=None):
 
 def local(filename):
 	return os.path.dirname(os.path.realpath(__file__)) + "/../" + filename
+
+
+class TempFile:
+    def __init__(self, content, extension):
+        self.file = tempfile.NamedTemporaryFile("w+", delete=False, suffix=("." + extension))
+        print(content, file=self.file)
+        self.file.close()
+        self.name = self.file.name
+
+    def delete(self):
+        os.remove(self.file.name)
