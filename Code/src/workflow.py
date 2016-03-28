@@ -18,7 +18,8 @@ def main(csv_file, groups_file):
 
     solutions = Solutions()
     t_origin = time.time()
-    constraints = [Permutation(), Series(), AllDifferent(), SumColumn(), SumRow(), Rank(), ForeignKey()]
+
+    constraints = [Permutation(), Series(), AllDifferent(), SumColumn(), SumRow(), Rank(), ForeignKey(), Lookup()]
     for constraint in constraints:
         if not manager.supports_assignments_for(constraint):
             print("No assignment strategy for {}\n".format(constraint))

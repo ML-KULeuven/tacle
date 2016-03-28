@@ -91,10 +91,6 @@ class Group:
         self.data = f(self.data)
 
     def __repr__(self):
-        repr_str = "Table: \n" + str(self.table) + "\nBounds: " + str(self.bounds) + "\nRow: " + str(self.row)
-        return repr_str
-
-    def __str__(self):
         r1, r2, c1, c2 = self.bounds.bounds
         if self.row:
             rows = str(r1) if r1 == r2 else "{}:{}".format(r1, r2)
@@ -166,6 +162,10 @@ class Group:
 
     def get_vector(self, i):
         return self.data[i - 1, :] if self.row else self.data[:, i - 1]
+
+    def __iter__(self):
+        for i in range(1, self.vectors() + 1):
+            yield self.vector_subset(i, i)
 
     def is_subgroup(self, group):
         return self.table == group.table and self.bounds.contains(group.bounds)
