@@ -3,7 +3,7 @@ import re
 from numpy import transpose
 
 from core.constraint import *
-from core.group import Group
+from core.group import Group, GType
 from core.strategy import DictAssignmentStrategy, DictSolvingStrategy
 from engine import local, run_command, TempFile
 
@@ -72,8 +72,17 @@ class MinizincCodeGenerator:
         data = group.get_group_data()
         if to_vector and not group.row:
             data = transpose(data)
-        group_data = " | ".join([", ".join(map(str, column)) for column in data.tolist()])
+        group_data = " | ".join([", ".join(map(lambda dp: MinizincCodeGenerator.to_string(group.dtype, dp), column))
+                                 for column in data.tolist()])
         return "[| {} |]".format(group_data)
+
+    @staticmethod
+    def to_string(gtype, data_point):
+        if gtype == GType.int or gtype == GType.float:
+            return str(data_point)
+        elif gtype == GType.string:
+            return "\"" + str(data_point) + "\""
+        raise ValueError("Unexpected GType: " + str(gtype))
 
 
 class MinizincOutputParser:
@@ -153,8 +162,14 @@ class MinizincSolvingStrategy(DictSolvingStrategy):
             results = [self._find_constraints(a, f, constraint) for a, f in assignment_tuples]
             return [item for solutions in results for item in solutions]
 
+        def sum_if(constraint, assignments, solutions):
+            filename = "minizinc/constraint/conditional_sum.mzn"
+            results = [self._find_constraints(assignment, filename, constraint) for assignment in assignments]
+            return [item for solutions in results for item in solutions]
+
         self.add_strategy(SumColumn(), sum_columns)
         self.add_strategy(SumRow(), sum_rows)
+        self.add_strategy(SumIf(), sum_if)
 
     @staticmethod
     def _find_constraints(assignment, file, constraint):

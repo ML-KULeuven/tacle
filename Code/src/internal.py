@@ -10,7 +10,7 @@ from core.strategy import AssignmentStrategy, DictSolvingStrategy
 class InternalAssignmentStrategy(AssignmentStrategy):
     def __init__(self):
         super().__init__()
-        self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup()}
+        self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup(), SumIf()}
 
     def applies_to(self, constraint):
         return constraint in self.constraints
@@ -112,12 +112,31 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                                 results.append({k.name: v for k, v in result.items()})
             return results
 
+        def sum_if(c: SumIf, assignments, solutions):
+            results = []
+            keys = [c.o_key, c.result, c.f_key, c.values]
+
+            def is_sum_if(ok_v, r_v, fk_v, v_v):
+                m = dict(zip(ok_v, range(len(ok_v))))
+                for i in range(len(fk_v)):
+                    r_v[m[fk_v[i]]] -= v_v[i]
+                return all(e == 0 for e in r_v)
+
+            for assignment in assignments:
+                ok, r, fk, v = [assignment[k.name] for k in keys]
+                for vectors in itertools.product(ok, r, fk, v):
+                    if not any(g1.overlaps_with(g2) for g1, g2 in itertools.combinations(vectors, 2))\
+                            and is_sum_if(*list(map(lambda vec: vec.get_vector(1), vectors))):
+                        results.append(dict(zip([k.name for k in keys], vectors)))
+            return results
+
         self.add_strategy(Series(), series)
         self.add_strategy(AllDifferent(), all_different)
         self.add_strategy(Permutation(), permutation)
         self.add_strategy(Rank(), rank)
         self.add_strategy(ForeignKey(), foreign_keys)
         self.add_strategy(Lookup(), lookups)
+        self.add_strategy(SumIf(), sum_if)
 
     @staticmethod
     def test_set(vector):

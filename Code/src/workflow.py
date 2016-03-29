@@ -19,7 +19,8 @@ def main(csv_file, groups_file):
     solutions = Solutions()
     t_origin = time.time()
 
-    constraints = [Permutation(), Series(), AllDifferent(), SumColumn(), SumRow(), Rank(), ForeignKey(), Lookup()]
+    constraints = [Permutation(), Series(), AllDifferent(), SumColumn(), SumRow(), Rank(), ForeignKey(), Lookup(),
+                   SumIf()]
     for constraint in constraints:
         if not manager.supports_assignments_for(constraint):
             print("No assignment strategy for {}\n".format(constraint))
@@ -46,7 +47,7 @@ def get_manager():
     manager.add_assignment_strategy(IdpAssignmentStrategy())
     manager.add_assignment_strategy(MinizincAssignmentStrategy())
     # manager.add_solving_strategy(AspSolvingStrategy())
-    # manager.add_solving_strategy(MinizincSolvingStrategy())
+    manager.add_solving_strategy(MinizincSolvingStrategy())
     return manager
 
 

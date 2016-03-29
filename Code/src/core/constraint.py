@@ -108,3 +108,18 @@ class Lookup(Constraint):
                    SameOrientation([self.f_key, self.f_value]), SameOrientation([self.o_key, self.o_value])]
         super().__init__("lookup", "{FV} = LOOKUP({FK}, {OK}, {OV})", source, filters)
 
+
+class SumIf(Constraint):
+    o_key = Variable("OK", vector=True, textual=True)
+    result = Variable("R", vector=True, numeric=True)
+    f_key = Variable("FK", vector=True, textual=True)
+    values = Variable("V", vector=True, numeric=True)
+
+    def __init__(self):
+        variables = [self.o_key, self.result, self.f_key, self.values]
+        foreign_key = ForeignKey()
+        source = ConstraintSource(variables, foreign_key, {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"})
+        filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]),
+                   SameTable([self.o_key, self.result]), SameTable([self.f_key, self.values]),
+                   SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
+        super().__init__("sum-if", "{R} = SUM({FK}={OK}, {V})", source, filters)
