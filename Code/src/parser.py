@@ -1,8 +1,9 @@
 import json
+
 import numpy as np
 import pandas as pd
 
-from group import Bounds, Table, Group
+from core.group import Bounds, Table, Group
 
 
 def parse(filename):

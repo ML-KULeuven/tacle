@@ -1,9 +1,9 @@
 import re
 
-from constraint import *
-from group import *
+from core.constraint import *
+from core.group import *
+from core.strategy import DictAssignmentStrategy
 from engine import run_command, local
-from strategy import DictAssignmentStrategy
 
 
 class IdpAssignmentStrategy(DictAssignmentStrategy):

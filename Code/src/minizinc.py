@@ -2,10 +2,10 @@ import re
 
 from numpy import transpose
 
-from constraint import *
+from core.constraint import *
+from core.group import Group
+from core.strategy import DictAssignmentStrategy, DictSolvingStrategy
 from engine import local, run_command, TempFile
-from group import Group
-from strategy import DictAssignmentStrategy, DictSolvingStrategy
 
 unsatisfiable_pattern = re.compile(r".*UNSATISFIABLE.*")
 error_pattern = re.compile(r".*error.*")

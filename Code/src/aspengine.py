@@ -3,9 +3,9 @@ from os import system
 
 import numpy as np
 
-from constraint import SumColumn, SumRow
-from group import GType
-from strategy import DictSolvingStrategy
+from core.constraint import SumColumn, SumRow
+from core.group import GType
+from core.strategy import DictSolvingStrategy
 
 
 class AspSolvingStrategy(DictSolvingStrategy):

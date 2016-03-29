@@ -1,59 +1,22 @@
 import itertools
+
 import numpy
 
-from constraint import *
-from group import Group
-from strategy import DictAssignmentStrategy, DictSolvingStrategy
+from core.constraint import *
+from core.group import Group
+from core.strategy import AssignmentStrategy, DictSolvingStrategy
 
 
-class InternalAssignmentStrategy(DictAssignmentStrategy):
+class InternalAssignmentStrategy(AssignmentStrategy):
     def __init__(self):
         super().__init__()
+        self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup()}
 
-        def series(constraint, groups, solutions):
-            return [{constraint.get_variables()[0].name: g} for g in filter(Group.is_integer, groups)]
+    def applies_to(self, constraint):
+        return constraint in self.constraints
 
-        def all_different(constraint, groups, solutions):
-            return [{constraint.get_variables()[0].name: g} for g in filter(Group.is_textual, groups)]
-
-        def permutation(constraint, groups, solutions):
-            return [{constraint.get_variables()[0].name: g} for g in filter(Group.is_integer, groups)]
-
-        def rank(constraint, groups, solutions):
-            assignments = []
-            for y_group in solutions.get_property_groups(Permutation()):
-                for x_group in filter(Group.is_numeric, groups):
-                    if x_group.length() == y_group.length():
-                        assignments.append({"Y": y_group, "X": x_group})
-            return assignments
-
-        def foreign_keys(constraint, groups, solutions):
-            assignments = []
-            for pk_group in solutions.get_property_groups(AllDifferent()):
-                for fk_group in filter(Group.is_textual, groups):
-                    if not pk_group.is_subgroup(fk_group):
-                        assignments.append({constraint.pk.name: pk_group, constraint.fk.name: fk_group})
-            return assignments
-
-        def lookups(c: Lookup, groups, solutions):
-            assignments = []
-            foreign_key = ForeignKey()
-            for solution in solutions.get_solutions(foreign_key):
-                pk, fk = [solution[key] for key in [foreign_key.pk.name, foreign_key.fk.name]]
-                pv_filter = lambda g: g.length() == pk.length() and g.table == pk.table and g.row == pk.row
-                pv_candidates = list(filter(pv_filter, groups))
-                fv_filter = lambda g: g.length() == fk.length() and g.table == fk.table and g.row == fk.row
-                fv_candidates = list(filter(fv_filter, groups))
-                assignments += [{c.o_key.name: pk, c.f_key.name: fk, c.o_value.name: pv, c.f_value.name: fv}
-                                for pv in pv_candidates for fv in fv_candidates]
-            return assignments
-
-        self.add_strategy(Series(), series)
-        self.add_strategy(AllDifferent(), all_different)
-        self.add_strategy(Permutation(), permutation)
-        self.add_strategy(Rank(), rank)
-        self.add_strategy(ForeignKey(), foreign_keys)
-        self.add_strategy(Lookup(), lookups)
+    def apply(self, constraint: Constraint, groups: [Group], solutions):
+        return constraint.source.candidates(groups, solutions, constraint.filters)
 
 
 class InternalSolvingStrategy(DictSolvingStrategy):

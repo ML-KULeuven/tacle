@@ -1,5 +1,5 @@
-from constraint import Constraint
-from group import Group
+from core.constraint import Constraint
+from core.group import Group
 
 
 class AssignmentStrategy:

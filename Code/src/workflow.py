@@ -2,14 +2,14 @@ import argparse
 import time
 
 from aspengine import AspSolvingStrategy
+from core.constraint import *
+from core.solutions import Solutions
+from core.strategy import StrategyManager
 from idp import IdpAssignmentStrategy
 from internal import InternalAssignmentStrategy, InternalSolvingStrategy
-from constraint import *
 from minizinc import MinizincAssignmentStrategy
 from minizinc import MinizincSolvingStrategy
 from parser import get_groups_tables
-from solutions import Solutions
-from strategy import StrategyManager
 
 
 def main(csv_file, groups_file):
@@ -46,7 +46,7 @@ def get_manager():
     manager.add_assignment_strategy(IdpAssignmentStrategy())
     manager.add_assignment_strategy(MinizincAssignmentStrategy())
     # manager.add_solving_strategy(AspSolvingStrategy())
-    manager.add_solving_strategy(MinizincSolvingStrategy())
+    # manager.add_solving_strategy(MinizincSolvingStrategy())
     return manager
 
 
