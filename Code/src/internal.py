@@ -1,6 +1,7 @@
 import itertools
 
 import numpy
+from constraint import Problem
 
 from core.constraint import *
 from core.group import Group
@@ -10,7 +11,8 @@ from core.strategy import AssignmentStrategy, DictSolvingStrategy
 class InternalAssignmentStrategy(AssignmentStrategy):
     def __init__(self):
         super().__init__()
-        self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup(), SumIf()}
+        self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup(), SumIf(),
+                            RunningTotal()}
 
     def applies_to(self, constraint):
         return constraint in self.constraints
@@ -51,20 +53,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         results.append({variable.name: group.vector_subset(i, i)})
             return results
 
-        def rank(constraint, assignments, solutions):
-            solutions = []
-            for assignment in assignments:
-                y_group = assignment["Y"]
-                x_group = assignment["X"]
-                for i in range(1, y_group.vectors() + 1):  # TODO invert
-                    for j in range(1, x_group.vectors() + 1):
-                        x_v = x_group.vector_subset(j, j)
-                        y_v = y_group.vector_subset(i, i)
-                        if not x_v.overlaps_with(y_v):
-                            indices = numpy.argsort(x_group.get_vector(j)) + 1
-                            if all(indices[::-1] == y_group.get_vector(i)):
-                                solutions.append({"X": x_v, "Y": y_v})
-            return solutions
+        def rank(c: Rank, assignments, solutions):
+            def is_rank(y, x):
+                indices = numpy.argsort(x) + 1
+                return all(indices[::-1] == y)
+
+            return self._generate_test_vectors(assignments, [c.y, c.x], is_rank)
 
         def foreign_keys(constraint, assignments, solutions):
             solutions = []
@@ -113,7 +107,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return results
 
         def sum_if(c: SumIf, assignments, solutions):
-            results = []
             keys = [c.o_key, c.result, c.f_key, c.values]
 
             def is_sum_if(ok_v, r_v, fk_v, v_v):
@@ -122,13 +115,18 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     r_v[m[fk_v[i]]] -= v_v[i]
                 return all(e == 0 for e in r_v)
 
-            for assignment in assignments:
-                ok, r, fk, v = [assignment[k.name] for k in keys]
-                for vectors in itertools.product(ok, r, fk, v):
-                    if not any(g1.overlaps_with(g2) for g1, g2 in itertools.combinations(vectors, 2))\
-                            and is_sum_if(*list(map(lambda vec: vec.get_vector(1), vectors))):
-                        results.append(dict(zip([k.name for k in keys], vectors)))
-            return results
+            return self._generate_test_vectors(assignments, keys, is_sum_if)
+
+        def running_total(c: RunningTotal, assignments, solutions):
+            def is_running_diff(acc, pos, neg):
+                if not acc[0] == pos[0] - neg[0]:
+                    return False
+                for i in range(1, len(acc)):
+                    if not acc[i] == acc[i - 1] + pos[i] - neg[i]:
+                        return False
+                return True
+
+            return self._generate_test_vectors(assignments, [c.acc, c.pos, c.neg], is_running_diff)
 
         self.add_strategy(Series(), series)
         self.add_strategy(AllDifferent(), all_different)
@@ -137,6 +135,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(ForeignKey(), foreign_keys)
         self.add_strategy(Lookup(), lookups)
         self.add_strategy(SumIf(), sum_if)
+        self.add_strategy(RunningTotal(), running_total)
 
     @staticmethod
     def test_set(vector):
@@ -153,3 +152,13 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             if not vector[i] == i + 1:
                 return False
         return True
+
+    @staticmethod
+    def _generate_test_vectors(assignments, keys, test_f):
+        results = []
+        for assignment in assignments:
+            for vectors in itertools.product(*[assignment[k.name] for k in keys]):
+                if not any(g1.overlaps_with(g2) for g1, g2 in itertools.combinations(vectors, 2))\
+                        and test_f(*list(map(lambda vec: vec.get_vector(1), vectors))):
+                    results.append(dict(zip([k.name for k in keys], vectors)))
+        return results

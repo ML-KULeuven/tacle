@@ -75,10 +75,11 @@ class AllDifferent(Constraint):
 
 
 class Rank(Constraint):
+    x = Variable("X", vector=True, numeric=True)
+    y = Variable("Y", vector=True, integer=True)
+
     def __init__(self):
-        x = Variable("X", vector=True, numeric=True)
-        y = Variable("Y", vector=True, integer=True)
-        variables = [x, y]
+        variables = [self.x, self.y]
         filters = [SameLength(variables)]
         super().__init__("rank", "{Y} = RANK({X})", ConstraintSource(variables, Permutation(), {"X": "Y"}), filters)
 
@@ -123,3 +124,15 @@ class SumIf(Constraint):
                    SameTable([self.o_key, self.result]), SameTable([self.f_key, self.values]),
                    SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
         super().__init__("sum-if", "{R} = SUM({FK}={OK}, {V})", source, filters)
+
+
+class RunningTotal(Constraint):
+    acc = Variable("A", vector=True, numeric=True)
+    pos = Variable("P", vector=True, numeric=True)
+    neg = Variable("N", vector=True, numeric=True)
+
+    def __init__(self):
+        variables = [self.acc, self.pos, self.neg]
+        source = Source(variables)
+        filters = [SameLength(variables)]
+        super().__init__("running-total", "{A} = PREV({A}) + {P} - {N}", source, filters)
