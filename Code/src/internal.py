@@ -55,8 +55,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
         def rank(c: Rank, assignments, solutions):
             def is_rank(y, x):
-                indices = numpy.argsort(x) + 1
-                return all(indices[::-1] == y)
+                return (numpy.array(rank_data(x)) == y).all()
 
             return self._generate_test_vectors(assignments, [c.y, c.x], is_rank)
 
@@ -99,8 +98,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     if not pk_v.overlaps_with(pv_v):
                         pk_dict = dict(zip(pk_v.get_vector(1), pv_v.get_vector(1)))
                         for fk_v, fv_v in itertools.product(fk, fv):
-                            if not any(g1.overlaps_with(g2) for g1 in [pk_v, pv_v] for g2 in [fk_v, fv_v])\
-                                    and not fk_v.overlaps_with(fv_v)\
+                            if not any(g1.overlaps_with(g2) for g1 in [pk_v, pv_v] for g2 in [fk_v, fv_v]) \
+                                    and not fk_v.overlaps_with(fv_v) \
                                     and is_lookup(pk_dict, fk_v.get_vector(1), fv_v.get_vector(1)):
                                 result = {c.o_key: pk_v, c.o_value: pv_v, c.f_key: fk_v, c.f_value: fv_v}
                                 results.append({k.name: v for k, v in result.items()})
@@ -158,7 +157,20 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         results = []
         for assignment in assignments:
             for vectors in itertools.product(*[assignment[k.name] for k in keys]):
-                if not any(g1.overlaps_with(g2) for g1, g2 in itertools.combinations(vectors, 2))\
+                if not any(g1.overlaps_with(g2) for g1, g2 in itertools.combinations(vectors, 2)) \
                         and test_f(*list(map(lambda vec: vec.get_vector(1), vectors))):
                     results.append(dict(zip([k.name for k in keys], vectors)))
         return results
+
+
+def rank_data(a):
+    initial = sorted(a, reverse=True)
+    table = {initial[0]: 1}
+    counter = 1
+    for i in range(1, len(initial)):
+        if initial[i] == initial[i - 1]:
+            counter += 1
+        else:
+            table[initial[i]] = table[initial[i - 1]] + counter
+            counter = 1
+    return [table[e] for e in a]

@@ -81,7 +81,7 @@ class Rank(Constraint):
     def __init__(self):
         variables = [self.x, self.y]
         filters = [SameLength(variables)]
-        super().__init__("rank", "{Y} = RANK({X})", ConstraintSource(variables, Permutation(), {"X": "Y"}), filters)
+        super().__init__("rank", "{Y} = RANK({X})", Source(variables), filters)
 
 
 class ForeignKey(Constraint):
