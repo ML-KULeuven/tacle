@@ -3,8 +3,6 @@
 
 y_vector(Py+ShiftY,Wy) :- selected_Y(Vy), element_Y(Vy,Py,Wy), shift(ShiftY).
 
-
-
 sum_X(Pos,Vx,Val) :- Val = #sum{X: element_X(Vx,P,X) }, rel_X(Pos,Vx).
 
 holds(Py) :- y_vector(Py,Wy), sum_X(Py,_,Wy).

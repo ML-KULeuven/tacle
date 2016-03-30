@@ -23,14 +23,14 @@ class AspSolvingStrategy(DictSolvingStrategy):
                 if SAT:
                   selected_y, x_positions = SAT
 #                 print("X COLUMN GROUP","SAT","X",X,"X Positions: ",x_positions,"Y",Y,"selected y vector",selected_y, sep="\n")
-                  solution = {"X":X.vector_subset(min(x_positions),max(x_positions)),"Y":Y.get_vector(selected_y)}
+                  solution = {"X":X.vector_subset(min(x_positions),max(x_positions)),"Y":Y.vector_subset(selected_y,selected_y)}
                   solutions.append(solution)
               else: #X.row == True
                 SAT = self.handle_sum_column_data_in_rows(X,Y,i)
                 if SAT:
                   start,end,selected_y = SAT
 #                 print("SAT",start,end,selected_y)
-                  solution = {"X":X.vector_subset(start,end),"Y":Y.get_vector(selected_y)}
+                  solution = {"X":X.vector_subset(start,end),"Y":Y.vector_subset(selected_y,selected_y)}
                   solutions.append(solution)
             return solutions
 
@@ -44,12 +44,14 @@ class AspSolvingStrategy(DictSolvingStrategy):
                     SAT = self.handle_sum_row_data_in_column(X, Y, i)
                     if SAT:
                         start,end,selected_y = SAT
-                        solution = {"X":X.vector_subset(start,end),"Y":Y.get_vector(selected_y)}
+                        solution = {"X":X.vector_subset(start,end),"Y":Y.vector_subset(selected_y,selected_y)}
                         solutions.append(solution)
                 else:  # X.row == True
                     SAT = self.handle_sum_row_data_in_rows(X, Y, i)
                     if SAT:
-                        print("ROW DATA SAT")
+                        selected_y, x_positions = SAT
+                        solution = {"X":X.vector_subset(min(x_positions),max(x_positions)),"Y":Y.vector_subset(selected_y,selected_y)}
+                        solutions.append(solution)
             return solutions
 
         self.add_strategy(SumColumn(), sum_columns)
@@ -68,8 +70,7 @@ class AspSolvingStrategy(DictSolvingStrategy):
 
 
     def handle_sum_row_data_in_rows(self, X, Y, i):
-        # TODO SYMMETRIC CASE, NO NEED TO IMPLEMENT
-        return False
+        return self.handle_sum_column_data_in_column(X,Y,i) #symmetric in the ASP representation
 
     def process_sum_row_in_col_output(self, output_str):
         if "UNSATISFIABLE" in output_str:
@@ -174,9 +175,9 @@ class AspSolvingStrategy(DictSolvingStrategy):
         if "UNSATISFIABLE" in output:
             return None
         start = re.search(r'start\((?P<start>\d+)\)', output)
-        start = int(start.group("start"))
+        start = int(start.group("start"))+1
         end   = re.search(r'end\((?P<end>\d+)\)', output)
-        end   = int(end.group("end"))
-        selected_y =  int(re.search(r"selected_Y\(v[xy](?P<selected>\d+)\)",output).group("selected"))
+        end   = int(end.group("end"))+1
+        selected_y =  int(re.search(r"selected_Y\(v[xy](?P<selected>\d+)\)",output).group("selected"))+1
         return start,end,selected_y
 # return selected_y+1, x_positions
