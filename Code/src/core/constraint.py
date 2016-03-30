@@ -54,23 +54,29 @@ class SumRow(Constraint):
 
 
 class Permutation(Constraint):
+    x = Variable("X", numeric=True)
+
     def __init__(self):
         filters = []
-        variables = [Variable("X", numeric=True)]
+        variables = [self.x]
         super().__init__("permutation", "PERMUTATION({X})", Source(variables), filters)
 
 
 class Series(Constraint):
+    x = Variable("X", numeric=True)
+
     def __init__(self):
         filters = []
-        variables = [Variable("X", numeric=True)]
+        variables = [self.x]
         super().__init__("series", "SERIES({X})", Source(variables), filters)
 
 
 class AllDifferent(Constraint):
+    x = Variable("X", textual=True)
+
     def __init__(self):
         filters = []
-        variables = [Variable("X", textual=True)]
+        variables = [self.x]
         super().__init__("all-different", "ALLDIFFERENT({X})", Source(variables), filters)
 
 

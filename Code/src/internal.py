@@ -25,33 +25,28 @@ class InternalSolvingStrategy(DictSolvingStrategy):
     def __init__(self):
         super().__init__()
 
-        def series(constraint, assignments, solutions):
-            results = []
-            variable = constraint.get_variables()[0]
-            for group in [assignment[variable.name] for assignment in assignments]:
-                for i in range(1, group.vectors() + 1):
-                    if self.test_list(group.get_vector(i)):
-                        results.append({variable.name: group.vector_subset(i, i)})
-            return results
+        def series(c: Series, assignments, solutions):
+            def test_list(vector):
+                for i in range(len(vector)):
+                    if not vector[i] == i + 1:
+                        return False
+                return True
 
-        def all_different(constraint, assignments, solutions):
-            results = []
-            variable = constraint.get_variables()[0]
-            for group in [assignment[variable.name] for assignment in assignments]:
-                for i in range(1, group.vectors() + 1):
-                    vector = group.get_vector(i)
-                    if len(set(vector)) == len(vector):
-                        results.append({variable.name: group.vector_subset(i, i)})
-            return results
+            return self._generate_test_vectors(assignments, [c.x], test_list)
 
-        def permutation(constraint, assignments, solutions):
-            results = []
-            variable = constraint.get_variables()[0]
-            for group in [assignment[variable.name] for assignment in assignments]:
-                for i in range(1, group.vectors() + 1):
-                    if self.test_set(group.get_vector(i)):
-                        results.append({variable.name: group.vector_subset(i, i)})
-            return results
+        def all_different(c: AllDifferent, assignments, solutions):
+            return self._generate_test_vectors(assignments, [c.x], lambda v: len(set(v)) == len(v))
+
+        def permutation(c: Permutation, assignments, solutions):
+            def test_set(vector):
+                number_set = set(range(1, len(vector) + 1))
+                for i in range(len(vector)):
+                    if not vector[i] in number_set:
+                        return False
+                    number_set.remove(vector[i])
+                return True
+
+            return self._generate_test_vectors(assignments, [c.x], test_set)
 
         def rank(c: Rank, assignments, solutions):
             def is_rank(y, x):
@@ -135,22 +130,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(Lookup(), lookups)
         self.add_strategy(SumIf(), sum_if)
         self.add_strategy(RunningTotal(), running_total)
-
-    @staticmethod
-    def test_set(vector):
-        number_set = set(range(1, len(vector) + 1))
-        for i in range(len(vector)):
-            if not vector[i] in number_set:
-                return False
-            number_set.remove(vector[i])
-        return True
-
-    @staticmethod
-    def test_list(vector):
-        for i in range(len(vector)):
-            if not vector[i] == i + 1:
-                return False
-        return True
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_f):
