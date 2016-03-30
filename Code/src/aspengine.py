@@ -19,7 +19,7 @@ class AspSolvingStrategy(DictSolvingStrategy):
 
         def aggregate_columns(aggregate, constraint, assignments, solutions):
             solutions = []
-            print("Processing col sum...")
+            print("Processing col {aggregate}...".format(aggregate=aggregate))
             for i,xy_dict in enumerate(assignments):
               X = xy_dict["X"]
               Y = xy_dict["Y"]
@@ -27,20 +27,20 @@ class AspSolvingStrategy(DictSolvingStrategy):
                 SAT = self.handle_aggregate_column_data_in_column(X,Y,i,aggregate)
                 if SAT:
                   selected_y, x_positions = SAT
-#                 print("X COLUMN GROUP","SAT","X",X,"X Positions: ",x_positions,"Y",Y,"selected y vector",selected_y, sep="\n")
+                  print("X COLUMN GROUP","SAT","X",X,"X Positions: ",x_positions,"Y",Y,"selected y vector",selected_y, sep="\n")
                   solution = {"X":X.vector_subset(min(x_positions),max(x_positions)),"Y":Y.vector_subset(selected_y,selected_y)}
                   solutions.append(solution)
               else: #X.row == True
                 SAT = self.handle_aggregate_column_data_in_rows(X,Y,i,aggregate)
                 if SAT:
                   start,end,selected_y = SAT
-#                 print("SAT",start,end,selected_y)
+                  print("SAT",start,end,selected_y, X,Y)
                   solution = {"X":X.vector_subset(start,end),"Y":Y.vector_subset(selected_y,selected_y)}
                   solutions.append(solution)
             return solutions
 
         def aggregate_rows(aggregate, constraint, assignments, solutions):
-            print("Processing row sum...")
+            print("Processing row {aggregate}...".format(aggregate=aggregate))
             solutions = []
             for i, xy_dict in enumerate(assignments):
                 X = xy_dict["X"]
@@ -121,10 +121,14 @@ class AspSolvingStrategy(DictSolvingStrategy):
     def agg_data_processing(self, X, Y, i):
         tmp_filename, test_file, Xdata, Ydata = self.preprocess(self, X, Y, i)
         Xdata, Ydata = self.scale_data(X, Y, Xdata, Ydata)
-        if X != Y:
-            self.generate_Y_asp(Ydata, self.yid, test_file)
-        else:
+        if X == Y: #handle intersection case
             self.generate_Y_asp(Ydata, self.xid, test_file)
+        elif X.overlaps_with(Y):
+            self.generate_Y_asp(Ydata, self.xid, test_file,) #TODO fix it!
+        else:
+            self.generate_Y_asp(Ydata, self.yid, test_file)
+        
+#       print("TEST", X.overlaps_with(Y) and X !=Y,X.bounds, Y.bounds, "TABLE",X.table, Y.table, X, Y, np.array_equal(Xdata,Ydata))
         self.generate_X_asp(Xdata, self.xid, test_file)
         return tmp_filename, test_file, Xdata, Ydata
 
@@ -162,12 +166,13 @@ class AspSolvingStrategy(DictSolvingStrategy):
         self.call_clingo(tmp_filename, "/{aggregate}/col_{aggregate}_col_data.asp".format(aggregate=aggregate))
         with open("tmp/asp_output", "r") as output:
             output_str = output.read()
-            return self.process_sum_column_in_column_output(output_str)
+            return self.process_aggregate_column_in_column_output(output_str)
 
     @staticmethod
-    def process_sum_column_in_column_output(output):
+    def process_aggregate_column_in_column_output(output):
         if "UNSATISFIABLE" in output:
             return None
+        print(output)
         shift = re.search(r'shift\((?P<shift>\d+)\)', output)
         shift = int(shift.group("shift"))
         selected_y = int(re.search(r"selected_Y\(v[xy](?P<selected>\d+)\)", output).group("selected")) + 1 # here it starts from zero, but not in the table representation
@@ -179,6 +184,7 @@ class AspSolvingStrategy(DictSolvingStrategy):
     def process_start_end_output(output):
         if "UNSATISFIABLE" in output:
             return None
+        print(output)
         start = re.search(r'start\((?P<start>\d+)\)', output)
         start = int(start.group("start"))+1
         end   = re.search(r'end\((?P<end>\d+)\)', output)
