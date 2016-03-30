@@ -129,6 +129,9 @@ class MinizincAssignmentStrategy(DictAssignmentStrategy):
         self.add_strategy(SumColumn(), sum_columns)
         self.add_strategy(SumRow(), sum_rows)
 
+        self.add_strategy(MaxColumn(), sum_columns)
+        self.add_strategy(MaxRow(), sum_rows)
+
     def applies_to(self, constraint):
         return constraint in self.strategies
 
