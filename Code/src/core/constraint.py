@@ -53,6 +53,20 @@ class SumRow(Constraint):
         super().__init__("row-sum", "{Y} = SUM({X}, row)", Source(variables), filters)
 
 
+class MaxColumn(Constraint):
+    def __init__(self):
+        variables = [Variable("X", numeric=True), Variable("Y", vector=True, numeric=True)]
+        filters = []
+        super().__init__("column-max", "{Y} = MAX({X}, col)", Source(variables), filters)
+
+
+class MaxRow(Constraint):
+    def __init__(self):
+        variables = [Variable("X", numeric=True), Variable("Y", vector=True, numeric=True)]
+        filters = []
+        super().__init__("row-max", "{Y} = MAX({X}, row)", Source(variables), filters)
+
+
 class Permutation(Constraint):
     def __init__(self):
         filters = []

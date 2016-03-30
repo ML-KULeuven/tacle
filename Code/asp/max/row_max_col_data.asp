@@ -9,17 +9,19 @@ selected_X(V) :-  rel_X(Pos,V), start(S0), end(S1), Pos >= S0, Pos <= S1.
 
 y_vector(Py,Wy) :- selected_Y(Vy), element_Y(Vy,Py,Wy).
 
-x_sum(Pos,Val) :- Val = #sum{ W,V: element_X(V,Pos,W), selected_X(V) }, y_vector(Pos,_).
+x_max(Pos,Val) :- Val = #max{ W,V: element_X(V,Pos,W), selected_X(V) }, y_vector(Pos,_).
 
 :- selected_Y(V), selected_X(V).
 
-holds(Pos) :- x_sum(Pos,Val), y_vector(Pos,Val).
+holds(Pos) :- x_max(Pos,Val), y_vector(Pos,Val).
 
 :- y_vector(Pos,_), not holds(Pos).
+
+#maximize{1,V:selected_X(V)}.
 
 #show selected_Y/1.
 #show selected_X/1.
 #show start/1.
 #show end/1.
-#show x_sum/2.
+#show x_max/2.
 #show holds/1.
