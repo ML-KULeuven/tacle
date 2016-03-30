@@ -8,8 +8,14 @@ element_X(vx1,1,7).  element_X(vx1,2,8).  element_X(vx1,3,9). element_X(vx1,4,10
 element_X(vx2,1,7).  element_X(vx2,2,7).  element_X(vx2,3,9). element_X(vx2,4,11).
 element_X(vx3,1,1).  element_X(vx3,2,1).  element_X(vx3,3,1). element_X(vx3,4,1).
 
+range(1..3).
+1 { start(X) : range(X) } 1.
+1 { end(X)   : range(X) } 1.
+
+:- start(S), end(S).
+
 1 { selected_Y(V) : rel_Y(_,V) } 1.
-0 { selected_X(V)} 1 :-  rel_X(_,V) .
+selected_X(V) :-  rel_X(Pos,V), start(S0), end(S1), Pos >= S0, Pos <= S1.
 
 :- selected_Y(V), selected_X(V).
 
@@ -22,6 +28,8 @@ holds(Py) :- y_vector(Py,Wy), sum_X(Py,Wy).
 :- y_vector(Py, _), not holds(Py).
 
 #show sum_X/2.
+#show start/1.
+#show end/1.
 #show y_vector/2.
 #show selected_Y/1.
 #show selected_X/1.

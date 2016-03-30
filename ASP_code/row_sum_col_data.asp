@@ -15,8 +15,15 @@ element_Y(vx5,1,387). element_Y(vx5,2,386).  element_Y(vx5,3,203). element_Y(vx5
 element_Y(vx6,1,1514).element_Y(vx6,2,1551). element_Y(vx6,3,691). element_Y(vx6,4,392).
 element_Y(vx7,1,2).   element_Y(vx7,2,1).    element_Y(vx7,3,3).   element_Y(vx7,4,4).
 
+range(0..6).
+1 { start(X) : range(X) } 1.
+1 { end(X)   : range(X) } 1.
+
+:- start(S), end(S).
+
+selected_X(V) :-  rel_X(Pos,V), start(S0), end(S1), Pos >= S0, Pos <= S1.
+
 1 { selected_Y(V) : rel_Y(_,V) } 1.
-{ selected_X(V) } :- rel_X(_,V).
 
 y_vector(Py,Wy) :- selected_Y(Vy), element_Y(Vy,Py,Wy).
 
@@ -30,5 +37,7 @@ holds(Pos) :- x_sum(Pos,Val), y_vector(Pos,Val).
 
 #show selected_Y/1.
 #show selected_X/1.
+#show start/1.
+#show end/1.
 #show x_sum/2.
 #show holds/1.
