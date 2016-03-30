@@ -105,8 +105,11 @@ class AspSolvingStrategy(DictSolvingStrategy):
     @staticmethod
     def scale_data(X, Y, Xdata, Ydata):
         if Y.dtype == GType.float or X.dtype == GType.float:
-            Ydata = 100 * Ydata.astype(np.float32)
-            Xdata = 100 * Xdata.astype(np.float32)
+            X_digits_max = np.max(compute_digits_after_period(Xdata.flatten()))
+            Y_digits_max = np.max(compute_digits_after_period(Ydata.flatten()))
+            scale = np.power(10,max(X_digits_max,Y_digits_max))
+            Ydata = scale * Ydata.astype(np.float32)
+            Xdata = scale * Xdata.astype(np.float32)
             Ydata = Ydata.astype(int)
             Xdata = Xdata.astype(int)
             return Xdata, Ydata
@@ -180,4 +183,14 @@ class AspSolvingStrategy(DictSolvingStrategy):
         end   = int(end.group("end"))+1
         selected_y =  int(re.search(r"selected_Y\(v[xy](?P<selected>\d+)\)",output).group("selected"))+1
         return start,end,selected_y
+
+def compute_digits_after_period(number):
+   str_num = str(number)
+   if "." not in str_num:
+       return 0
+   before,after = str_num.split(".")
+   return len(after)
+
+compute_digits_after_period = np.vectorize(compute_digits_after_period)
+    
 # return selected_y+1, x_positions
