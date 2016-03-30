@@ -157,7 +157,7 @@ class AspSolvingStrategy(DictSolvingStrategy):
 
         test_file.close()
 
-        system("clingo {tmp_filename} asp/check_sum.asp 0 > tmp/asp_output".format(tmp_filename=tmp_filename))
+        system("clingo {tmp_filename} asp/col_sum_col_data.asp 0 > tmp/asp_output".format(tmp_filename=tmp_filename))
         with open("tmp/asp_output", "r") as output:
             output_str = output.read()
             return self.process_sum_column_in_column_output(output_str)

@@ -45,8 +45,8 @@ def get_manager():
     manager.add_solving_strategy(InternalSolvingStrategy())
     manager.add_assignment_strategy(IdpAssignmentStrategy())
     manager.add_assignment_strategy(MinizincAssignmentStrategy())
-    manager.add_solving_strategy(AspSolvingStrategy())
-#   manager.add_solving_strategy(MinizincSolvingStrategy())
+#   manager.add_solving_strategy(AspSolvingStrategy())
+    manager.add_solving_strategy(MinizincSolvingStrategy())
     return manager
 
 
