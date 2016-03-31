@@ -4,6 +4,10 @@
 \usepackage{latexsym}
 \usepackage{xspace}
 \usepackage{cite}
+\usepackage[sorting=none]{biblatex}
+\bibliography{references}
+\bibliographystyle{ecai}
+
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey} #1}\xspace}
 
@@ -17,7 +21,6 @@
 \author{Name1 Surname1 \and Name2 Surname2 \and Name3 Surname3 \institute{KU Leuven,Belgium, email: firstname.lastname@kuleuven} }
 
 \maketitle
-\bibliographystyle{ecai}
 
 \begin{abstract}
   abstract
@@ -37,6 +40,6 @@ modelseeker \cite{modelseeker}
 
 claudien \cite{claudien}
 
-\bibliography{references}
+\printbibliography
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
