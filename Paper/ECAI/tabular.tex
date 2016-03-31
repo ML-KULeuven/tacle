@@ -3,10 +3,8 @@
 \usepackage{graphicx}
 \usepackage{latexsym}
 \usepackage{xspace}
-\usepackage{cite}
-\usepackage[sorting=none]{biblatex}
-\bibliography{references}
-\bibliographystyle{ecai}
+\usepackage[numbers]{natbib}
+\usepackage{notoccite}
 
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey} #1}\xspace}
@@ -29,7 +27,7 @@
 \sergey{we need structure} test
 
 \section{Related Work}
-\sergey{what else should be in the related work?}
+\sergey{ECAI reference style file ignores their guideline and their guideline ignores what is written in the guidelines!}
 flashfill, flashextract, flashmeta \cite{flashfill,flashextract,flashmeta}
 
 sketch \cite{sketch}
@@ -40,6 +38,7 @@ modelseeker \cite{modelseeker}
 
 claudien \cite{claudien}
 
-\printbibliography
+\bibliographystyle{ecai}
+\bibliography{references}
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
