@@ -16,7 +16,7 @@
 
 \title{Tabular Constraint Learning}
 
-\author{Name1 Surname1 \and Name2 Surname2 \and Name3 Surname3 \institute{KU Leuven,Belgium, email: firstname.lastname@kuleuven} }
+\author{Name1 Surname1 \and Name2 Surname2 \and Name3 Surname3 \institute{KU Leuven, Belgium, email: firstname.lastname@kuleuven} }
 
 \maketitle
 
@@ -29,14 +29,39 @@
 \section{Related Work}
 \sergey{ECAI reference style file ignores their guideline and their guideline ignores what is written in the guidelines!}
 flashfill, flashextract, flashmeta \cite{flashfill,flashextract,flashmeta}
+\begin{itemize}
+  \item their supervised vs our unsupervised approach
+  \item they look for a single ``smallest'' solution, we enumerate them all
+  \item they are looking for a function, we solve constraint satisfaction problems
+  \item we do not assume classic row based data layout, we work in the tabular setting
+\end{itemize}
 
 sketch \cite{sketch}
+\begin{itemize}
+  \item look for a constant that would fill in the gap in a program
+  \item tailored for programming languages
+  \item similar to model checking
+  \item looks for a single solution
+  \item similar to constraint satisfaction and sat, where one is interested in a single assignment that works for any potential input
+\end{itemize}
 
 tabular \cite{tabular}
+\begin{itemize}
+  \item language based on the excel tables that specify probabilistic models
+  \item a system for probabilistic inference and similarity mostly in the usage of excel
+  \item probabilistic constraint satisfaction (?) and graphical models
+  \item single solution again
+\end{itemize}
 
-modelseeker \cite{modelseeker}
+modelseeker \cite{modelseeker} \sergey{Samuel, Luc, probably you would need elaborate here more in details}
 
-claudien \cite{claudien}
+\begin{itemize}
+  \item not designed for excel-like data representation (type consistency, groups, etc)
+  \item not designed for excel-like constraints (lookups, conditional ifs, etc)
+  \item does not support user extensions (?)
+\end{itemize
+
+claudien \cite{claudien} \sergey{Samuel, Luc, you would need to help with this one}
 
 \bibliographystyle{ecai}
 \bibliography{references}
