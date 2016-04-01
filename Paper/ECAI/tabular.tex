@@ -24,9 +24,49 @@
   abstract
   \end{abstract}
 \section{Introduction}
-\sergey{we need structure} test
+\sergey{bullet points for luc to start introduction}\\
+\textbf{Key question}:\\
+Can we discover or reconstruct structural relations in flat tabular spreadsheet data? [in a general way that allows declarative specification of constraints to discover]\
+
+
+\textbf{Motivation}:
+\begin{itemize}
+  \item File generated from model, model got lost - > reconstruct
+  \item Constraint programming is hard - is Excel hard?
+  \item Avoid manual analysis, provide selection of constraints
+  \item Error checking
+  \item Completion, gain speed and insights (Complicated constraints, also complicated to verify, too much output)
+\end{itemize}
+
+\textbf{Novelty:}
+\begin{itemize}
+  \item Unsupervised setting (contrary to flashfill, etc)
+  \item Numeric, different constraints (contrary to single textual function solution in flashfill, etc)
+  \item Data format (2D) -- data is no longer in rows like a classic ML or DM settings
+  \item Declarative, general / modular, stacking of constraint problems 
+\end{itemize}
+
+\sergey{we need structure here} 
+
+\textbf{Approach}
+\begin{itemize}
+  \item Notation
+  \item Algorithm (select constraints, find assignments, find solutions)
+\end{itemize}
+
+{\bfseries 
+  Experimental questions
+}
+\begin{itemize}
+  \item  How accurate are we? (Accuracy / recall)
+  \item  How fast are we and which factors affect the runtime (how)?
+  \item  How general is our approach, what limitations are there?
+\end{itemize}
+
 
 \section{Related Work}
+\sergey{key bullet points for Luc and possibly Samuel and me to make related work section}
+
 \sergey{ECAI reference style file ignores their guideline and their guideline ignores what is written in the guidelines!}
 flashfill, flashextract, flashmeta \cite{flashfill,flashextract,flashmeta}
 \begin{itemize}
