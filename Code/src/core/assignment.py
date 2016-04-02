@@ -1,16 +1,20 @@
 from typing import List
 
-from constraint import Problem, FunctionConstraint, RecursiveBacktrackingSolver
-from core.group import Group
+from constraint import Problem
+from core.group import Group, GType
 
 
 class Variable:
-    def __init__(self, name, vector=False, numeric=False, textual=False, integer=False):
+    def __init__(self, name, vector=False, types={GType.int, GType.float, GType.string}):
         self.name = name
         self.vector = vector
-        self.numeric = numeric
-        self.integer = integer
-        self.textual = textual
+        if len(types) == 0:
+            raise Exception("At least one type must be supported")
+        self._types = types
+
+    @property
+    def types(self):
+        return self._types
 
     def __str__(self):
         return self.name + "[Var]"
@@ -22,13 +26,13 @@ class Variable:
         return self.vector
 
     def is_numeric(self):
-        return self.numeric
-
-    def is_integer(self):
-        return self.integer
+        return GType.string not in self.types
 
     def is_textual(self):
-        return self.textual
+        return len(self.types) == 1 and GType.string in self.types
+
+    def is_integer(self):
+        return len(self.types) == 1 and GType.int in self.types
 
 
 class Source:
@@ -42,26 +46,17 @@ class Source:
     def candidates(self, groups, solutions, filters):
         return self._complete([{}], self.variables, groups, filters)
 
-    @staticmethod
-    def _complete(assignments, v_unassigned, groups, filters):
+    def _complete(self, assignments, v_unassigned, groups, filters):
         result = []
-        for assignment in assignments:
+
+        def try_assignment():
             problem = Problem()
 
-            for variable in assignment:
-                problem.addVariable(variable, [assignment[variable]])
-
-            for variable in v_unassigned:
-                domain = groups
-                if variable.is_numeric():
-                    domain = list(filter(Group.is_numeric, domain))
-                if variable.is_integer():
-                    domain = list(filter(Group.is_integer, domain))
-                if variable.is_textual():
-                    domain = list(filter(Group.is_textual, domain))
-                domain = list(domain)
+            for variable in self.variables:
+                candidates = [assignment[variable.name]] if variable.name in assignment else groups
+                domain = list([g for g in candidates if g.dtype in variable.types])
                 if len(domain) == 0:
-                    return []
+                    return variable.name in assignment, []
                 problem.addVariable(variable.name, domain)
 
             for f in filters:
@@ -72,11 +67,14 @@ class Source:
 
                 problem.addConstraint(c_j(f, variables), variables)
 
-            result += list(problem.getSolutions())
+            return True, list(problem.getSolutions())
+
+        for assignment in assignments:
+            resume, solutions = try_assignment()
+            if not resume:
+                return []
+            result += solutions
         return result
-        #return [dict({v_unassigned[i]: l[i] for i in range(len(v_unassigned))}, **assignment)
-        #        for l in itertools.permutations(groups, len(v_unassigned))
-        #        for assignment in assignments]
 
 
 class ConstraintSource(Source):
@@ -126,6 +124,11 @@ class SameTable(Filter):
 class SameOrientation(Filter):
     def test(self, assignment):
         return self.test_same(assignment, lambda g: g.row)
+
+
+class SameType(Filter):
+    def test(self, assignment):
+        return self.test_same(assignment, lambda g: g.dtype)
 
 
 class NotSubgroup(Filter):

@@ -1,7 +1,6 @@
 import itertools
 
 import numpy
-from constraint import Problem
 
 from core.constraint import *
 from core.group import Group
@@ -12,7 +11,7 @@ class InternalAssignmentStrategy(AssignmentStrategy):
     def __init__(self):
         super().__init__()
         self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup(), SumIf(),
-                            RunningTotal()}
+                            RunningTotal(), ForeignProduct()}
 
     def applies_to(self, constraint):
         return constraint in self.constraints
@@ -107,7 +106,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 m = dict(zip(ok_v, range(len(ok_v))))
                 for i in range(len(fk_v)):
                     r_v[m[fk_v[i]]] -= v_v[i]
-                return all(e == 0 for e in r_v)
+                return all(equal(e, 0) for e in r_v)
 
             return self._generate_test_vectors(assignments, keys, is_sum_if)
 
@@ -116,11 +115,24 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 if not acc[0] == pos[0] - neg[0]:
                     return False
                 for i in range(1, len(acc)):
-                    if not acc[i] == acc[i - 1] + pos[i] - neg[i]:
+                    if not equal(acc[i], acc[i - 1] + pos[i] - neg[i]):
                         return False
                 return True
 
             return self._generate_test_vectors(assignments, [c.acc, c.pos, c.neg], is_running_diff)
+
+        def foreign_product(c: ForeignProduct, assignments, solutions):
+            keys = [c.o_key, c.f_key, c.result, c.o_value, c.f_value]
+
+            # TODO incremental temp structures
+            def is_foreign_product(ok, fk, r, ov, fv):
+                m = dict(zip(ok, ov))
+                for i in range(len(fk)):
+                    if not equal(r[i], m[fk[i]] * fv[i]):
+                        return False
+                return True
+
+            return self._generate_test_vectors(assignments, keys, is_foreign_product)
 
         self.add_strategy(Series(), series)
         self.add_strategy(AllDifferent(), all_different)
@@ -130,6 +142,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(Lookup(), lookups)
         self.add_strategy(SumIf(), sum_if)
         self.add_strategy(RunningTotal(), running_total)
+        self.add_strategy(ForeignProduct(), foreign_product)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_f):
@@ -153,3 +166,11 @@ def rank_data(a):
             table[initial[i]] = table[initial[i - 1]] + counter
             counter = 1
     return [table[e] for e in a]
+
+
+def equal(x, y):
+    delta = pow(10, -10)
+    if isinstance(x, float) or isinstance(y, float):
+        return abs(x - y) < delta
+    else:
+        return x == y
