@@ -121,14 +121,14 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return self._generate_test_vectors(assignments, [c.acc, c.pos, c.neg], is_running_diff)
 
-        def foreign_product(c: ForeignProduct, assignments, solutions):
+        def foreign_operation(c: ForeignOperation, assignments, solutions):
             keys = [c.o_key, c.f_key, c.result, c.o_value, c.f_value]
 
             # TODO incremental temp structures
             def is_foreign_product(ok, fk, r, ov, fv):
                 m = dict(zip(ok, ov))
                 for i in range(len(fk)):
-                    if not equal(r[i], m[fk[i]] * fv[i]):
+                    if not equal(r[i], c.operator(fv[i], m[fk[i]])):
                         return False
                 return True
 
@@ -142,7 +142,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(Lookup(), lookups)
         self.add_strategy(SumIf(), sum_if)
         self.add_strategy(RunningTotal(), running_total)
-        self.add_strategy(ForeignProduct(), foreign_product)
+        self.add_strategy(ForeignProduct(), foreign_operation)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_f):

@@ -150,14 +150,15 @@ class RunningTotal(Constraint):
         super().__init__("running-total", "{A} = PREV({A}) + {P} - {N}", source, filters)
 
 
-class ForeignProduct(Constraint):
+class ForeignOperation(Constraint):
     f_key = Variable("FK", vector=True, types=discrete)
     o_key = Variable("OK", vector=True, types=discrete)
     result = Variable("R", vector=True, types=numeric)
     f_value = Variable("FV", vector=True, types=numeric)
     o_value = Variable("OV", vector=True, types=numeric)
 
-    def __init__(self):
+    def __init__(self, operator):
+        self._operator = operator
         foreign = [self.f_key, self.result, self.f_value]
         original = [self.o_key, self.o_value]
         variables = foreign + original
@@ -166,3 +167,12 @@ class ForeignProduct(Constraint):
         filters = [SameLength(foreign), SameTable(foreign), SameOrientation(foreign),
                    SameLength(original), SameTable(original), SameOrientation(original)]
         super().__init__("foreign-product", "{R} = PRODUCT({FV}, {FK}={OK} | {OV})", source, filters)
+
+    @property
+    def operator(self):
+        return self._operator
+
+
+class ForeignProduct(ForeignOperation):
+    def __init__(self):
+        super().__init__(lambda fv, ov: fv * ov)
