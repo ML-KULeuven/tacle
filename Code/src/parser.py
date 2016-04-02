@@ -18,6 +18,7 @@ def get_groups_tables(csv_file, groups_file=None):
     if groups_file is None:
         type_data = np.vectorize(lambda x: int(np.floor(Group._infer_type_scalar(x) / 2) * 2))(data)
         t = list(detect_tables(data, type_data))
+        print("Detected table areas: {}".format(t))
         t = [(b, Table("T{}".format(i + 1), Bounds(b).subset(data))) for i, b in enumerate(t)]
         return detect_groups(data, type_data, t)
     else:
@@ -62,6 +63,7 @@ def detect_tables(data, type_data):
             line.append([row, row + 1, rect, cols])
         rectangles.append(line)
 
+    rectangles.append([])
     saved = []
     current = {(rec[2], rec[3]): rec for rec in rectangles[0]}
     for i in range(1, len(rectangles)):
