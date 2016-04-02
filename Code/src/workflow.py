@@ -12,9 +12,9 @@ from minizinc import MinizincSolvingStrategy
 from parser import get_groups_tables
 
 
-def main(csv_file, groups_file):
+def main(csv_file, groups_file=None):
     manager = get_manager()
-    groups = get_groups_tables(csv_file, groups_file)
+    groups = list(get_groups_tables(csv_file, groups_file))
 
     solutions = Solutions()
     t_origin = time.time()
@@ -54,7 +54,7 @@ def get_manager():
 def arg_parser():
     p = argparse.ArgumentParser()
     p.add_argument('csv_file')
-    p.add_argument('groups_file')
+    p.add_argument('-g', '--groups_file', default=None)
     return p
 
 

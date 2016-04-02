@@ -1,10 +1,13 @@
 from enum import Enum
 
 import numpy
+import re
 
 
 def null(var, val):
     return val if var is None else var
+
+percent_pattern = re.compile(r"\d+(\.\d+)?%")
 
 
 class Bounds:
@@ -50,11 +53,11 @@ class Bounds:
 
 
 class Table:
-    def __init__(self, name, data, rows, columns):
+    def __init__(self, name, data):
         self.name = name
         self.data = data
-        self.rows = rows
-        self.columns = columns
+        self.rows = numpy.size(data, 0)
+        self.columns = numpy.size(data, 1)
 
     def __repr__(self):
         repr_str = "Data:\n" + str(self.data) + "\nRows: " + str(self.rows) + "\nColumn: " + str(self.columns)
@@ -74,7 +77,8 @@ def cast(gtype: GType, value):
     if gtype == GType.int:
         return int(value)
     elif gtype == GType.float:
-        return float(value)
+        match = percent_pattern.match(str(value))
+        return float(value) if not match else float(str(value).replace("%", ""))
     elif gtype == GType.string:
         return str(value)
     raise ValueError("Unexpected GType: " + str(gtype))
@@ -110,6 +114,8 @@ class Group:
 
     @staticmethod
     def _infer_type_scalar(val):
+        if percent_pattern.match(str(val)):
+            return 1
         try:
             val = int(val)
             return 0
