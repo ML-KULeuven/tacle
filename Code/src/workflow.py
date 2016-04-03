@@ -20,7 +20,7 @@ def main(csv_file, groups_file=None):
     t_origin = time.time()
 
     constraints = [Permutation(), Series(), AllDifferent(), SumColumn(), SumRow(), Rank(), ForeignKey(), Lookup(),
-                   SumIf(), RunningTotal(), ForeignProduct()]
+                   SumIf(), MaxIf(), RunningTotal(), ForeignProduct()]
     for constraint in constraints:
         if not manager.supports_assignments_for(constraint):
             print("No assignment strategy for {}\n".format(constraint))

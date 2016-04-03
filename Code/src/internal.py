@@ -10,7 +10,7 @@ from core.strategy import AssignmentStrategy, DictSolvingStrategy
 class InternalAssignmentStrategy(AssignmentStrategy):
     def __init__(self):
         super().__init__()
-        self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup(), SumIf(),
+        self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup(), SumIf(), MaxIf(),
                             RunningTotal(), ForeignProduct()}
 
     def applies_to(self, constraint):
@@ -99,16 +99,19 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                                 results.append({k.name: v for k, v in result.items()})
             return results
 
-        def sum_if(c: SumIf, assignments, solutions):
+        def conditional_aggregate(c: ConditionalAggregate, assignments, solutions):
             keys = [c.o_key, c.result, c.f_key, c.values]
 
-            def is_sum_if(ok_v, r_v, fk_v, v_v):
+            def is_aggregate(ok_v, r_v, fk_v, v_v):
                 m = dict(zip(ok_v, range(len(ok_v))))
+                acc = [None] * len(r_v)
                 for i in range(len(fk_v)):
-                    r_v[m[fk_v[i]]] -= v_v[i]
-                return all(equal(e, 0) for e in r_v)
+                    key = m[fk_v[i]]
+                    acc[key] = v_v[i] if acc[key] is None else c.operator(acc[key], v_v[i])
+                acc = [c.default if acc[i] is None else acc[i] for i in range(len(acc))]
+                return all(equal(r_v[i], acc[i]) for i in range(len(r_v)))
 
-            return self._generate_test_vectors(assignments, keys, is_sum_if)
+            return list(self._generate_test_vectors(assignments, keys, is_aggregate))
 
         def running_total(c: RunningTotal, assignments, solutions):
             def is_running_diff(acc, pos, neg):
@@ -124,7 +127,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         def foreign_operation(c: ForeignOperation, assignments, solutions):
             keys = [c.o_key, c.f_key, c.result, c.o_value, c.f_value]
 
-            # TODO incremental temp structures
             def is_foreign_product(ok, fk, r, ov, fv):
                 m = dict(zip(ok, ov))
                 for i in range(len(fk)):
@@ -140,7 +142,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(Rank(), rank)
         self.add_strategy(ForeignKey(), foreign_keys)
         self.add_strategy(Lookup(), lookups)
-        self.add_strategy(SumIf(), sum_if)
+        self.add_strategy(SumIf(), conditional_aggregate)
+        self.add_strategy(MaxIf(), conditional_aggregate)
         self.add_strategy(RunningTotal(), running_total)
         self.add_strategy(ForeignProduct(), foreign_operation)
 

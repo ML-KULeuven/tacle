@@ -122,20 +122,40 @@ class Lookup(Constraint):
         super().__init__("lookup", "{FV} = LOOKUP({FK}, {OK}, {OV})", source, filters)
 
 
-class SumIf(Constraint):
+class ConditionalAggregate(Constraint):
     o_key = Variable("OK", vector=True, types=textual)
     result = Variable("R", vector=True, types=numeric)
     f_key = Variable("FK", vector=True, types=textual)
     values = Variable("V", vector=True, types=numeric)
 
-    def __init__(self):
+    def __init__(self, name: str, operator, default=0):
+        self._default = default
+        self._operator = operator
         variables = [self.o_key, self.result, self.f_key, self.values]
         foreign_key = ForeignKey()
         source = ConstraintSource(variables, foreign_key, {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"})
         filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]),
                    SameTable([self.o_key, self.result]), SameTable([self.f_key, self.values]),
                    SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
-        super().__init__("sum-if", "{R} = SUM({FK}={OK}, {V})", source, filters)
+        super().__init__("{}-if".format(name.lower()), "{R} = " + name.upper() + "({FK}={OK}, {V})", source, filters)
+
+    @property
+    def operator(self):
+        return self._operator
+
+    @property
+    def default(self):
+        return self._default
+
+
+class SumIf(ConditionalAggregate):
+    def __init__(self):
+        super().__init__("SUM", lambda acc, new: acc + new)
+
+
+class MaxIf(ConditionalAggregate):
+    def __init__(self):
+        super().__init__("MAX", lambda acc, new: max(acc, new))
 
 
 class RunningTotal(Constraint):
@@ -157,7 +177,7 @@ class ForeignOperation(Constraint):
     f_value = Variable("FV", vector=True, types=numeric)
     o_value = Variable("OV", vector=True, types=numeric)
 
-    def __init__(self, operator):
+    def __init__(self, name: str, operator):
         self._operator = operator
         foreign = [self.f_key, self.result, self.f_value]
         original = [self.o_key, self.o_value]
@@ -166,7 +186,8 @@ class ForeignOperation(Constraint):
         source = ConstraintSource(variables, foreign_key, {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"})
         filters = [SameLength(foreign), SameTable(foreign), SameOrientation(foreign),
                    SameLength(original), SameTable(original), SameOrientation(original)]
-        super().__init__("foreign-product", "{R} = PRODUCT({FV}, {FK}={OK} | {OV})", source, filters)
+        super().__init__("foreign-" + name.lower(), "{R} = " + name.upper() + "({FV}, {FK}={OK} | {OV})", source,
+                         filters)
 
     @property
     def operator(self):
@@ -175,4 +196,4 @@ class ForeignOperation(Constraint):
 
 class ForeignProduct(ForeignOperation):
     def __init__(self):
-        super().__init__(lambda fv, ov: fv * ov)
+        super().__init__("PRODUCT", lambda fv, ov: fv * ov)

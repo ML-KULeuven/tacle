@@ -73,3 +73,26 @@ class AssignmentGenerator:
         self.add_strategy(Rank(), rank)
         self.add_strategy(ForeignKey(), foreign_keys)
         self.add_strategy(Lookup(), lookups)
+
+        ## Complex generate test
+
+
+            @staticmethod
+    def _test(assignments, keys, test_f):
+        for assignment in assignments:
+            yield from InternalSolvingStrategy._generate_test_vectors_rec(assignment, [k if isinstance(k, tuple) else ([k], lambda x: x.get_vector(1)) for k in keys], {}, [], test_f)
+
+    @staticmethod
+    def _generate_test_vectors_rec(assignment, keys, vectors, inputs, test_f):
+        if len(keys) == 0:
+            if test_f(*inputs):
+                yield(vectors)
+        else:
+            (key_set, transformer) = keys[0]
+            for choices in itertools.product(*[assignment[k.name] for k in key_set]):
+                if not any(g1.overlaps_with(g2) for g1, g2 in itertools.combinations(list(vectors.values()) + list(choices), 2)):
+                    new_vectors = {k: v for k, v in vectors.items()}
+                    for k, v in zip(key_set, choices):
+                        new_vectors[k.name] = v
+                    new_inputs = inputs + [transformer(*choices)]
+                    yield from InternalSolvingStrategy._generate_test_vectors_rec(assignment, keys[1:], new_vectors, new_inputs, test_f)
