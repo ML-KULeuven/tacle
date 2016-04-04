@@ -126,8 +126,8 @@ class MinizincAssignmentStrategy(DictAssignmentStrategy):
             # TODO Implementation not finished
             return self._get_assignments(groups, constraint, local("minizinc/group/rank.mzn"))
 
-        self.add_strategy(SumColumn(), sum_columns) # probably, sum_columns should be renamed into binary assignments?
-        self.add_strategy(SumRow(), sum_rows)
+        self.add_strategy(ColumnSum(), sum_columns) # probably, sum_columns should be renamed into binary assignments?
+        self.add_strategy(RowSum(), sum_rows)
 
         self.add_strategy(MaxColumn(), sum_columns) 
         self.add_strategy(MaxRow(), sum_rows)
@@ -176,8 +176,8 @@ class MinizincSolvingStrategy(DictSolvingStrategy):
             results = [self._find_constraints(assignment, filename, constraint) for assignment in assignments]
             return [item for solutions in results for item in solutions]
 
-        self.add_strategy(SumColumn(), sum_columns)
-        self.add_strategy(SumRow(), sum_rows)
+        self.add_strategy(ColumnSum(), sum_columns)
+        self.add_strategy(RowSum(), sum_rows)
         self.add_strategy(SumIf(), sum_if)
 
     @staticmethod

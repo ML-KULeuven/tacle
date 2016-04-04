@@ -1,6 +1,9 @@
+from enum import Enum
 from typing import List, Dict
 
-from core.assignment import Source, Filter, Variable, SameLength, ConstraintSource, NotSubgroup, SameTable, \
+import numpy
+
+from core.assignment import Source, Filter, Variable, SameLength, ConstraintSource, SameTable, \
     SameOrientation, SameType, SizeFilter, Not
 from core.group import GType, Group, Orientation
 
@@ -45,12 +48,28 @@ textual = {GType.string}
 discrete = {GType.string, GType.int}
 
 
-class Sum(Constraint):
+class Operation(Enum):
+    SUM = numpy.sum,
+    PRODUCT = numpy.product,
+    MAX = numpy.max,
+    MIN = numpy.min,
+    AVERAGE = numpy.average,
+
+    def __init__(self, f):
+        self._f = f
+
+    @property
+    def f(self):
+        return self._f
+
+
+class Aggregate(Constraint):
     x = Variable("X", types=numeric)
     y = Variable("Y", vector=True, types=numeric)
 
-    def __init__(self, orientation: Orientation):
+    def __init__(self, orientation: Orientation, operation: Operation):
         self._orientation = orientation
+        self._operation = operation
         size = Group.columns if orientation == Orientation.VERTICAL else Group.rows
         o_string = "col" if orientation == Orientation.VERTICAL else "row"
         variables = [self.x, self.y]
@@ -69,44 +88,24 @@ class Sum(Constraint):
     def orientation(self):
         return self._orientation
 
+    @property
+    def operation(self):
+        return self._operation
 
-class ColumnSum(Sum):
+
+class ColumnSum(Aggregate):
     def __init__(self):
-        super().__init__(Orientation.VERTICAL)
+        super().__init__(Orientation.VERTICAL, Operation.SUM)
 
-# constraint not g_row_orientation[assign[1]] -> g_length[assign[2]] = g_rows[assign[1]];
-# constraint g_row_orientation[assign[1]] -> g_length[assign[2]] <= g_rows[assign[1]];
-# constraint g_columns[assign[1]] > 1;
-# constraint forall(v in 1..nV)(v_numeric[v] -> g_numeric[assign[v]]);
+
+class RowSum(Aggregate):
+    def __init__(self):
+        super().__init__(Orientation.HORIZONTAL, Operation.SUM)
+
 
 # TODO Same table, different orientation, overlapping bounds => prune assignment already
 
 # TODO Subset -> Fuzzy lookup
-
-
-class SumColumn(Constraint):
-    x = Variable("X", types=numeric)
-    y = Variable("Y", vector=True, types=numeric)
-
-    def __init__(self):
-        def test(_, a: Dict[str, Group]):
-            return a[self.y.name].length() == a[self.x.name].columns() if a[self.x.name].row \
-                else a[self.y.name].length() <= a[self.x.name].columns()
-
-        filter_class = type("SumColumnLength", (Filter,), {"test": test})
-        variables = [self.x, self.y]
-        filters = [SizeFilter([self.x], rows=2), filter_class(variables)]
-        super().__init__("column-sum", "{Y} = SUM({X}, col)", Source(variables), filters)
-
-
-class SumRow(Constraint):
-    x = Variable("X", types=numeric)
-    y = Variable("Y", vector=True, types=numeric)
-
-    def __init__(self):
-        variables = [self.x, self.y]
-        filters = []
-        super().__init__("row-sum", "{Y} = SUM({X}, row)", Source(variables), filters)
 
 
 class MaxColumn(Constraint):

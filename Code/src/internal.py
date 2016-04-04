@@ -1,18 +1,16 @@
 import itertools
 
-import numpy
-
 from core.constraint import *
 from core.group import Group
 from core.solutions import Solutions
-from core.strategy import AssignmentStrategy, DictSolvingStrategy, DictAssignmentStrategy
+from core.strategy import AssignmentStrategy, DictSolvingStrategy
 
 
 class InternalCSPStrategy(AssignmentStrategy):
     def __init__(self):
         super().__init__()
         self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup(), FuzzyLookup(),
-                            SumIf(), MaxIf(), RunningTotal(), ForeignProduct(), SumColumn(), ColumnSum()}
+                            SumIf(), MaxIf(), RunningTotal(), ForeignProduct(), ColumnSum(), RowSum()}
 
     def applies_to(self, constraint):
         return constraint in self.constraints
@@ -160,33 +158,10 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return self._generate_test_vectors(assignments, keys, is_foreign_product)
 
-        def sum_column(c: SumColumn, assignments: List[Dict[str, Group]], solutions: Solutions):
-            solutions = []
-            for assignment in assignments:
-                x_group, y_group = (assignment[k.name] for k in [c.x, c.y])
-                assert isinstance(x_group, Group)
-                assert isinstance(y_group, Group)
-                y_length = y_group.length()
-                if x_group.row:
-                    for x1 in range(x_group.rows() - 1):
-                        for x2 in range(x1 + 2, x_group.rows() + 1):
-                            sums = numpy.sum(x_group.data[x1:x2, :], 0)
-                            for y_vector_group in y_group:
-                                if numpy.vectorize(equal)(sums, y_vector_group.get_vector(1)).all():
-                                    x_subgroup = x_group.vector_subset(x1 + 1, x2)
-                                    solutions.append({c.x.name: x_subgroup, c.y.name: y_vector_group})
-                else:
-                    sums = numpy.sum(x_group.data, 0)
-                    for y_vector_group in y_group:
-                        match = pattern_finder(sums, y_vector_group.get_vector(1))
-                        x_match = [x_group.vector_subset(m + 1, m + y_length) for m in match]
-                        solutions += [{c.x.name: x, c.y.name: y_vector_group} for x in x_match]
-
-            return solutions
-
-        def sum__(c: Sum, assignments: List[Dict[str, Group]], solutions: Solutions):
+        def aggregate(c: Aggregate, assignments: List[Dict[str, Group]], solutions: Solutions):
             solutions = []
             o_column = Orientation.column(c.orientation)
+            operation_f = c.operation.f
 
             for assignment in assignments:
                 x_group, y_group = (assignment[k.name] for k in [c.x, c.y])
@@ -197,7 +172,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
                 o_match = x_group.row == Orientation.row(c.orientation)
                 if o_match:
-                    sums = numpy.sum(x_group.data, 0 if o_column else 1)
+                    sums = operation_f(x_group.data, 0 if o_column else 1)
                     for y_vector_group in y_group:
                         match = pattern_finder(sums, y_vector_group.get_vector(1))
                         x_match = [x_group.vector_subset(m + 1, m + y_length) for m in match]
@@ -206,7 +181,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     x_length = x_group.rows() if o_column else x_group.columns()
                     for x1 in range(x_length - 1):
                         for x2 in range(x1 + 2, x_length + 1):
-                            sums = numpy.sum(x_data[x1:x2, :], 0) if o_column else numpy.sum(x_data[:, x1:x2], 1)
+                            sums = operation_f(x_data[x1:x2, :], 0) if o_column else operation_f(x_data[:, x1:x2], 1)
                             for y_vector_group in y_group:
                                 if numpy.vectorize(equal)(sums, y_vector_group.get_vector(1)).all():
                                     x_subgroup = x_group.vector_subset(x1 + 1, x2)
@@ -225,8 +200,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(MaxIf(), conditional_aggregate)
         self.add_strategy(RunningTotal(), running_total)
         self.add_strategy(ForeignProduct(), foreign_operation)
-        self.add_strategy(SumColumn(), sum_column)
-        self.add_strategy(ColumnSum(), sum__)
+        self.add_strategy(ColumnSum(), aggregate)
+        self.add_strategy(RowSum(), aggregate)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_f):

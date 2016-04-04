@@ -2,7 +2,6 @@ import json
 
 import numpy as np
 import pandas as pd
-import re
 
 from core.group import Bounds, Table, Group, GType, detect_type, numeric_type, Orientation
 

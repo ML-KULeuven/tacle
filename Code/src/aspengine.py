@@ -3,7 +3,7 @@ from os import system
 
 import numpy as np
 
-from core.constraint import SumColumn, SumRow, MaxRow, MaxColumn, MinColumn, MinRow, AvgColumn, AvgRow
+from core.constraint import MaxRow, MaxColumn, MinColumn, MinRow, AvgColumn, AvgRow, ColumnSum, RowSum
 from core.group import GType
 from core.strategy import DictSolvingStrategy
 from functools import partial
@@ -61,8 +61,8 @@ class AspSolvingStrategy(DictSolvingStrategy):
             return solutions
         
         #sum
-        self.add_strategy(SumColumn(), partial(aggregate_columns,"sum"))
-        self.add_strategy(SumRow(), partial(aggregate_rows,"sum"))
+        self.add_strategy(ColumnSum(), partial(aggregate_columns,"sum"))
+        self.add_strategy(RowSum(), partial(aggregate_rows,"sum"))
         #max
         self.add_strategy(MaxColumn(), partial(aggregate_columns,"max"))
         self.add_strategy(MaxRow(), partial(aggregate_rows,"max"))
