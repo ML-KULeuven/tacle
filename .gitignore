@@ -41,3 +41,6 @@ Backup[ ]of[ ]*.numbers/
 # Mac finder files and hidden folders
 .DS_Store
 Code/.idea
+
+# Python
+__pycache__/

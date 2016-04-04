@@ -1,0 +1,10 @@
+Aantal,Code,Naam,Totaal in EUR,,Code,Naam,EUR
+20,42,Air France,358.4,,0,Onjuist nummer,0
+15,45,Interbrew,450.75,,41,Accor,41.27
+25,41,Accor,1031.75,,42,Air France,17.92
+17,46,Michelin,697.51,,43,BIC,39.7
+34,47,Usinor,445.4,,44,EADS,13
+,,,,,45,Interbrew,30.05
+,,,,,46,Michelin,41.03
+,,,,,47,Usinor,13.1
+,Totaal van alle aandelen:,,2983.81,,48,Onjuist nummer,0
