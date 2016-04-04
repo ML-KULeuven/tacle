@@ -1,7 +1,7 @@
 from typing import List
 
 from core.assignment import Source, Filter, Variable, SameLength, ConstraintSource, NotSubgroup, SameTable, \
-    SameOrientation, SameType
+    SameOrientation, SameType, Not
 from core.group import GType
 
 
@@ -144,7 +144,7 @@ class ForeignKey(Constraint):
     def __init__(self):
         variables = [self.pk, self.fk]
         source = ConstraintSource(variables, AllDifferent(), {"X": "PK"})
-        filters = [NotSubgroup([self.pk, self.fk]), SameType(variables)]
+        filters = [Not(SameTable([self.pk, self.fk])), SameType(variables)]
         super().__init__("foreign-key", "{FK} -> {PK}", source, filters)
 
 

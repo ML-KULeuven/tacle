@@ -106,6 +106,15 @@ class Filter:
         return all(f(groups[i]) == f(groups[j]) for i in range(len(groups)) for j in range(i + 1, len(groups)))
 
 
+class Not(Filter):
+    def __init__(self, original_filter: Filter):
+        super().__init__(original_filter.variables)
+        self._original_filter = original_filter
+
+    def test(self, assignment):
+        return not self._original_filter.test(assignment)
+
+
 class NoFilter(Filter):
     def test(self, assignment):
         return True
