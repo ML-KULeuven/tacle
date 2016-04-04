@@ -10,7 +10,7 @@
 
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
-
+\newcommand{\samuel}[1]{\textcolor{green}{{\sc Samuel:} #1}\xspace}
 
 %%\ecaisubmission   % inserts page numbers. Use only for submission of paper.
                   % Do NOT use for camera-ready version of paper.
@@ -62,27 +62,54 @@ Can we discover or reconstruct structural relations in flat tabular spreadsheet 
 \section{Formalization}
 
 \newcommand{\constraints}{\ensuremath{\mathcal{C}}\xspace}
-\newcommand{\generategroups}{\textit{generateGroups}\xspace}
-\newcommand{\extractgroups}{\textit{extractGroups}\xspace}
-\newcommand{\findassignment}{\textit{findAssignment}\xspace}
+\newcommand{\format}[1]{\textit{#1}\xspace}
+\newcommand{\generategroups}{\format{generateAssignments}}
+\newcommand{\extractgroups}{\format{extractGroups}}
+\newcommand{\extracttables}{\format{extractTables}}
+\newcommand{\learnconstraints}{\format{learnConstraints}}
+\newcommand{\findassignment}{\format{findSolutions}}
+\newcommand{\postprocess}{\format{postProcess}}
 
 \begin{algorithm}[thb]
   \begin{algorithmic}
     \footnotesize
-    \State \textbf{Input:} $D$ -- dataset, (optional groups $G$)
+    \State \textbf{Input:} $G$ -- set of groups
     \State \textbf{Output:} $S$ -- learned constraints with their satisfaction assignment
     \If{$G$ is not defined}
        \State $G \gets \extractgroups(D)$
     \EndIf
+    \State $S \gets \emptyset$
   \For{$c \in \constraints$} \Comment{\constraints -- the set of predefined Excel constraints}
-    \For{$G_1, \dots, G_n \in \generategroups(c,G)$}
-      \State $S \gets S \cup \findassignment(c, G1, \dots, G_n)$
+    \State $v_1, ..., v_n =$ variables of $c$
+    \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(c,G, S)$}
+      \State $S \gets S \cup \findassignment(c, v_1{:}~G_1, \dots, v_n{:}~G_n, S)$
     \EndFor
   \EndFor\\
 \Return $S$
 \end{algorithmic}
-\caption{First Order Model: Iterative Query Enumeration}
-\label{algo:top_cycle}
+\caption{Tabular constraint learning}
+\label{algo:tcl}
+\end{algorithm}
+
+\samuel{Provide information on how functions work}
+
+\begin{algorithm}[thb]
+  \begin{algorithmic}
+    \footnotesize
+    \State \textbf{Input:} $D$ -- dataset, (optional: tables $T$, groups $G$)
+    \State \textbf{Output:} $S$ -- learned constraints with their satisfaction assignment
+    \If{$T$ is \textbf{not} provided}
+      \State $T \gets \extracttables(D)$
+    \EndIf
+    \If{$G$ is \textbf{not} provided}
+      \State $G \gets \extractgroups(D, T)$
+    \EndIf
+    \State $S \gets \learnconstraints(G)$
+    \State $S \gets \postprocess(S)$
+    \State \Return $S$
+\end{algorithmic}
+\caption{Workflow}
+\label{algo:workflow}
 \end{algorithm}
 
 \section{Case Study aka Experiments}
