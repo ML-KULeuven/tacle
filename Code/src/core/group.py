@@ -4,6 +4,19 @@ import numpy
 import re
 
 
+class Orientation(Enum):
+    HORIZONTAL = True
+    VERTICAL = False
+
+    @staticmethod
+    def row(orientation):
+        return orientation is None or orientation == Orientation.HORIZONTAL
+
+    @staticmethod
+    def column(orientation):
+        return orientation is None or orientation == Orientation.VERTICAL
+
+
 def null(var, val):
     return val if var is None else var
 
@@ -60,11 +73,16 @@ class Bounds:
 
 
 class Table:
-    def __init__(self, name, data):
+    def __init__(self, name, data, orientation=None):
         self.name = name
         self.data = data
         self.rows = numpy.size(data, 0)
         self.columns = numpy.size(data, 1)
+        self._orientation = orientation
+
+    @property
+    def orientation(self):
+        return self._orientation
 
     def __repr__(self):
         repr_str = "Data:\n" + str(self.data) + "\nRows: " + str(self.rows) + "\nColumn: " + str(self.columns)

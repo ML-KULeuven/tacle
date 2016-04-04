@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import re
 
-from core.group import Bounds, Table, Group, GType, detect_type, numeric_type
+from core.group import Bounds, Table, Group, GType, detect_type, numeric_type, Orientation
 
 
 def parse(filename):
@@ -18,9 +18,12 @@ def get_groups_tables(csv_file, groups_file=None):
     if groups_file is None:
         type_data = np.vectorize(detect_type)(data)
         t = list(detect_tables(type_data))
-        print("PARSE: Detected table areas: {}".format(", ".join(["[{}:{}, {}:{}]".format(*r) for r in t])), "\n")
-        t = [(b, Table("T{}".format(i + 1), Bounds(b).subset(data))) for i, b in enumerate(t)]
-        return detect_groups(data, type_data, t)
+        print("PARSE: Detected table areas: {}".format(", ".join(["[{}:{}, {}:{}]".format(*r) for r, o in t])))
+        t = [(b, Table("T{}".format(i + 1), Bounds(b).subset(data), o)) for i, (b, o) in enumerate(t)]
+        groups = detect_groups(data, type_data, t)
+        print("PARSE: Detected groups: {}".format(", ".join(str(g) for g in groups)))
+        print()
+        return groups
     else:
         tables = {}
         groups = []
@@ -78,9 +81,9 @@ def detect_tables(type_data):
                 new_current[key] = rec
         saved += current.values()
         current = new_current
-    tables = [[r1 + 1, r2, c1 + 1, c2] for r1, r2, c1, c2 in [remove_header(rec, type_data) for rec in saved]]
-    tables = [rec for rec in tables if rec[0] <= rec[1] and rec[2] <= rec[3]]
-    return sorted(tables, key=lambda t: (t[0], t[2], t[1], t[3]))
+    tables = [((r1 + 1, r2, c1 + 1, c2), o) for (r1, r2, c1, c2), o in [remove_header(rec, type_data) for rec in saved]]
+    tables = [(rec, o) for rec, o in tables if rec[0] <= rec[1] and rec[2] <= rec[3]]
+    return sorted(tables, key=lambda t: (t[0][0], t[0][2], t[0][1], t[0][3], t[1].value))
 
 
 def detect_groups(data, type_data, tables):
@@ -120,16 +123,27 @@ def detect_groups(data, type_data, tables):
 
     for t in tables:
         (b, table) = t
-        detect_horizontal()
-        detect_verticals()
+        if Orientation.row(table.orientation):
+            detect_horizontal()
+        elif Orientation.column(table.orientation):
+            detect_verticals()
 
     return groups
 
 
 def remove_header(rec, type_data):
     r1, r2, c1, c2 = rec
+    o = None
     if all(type_data[r1, i] == GType.string.value for i in range(c1, c2)):
-        return [r1 + 1, r2, c1, c2]
-    if all(type_data[i, c1] == GType.string.value for i in range(r1, r2)):
-        return [r1, r2, c1 + 1, c2]
-    return rec
+        rec = r1 + 1, r2, c1, c2
+        o = Orientation.VERTICAL
+    elif all(type_data[i, c1] == GType.string.value for i in range(r1, r2)):
+        rec = r1, r2, c1 + 1, c2
+        o = Orientation.HORIZONTAL
+
+    r1, r2, c1, c2 = rec
+    if c1 == c2 - 1:
+        o = Orientation.VERTICAL
+    elif r1 == r2 - 1:
+        o = Orientation.HORIZONTAL
+    return tuple(rec), o
