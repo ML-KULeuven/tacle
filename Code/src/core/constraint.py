@@ -49,18 +49,24 @@ discrete = {GType.string, GType.int}
 
 
 class Operation(Enum):
-    SUM = numpy.sum,
-    PRODUCT = numpy.product,
-    MAX = numpy.max,
-    MIN = numpy.min,
-    AVERAGE = numpy.average,
+    SUM = (numpy.sum, lambda x, y: x + y)
+    MAX = (numpy.max, lambda x, y: max(x + y))
+    MIN = (numpy.min, lambda x, y: min(x + y))
+    AVERAGE = (numpy.average, lambda x, y: (x + y) / 2)
+    PRODUCT = (numpy.product, lambda x, y: x * y)
 
-    def __init__(self, f):
-        self._f = f
+    # noinspection PyInitNewSignature
+    def __init__(self, aggregate, func):
+        self._aggregate = aggregate
+        self._func = func
 
     @property
-    def f(self):
-        return self._f
+    def aggregate(self):
+        return self._aggregate
+
+    @property
+    def func(self):
+        return self._func
 
 
 class Aggregate(Constraint):
@@ -104,16 +110,6 @@ class ColumnSum(Aggregate):
 class RowSum(Aggregate):
     def __init__(self):
         super().__init__(Orientation.HORIZONTAL, Operation.SUM)
-
-
-class ColumnProduct(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.VERTICAL, Operation.PRODUCT)
-
-
-class RowProduct(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.HORIZONTAL, Operation.PRODUCT)
 
 
 class ColumnAverage(Aggregate):
@@ -286,8 +282,8 @@ class ForeignOperation(Constraint):
     f_value = Variable("FV", vector=True, types=numeric)
     o_value = Variable("OV", vector=True, types=numeric)
 
-    def __init__(self, name: str, operator):
-        self._operator = operator
+    def __init__(self, name: str, operation: Operation):
+        self._operation = operation
         foreign = [self.f_key, self.result, self.f_value]
         original = [self.o_key, self.o_value]
         variables = foreign + original
@@ -299,10 +295,10 @@ class ForeignOperation(Constraint):
                          filters)
 
     @property
-    def operator(self):
-        return self._operator
+    def operation(self):
+        return self._operation
 
 
 class ForeignProduct(ForeignOperation):
     def __init__(self):
-        super().__init__("PRODUCT", lambda fv, ov: fv * ov)
+        super().__init__("PRODUCT", Operation.PRODUCT)

@@ -25,8 +25,6 @@ def main(csv_file, groups_file, verbose):
         AllDifferent(),
         ColumnSum(),
         RowSum(),
-        ColumnProduct(),
-        RowProduct(),
         ColumnAverage(),
         RowAverage(),
         ColumnMax(),

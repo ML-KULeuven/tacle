@@ -24,8 +24,6 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(ForeignProduct())
         self.add_constraint(ColumnSum())
         self.add_constraint(RowSum())
-        self.add_constraint(ColumnProduct())
-        self.add_constraint(RowProduct())
         self.add_constraint(ColumnAverage())
         self.add_constraint(RowAverage())
         self.add_constraint(ColumnMax())
@@ -176,7 +174,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             def is_foreign_product(ok, fk, r, ov, fv):
                 m = dict(zip(ok, ov))
                 for i in range(len(fk)):
-                    if not equal(r[i], c.operator(fv[i], m[fk[i]])):
+                    if not equal(r[i], c.operation.func(fv[i], m[fk[i]])):
                         return False
                 return True
 
@@ -185,7 +183,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         def aggregate(c: Aggregate, assignments: List[Dict[str, Group]], solutions: Solutions):
             solutions = []
             o_column = Orientation.column(c.orientation)
-            operation_f = c.operation.f
+            operation_f = c.operation.aggregate
 
             for assignment in assignments:
                 x_group, y_group = (assignment[k.name] for k in [c.x, c.y])
@@ -228,8 +226,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(ForeignProduct(), foreign_operation)
         self.add_strategy(ColumnSum(), aggregate)
         self.add_strategy(RowSum(), aggregate)
-        self.add_strategy(ColumnProduct(), aggregate)
-        self.add_strategy(RowProduct(), aggregate)
         self.add_strategy(ColumnAverage(), aggregate)
         self.add_strategy(RowAverage(), aggregate)
         self.add_strategy(ColumnMax(), aggregate)

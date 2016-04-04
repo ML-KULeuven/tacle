@@ -129,9 +129,6 @@ class MinizincAssignmentStrategy(DictAssignmentStrategy):
         self.add_strategy(ColumnSum(), aggregate_columns) # probably, sum_columns should be renamed into binary assignments?
         self.add_strategy(RowSum(), aggregate_rows)
 
-        self.add_strategy(ColumnProduct(), aggregate_columns)
-        self.add_strategy(RowProduct(), aggregate_rows)
-
         self.add_strategy(ColumnAverage(), aggregate_columns)
         self.add_strategy(RowAverage(), aggregate_rows)
 
