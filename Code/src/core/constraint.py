@@ -71,7 +71,8 @@ class Aggregate(Constraint):
         self._orientation = orientation
         self._operation = operation
         size = Group.columns if orientation == Orientation.VERTICAL else Group.rows
-        o_string = "col" if orientation == Orientation.VERTICAL else "row"
+        or_string = "col" if orientation == Orientation.VERTICAL else "row"
+        op_string = operation.name
         variables = [self.x, self.y]
 
         def test(_, a: Dict[str, Group]):
@@ -79,10 +80,12 @@ class Aggregate(Constraint):
             o_match = x_group.row == (orientation == Orientation.HORIZONTAL)
             return y_group.length() <= size(x_group) if o_match else y_group.length() == size(x_group)
 
-        filter_class = type("Sum{}Length".format(o_string.capitalize()), (Filter,), {"test": test})
+        filter_class = type("{}{}Length".format(op_string.lower().capitalize(), or_string.capitalize()),
+                            (Filter,), {"test": test})
         size_filter = SizeFilter([self.x], rows=2) if Orientation.column(orientation) else SizeFilter([self.x], cols=2)
         filters = [size_filter, filter_class(variables)]
-        super().__init__("sum ({})".format(o_string), "{Y} = SUM({X}, " + o_string + ")", Source(variables), filters)
+        format_s = "{Y} = " + op_string.upper() + "({X}, " + or_string + ")"
+        super().__init__("{} ({})".format(op_string, or_string), format_s, Source(variables), filters)
 
     @property
     def orientation(self):
@@ -101,6 +104,46 @@ class ColumnSum(Aggregate):
 class RowSum(Aggregate):
     def __init__(self):
         super().__init__(Orientation.HORIZONTAL, Operation.SUM)
+
+
+class ColumnProduct(Aggregate):
+    def __init__(self):
+        super().__init__(Orientation.VERTICAL, Operation.PRODUCT)
+
+
+class RowProduct(Aggregate):
+    def __init__(self):
+        super().__init__(Orientation.HORIZONTAL, Operation.PRODUCT)
+
+
+class ColumnAverage(Aggregate):
+    def __init__(self):
+        super().__init__(Orientation.VERTICAL, Operation.AVERAGE)
+
+
+class RowAverage(Aggregate):
+    def __init__(self):
+        super().__init__(Orientation.HORIZONTAL, Operation.AVERAGE)
+
+
+class ColumnMax(Aggregate):
+    def __init__(self):
+        super().__init__(Orientation.VERTICAL, Operation.MAX)
+
+
+class RowMax(Aggregate):
+    def __init__(self):
+        super().__init__(Orientation.HORIZONTAL, Operation.MAX)
+
+
+class ColumnMin(Aggregate):
+    def __init__(self):
+        super().__init__(Orientation.VERTICAL, Operation.MIN)
+
+
+class RowMin(Aggregate):
+    def __init__(self):
+        super().__init__(Orientation.HORIZONTAL, Operation.MIN)
 
 
 # TODO Same table, different orientation, overlapping bounds => prune assignment already

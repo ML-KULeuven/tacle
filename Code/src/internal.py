@@ -24,6 +24,14 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(ForeignProduct())
         self.add_constraint(ColumnSum())
         self.add_constraint(RowSum())
+        self.add_constraint(ColumnProduct())
+        self.add_constraint(RowProduct())
+        self.add_constraint(ColumnAverage())
+        self.add_constraint(RowAverage())
+        self.add_constraint(ColumnMax())
+        self.add_constraint(RowMax())
+        self.add_constraint(ColumnMin())
+        self.add_constraint(RowMin())
 
     def add_constraint(self, constraint: Constraint):
         self._constraints.add(constraint)
@@ -192,7 +200,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     for y_vector_group in y_group:
                         match = pattern_finder(sums, y_vector_group.get_vector(1))
                         x_match = [x_group.vector_subset(m + 1, m + y_length) for m in match]
-                        solutions += [{c.x.name: x, c.y.name: y_vector_group} for x in x_match]
+                        solutions += [{c.x.name: x, c.y.name: y_vector_group} for x in x_match
+                                      if not x.overlaps_with(y_vector_group)]
                 else:
                     x_length = x_group.rows() if o_column else x_group.columns()
                     for x1 in range(x_length - 1):
@@ -201,7 +210,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                             for y_vector_group in y_group:
                                 if numpy.vectorize(equal)(sums, y_vector_group.get_vector(1)).all():
                                     x_subgroup = x_group.vector_subset(x1 + 1, x2)
-                                    solutions.append({c.x.name: x_subgroup, c.y.name: y_vector_group})
+                                    if not x_subgroup.overlaps_with(y_vector_group):
+                                        solutions.append({c.x.name: x_subgroup, c.y.name: y_vector_group})
 
             return solutions
 
@@ -218,6 +228,14 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(ForeignProduct(), foreign_operation)
         self.add_strategy(ColumnSum(), aggregate)
         self.add_strategy(RowSum(), aggregate)
+        self.add_strategy(ColumnProduct(), aggregate)
+        self.add_strategy(RowProduct(), aggregate)
+        self.add_strategy(ColumnAverage(), aggregate)
+        self.add_strategy(RowAverage(), aggregate)
+        self.add_strategy(ColumnMax(), aggregate)
+        self.add_strategy(RowMax(), aggregate)
+        self.add_strategy(ColumnMin(), aggregate)
+        self.add_strategy(RowMin(), aggregate)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_f):
