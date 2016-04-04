@@ -24,6 +24,7 @@ def main(csv_file, groups_file, verbose):
         Series(),
         AllDifferent(),
         SumColumn(),
+        ColumnSum(),
         SumRow(),
         MaxColumn(),
         MaxRow(),

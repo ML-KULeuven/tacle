@@ -2,7 +2,7 @@ from typing import List, Dict
 
 from core.assignment import Source, Filter, Variable, SameLength, ConstraintSource, NotSubgroup, SameTable, \
     SameOrientation, SameType, SizeFilter, Not
-from core.group import GType, Group
+from core.group import GType, Group, Orientation
 
 
 class Constraint:
@@ -43,6 +43,45 @@ integer = {GType.int}
 numeric = {GType.int, GType.float}
 textual = {GType.string}
 discrete = {GType.string, GType.int}
+
+
+class Sum(Constraint):
+    x = Variable("X", types=numeric)
+    y = Variable("Y", vector=True, types=numeric)
+
+    def __init__(self, orientation: Orientation):
+        self._orientation = orientation
+        size = Group.columns if orientation == Orientation.VERTICAL else Group.rows
+        o_string = "col" if orientation == Orientation.VERTICAL else "row"
+        variables = [self.x, self.y]
+
+        def test(_, a: Dict[str, Group]):
+            x_group, y_group = [a[v.name] for v in variables]
+            o_match = x_group.row == (orientation == Orientation.HORIZONTAL)
+            return y_group.length() <= size(x_group) if o_match else y_group.length() == size(x_group)
+
+        filter_class = type("Sum{}Length".format(o_string.capitalize()), (Filter,), {"test": test})
+        size_filter = SizeFilter([self.x], rows=2) if Orientation.column(orientation) else SizeFilter([self.x], cols=2)
+        filters = [size_filter, filter_class(variables)]
+        super().__init__("sum ({})".format(o_string), "{Y} = SUM({X}, " + o_string + ")", Source(variables), filters)
+
+    @property
+    def orientation(self):
+        return self._orientation
+
+
+class ColumnSum(Sum):
+    def __init__(self):
+        super().__init__(Orientation.VERTICAL)
+
+# constraint not g_row_orientation[assign[1]] -> g_length[assign[2]] = g_rows[assign[1]];
+# constraint g_row_orientation[assign[1]] -> g_length[assign[2]] <= g_rows[assign[1]];
+# constraint g_columns[assign[1]] > 1;
+# constraint forall(v in 1..nV)(v_numeric[v] -> g_numeric[assign[v]]);
+
+# TODO Same table, different orientation, overlapping bounds => prune assignment already
+
+# TODO Subset -> Fuzzy lookup
 
 
 class SumColumn(Constraint):
@@ -207,7 +246,7 @@ class ConditionalAggregate(Constraint):
         filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]),
                    SameTable([self.o_key, self.result]), SameTable([self.f_key, self.values]),
                    SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
-        super().__init__("{}-if".format(name.lower()), "{R} = " + name.upper() + "({FK}={OK}, {V})", source, filters)
+        super().__init__("{}-if".format(name.lower()), "{R} = " + name.upper() + "IF({FK}={OK}, {V})", source, filters)
 
     @property
     def operator(self):

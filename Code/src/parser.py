@@ -15,8 +15,8 @@ def parse(filename):
 
 def get_groups_tables(csv_file, groups_file=None):
     data = parse(csv_file)
+    type_data = np.vectorize(detect_type)(data)
     if groups_file is None:
-        type_data = np.vectorize(detect_type)(data)
         t = list(detect_tables(type_data))
         print("PARSE: Detected table areas: {}".format(", ".join(["[{}:{}, {}:{}]".format(*r) for r, o in t])))
         t = [(b, Table("T{}".format(i + 1), Bounds(b).subset(data), o)) for i, (b, o) in enumerate(t)]
@@ -25,7 +25,8 @@ def get_groups_tables(csv_file, groups_file=None):
         print()
         return groups
     else:
-        tables = {}
+        table_dict = {}
+        t = []
         groups = []
         with open(groups_file, "r") as group_file:
             json_data = json.load(group_file)
@@ -33,10 +34,14 @@ def get_groups_tables(csv_file, groups_file=None):
                 bounds = Bounds(table_description["Bounds"])
                 data_subset = bounds.subset(data)
                 name = table_description["Name"]
-                tables[name] = Table(name, data_subset)
-            for group_description in json_data["Groups"]:
-                table = tables[group_description["Table"]]
-                groups.append(create_group(group_description["Bounds"], table))
+                table_dict[name] = Table(name, data_subset)
+                t.append((bounds.bounds, table_dict[name]))
+            if "Groups" in json_data:
+                for group_description in json_data["Groups"]:
+                    table = table_dict[group_description["Table"]]
+                    groups.append(create_group(group_description["Bounds"], table))
+            else:
+                groups = detect_groups(data, type_data, t)
         return groups
 
 
@@ -83,7 +88,8 @@ def detect_tables(type_data):
         current = new_current
     tables = [((r1 + 1, r2, c1 + 1, c2), o) for (r1, r2, c1, c2), o in [remove_header(rec, type_data) for rec in saved]]
     tables = [(rec, o) for rec, o in tables if rec[0] <= rec[1] and rec[2] <= rec[3]]
-    return sorted(tables, key=lambda t: (t[0][0], t[0][2], t[0][1], t[0][3], t[1].value))
+    # TODO Error BMI (no T1)
+    return sorted(tables, key=lambda t: (t[0][0], t[0][2], t[0][1], t[0][3]))
 
 
 def detect_groups(data, type_data, tables):
@@ -125,7 +131,7 @@ def detect_groups(data, type_data, tables):
         (b, table) = t
         if Orientation.row(table.orientation):
             detect_horizontal()
-        elif Orientation.column(table.orientation):
+        if Orientation.column(table.orientation):
             detect_verticals()
 
     return groups
