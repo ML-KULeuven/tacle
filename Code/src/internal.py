@@ -22,14 +22,8 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(MaxIf())
         self.add_constraint(RunningTotal())
         self.add_constraint(ForeignProduct())
-        self.add_constraint(ColumnSum())
-        self.add_constraint(RowSum())
-        self.add_constraint(ColumnAverage())
-        self.add_constraint(RowAverage())
-        self.add_constraint(ColumnMax())
-        self.add_constraint(RowMax())
-        self.add_constraint(ColumnMin())
-        self.add_constraint(RowMin())
+        for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin()]:
+            self.add_constraint(c)
 
     def add_constraint(self, constraint: Constraint):
         self._constraints.add(constraint)
@@ -224,14 +218,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(MaxIf(), conditional_aggregate)
         self.add_strategy(RunningTotal(), running_total)
         self.add_strategy(ForeignProduct(), foreign_operation)
-        self.add_strategy(ColumnSum(), aggregate)
-        self.add_strategy(RowSum(), aggregate)
-        self.add_strategy(ColumnAverage(), aggregate)
-        self.add_strategy(RowAverage(), aggregate)
-        self.add_strategy(ColumnMax(), aggregate)
-        self.add_strategy(RowMax(), aggregate)
-        self.add_strategy(ColumnMin(), aggregate)
-        self.add_strategy(RowMin(), aggregate)
+        for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin()]:
+            self.add_strategy(c, aggregate)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_f):
