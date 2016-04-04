@@ -116,10 +116,27 @@ class Lookup(Constraint):
     def __init__(self):
         variables = [self.o_key, self.o_value, self.f_key, self.f_value]
         source = ConstraintSource(variables, ForeignKey(), {"PK": "OK", "FK": "FK"})
-        filters = [SameLength([self.f_key, self.f_value]), SameLength([self.o_key, self.o_value]),
+        filters = [SameType([self.o_value, self.f_value]),
+                   SameLength([self.f_key, self.f_value]), SameLength([self.o_key, self.o_value]),
                    SameTable([self.f_key, self.f_value]), SameTable([self.o_key, self.o_value]),
                    SameOrientation([self.f_key, self.f_value]), SameOrientation([self.o_key, self.o_value])]
         super().__init__("lookup", "{FV} = LOOKUP({FK}, {OK}, {OV})", source, filters)
+
+
+class FuzzyLookup(Constraint):
+    o_key = Variable("OK", vector=True, types=numeric)
+    o_value = Variable("OV", vector=True)
+    f_key = Variable("FK", vector=True, types=numeric)
+    f_value = Variable("FV", vector=True)
+
+    def __init__(self):
+        variables = [self.o_key, self.o_value, self.f_key, self.f_value]
+        source = Source(variables)
+        filters = [SameType([self.o_value, self.f_value]),
+                   SameLength([self.f_key, self.f_value]), SameLength([self.o_key, self.o_value]),
+                   SameTable([self.f_key, self.f_value]), SameTable([self.o_key, self.o_value]),
+                   SameOrientation([self.f_key, self.f_value]), SameOrientation([self.o_key, self.o_value])]
+        super().__init__("fuzzy-lookup", "{FV} = FUZZY-LOOKUP({FK}, {OK}, {OV})", source, filters)
 
 
 class ConditionalAggregate(Constraint):

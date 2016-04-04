@@ -10,8 +10,8 @@ from core.strategy import AssignmentStrategy, DictSolvingStrategy
 class InternalAssignmentStrategy(AssignmentStrategy):
     def __init__(self):
         super().__init__()
-        self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup(), SumIf(), MaxIf(),
-                            RunningTotal(), ForeignProduct()}
+        self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup(), FuzzyLookup(),
+                            SumIf(), MaxIf(), RunningTotal(), ForeignProduct()}
 
     def applies_to(self, constraint):
         return constraint in self.constraints
@@ -99,6 +99,26 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                                 results.append({k.name: v for k, v in result.items()})
             return results
 
+        def fuzzy_lookup(c: Lookup, assignments, solutions):
+            keys = [c.o_key, c.o_value, c.f_key, c.f_value]
+
+            def find_fuzzy(element, collection):
+                if element < collection[0]:
+                    return None
+                for i in range(1, len(collection)):
+                    if element < collection[i]:
+                        return i - 1
+                return len(collection) - 1
+
+            def is_lookup(ok, ov, fk, fv):
+                for i in range(len(fk)):
+                    index = find_fuzzy(fk[i], ok)
+                    if index is None or not equal(ov[index], fv[i]):
+                        return False
+                return True
+
+            return self._generate_test_vectors(assignments, keys, is_lookup)
+
         def conditional_aggregate(c: ConditionalAggregate, assignments, solutions):
             keys = [c.o_key, c.result, c.f_key, c.values]
 
@@ -142,6 +162,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(Rank(), rank)
         self.add_strategy(ForeignKey(), foreign_keys)
         self.add_strategy(Lookup(), lookups)
+        self.add_strategy(FuzzyLookup(), fuzzy_lookup)
         self.add_strategy(SumIf(), conditional_aggregate)
         self.add_strategy(MaxIf(), conditional_aggregate)
         self.add_strategy(RunningTotal(), running_total)

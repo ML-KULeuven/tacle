@@ -12,7 +12,7 @@ from minizinc import MinizincSolvingStrategy
 from parser import get_groups_tables
 
 
-def main(csv_file, groups_file=None):
+def main(csv_file, groups_file, display_time):
     manager = get_manager()
     groups = list(get_groups_tables(csv_file, groups_file))
 
@@ -20,7 +20,7 @@ def main(csv_file, groups_file=None):
     t_origin = time.time()
 
     constraints = [Permutation(), Series(), AllDifferent(), SumColumn(), SumRow(), Rank(), ForeignKey(), Lookup(),
-                   SumIf(), MaxIf(), RunningTotal(), ForeignProduct()]
+                   FuzzyLookup(), SumIf(), MaxIf(), RunningTotal(), ForeignProduct()]
     for constraint in constraints:
         if not manager.supports_assignments_for(constraint):
             print("No assignment strategy for {}\n".format(constraint))
@@ -33,11 +33,14 @@ def main(csv_file, groups_file=None):
             solutions.add(constraint, manager.find_solutions(constraint, assignments, solutions))
             t_end = time.time()
             f_string = "{name} [assignment time: {assign:.3f}, solving time: {solve:.3f}]"
-            print(f_string.format(name=constraint.name.capitalize(), assign=t_assign - t_start, solve=t_end - t_assign))
-            print("\n".join(["\t" + constraint.to_string(s) for s in solutions.get_solutions(constraint)]))
-            print()
+            if display_time:
+                print(f_string.format(name=constraint.name, assign=t_assign - t_start, solve=t_end - t_assign))
+            if len(solutions.get_solutions(constraint)) > 0:
+                print("\n".join(["\t" + constraint.to_string(s) for s in solutions.get_solutions(constraint)]))
+                print()
 
-    print("Total: {0:.3f}".format(time.time() - t_origin))
+    if display_time:
+        print("Total: {0:.3f}".format(time.time() - t_origin))
 
 
 def get_manager():
@@ -55,6 +58,7 @@ def arg_parser():
     p = argparse.ArgumentParser()
     p.add_argument('csv_file')
     p.add_argument('-g', '--groups_file', default=None)
+    p.add_argument('-t', '--display_time', action="store_true")
     return p
 
 
