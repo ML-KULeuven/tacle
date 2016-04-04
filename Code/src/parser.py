@@ -1,8 +1,8 @@
 import json
 
-import itertools
 import numpy as np
 import pandas as pd
+import re
 
 from core.group import Bounds, Table, Group, GType
 
@@ -16,9 +16,9 @@ def parse(filename):
 def get_groups_tables(csv_file, groups_file=None):
     data = parse(csv_file)
     if groups_file is None:
-        type_data = np.vectorize(lambda x: int(np.floor(Group._infer_type_scalar(x) / 2) * 2))(data)
-        t = list(detect_tables(data, type_data))
-        print("Detected table areas: {}".format(t))
+        type_data = np.vectorize(detect_type)(data)
+        t = list(detect_tables(type_data))
+        print("Detected table areas: {}".format(", ".join(["[{}:{}, {}:{}]".format(*r) for r in t])))
         t = [(b, Table("T{}".format(i + 1), Bounds(b).subset(data))) for i, b in enumerate(t)]
         return detect_groups(data, type_data, t)
     else:
@@ -46,14 +46,14 @@ def create_group(bounds_list, table):
         raise Exception("Could not create group")
 
 
-def detect_tables(data, type_data):
+def detect_tables(type_data):
     rectangles = []
-    for row in range(np.size(data, 0)):
+    for row in range(np.size(type_data, 0)):
         line = []
         rect = None
-        cols = np.size(data, 1)
+        cols = np.size(type_data, 1)
         for col in range(cols):
-            if isinstance(data[row, col], str):
+            if type_data[row, col] != NAN:
                 if rect is None:
                     rect = col
             elif rect is not None:
@@ -90,10 +90,11 @@ def detect_groups(data, type_data, tables):
         t_data = Bounds(b).subset(type_data)
         rows, cols = (table.rows, table.columns)
         for row in range(rows):
-            row_same_type = all(t_data[row, col] == t_data[row, col - 1] for col in range(1, cols))
+            row_same_type = all(numeric_type(t_data[row, col]) == numeric_type(t_data[row, col - 1])
+                                for col in range(1, cols))
             if not row_same_type:
                 return []
-        same = [t_data[row, 0] == t_data[row - 1, 0] for row in range(1, rows)] + [False]
+        same = [numeric_type(t_data[row, 0]) == numeric_type(t_data[row - 1, 0]) for row in range(1, rows)] + [False]
 
         start = 0
         for row in range(rows):
@@ -105,10 +106,11 @@ def detect_groups(data, type_data, tables):
         t_data = Bounds(b).subset(type_data)
         rows, cols = (table.rows, table.columns)
         for col in range(cols):
-            col_same_type = all(t_data[row, col] == t_data[row - 1, col] for row in range(1, rows))
+            col_same_type = all(numeric_type(t_data[row, col]) == numeric_type(t_data[row - 1, col])
+                                for row in range(1, rows))
             if not col_same_type:
                 return []
-        same = [t_data[0, col] == t_data[0, col - 1] for col in range(1, cols)] + [False]
+        same = [numeric_type(t_data[0, col]) == numeric_type(t_data[0, col - 1]) for col in range(1, cols)] + [False]
 
         start = 0
         for col in range(cols):
@@ -126,8 +128,36 @@ def detect_groups(data, type_data, tables):
 
 def remove_header(rec, type_data):
     r1, r2, c1, c2 = rec
-    if all(type_data[r1, i] == GType.string.value for i in range(c1, c2)):
+    if all(type_data[r1, i] == STRING for i in range(c1, c2)):
         return [r1 + 1, r2, c1, c2]
-    if all(type_data[i, c1] == GType.string.value for i in range(r1, r2)):
+    if all(type_data[i, c1] == STRING for i in range(r1, r2)):
         return [r1, r2, c1 + 1, c2]
     return rec
+
+
+# --- Type detection ---
+
+percent_pattern = re.compile(r"\d+(\.\d+)?%")
+
+NAN = -1
+INT = 0
+FLOAT = 1
+STRING = 2
+
+
+def detect_type(val):
+    if percent_pattern.match(str(val)):
+        return FLOAT
+    try:
+        val = int(val)
+        return INT
+    except:
+        try:
+            val = float(val)
+            return FLOAT if not np.isnan(val) else NAN
+        except:
+            return STRING
+
+
+def numeric_type(data_type):
+    return data_type == INT or data_type == FLOAT
