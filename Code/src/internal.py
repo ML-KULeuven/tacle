@@ -9,11 +9,27 @@ from core.strategy import AssignmentStrategy, DictSolvingStrategy
 class InternalCSPStrategy(AssignmentStrategy):
     def __init__(self):
         super().__init__()
-        self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup(), FuzzyLookup(),
-                            SumIf(), MaxIf(), RunningTotal(), ForeignProduct(), ColumnSum(), RowSum()}
+        self._constraints = set()
+
+        self.add_constraint(Series())
+        self.add_constraint(AllDifferent())
+        self.add_constraint(Permutation())
+        self.add_constraint(Rank())
+        self.add_constraint(ForeignKey())
+        self.add_constraint(Lookup())
+        self.add_constraint(FuzzyLookup())
+        self.add_constraint(SumIf())
+        self.add_constraint(MaxIf())
+        self.add_constraint(RunningTotal())
+        self.add_constraint(ForeignProduct())
+        self.add_constraint(ColumnSum())
+        self.add_constraint(RowSum())
+
+    def add_constraint(self, constraint: Constraint):
+        self._constraints.add(constraint)
 
     def applies_to(self, constraint):
-        return constraint in self.constraints
+        return constraint in self._constraints
 
     def apply(self, constraint: Constraint, groups: [Group], solutions):
         return constraint.source.candidates(groups, solutions, constraint.filters)
