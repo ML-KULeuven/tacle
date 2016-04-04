@@ -34,7 +34,14 @@ def get_groups_tables(csv_file, groups_file=None):
                 bounds = Bounds(table_description["Bounds"])
                 data_subset = bounds.subset(data)
                 name = table_description["Name"]
-                table_dict[name] = Table(name, data_subset)
+                orientation = None
+                if "Orientation" in table_description:
+                    o_string = table_description["Orientation"].lower()
+                    if o_string == "row" or o_string == "horizontal":
+                        orientation = Orientation.HORIZONTAL
+                    elif o_string == "column" or o_string == "col" or o_string == "vertical":
+                        orientation = Orientation.VERTICAL
+                table_dict[name] = Table(name, data_subset, orientation)
                 t.append((bounds.bounds, table_dict[name]))
             if "Groups" in json_data:
                 for group_description in json_data["Groups"]:
