@@ -3,7 +3,7 @@ from os import system
 
 import numpy as np
 
-from core.constraint import MaxRow, MaxColumn, MinColumn, MinRow, AvgColumn, AvgRow, ColumnSum, RowSum
+from core.constraint import RowMax, ColumnMax, ColumnMin, RowMin, ColumnAverage, RowAverage, ColumnSum, RowSum
 from core.group import GType
 from core.strategy import DictSolvingStrategy
 from functools import partial
@@ -64,14 +64,14 @@ class AspSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(ColumnSum(), partial(aggregate_columns,"sum"))
         self.add_strategy(RowSum(), partial(aggregate_rows,"sum"))
         #max
-        self.add_strategy(MaxColumn(), partial(aggregate_columns,"max"))
-        self.add_strategy(MaxRow(), partial(aggregate_rows,"max"))
+        self.add_strategy(ColumnMax(), partial(aggregate_columns,"max"))
+        self.add_strategy(RowMax(), partial(aggregate_rows,"max"))
         #min
-        self.add_strategy(MinColumn(), partial(aggregate_columns,"min"))
-        self.add_strategy(MinRow(), partial(aggregate_rows,"min"))
+        self.add_strategy(ColumnMin(), partial(aggregate_columns,"min"))
+        self.add_strategy(RowMin(), partial(aggregate_rows,"min"))
         #avg
-        self.add_strategy(AvgColumn(), partial(aggregate_columns,"avg"))
-        self.add_strategy(AvgRow(), partial(aggregate_rows,"avg"))
+        self.add_strategy(ColumnAverage(), partial(aggregate_columns,"avg"))
+        self.add_strategy(RowAverage(), partial(aggregate_rows,"avg"))
 
     def handle_aggregate_row_data_in_column(self, X, Y, i, aggregate):
         processed = self.agg_data_processing(X, Y, i, "row")

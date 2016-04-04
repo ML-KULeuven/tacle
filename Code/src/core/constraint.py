@@ -85,7 +85,7 @@ class Aggregate(Constraint):
         size_filter = SizeFilter([self.x], rows=2) if Orientation.column(orientation) else SizeFilter([self.x], cols=2)
         filters = [size_filter, filter_class(variables)]
         format_s = "{Y} = " + op_string.upper() + "({X}, " + or_string + ")"
-        super().__init__("{} ({})".format(op_string, or_string), format_s, Source(variables), filters)
+        super().__init__("{} ({})".format(op_string.lower(), or_string), format_s, Source(variables), filters)
 
     @property
     def orientation(self):
@@ -149,48 +149,6 @@ class RowMin(Aggregate):
 # TODO Same table, different orientation, overlapping bounds => prune assignment already
 
 # TODO Subset -> Fuzzy lookup
-
-
-class MaxColumn(Constraint):
-    def __init__(self):
-        variables = [Variable("X", types=numeric), Variable("Y", vector=True, types=numeric)]
-        filters = []
-        super().__init__("column-max", "{Y} = MAX({X}, col)", Source(variables), filters)
-
-
-class MaxRow(Constraint):
-    def __init__(self):
-        variables = [Variable("X", types=numeric), Variable("Y", vector=True, types=numeric)]
-        filters = []
-        super().__init__("row-max", "{Y} = MAX({X}, row)", Source(variables), filters)
-
-
-class MinColumn(Constraint):
-    def __init__(self):
-        variables = [Variable("X", types=numeric), Variable("Y", vector=True, types=numeric)]
-        filters = []
-        super().__init__("column-min", "{Y} = MIN({X}, col)", Source(variables), filters)
-
-
-class MinRow(Constraint):
-    def __init__(self):
-        variables = [Variable("X", types=numeric), Variable("Y", vector=True, types=numeric)]
-        filters = []
-        super().__init__("row-min", "{Y} = MIN({X}, row)", Source(variables), filters)
-
-
-class AvgColumn(Constraint):
-    def __init__(self):
-        variables = [Variable("X", types=numeric), Variable("Y", vector=True, types=numeric)]
-        filters = []
-        super().__init__("column-avg", "{Y} = AVG({X}, col)", Source(variables), filters)
-
-
-class AvgRow(Constraint):
-    def __init__(self):
-        variables = [Variable("X", types=numeric), Variable("Y", vector=True, types=numeric)]
-        filters = []
-        super().__init__("row-avg", "{Y} = AVG({X}, row)", Source(variables), filters)
 
 
 class Permutation(Constraint):

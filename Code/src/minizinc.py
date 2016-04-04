@@ -116,27 +116,30 @@ class MinizincAssignmentStrategy(DictAssignmentStrategy):
     def __init__(self):
         super().__init__()
 
-        def sum_columns(constraint, groups, solutions):
+        def aggregate_columns(constraint, groups, solutions):
             return self._get_assignments(groups, constraint, local("minizinc/group/sum_column.mzn"))
 
-        def sum_rows(constraint, groups, solutions):
+        def aggregate_rows(constraint, groups, solutions):
             return self._get_assignments(groups, constraint, local("minizinc/group/sum_row.mzn"))
 
         def rank(constraint, groups, solutions):
             # TODO Implementation not finished
             return self._get_assignments(groups, constraint, local("minizinc/group/rank.mzn"))
 
-        self.add_strategy(ColumnSum(), sum_columns) # probably, sum_columns should be renamed into binary assignments?
-        self.add_strategy(RowSum(), sum_rows)
+        self.add_strategy(ColumnSum(), aggregate_columns) # probably, sum_columns should be renamed into binary assignments?
+        self.add_strategy(RowSum(), aggregate_rows)
 
-        self.add_strategy(MaxColumn(), sum_columns) 
-        self.add_strategy(MaxRow(), sum_rows)
+        self.add_strategy(ColumnProduct(), aggregate_columns)
+        self.add_strategy(RowProduct(), aggregate_rows)
 
-        self.add_strategy(MinColumn(), sum_columns)
-        self.add_strategy(MinRow(), sum_rows)
+        self.add_strategy(ColumnAverage(), aggregate_columns)
+        self.add_strategy(RowAverage(), aggregate_rows)
 
-        self.add_strategy(AvgColumn(), sum_columns)
-        self.add_strategy(AvgRow(), sum_rows)
+        self.add_strategy(ColumnMax(), aggregate_columns)
+        self.add_strategy(RowMax(), aggregate_rows)
+
+        self.add_strategy(ColumnMin(), aggregate_columns)
+        self.add_strategy(RowMin(), aggregate_rows)
 
     def applies_to(self, constraint):
         return constraint in self.strategies
