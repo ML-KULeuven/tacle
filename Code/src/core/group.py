@@ -7,8 +7,6 @@ import re
 def null(var, val):
     return val if var is None else var
 
-percent_pattern = re.compile(r"\d+(\.\d+)?%")
-
 
 class Bounds:
     def __init__(self, bounds_list):
@@ -68,6 +66,7 @@ class Table:
 
 
 class GType(Enum):
+    nan = -1
     int = 0
     float = 1
     string = 2
@@ -112,29 +111,11 @@ class Group:
     def get_group_data(self):
         return self.data
 
-    @staticmethod
-    def _infer_type_scalar(val):
-        if percent_pattern.match(str(val)):
-            return 1
-        try:
-            val = int(val)
-            return 0
-        except:
-            try:
-                val = float(val)
-                return 1
-            except:
-                return 2
-
     def infer_type(self):
-        flat = self.data.flatten()
-        dtype = max(list(map(self._infer_type_scalar, flat)))
-        if dtype == 0:
-            return GType.int
-        if dtype == 1:
-            return GType.float
-        else:
-            return GType.string
+        types = list(detect_type(val) for val in (self.data.flatten()))
+        if any(t == GType.nan.value for t in types):
+            raise Exception("NaN values not allowed in groups")
+        return GType(max(list(types)))
 
     def length(self):
         return self.bounds.columns() if self.row else self.bounds.rows()
@@ -184,3 +165,24 @@ class Group:
     def vector_subset(self, start, end):
         l = [start, end] + [None, None] if self.row else [None, None] + [start, end]
         return self.subgroup(Bounds(l))
+
+
+# --- Type detection ---
+
+percent_pattern = re.compile(r"\d+(\.\d+)?%")
+
+
+def detect_type(val):
+    if percent_pattern.match(str(val)):
+        return GType.float.value
+    try:
+        val = float(val)
+        if numpy.isnan(val):
+            return GType.nan.value
+        return GType.int.value if float(val) == int(val) else GType.float.value
+    except ValueError:
+        return GType.string.value
+
+
+def numeric_type(data_type):
+    return data_type == GType.int.value or data_type == GType.float.value

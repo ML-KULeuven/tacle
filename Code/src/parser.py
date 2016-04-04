@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import re
 
-from core.group import Bounds, Table, Group, GType
+from core.group import Bounds, Table, Group, GType, detect_type, numeric_type
 
 
 def parse(filename):
@@ -53,7 +53,7 @@ def detect_tables(type_data):
         rect = None
         cols = np.size(type_data, 1)
         for col in range(cols):
-            if type_data[row, col] != NAN:
+            if type_data[row, col] != GType.nan.value:
                 if rect is None:
                     rect = col
             elif rect is not None:
@@ -128,36 +128,8 @@ def detect_groups(data, type_data, tables):
 
 def remove_header(rec, type_data):
     r1, r2, c1, c2 = rec
-    if all(type_data[r1, i] == STRING for i in range(c1, c2)):
+    if all(type_data[r1, i] == GType.string.value for i in range(c1, c2)):
         return [r1 + 1, r2, c1, c2]
-    if all(type_data[i, c1] == STRING for i in range(r1, r2)):
+    if all(type_data[i, c1] == GType.string.value for i in range(r1, r2)):
         return [r1, r2, c1 + 1, c2]
     return rec
-
-
-# --- Type detection ---
-
-percent_pattern = re.compile(r"\d+(\.\d+)?%")
-
-NAN = -1
-INT = 0
-FLOAT = 1
-STRING = 2
-
-
-def detect_type(val):
-    if percent_pattern.match(str(val)):
-        return FLOAT
-    try:
-        val = int(val)
-        return INT
-    except:
-        try:
-            val = float(val)
-            return FLOAT if not np.isnan(val) else NAN
-        except:
-            return STRING
-
-
-def numeric_type(data_type):
-    return data_type == INT or data_type == FLOAT
