@@ -4,14 +4,15 @@ import numpy
 
 from core.constraint import *
 from core.group import Group
-from core.strategy import AssignmentStrategy, DictSolvingStrategy
+from core.solutions import Solutions
+from core.strategy import AssignmentStrategy, DictSolvingStrategy, DictAssignmentStrategy
 
 
-class InternalAssignmentStrategy(AssignmentStrategy):
+class InternalCSPStrategy(AssignmentStrategy):
     def __init__(self):
         super().__init__()
         self.constraints = {Series(), AllDifferent(), Permutation(), Rank(), ForeignKey(), Lookup(), FuzzyLookup(),
-                            SumIf(), MaxIf(), RunningTotal(), ForeignProduct()}
+                            SumIf(), MaxIf(), RunningTotal(), ForeignProduct(), SumColumn()}
 
     def applies_to(self, constraint):
         return constraint in self.constraints
@@ -159,6 +160,30 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return self._generate_test_vectors(assignments, keys, is_foreign_product)
 
+        def sum_column(c: SumColumn, assignments: List[Dict[str, Group]], solutions: Solutions):
+            solutions = []
+            for assignment in assignments:
+                x_group, y_group = (assignment[k.name] for k in [c.x, c.y])
+                assert isinstance(x_group, Group)
+                assert isinstance(y_group, Group)
+                y_length = y_group.length()
+                if x_group.row:
+                    for x1 in range(x_group.rows() - 1):
+                        for x2 in range(x1 + 2, x_group.rows() + 1):
+                            sums = numpy.sum(x_group.data[x1:x2, :], 0)
+                            for y_vector_group in y_group:
+                                if numpy.vectorize(equal)(sums, y_vector_group.get_vector(1)).all():
+                                    x_subgroup = x_group.vector_subset(x1 + 1, x2)
+                                    solutions.append({c.x.name: x_subgroup, c.y.name: y_vector_group})
+                else:
+                    sums = numpy.sum(x_group.data, 0)
+                    for y_vector_group in y_group:
+                        match = pattern_finder(sums, y_vector_group.get_vector(1))
+                        x_match = [x_group.vector_subset(m + 1, m + y_length) for m in match]
+                        solutions += [{c.x.name: x, c.y.name: y_vector_group} for x in x_match]
+
+            return solutions
+
         self.add_strategy(Series(), series)
         self.add_strategy(AllDifferent(), all_different)
         self.add_strategy(Permutation(), permutation)
@@ -170,6 +195,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(MaxIf(), conditional_aggregate)
         self.add_strategy(RunningTotal(), running_total)
         self.add_strategy(ForeignProduct(), foreign_operation)
+        self.add_strategy(SumColumn(), sum_column)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_f):
@@ -201,3 +227,13 @@ def equal(x, y):
         return abs(x - y) < delta
     else:
         return x == y
+
+
+def pattern_finder(source, pattern):
+    matches = []
+    if len(pattern) > len(source):
+        return matches
+    for i in range(len(source) - len(pattern) + 1):
+        if equal(source[i], pattern[0]) and numpy.vectorize(equal)(source[i:i + len(pattern)], pattern).all():
+            matches.append(i)
+    return matches

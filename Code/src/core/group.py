@@ -126,7 +126,7 @@ class Group:
         self._row = row
         data = bounds.subset(table.data)
         self._dtype = self.infer_type(data)
-        self.data = numpy.vectorize(lambda x: cast(self.dtype, x))(data)
+        self._data = numpy.vectorize(lambda x: cast(self.dtype, x))(data)
 
     @property
     def row(self):
@@ -143,6 +143,10 @@ class Group:
     @property
     def dtype(self):
         return self._dtype
+
+    @property
+    def data(self):
+        return self._data
 
     def __repr__(self):
         r1, r2, c1, c2 = self.bounds.bounds
@@ -218,7 +222,8 @@ class Group:
         return not self == other
 
     def __eq__(self, other):
-        return isinstance(other, Group) and self.bounds == other.bounds
+        return isinstance(other, Group) \
+            and (self.table, self.row, self.bounds) == (other.table, other.row, other.bounds)
 
     @staticmethod
     def infer_type(data):

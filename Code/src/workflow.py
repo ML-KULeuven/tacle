@@ -6,7 +6,7 @@ from core.constraint import *
 from core.solutions import Solutions
 from core.strategy import StrategyManager
 from idp import IdpAssignmentStrategy
-from internal import InternalAssignmentStrategy, InternalSolvingStrategy
+from internal import InternalCSPStrategy, InternalSolvingStrategy
 from minizinc import MinizincAssignmentStrategy
 from minizinc import MinizincSolvingStrategy
 from parser import get_groups_tables
@@ -70,6 +70,7 @@ def main(csv_file, groups_file, verbose):
             print(f_string.format(name=constraint.name, assign=t_assign - t_start, solve=t_end - t_assign))
         if len(solutions.get_solutions(constraint)) > 0:
             print("\n".join(["\t" + constraint.to_string(s) for s in solutions.get_solutions(constraint)]))
+        if len(solutions.get_solutions(constraint)) > 0 or verbose:
             print()
 
     if verbose:
@@ -78,7 +79,7 @@ def main(csv_file, groups_file, verbose):
 
 def get_manager():
     manager = StrategyManager()
-    manager.add_assignment_strategy(InternalAssignmentStrategy())
+    manager.add_assignment_strategy(InternalCSPStrategy())
     manager.add_solving_strategy(InternalSolvingStrategy())
     manager.add_assignment_strategy(IdpAssignmentStrategy())
     manager.add_assignment_strategy(MinizincAssignmentStrategy())

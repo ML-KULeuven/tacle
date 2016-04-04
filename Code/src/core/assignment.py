@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from constraint import Problem
 from core.group import Group, GType
@@ -98,7 +98,7 @@ class Filter:
     def variables(self):
         return self._variables
 
-    def test(self, assignment):
+    def test(self, assignment: Dict[str, Group]):
         raise NotImplementedError()
 
     def test_same(self, assignment, f):
@@ -116,32 +116,44 @@ class Not(Filter):
 
 
 class NoFilter(Filter):
-    def test(self, assignment):
+    def test(self, assignment: Dict[str, Group]):
         return True
 
 
 class SameLength(Filter):
-    def test(self, assignment):
+    def test(self, assignment: Dict[str, Group]):
         return self.test_same(assignment, Group.length)
 
 
 class SameTable(Filter):
-    def test(self, assignment):
+    def test(self, assignment: Dict[str, Group]):
         return self.test_same(assignment, lambda g: g.table)
 
 
 class SameOrientation(Filter):
-    def test(self, assignment):
+    def test(self, assignment: Dict[str, Group]):
         return self.test_same(assignment, lambda g: g.row)
 
 
 class SameType(Filter):
-    def test(self, assignment):
+    def test(self, assignment: Dict[str, Group]):
         return self.test_same(assignment, lambda g: g.dtype)
 
 
+class SizeFilter(Filter):
+    def __init__(self, variables, rows=None, cols=None):
+        super().__init__(variables)
+        self._rows = rows
+        self._cols = cols
+
+    def test(self, assignment: Dict[str, Group]):
+        groups = list([assignment[v.name] for v in self.variables])
+        return all(self._rows is None or g.rows() >= self._rows for g in groups) \
+            and all(self._cols is None or g.columns() >= self._cols for g in groups)
+
+
 class NotSubgroup(Filter):
-    def test(self, assignment):
+    def test(self, assignment: Dict[str, Group]):
         if len(self.variables) != 2:
             raise RuntimeError("Expected two variables, got {}".format(len(self.variables)))
         return not assignment[self.variables[0].name].is_subgroup(assignment[self.variables[1].name])

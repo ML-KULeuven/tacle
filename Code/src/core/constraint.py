@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Dict
 
 from core.assignment import Source, Filter, Variable, SameLength, ConstraintSource, NotSubgroup, SameTable, \
-    SameOrientation, SameType, Not
-from core.group import GType
+    SameOrientation, SameType, SizeFilter, Not
+from core.group import GType, Group
 
 
 class Constraint:
@@ -46,15 +46,26 @@ discrete = {GType.string, GType.int}
 
 
 class SumColumn(Constraint):
+    x = Variable("X", types=numeric)
+    y = Variable("Y", vector=True, types=numeric)
+
     def __init__(self):
-        variables = [Variable("X", types=numeric), Variable("Y", vector=True, types=numeric)]
-        filters = []
+        def test(_, a: Dict[str, Group]):
+            return a[self.y.name].length() == a[self.x.name].columns() if a[self.x.name].row \
+                else a[self.y.name].length() <= a[self.x.name].columns()
+
+        filter_class = type("SumColumnLength", (Filter,), {"test": test})
+        variables = [self.x, self.y]
+        filters = [SizeFilter([self.x], rows=2), filter_class(variables)]
         super().__init__("column-sum", "{Y} = SUM({X}, col)", Source(variables), filters)
 
 
 class SumRow(Constraint):
+    x = Variable("X", types=numeric)
+    y = Variable("Y", vector=True, types=numeric)
+
     def __init__(self):
-        variables = [Variable("X", types=numeric), Variable("Y", vector=True, types=numeric)]
+        variables = [self.x, self.y]
         filters = []
         super().__init__("row-sum", "{Y} = SUM({X}, row)", Source(variables), filters)
 
@@ -71,6 +82,7 @@ class MaxRow(Constraint):
         variables = [Variable("X", types=numeric), Variable("Y", vector=True, types=numeric)]
         filters = []
         super().__init__("row-max", "{Y} = MAX({X}, row)", Source(variables), filters)
+
 
 class MinColumn(Constraint):
     def __init__(self):
