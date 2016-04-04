@@ -126,8 +126,17 @@ class MinizincAssignmentStrategy(DictAssignmentStrategy):
             # TODO Implementation not finished
             return self._get_assignments(groups, constraint, local("minizinc/group/rank.mzn"))
 
-        self.add_strategy(SumColumn(), sum_columns)
+        self.add_strategy(SumColumn(), sum_columns) # probably, sum_columns should be renamed into binary assignments?
         self.add_strategy(SumRow(), sum_rows)
+
+        self.add_strategy(MaxColumn(), sum_columns) 
+        self.add_strategy(MaxRow(), sum_rows)
+
+        self.add_strategy(MinColumn(), sum_columns)
+        self.add_strategy(MinRow(), sum_rows)
+
+        self.add_strategy(AvgColumn(), sum_columns)
+        self.add_strategy(AvgRow(), sum_rows)
 
     def applies_to(self, constraint):
         return constraint in self.strategies

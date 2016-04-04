@@ -1,0 +1,120 @@
+\documentclass{ecai}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{latexsym}
+\usepackage{xspace}
+\usepackage[numbers]{natbib}
+\usepackage{notoccite}
+
+\usepackage[dvipsnames]{xcolor}
+\newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
+
+%%\ecaisubmission   % inserts page numbers. Use only for submission of paper.
+                  % Do NOT use for camera-ready version of paper.
+
+\begin{document}
+
+\title{Tabular Constraint Learning}
+
+\author{Name1 Surname1 \and Name2 Surname2 \and Name3 Surname3 \institute{KU Leuven, Belgium, email: firstname.lastname@kuleuven} }
+
+\maketitle
+
+\begin{abstract}
+  abstract
+  \end{abstract}
+\section{Introduction}
+\sergey{bullet points for luc to start introduction}\\
+\textbf{Key question}:\\
+Can we discover or reconstruct structural relations in flat tabular spreadsheet data? [in a general way that allows declarative specification of constraints to discover]\\
+
+
+\textbf{Motivation}:
+\begin{itemize}
+  \item File generated from model, model got lost, need to reconstruct
+  \item Constraint programming is hard - is Excel hard?
+  \item Avoid manual analysis, provide selection of constraints
+  \item Error checking
+  \item Completion, gain speed and insights (Complicated constraints, also complicated to verify, too much output)
+\end{itemize}
+
+\textbf{Novelty:}
+\begin{itemize}
+  \item Unsupervised setting (contrary to flashfill, etc)
+  \item Numeric, different constraints (contrary to single textual function solution in flashfill, etc)
+  \item Data format (2D) -- data is no longer in rows like a classic ML or DM settings
+  \item Declarative, general / modular, stacking of constraint problems 
+\end{itemize}
+
+\sergey{to himself we need structure here} 
+\begin{figure}[thpb]
+  \begin{center}
+    \includegraphics[width=0.55\textwidth]{figures/Demo.png}
+  \end{center}
+  \vspace{-10pt}
+  \caption{An example of constraint reconstruction (in blue) with indicated groups (in green)}
+  \label{fig:main_example}
+\end{figure}
+
+\section{Formalization}
+\section{Case Study aka Experiments}
+
+\textbf{Approach}
+\begin{itemize}
+  \item Notation
+  \item Algorithm (select constraints, find assignments, find solutions)
+\end{itemize}
+
+{\bfseries 
+  Experimental questions
+}
+\begin{itemize}
+  \item  How accurate are we? (Accuracy / recall)
+  \item  How fast are we and which factors affect the runtime (how)?
+  \item  How general is our approach, what limitations are there?
+\end{itemize}
+
+
+\section{Related Work}
+\sergey{key bullet points for Luc and possibly Samuel and me to make related work section}
+
+\sergey{ECAI reference style file ignores their guideline and their guideline ignores what is written in the guidelines!}
+flashfill, flashextract, flashmeta \cite{flashfill,flashextract,flashmeta}
+\begin{itemize}
+  \item their supervised vs our unsupervised approach
+  \item they look for a single ``smallest'' solution, we enumerate them all
+  \item they are looking for a function, we solve constraint satisfaction problems
+  \item we do not assume classic row based data layout, we work in the tabular setting
+\end{itemize}
+
+sketch \cite{sketch}
+\begin{itemize}
+  \item look for a constant that would fill in the gap in a program
+  \item tailored for programming languages
+  \item similar to model checking
+  \item looks for a single solution
+  \item similar to constraint satisfaction and sat, where one is interested in a single assignment that works for any potential input
+\end{itemize}
+
+tabular \cite{tabular}
+\begin{itemize}
+  \item language based on the excel tables that specify probabilistic models
+  \item a system for probabilistic inference and similarity mostly in the usage of excel
+  \item probabilistic constraint satisfaction (?) and graphical models
+  \item single solution again
+\end{itemize}
+
+modelseeker \cite{modelseeker} \sergey{Samuel, Luc, probably you would need elaborate here more in details}
+
+\begin{itemize}
+  \item not designed for excel-like data representation (type consistency, groups, etc)
+  \item not designed for excel-like constraints (lookups, conditional ifs, etc)
+  \item does not support user extensions (?)
+\end{itemize}
+
+claudien \cite{claudien} \sergey{Samuel, Luc, you would need to help with this one}
+
+\bibliographystyle{ecai}
+\bibliography{references}
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

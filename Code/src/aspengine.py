@@ -3,71 +3,94 @@ from os import system
 
 import numpy as np
 
-from core.constraint import SumColumn, SumRow
+from core.constraint import SumColumn, SumRow, MaxRow, MaxColumn, MinColumn, MinRow, AvgColumn, AvgRow
 from core.group import GType
 from core.strategy import DictSolvingStrategy
-
+from functools import partial
+# use --quiet=1 to get only the optimal model 
 
 class AspSolvingStrategy(DictSolvingStrategy):
+
+    def call_clingo(self, tmp_filename, asp_file):
+        system("clingo --quiet=1 {tmp_filename} asp/{asp_file} > tmp/asp_output".format(tmp_filename=tmp_filename, asp_file=asp_file))
+
     def __init__(self):
         super().__init__()
 
-        def sum_columns(constraint, assignments, solutions):
+        def aggregate_columns(aggregate, constraint, assignments, solutions):
             solutions = []
-            print("Processing col sum...")
+            print("Processing col {aggregate}...".format(aggregate=aggregate))
             for i,xy_dict in enumerate(assignments):
               X = xy_dict["X"]
               Y = xy_dict["Y"]
+        #     print(X,Y,i)
               if X.row == False:
-                SAT = self.handle_sum_column_data_in_column(X,Y,i)
+                SAT = self.handle_aggregate_column_data_in_column(X,Y,i,aggregate)
                 if SAT:
                   selected_y, x_positions = SAT
-                  print("X COLUMN GROUP","SAT","X",X,"X Positions: ",x_positions,"Y",Y,"selected y vector",selected_y, sep="\n")
-                  solution = {"X":X.vector_subset(min(x_positions),max(x_positions)),"Y":Y.get_vector(selected_y)}
+            #     print("X COLUMN GROUP","SAT","X",X,"X Positions: ",x_positions,"Y",Y,"selected y vector",selected_y, sep="\n")
+                  solution = {"X":X.vector_subset(min(x_positions),max(x_positions)),"Y":Y.vector_subset(selected_y,selected_y)}
                   solutions.append(solution)
               else: #X.row == True
-                SAT = self.handle_sum_column_data_in_rows(X,Y,i)
+                SAT = self.handle_aggregate_column_data_in_rows(X,Y,i,aggregate)
                 if SAT:
-                  print("X ROW GROUP","SAT","X",X,"Y",Y,sep="\n")
+                  start,end,selected_y = SAT
+            #     print("SAT",start,end,selected_y, X,Y)
+                  solution = {"X":X.vector_subset(start,end),"Y":Y.vector_subset(selected_y,selected_y)}
                   solutions.append(solution)
+            return solutions
 
-        def sum_rows(constraint, assignments, solutions):
-            print("Processing row sum...")
+        def aggregate_rows(aggregate, constraint, assignments, solutions):
+            print("Processing row {aggregate}...".format(aggregate=aggregate))
+            solutions = []
             for i, xy_dict in enumerate(assignments):
                 X = xy_dict["X"]
                 Y = xy_dict["Y"]
                 if X.row == False:
-                    SAT = self.handle_sum_row_data_in_column(X, Y, i)
+                    SAT = self.handle_aggregate_row_data_in_column(X, Y, i, aggregate)
                     if SAT:
-                        print("COLUMN DATA SAT")
-                        print("X", X, "Y", Y, sep="\n")
-                        print("X row", X.row, "Y row", Y.row, sep="\n")
+                        start,end,selected_y = SAT
+                        solution = {"X":X.vector_subset(start,end),"Y":Y.vector_subset(selected_y,selected_y)}
+                        solutions.append(solution)
                 else:  # X.row == True
-                    SAT = self.handle_sum_row_data_in_rows(X, Y, i)
+                    SAT = self.handle_aggregate_row_data_in_rows(X, Y, i, aggregate)
                     if SAT:
-                        print("ROW DATA SAT")
+                        selected_y, x_positions = SAT
+                        solution = {"X":X.vector_subset(min(x_positions),max(x_positions)),"Y":Y.vector_subset(selected_y,selected_y)}
+                        solutions.append(solution)
+            return solutions
+        
+        #sum
+        self.add_strategy(SumColumn(), partial(aggregate_columns,"sum"))
+        self.add_strategy(SumRow(), partial(aggregate_rows,"sum"))
+        #max
+        self.add_strategy(MaxColumn(), partial(aggregate_columns,"max"))
+        self.add_strategy(MaxRow(), partial(aggregate_rows,"max"))
+        #min
+        self.add_strategy(MinColumn(), partial(aggregate_columns,"min"))
+        self.add_strategy(MinRow(), partial(aggregate_rows,"min"))
+        #avg
+        self.add_strategy(AvgColumn(), partial(aggregate_columns,"avg"))
+        self.add_strategy(AvgRow(), partial(aggregate_rows,"avg"))
 
-        self.add_strategy(SumColumn(), sum_columns)
-        self.add_strategy(SumRow(), sum_rows)
-
-    def handle_sum_row_data_in_column(self, X, Y, i):
-        tmp_filename, test_file, Xdata, Ydata = self.sum_data_processing(X, Y, i)
+    def handle_aggregate_row_data_in_column(self, X, Y, i, aggregate):
+        processed = self.agg_data_processing(X, Y, i, "row")
+        if processed is None:
+            return None
+        tmp_filename, test_file, Xdata, Ydata = processed
+        rows, cols = Xdata.shape
+        print("range(0..{}).".format(rows-1),file=test_file)
         test_file.close()
-
-        system("clingo {tmp_filename} asp/row_sum_col_data.asp 0 > tmp/asp_output".format(tmp_filename=tmp_filename))
+        self.call_clingo(tmp_filename,"/{aggregate}/row_{aggregate}_col_data.asp".format(aggregate=aggregate))
         with open("tmp/asp_output", "r") as output:
             output_str = output.read()
-            return self.process_sum_row_in_col_output(output_str)
+            return self.process_start_end_output(output_str)
 
-    def handle_sum_row_data_in_rows(self, X, Y, i):
-        # TODO SYMMETRIC CASE, NO NEED TO IMPLEMENT
-        return False
 
-    def process_sum_row_in_col_output(self, output_str):
-        if "UNSATISFIABLE" in output_str:
-            return None
-        print(output_str)
-        return True
+
+    def handle_aggregate_row_data_in_rows(self, X, Y, i, aggregate):
+      return self.handle_aggregate_column_data_in_column(X,Y,i,aggregate, direction="row") #symmetric in the ASP representation
+
 
     @staticmethod
     def yid(idint):
@@ -96,34 +119,48 @@ class AspSolvingStrategy(DictSolvingStrategy):
     @staticmethod
     def scale_data(X, Y, Xdata, Ydata):
         if Y.dtype == GType.float or X.dtype == GType.float:
-            Ydata = 100 * Ydata.astype(np.float32)
-            Xdata = 100 * Xdata.astype(np.float32)
+            X_digits_max = np.max(compute_digits_after_period(Xdata.flatten()))
+            Y_digits_max = np.max(compute_digits_after_period(Ydata.flatten()))
+            scale = np.power(10,max(X_digits_max,Y_digits_max))
+            Ydata = scale * Ydata.astype(np.float32)
+            Xdata = scale * Xdata.astype(np.float32)
             Ydata = Ydata.astype(int)
             Xdata = Xdata.astype(int)
             return Xdata, Ydata
         else:
             return Xdata, Ydata
 
-    def sum_data_processing(self, X, Y, i):
-        tmp_filename, test_file, Xdata, Ydata = self.preprocess(self, X, Y, i)
+    def agg_data_processing(self, X, Y, i, direction):
+        tmp_filename, test_file, Xdata, Ydata = self.preprocess(self, X, Y, i, direction)
         Xdata, Ydata = self.scale_data(X, Y, Xdata, Ydata)
-        self.generate_Y_asp(Ydata, self.yid, test_file)
+        if X == Y: #handle intersection case
+            self.generate_Y_asp(Ydata, self.xid, test_file)
+        elif X.overlaps_with(Y) and np.array_equal(Xdata.T,Ydata) and X.row != Y.row : # X is a transpose of Y
+            return None
+        else:
+            self.generate_Y_asp(Ydata, self.yid, test_file)
+        
+#       print("TEST", X.overlaps_with(Y) and X !=Y,X.bounds, Y.bounds, "TABLE",X.table, Y.table, X, Y, np.array_equal(Xdata,Ydata))
         self.generate_X_asp(Xdata, self.xid, test_file)
         return tmp_filename, test_file, Xdata, Ydata
 
-    def handle_sum_column_data_in_rows(self, X, Y, i):
-        tmp_filename, test_file, Xdata, Ydata = self.sum_data_processing(X, Y, i)
+    def handle_aggregate_column_data_in_rows(self, X, Y, i, aggregate):
+        processed = self.agg_data_processing(X, Y, i, "col")
+        if processed is None:
+            return None
+        tmp_filename, test_file, Xdata, Ydata = processed
+        rows,cols = Xdata.shape
+        print("range(0..{}).".format(rows-1), file=test_file)
         test_file.close()
-
-        system("clingo {tmp_filename} asp/col_sum_row_data.asp 0 > tmp/asp_output".format(tmp_filename=tmp_filename))
+      # print(tmp_filename)
+        self.call_clingo(tmp_filename, "/{aggregate}/col_{aggregate}_row_data.asp".format(aggregate=aggregate))
         with open("tmp/asp_output", "r") as output:
             output_str = output.read()
-            return self.process_sum_column_in_row_output(output_str)
-            # return self.process_sum_column_in_column_output(output_str)
+            return self.process_start_end_output(output_str)
 
     @staticmethod
-    def preprocess(self, X, Y, i):
-        tmp_filename = "tmp/asp_tmp{i}.asp".format(i=i)
+    def preprocess(self, X, Y, i, direction):
+        tmp_filename = "tmp/{direction}_asp_tmp{i}.asp".format(i=i,direction=direction)
         # print(tmp_filename)
         test_file = open(tmp_filename, "w")
         Xdata = X.get_group_data()
@@ -134,43 +171,53 @@ class AspSolvingStrategy(DictSolvingStrategy):
             Ydata = Ydata.T
         return tmp_filename, test_file, Xdata, Ydata
 
-    def handle_sum_column_data_in_column(self, X, Y, i):
-        tmp_filename, test_file, Xdata, Ydata = self.sum_data_processing(X, Y, i)
+    def handle_aggregate_column_data_in_column(self, X, Y, i, aggregate,direction="col"):
+        processed = self.agg_data_processing(X, Y, i, direction)
+        if processed is None:
+            return None
+        tmp_filename, test_file, Xdata, Ydata = processed
 
         max_shift = X.bounds.columns() - Y.length()
         print("range(0..{max_shift}).".format(max_shift=max_shift), file=test_file)
-
+        
         test_file.close()
-
-        system("clingo {tmp_filename} asp/check_sum.asp 0 > tmp/asp_output".format(tmp_filename=tmp_filename))
+        self.call_clingo(tmp_filename, "/{aggregate}/col_{aggregate}_col_data.asp".format(aggregate=aggregate))
         with open("tmp/asp_output", "r") as output:
             output_str = output.read()
-            return self.process_sum_column_in_column_output(output_str)
+            return self.process_aggregate_column_in_column_output(output_str)
 
     @staticmethod
-    def process_sum_column_in_column_output(output):
+    def process_aggregate_column_in_column_output(output):
         if "UNSATISFIABLE" in output:
             return None
+       #print(output)
         shift = re.search(r'shift\((?P<shift>\d+)\)', output)
         shift = int(shift.group("shift"))
-        selected_y = int(re.search(r"selected_Y\(vy(?P<selected>\d+)\)", output).group("selected"))
-        print("selected", selected_y)
-        print("shift", shift)
+        selected_y = int(re.search(r"selected_Y\(v[xy](?P<selected>\d+)\)", output).group("selected")) + 1 # here it starts from zero, but not in the table representation
         positions = map(lambda x: int(x) + 1 + shift, re.findall(r"y_vector\((?P<pos>\d+),\d+\)", output))
         x_positions = list(positions)
-        return selected_y + 1, x_positions
+        return selected_y, x_positions
 
     @staticmethod
-    def process_sum_column_in_row_output(output):
+    def process_start_end_output(output):
         if "UNSATISFIABLE" in output:
             return None
-            # shift = re.search(r'shift\((?P<shift>\d+)\)', output)
-            # shift = int(shift.group("shift"))
-            # selected_y =  int(re.search(r"selected_Y\(vy(?P<selected>\d+)\)",output).group("selected"))
-            # print("selected",selected_y)
-            # print("shift",shift)
-            # positions   = map(lambda x: int(x)+1+shift, re.findall(r"y_vector\((?P<pos>\d+),\d+\)",output))
-            # x_positions = list(positions)
-        print(output)
-        return True
+       #print(output)
+        start = re.search(r'start\((?P<start>\d+)\)', output)
+        start = int(start.group("start"))+1
+        end   = re.search(r'end\((?P<end>\d+)\)', output)
+        end   = int(end.group("end"))+1
+        selected_y =  int(re.search(r"selected_Y\(v[xy](?P<selected>\d+)\)",output).group("selected"))+1
+        return start,end,selected_y
+
+def compute_digits_after_period(number):
+   str_num = str(number)
+   if "." not in str_num:
+       return 0
+   before,after = str_num.split(".")
+   return len(after)
+
+
+compute_digits_after_period = np.vectorize(compute_digits_after_period)
+    
 # return selected_y+1, x_positions
