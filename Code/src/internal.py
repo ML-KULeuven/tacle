@@ -111,11 +111,14 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 return len(collection) - 1
 
             def is_lookup(ok, ov, fk, fv):
+                exact = True
                 for i in range(len(fk)):
                     index = find_fuzzy(fk[i], ok)
+                    if index is not None and ok[index] != fk[i]:
+                        exact = False
                     if index is None or not equal(ov[index], fv[i]):
                         return False
-                return True
+                return not exact
 
             return self._generate_test_vectors(assignments, keys, is_lookup)
 

@@ -10,7 +10,7 @@ def null(var, val):
 
 class Bounds:
     def __init__(self, bounds_list):
-        self.bounds = bounds_list
+        self.bounds = tuple(bounds_list)
 
     def subset(self, data):
         top_row = self.bounds[0] - 1
@@ -49,6 +49,15 @@ class Bounds:
     def __repr__(self):
         return str(self.bounds)
 
+    def __hash__(self):
+        return hash(self.bounds)
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __eq__(self, other):
+        return self.bounds == other.bounds
+
 
 class Table:
     def __init__(self, name, data):
@@ -63,6 +72,15 @@ class Table:
 
     def __str__(self):
         return self.name
+
+    def __hash__(self):
+        return hash(*self.name)
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __eq__(self, other):
+        return self.name == other.name
 
 
 class GType(Enum):
@@ -85,13 +103,28 @@ def cast(gtype: GType, value):
 
 class Group:
     def __init__(self, table, bounds, row):
-        self.table = table
-        self.bounds = bounds
-        self.row = row
-        self.data = self._get_group_data()
-        self.dtype = self.infer_type()
-        f = numpy.vectorize(lambda x: cast(self.dtype, x))
-        self.data = f(self.data)
+        self._table = table
+        self._bounds = bounds
+        self._row = row
+        data = bounds.subset(table.data)
+        self._dtype = self.infer_type(data)
+        self.data = numpy.vectorize(lambda x: cast(self.dtype, x))(data)
+
+    @property
+    def row(self):
+        return self._row
+
+    @property
+    def table(self):
+        return self._table
+
+    @property
+    def bounds(self):
+        return self._bounds
+
+    @property
+    def dtype(self):
+        return self._dtype
 
     def __repr__(self):
         r1, r2, c1, c2 = self.bounds.bounds
@@ -110,12 +143,6 @@ class Group:
 
     def get_group_data(self):
         return self.data
-
-    def infer_type(self):
-        types = list(detect_type(val) for val in (self.data.flatten()))
-        if any(t == GType.nan.value for t in types):
-            raise Exception("NaN values not allowed in groups")
-        return GType(max(list(types)))
 
     def length(self):
         return self.bounds.columns() if self.row else self.bounds.rows()
@@ -165,6 +192,22 @@ class Group:
     def vector_subset(self, start, end):
         l = [start, end] + [None, None] if self.row else [None, None] + [start, end]
         return self.subgroup(Bounds(l))
+
+    def __hash__(self):
+        return hash((self.table, self.row, self.bounds))
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __eq__(self, other):
+        return isinstance(other, Group) and self.bounds == other.bounds
+
+    @staticmethod
+    def infer_type(data):
+        types = list(detect_type(val) for val in (data.flatten()))
+        if any(t == GType.nan.value for t in types):
+            raise Exception("NaN values not allowed in groups")
+        return GType(max(list(types)))
 
 
 # --- Type detection ---
