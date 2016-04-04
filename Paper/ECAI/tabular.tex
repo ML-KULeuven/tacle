@@ -3,11 +3,14 @@
 \usepackage{graphicx}
 \usepackage{latexsym}
 \usepackage{xspace}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
 \usepackage[numbers]{natbib}
 \usepackage{notoccite}
 
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
+
 
 %%\ecaisubmission   % inserts page numbers. Use only for submission of paper.
                   % Do NOT use for camera-ready version of paper.
@@ -57,6 +60,31 @@ Can we discover or reconstruct structural relations in flat tabular spreadsheet 
 \end{figure}
 
 \section{Formalization}
+
+\newcommand{\constraints}{\ensuremath{\mathcal{C}}\xspace}
+\newcommand{\generategroups}{\textit{generateGroups}\xspace}
+\newcommand{\extractgroups}{\textit{extractGroups}\xspace}
+\newcommand{\findassignment}{\textit{findAssignment}\xspace}
+
+\begin{algorithm}[thb]
+  \begin{algorithmic}
+    \footnotesize
+    \State \textbf{Input:} $D$ -- dataset, (optional groups $G$)
+    \State \textbf{Output:} $S$ -- learned constraints with their satisfaction assignment
+    \If{$G$ is not defined}
+       \State $G \gets \extractgroups(D)$
+    \EndIf
+  \For{$c \in \constraints$} \Comment{\constraints -- the set of predefined Excel constraints}
+    \For{$G_1, \dots, G_n \in \generategroups(c,G)$}
+      \State $S \gets S \cup \findassignment(c, G1, \dots, G_n)$
+    \EndFor
+  \EndFor\\
+\Return $S$
+\end{algorithmic}
+\caption{First Order Model: Iterative Query Enumeration}
+\label{algo:top_cycle}
+\end{algorithm}
+
 \section{Case Study aka Experiments}
 
 \textbf{Approach}
