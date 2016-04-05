@@ -1,3 +1,15 @@
+NEW
+sumif.xls: https://support.office.com/en-us/article/SUMIF-function-169b8c99-c05c-4483-a712-1697a653039b
+product.odt (excel guidlines for array formulas): https://support.office.com/en-us/article/Guidelines-and-examples-of-array-formulas-7d94a64e-3ff3-4686-9372-ecfd5caa57c7
+function-min-max.xls: http://www.free-training-tutorial.com/animations/max-min.html
+sumif2.xls: http://www.free-training-tutorial.com/animations/sumif-basic.html
+sumproduct: http://www.excel-easy.com/examples/sumproduct.html
+Excel2013_practise.xls: http://www.gcflearnfree.org/excel2013/13.4
+sumif_texas: https://tutorials.ischool.utexas.edu/index.php/Excel:_Advanced_Formulas_and_Functions
+sumif_subtotal: https://www.ablebits.com/office-addins-blog/2014/11/04/excel-sumif-function-formula-examples/
+household_organizer: sum: https://templates.office.com/en-us/Household%20Organizer-TM10000099
+pc_world_aggregates http://www.pcworld.com/article/2877236/software-productivity/excel-formulas-cheat-sheet-15-essential-tips-for-calculations-and-common-tasks.html
+
 help_lookup.csv: https://support.office.com/en-us/article/LOOKUP-function-446d94af-663b-451d-8251-369d5e3864cb
 expenses.csv: "OEF 24.xlsx"
 price_weight.csv: "Prijs volgens gewicht.xlsx"
@@ -5,3 +17,8 @@ bmi.csv: "Body Mass Index.xslx"
 rides.csv: "Afgelegde ritten per chauffeur.xlsx"
 score.csv: "scoreboard.xlsx"
 shares.csv: "Aandelen in bezit.xlsx"
+
+
+
+
+
