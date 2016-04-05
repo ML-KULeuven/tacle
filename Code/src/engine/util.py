@@ -14,7 +14,7 @@ def run_command(command, input_data=None):
 
 
 def local(filename):
-    return os.path.dirname(os.path.realpath(__file__)) + "/../" + filename
+    return os.path.dirname(os.path.realpath(__file__)) + "/../../" + filename
 
 
 class TempFile:
