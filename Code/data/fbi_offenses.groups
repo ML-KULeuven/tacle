@@ -1,0 +1,17 @@
+{
+	"Tables":
+		[
+			{
+				"Name": "T1",
+				"Bounds": [7, 154, 5, 14],
+				"Orientation": "Column"
+			}
+		],
+	"Groups":
+		[
+			{
+				"Table": "T1",
+				"Bounds": [":", 1, 10]
+			}
+		]
+}
