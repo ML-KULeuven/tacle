@@ -1,15 +1,13 @@
 import argparse
 import time
 
-from aspengine import AspSolvingStrategy
 from core.constraint import *
 from core.solutions import Solutions
 from core.strategy import StrategyManager
-from idp import IdpAssignmentStrategy
-from internal import InternalCSPStrategy, InternalSolvingStrategy
-from minizinc import MinizincAssignmentStrategy
-from minizinc import MinizincSolvingStrategy
-from parser import get_groups_tables
+from engine.idp import IdpAssignmentStrategy
+from engine.internal import InternalCSPStrategy, InternalSolvingStrategy
+from engine.minizinc import MinizincAssignmentStrategy, MinizincSolvingStrategy
+from parse.parser import get_groups_tables
 
 
 def main(csv_file, groups_file, verbose):

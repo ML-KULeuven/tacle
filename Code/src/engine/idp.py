@@ -1,7 +1,7 @@
 from core.constraint import *
 from core.group import *
 from core.strategy import DictAssignmentStrategy
-from engine import run_command, local
+from engine.util import run_command, local
 
 
 class IdpAssignmentStrategy(DictAssignmentStrategy):

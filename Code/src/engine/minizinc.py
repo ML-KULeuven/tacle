@@ -5,7 +5,7 @@ from numpy import transpose
 from core.constraint import *
 from core.group import Group, GType
 from core.strategy import DictAssignmentStrategy, DictSolvingStrategy
-from engine import local, run_command, TempFile
+from engine.util import local, run_command, TempFile
 
 unsatisfiable_pattern = re.compile(r".*UNSATISFIABLE.*")
 error_pattern = re.compile(r".*error.*")
