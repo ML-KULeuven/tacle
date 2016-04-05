@@ -24,6 +24,7 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(ForeignProduct())
         for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin()]:
             self.add_constraint(c)
+        self.add_constraint(Product())
 
     def add_constraint(self, constraint: Constraint):
         self._constraints.add(constraint)
@@ -207,6 +208,14 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return solutions
 
+        def product(c: Product, assignments, solutions):
+            keys = [c.result, c.first, c.second]
+
+            def is_product(r, o1, o2):
+                return numpy.vectorize(equal)(r, numpy.vectorize(Operation.PRODUCT.func)(o1, o2)).all()
+
+            return self._generate_test_vectors(assignments, keys, is_product, lambda r, o1, o2: ordered(o1, o2))
+
         self.add_strategy(Series(), series)
         self.add_strategy(AllDifferent(), all_different)
         self.add_strategy(Permutation(), permutation)
@@ -220,16 +229,16 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(ForeignProduct(), foreign_operation)
         for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin()]:
             self.add_strategy(c, aggregate)
+        self.add_strategy(Product(), product)
 
     @staticmethod
-    def _generate_test_vectors(assignments, keys, test_f):
-        results = []
+    def _generate_test_vectors(assignments, keys, test_vectors, test_groups=None):
         for assignment in assignments:
             for vectors in itertools.product(*[assignment[k.name] for k in keys]):
                 if not any(g1.overlaps_with(g2) for g1, g2 in itertools.combinations(vectors, 2)) \
-                        and test_f(*list(map(lambda vec: vec.get_vector(1), vectors))):
-                    results.append(dict(zip([k.name for k in keys], vectors)))
-        return results
+                        and (test_groups is None or test_groups(*vectors)) \
+                        and test_vectors(*list(map(lambda vec: vec.get_vector(1), vectors))):
+                    yield dict(zip([k.name for k in keys], vectors))
 
 
 def rank_data(a):
@@ -261,3 +270,12 @@ def pattern_finder(source, pattern):
         if equal(source[i], pattern[0]) and numpy.vectorize(equal)(source[i:i + len(pattern)], pattern).all():
             matches.append(i)
     return matches
+
+
+def ordered(*args):
+    if len(args) <= 1:
+        return True
+    for i in range(1, len(args)):
+        if args[i] < args[i - 1]:
+            return False
+    return True

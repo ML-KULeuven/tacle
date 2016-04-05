@@ -100,6 +100,9 @@ class Table:
     def __eq__(self, other):
         return self.name == other.name
 
+    def __lt__(self, other):
+        return self.name < other.name
+
 
 class GType(Enum):
     nan = -1
@@ -113,7 +116,7 @@ def cast(gtype: GType, value):
         return int(value)
     elif gtype == GType.float:
         match = percent_pattern.match(str(value))
-        return float(value) if not match else float(str(value).replace("%", ""))
+        return float(value) if not match else float(str(value).replace("%", "")) / 100.0
     elif gtype == GType.string:
         return str(value)
     raise ValueError("Unexpected GType: " + str(gtype))
@@ -224,6 +227,16 @@ class Group:
     def __eq__(self, other):
         return isinstance(other, Group) \
             and (self.table, self.row, self.bounds) == (other.table, other.row, other.bounds)
+
+    def __lt__(self, other):
+        if not isinstance(other, Group):
+            return NotImplemented
+        if self.table < other.table:
+            return True
+        index = 0 if self.row else 2
+        if self.row == other.row and self.bounds.bounds[index] < other.bounds.bounds[index]:
+            return True
+        return False
 
     @staticmethod
     def infer_type(data):

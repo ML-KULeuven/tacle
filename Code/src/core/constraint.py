@@ -271,7 +271,7 @@ class RunningTotal(Constraint):
     def __init__(self):
         variables = [self.acc, self.pos, self.neg]
         source = Source(variables)
-        filters = [SameLength(variables)]
+        filters = [SameLength(variables), SizeFilter(variables, length=2)]
         super().__init__("running-total", "{A} = PREV({A}) + {P} - {N}", source, filters)
 
 
@@ -302,3 +302,15 @@ class ForeignOperation(Constraint):
 class ForeignProduct(ForeignOperation):
     def __init__(self):
         super().__init__("PRODUCT", Operation.PRODUCT)
+
+
+class Product(Constraint):
+    result = Variable("R", vector=True, types=numeric)
+    first = Variable("O1", vector=True, types=numeric)
+    second = Variable("O2", vector=True, types=numeric)
+
+    def __init__(self):
+        variables = [self.result, self.first, self.second]
+        source = Source(variables)
+        filters = [SameLength(variables)]
+        super().__init__("product", "{R} = {O1} * {O2}", source, filters)

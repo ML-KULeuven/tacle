@@ -4,9 +4,9 @@ class Solutions:
         self.properties = {}
 
     def add(self, constraint, solutions):
-        self.solutions[constraint] = solutions
+        self.solutions[constraint] = list(solutions)
         if len(constraint.get_variables()) == 1:
-            self.properties[constraint] = [a[constraint.get_variables()[0].name] for a in solutions]
+            self.properties[constraint] = [a[constraint.get_variables()[0].name] for a in self.solutions[constraint]]
 
     def get_solutions(self, constraint):
         return self.solutions.get(constraint, [])

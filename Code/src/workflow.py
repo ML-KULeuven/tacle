@@ -36,7 +36,8 @@ def main(csv_file, groups_file, verbose):
         SumIf(),
         MaxIf(),
         RunningTotal(),
-        ForeignProduct()
+        ForeignProduct(),
+        Product()
     ]
 
     supported = []
