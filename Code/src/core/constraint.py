@@ -4,7 +4,7 @@ from typing import List, Dict
 import numpy
 
 from core.assignment import Source, Filter, Variable, SameLength, ConstraintSource, SameTable, \
-    SameOrientation, SameType, SizeFilter, Not
+    SameOrientation, SameType, SizeFilter, Not, NotPartial
 from core.group import GType, Group, Orientation
 
 
@@ -62,7 +62,19 @@ class Operation(Enum):
 
     @property
     def aggregate(self):
-        return self._aggregate
+        def apply(data, axis):
+            if axis == 1:
+                data = data.T
+            rows, cols = data.shape
+            results = numpy.array([None] * cols)
+            mask = numpy.vectorize(lambda e: e is not None)
+            for i in range(cols):
+                vec = data[:, i][mask(data[:, i])]
+                if len(vec) != 0:
+                    vec = numpy.array(vec, dtype=numpy.float64)
+                    results[i] = self._aggregate(vec)
+            return results
+        return apply
 
     @property
     def func(self):
@@ -151,8 +163,8 @@ class Permutation(Constraint):
     x = Variable("X", types=numeric)
 
     def __init__(self):
-        filters = []
         variables = [self.x]
+        filters = [NotPartial(variables)]
         super().__init__("permutation", "PERMUTATION({X})", Source(variables), filters)
 
 
@@ -160,8 +172,8 @@ class Series(Constraint):
     x = Variable("X", types=numeric)
 
     def __init__(self):
-        filters = []
         variables = [self.x]
+        filters = [NotPartial(variables)]
         super().__init__("series", "SERIES({X})", Source(variables), filters)
 
 
@@ -169,8 +181,8 @@ class AllDifferent(Constraint):
     x = Variable("X", types=discrete)
 
     def __init__(self):
-        filters = []
         variables = [self.x]
+        filters = [NotPartial(variables)]
         super().__init__("all-different", "ALLDIFFERENT({X})", Source(variables), filters)
 
 
@@ -180,7 +192,7 @@ class Rank(Constraint):
 
     def __init__(self):
         variables = [self.x, self.y]
-        filters = [SameLength(variables)]
+        filters = [SameLength(variables), NotPartial(variables)]
         super().__init__("rank", "{Y} = RANK({X})", Source(variables), filters)
 
 
@@ -191,7 +203,7 @@ class ForeignKey(Constraint):
     def __init__(self):
         variables = [self.pk, self.fk]
         source = ConstraintSource(variables, AllDifferent(), {"X": "PK"})
-        filters = [Not(SameTable([self.pk, self.fk])), SameType(variables)]
+        filters = [Not(SameTable([self.pk, self.fk])), SameType(variables), NotPartial(variables)]
         super().__init__("foreign-key", "{FK} -> {PK}", source, filters)
 
 
@@ -204,7 +216,7 @@ class Lookup(Constraint):
     def __init__(self):
         variables = [self.o_key, self.o_value, self.f_key, self.f_value]
         source = ConstraintSource(variables, ForeignKey(), {"PK": "OK", "FK": "FK"})
-        filters = [SameType([self.o_value, self.f_value]),
+        filters = [SameType([self.o_value, self.f_value]), NotPartial(variables),
                    SameLength([self.f_key, self.f_value]), SameLength([self.o_key, self.o_value]),
                    SameTable([self.f_key, self.f_value]), SameTable([self.o_key, self.o_value]),
                    SameOrientation([self.f_key, self.f_value]), SameOrientation([self.o_key, self.o_value])]
@@ -220,7 +232,7 @@ class FuzzyLookup(Constraint):
     def __init__(self):
         variables = [self.o_key, self.o_value, self.f_key, self.f_value]
         source = Source(variables)
-        filters = [SameType([self.o_value, self.f_value]),
+        filters = [SameType([self.o_value, self.f_value]), NotPartial(variables),
                    SameLength([self.f_key, self.f_value]), SameLength([self.o_key, self.o_value]),
                    SameTable([self.f_key, self.f_value]), SameTable([self.o_key, self.o_value]),
                    SameOrientation([self.f_key, self.f_value]), SameOrientation([self.o_key, self.o_value])]
@@ -239,7 +251,7 @@ class ConditionalAggregate(Constraint):
         variables = [self.o_key, self.result, self.f_key, self.values]
         foreign_key = ForeignKey()
         source = ConstraintSource(variables, foreign_key, {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"})
-        filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]),
+        filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]), NotPartial(variables),
                    SameTable([self.o_key, self.result]), SameTable([self.f_key, self.values]),
                    SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
         super().__init__("{}-if".format(name.lower()), "{R} = " + name.upper() + "IF({FK}={OK}, {V})", source, filters)
@@ -271,7 +283,7 @@ class RunningTotal(Constraint):
     def __init__(self):
         variables = [self.acc, self.pos, self.neg]
         source = Source(variables)
-        filters = [SameLength(variables), SizeFilter(variables, length=2)]
+        filters = [SameLength(variables), SizeFilter(variables, length=2), NotPartial(variables)]
         super().__init__("running-total", "{A} = PREV({A}) + {P} - {N}", source, filters)
 
 
@@ -289,7 +301,7 @@ class ForeignOperation(Constraint):
         variables = foreign + original
         foreign_key = ForeignKey()
         source = ConstraintSource(variables, foreign_key, {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"})
-        filters = [SameLength(foreign), SameTable(foreign), SameOrientation(foreign),
+        filters = [SameLength(foreign), SameTable(foreign), SameOrientation(foreign), NotPartial(variables),
                    SameLength(original), SameTable(original), SameOrientation(original)]
         super().__init__("foreign-" + name.lower(), "{R} = " + name.upper() + "({FV}, {FK}={OK} | {OV})", source,
                          filters)
@@ -312,5 +324,17 @@ class Product(Constraint):
     def __init__(self):
         variables = [self.result, self.first, self.second]
         source = Source(variables)
-        filters = [SameLength(variables)]
+        filters = [SameLength(variables), NotPartial(variables)]
         super().__init__("product", "{R} = {O1} * {O2}", source, filters)
+
+
+class Projection(Constraint):
+    result = Variable("R", vector=True)
+    projected = Variable("P")
+
+    def __init__(self):
+        variables = [self.result, self.projected]
+        source = Source(variables)
+        filters = [SameLength(variables), SameOrientation(variables), SameTable(variables), SameType(variables),
+                   SizeFilter([self.projected], vectors=2)]
+        super().__init__("project", "{R} = PROJECT({R})")

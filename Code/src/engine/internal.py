@@ -180,6 +180,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             o_column = Orientation.column(c.orientation)
             operation_f = c.operation.aggregate
 
+            # TODO Largest Area?
+
             for assignment in assignments:
                 x_group, y_group = (assignment[k.name] for k in [c.x, c.y])
                 x_data = x_group.data
@@ -256,6 +258,8 @@ def rank_data(a):
 
 def equal(x, y):
     delta = pow(10, -10)
+    if x is None or y is None:
+        return x is y
     if isinstance(x, float) or isinstance(y, float):
         return abs(x - y) < delta
     else:

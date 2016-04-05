@@ -141,17 +141,24 @@ class SameType(Filter):
 
 
 class SizeFilter(Filter):
-    def __init__(self, variables, rows=None, cols=None, length=None):
+    def __init__(self, variables, rows=None, cols=None, length=None, vectors=None):
         super().__init__(variables)
         self._rows = rows
         self._cols = cols
         self._length = length
+        self._vectors = vectors
 
     def test(self, assignment: Dict[str, Group]):
         groups = list([assignment[v.name] for v in self.variables])
         return all(self._rows is None or g.rows() >= self._rows for g in groups) \
             and all(self._cols is None or g.columns() >= self._cols for g in groups) \
-            and all(self._length is None or g.length() >= self._length for g in groups)
+            and all(self._length is None or g.length() >= self._length for g in groups) \
+            and all(self._vectors is None or g.vectors() >= self._vectors for g in groups)
+
+
+class NotPartial(Filter):
+    def test(self, assignment: Dict[str, Group]):
+        return not any([assignment[v.name].is_partial for v in self.variables])
 
 
 class NotSubgroup(Filter):

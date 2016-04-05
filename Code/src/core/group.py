@@ -111,10 +111,23 @@ class GType(Enum):
     string = 2
 
 
+class EmptyInt(int):
+    pass
+
+
+class EmptyFloat(float):
+    pass
+
+
 def cast(gtype: GType, value):
     if gtype == GType.int:
+        if detect_type(value) == GType.nan.value:
+            return EmptyInt()
         return int(value)
     elif gtype == GType.float:
+        if detect_type(value) == GType.nan.value:
+            # return EmptyFloat()
+            return None
         match = percent_pattern.match(str(value))
         return float(value) if not match else float(str(value).replace("%", "")) / 100.0
     elif gtype == GType.string:
@@ -130,6 +143,11 @@ class Group:
         data = bounds.subset(table.data)
         self._dtype = self.infer_type(data)
         self._data = numpy.vectorize(lambda x: cast(self.dtype, x))(data)
+        self._is_partial = numpy.any(numpy.vectorize(lambda x: x is None)(self._data))
+
+    @property
+    def is_partial(self):
+        return self._is_partial
 
     @property
     def row(self):

@@ -4,12 +4,17 @@ class Solutions:
         self.properties = {}
 
     def add(self, constraint, solutions):
-        self.solutions[constraint] = list(solutions)
-        if len(constraint.get_variables()) == 1:
-            self.properties[constraint] = [a[constraint.get_variables()[0].name] for a in self.solutions[constraint]]
+        solutions_l = list(solutions)
+        self.solutions[constraint] = solutions_l
+        solution_set = set(self._to_tuple(constraint, solution) for solution in solutions_l)
+        self.properties[constraint] = solution_set
 
     def get_solutions(self, constraint):
         return self.solutions.get(constraint, [])
 
-    def get_property_groups(self, constraint):
-        return self.properties.get(constraint, [])
+    def has_solution(self, constraint, solution):
+        return self._to_tuple(constraint, solution) in self.properties[constraint]
+
+    @staticmethod
+    def _to_tuple(constraint, solution):
+        return (solution[v.name] for v in constraint.variables)
