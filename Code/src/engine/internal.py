@@ -5,7 +5,7 @@ from core.group import Group
 from core.solutions import Solutions
 from core.strategy import AssignmentStrategy, DictSolvingStrategy
 
-
+# TODO Sum IF with Nones
 class InternalCSPStrategy(AssignmentStrategy):
     def __init__(self):
         super().__init__()
@@ -26,6 +26,7 @@ class InternalCSPStrategy(AssignmentStrategy):
         for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin()]:
             self.add_constraint(c)
         self.add_constraint(Product())
+        self.add_constraint(SumProduct())
 
     def add_constraint(self, constraint: Constraint):
         self._constraints.add(constraint)
@@ -219,6 +220,14 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return self._generate_test_vectors(assignments, keys, is_product, lambda r, o1, o2: ordered(o1, o2))
 
+        def sum_product(c: Product, assignments, solutions):
+            keys = [c.result, c.first, c.second]
+
+            def is_sum_product(r, o1, o2):
+                return numpy.vectorize(equal)(r, numpy.sum(numpy.vectorize(Operation.PRODUCT.func)(o1, o2))).all()
+
+            return self._generate_test_vectors(assignments, keys, is_sum_product, lambda r, o1, o2: ordered(o1, o2))
+
         def project(c: Projection, assignments, _):
             masks = {}
             for assignment in assignments:
@@ -250,6 +259,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin()]:
             self.add_strategy(c, aggregate)
         self.add_strategy(Product(), product)
+        self.add_strategy(SumProduct(), sum_product)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_vectors, test_groups=None):

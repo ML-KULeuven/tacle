@@ -5,6 +5,8 @@ import pandas as pd
 
 from core.group import Bounds, Table, Group, GType, detect_type, numeric_type, Orientation
 
+# TODO Deal with currency's
+# TODO Single vector => try both orientations
 
 def parse(filename):
     with open(filename, "r") as file:

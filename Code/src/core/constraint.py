@@ -338,3 +338,16 @@ class Projection(Constraint):
         filters = [SameLength(variables), SameOrientation(variables), SameTable(variables), SameType(variables),
                    SizeFilter([self.projected], vectors=2), Partial([self.projected])]
         super().__init__("project", "{R} = PROJECT({R})", source, filters)
+
+
+class SumProduct(Constraint):
+    result = Variable("R", vector=True, types=numeric)
+    first = Variable("O1", vector=True, types=numeric)
+    second = Variable("O2", vector=True, types=numeric)
+
+    def __init__(self):
+        variables = [self.result, self.first, self.second]
+        source = Source(variables)
+        filters = [SameLength([self.first, self.second]), NotPartial(variables),
+                   SizeFilter([self.first, self.second], length=2), SizeFilter([self.result], rows=1, cols=1)]
+        super().__init__("sum-product", "{R} = SUMPRODUCT({O1}, {O2})", source, filters)

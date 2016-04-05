@@ -132,7 +132,9 @@ class Group:
         data = bounds.subset(table.data)
         self._dtype = self.infer_type(data)
         self._data = numpy.vectorize(lambda x: cast(self.dtype, x))(data)
+        print(str(self), self.data)
         self._is_partial = numpy.any(numpy.vectorize(lambda x: x is None)(self._data))
+        print(str(self), self.is_partial)
 
     @property
     def is_partial(self):
