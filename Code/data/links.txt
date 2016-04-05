@@ -1,1 +1,7 @@
 help_lookup.csv: https://support.office.com/en-us/article/LOOKUP-function-446d94af-663b-451d-8251-369d5e3864cb
+expenses.csv: "OEF 24.xlsx"
+price_weight.csv: "Prijs volgens gewicht.xlsx"
+bmi.csv: "Body Mass Index.xslx"
+rides.csv: "Afgelegde ritten per chauffeur.xlsx"
+score.csv: "scoreboard.xlsx"
+shares.csv: "Aandelen in bezit.xlsx"
