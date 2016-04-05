@@ -17,8 +17,9 @@ def get_groups_tables(csv_file, groups_file=None):
     type_data = np.vectorize(detect_type)(data)
     if groups_file is None:
         t = list(detect_tables(type_data))
-        print("PARSE: Detected table areas: {}".format(", ".join(["[{}:{}, {}:{}]".format(*r) for r, o in t])))
         t = [(b, Table("T{}".format(i + 1), Bounds(b).subset(data), o)) for i, (b, o) in enumerate(t)]
+        print("PARSE: Detected tables: {}".format(", ".join(["{} = [{}:{}, {}:{}]".format(table.name, *bounds)
+                                                             for bounds, table in t])))
         groups = detect_groups(data, type_data, t)
         print("PARSE: Detected groups: {}".format(", ".join(str(g) for g in groups)))
         print()
