@@ -4,7 +4,7 @@ from typing import List, Dict
 import numpy
 
 from core.assignment import Source, Filter, Variable, SameLength, ConstraintSource, SameTable, \
-    SameOrientation, SameType, SizeFilter, Not, NotPartial
+    SameOrientation, SameType, SizeFilter, Not, NotPartial, Partial
 from core.group import GType, Group, Orientation
 
 
@@ -336,5 +336,5 @@ class Projection(Constraint):
         variables = [self.result, self.projected]
         source = Source(variables)
         filters = [SameLength(variables), SameOrientation(variables), SameTable(variables), SameType(variables),
-                   SizeFilter([self.projected], vectors=2)]
-        super().__init__("project", "{R} = PROJECT({R})")
+                   SizeFilter([self.projected], vectors=2), Partial([self.projected])]
+        super().__init__("project", "{R} = PROJECT({R})", source, filters)

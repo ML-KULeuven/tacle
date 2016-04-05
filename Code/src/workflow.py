@@ -21,6 +21,7 @@ def main(csv_file, groups_file, verbose):
         Permutation(),
         Series(),
         AllDifferent(),
+        Projection(),
         ColumnSum(),
         RowSum(),
         ColumnAverage(),

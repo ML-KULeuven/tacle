@@ -92,7 +92,7 @@ class Table:
         return self.name
 
     def __hash__(self):
-        return hash(*self.name)
+        return hash(self.name)
 
     def __ne__(self, other):
         return not self == other

@@ -10,15 +10,13 @@ sumif_subtotal: https://www.ablebits.com/office-addins-blog/2014/11/04/excel-sum
 household_organizer: sum: https://templates.office.com/en-us/Household%20Organizer-TM10000099
 pc_world_aggregates http://www.pcworld.com/article/2877236/software-productivity/excel-formulas-cheat-sheet-15-essential-tips-for-calculations-and-common-tasks.html
 
+# Excel support
 help_lookup.csv: https://support.office.com/en-us/article/LOOKUP-function-446d94af-663b-451d-8251-369d5e3864cb
+
+# Exercises from management course
 expenses.csv: "OEF 24.xlsx"
 price_weight.csv: "Prijs volgens gewicht.xlsx"
 bmi.csv: "Body Mass Index.xslx"
 rides.csv: "Afgelegde ritten per chauffeur.xlsx"
 score.csv: "scoreboard.xlsx"
 shares.csv: "Aandelen in bezit.xlsx"
-
-
-
-
-

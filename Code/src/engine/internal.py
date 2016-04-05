@@ -22,6 +22,7 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(MaxIf())
         self.add_constraint(RunningTotal())
         self.add_constraint(ForeignProduct())
+        self.add_constraint(Projection())
         for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin()]:
             self.add_constraint(c)
         self.add_constraint(Product())
@@ -218,6 +219,22 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return self._generate_test_vectors(assignments, keys, is_product, lambda r, o1, o2: ordered(o1, o2))
 
+        def project(c: Projection, assignments, _):
+            masks = {}
+            for assignment in assignments:
+                r_group, p_group = [assignment[v.name] for v in [c.result, c.projected]]
+                assert isinstance(r_group, Group)
+                assert isinstance(p_group, Group)
+                if p_group not in masks:
+                    masks[p_group] = numpy.vectorize(lambda x: x is not None)(p_group.data)
+                p_masked = masks[p_group] if p_group.row else masks[p_group].T
+                print(p_masked)
+                size = 2
+                for s in range(p_group.vectors() - 1):
+                    for e in range(s + size - 1, p_group.vectors() - 1):
+                        pass
+            return []
+
         self.add_strategy(Series(), series)
         self.add_strategy(AllDifferent(), all_different)
         self.add_strategy(Permutation(), permutation)
@@ -229,6 +246,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(MaxIf(), conditional_aggregate)
         self.add_strategy(RunningTotal(), running_total)
         self.add_strategy(ForeignProduct(), foreign_operation)
+        self.add_strategy(Projection(), project)
         for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin()]:
             self.add_strategy(c, aggregate)
         self.add_strategy(Product(), product)

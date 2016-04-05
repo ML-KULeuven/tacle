@@ -161,6 +161,11 @@ class NotPartial(Filter):
         return not any([assignment[v.name].is_partial for v in self.variables])
 
 
+class Partial(Filter):
+    def test(self, assignment: Dict[str, Group]):
+        return all([assignment[v.name].is_partial for v in self.variables])
+
+
 class NotSubgroup(Filter):
     def test(self, assignment: Dict[str, Group]):
         if len(self.variables) != 2:
