@@ -241,9 +241,10 @@ class Group:
     @staticmethod
     def infer_type(data):
         types = list(detect_type(val) for val in (data.flatten()))
-        if any(t == GType.nan.value for t in types):
-            raise Exception("NaN values not allowed in groups")
-        return GType(max(list(types)))
+        detected = GType(max(list(types)))
+        if detected == GType.nan:
+            raise Exception("NaN type not allowed for groups")
+        return detected
 
 
 # --- Type detection ---
@@ -264,4 +265,4 @@ def detect_type(val):
 
 
 def numeric_type(data_type):
-    return data_type == GType.int.value or data_type == GType.float.value
+    return data_type == GType.int.value or data_type == GType.float.value or data_type == GType.nan.value

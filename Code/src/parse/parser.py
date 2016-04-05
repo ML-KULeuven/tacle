@@ -49,6 +49,8 @@ def get_groups_tables(csv_file, groups_file=None):
                     groups.append(create_group(group_description["Bounds"], table))
             else:
                 groups = detect_groups(data, type_data, t)
+                print("PARSE: Detected groups: {}".format(", ".join(str(g) for g in groups)))
+                print()
         return groups
 
 
