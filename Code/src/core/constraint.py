@@ -83,10 +83,10 @@ class Operation(Enum):
 
     @staticmethod
     def blank_filter(data):
-        if data.dtype == numpy.object:
-            return None, lambda e: e is not None
-        else:
+        if numpy.issubdtype(data.dtype, numpy.float):
             return numpy.nan, lambda e: not numpy.isnan(e)
+        else:
+            return None, lambda e: e is not None
 
 
 class Aggregate(Constraint):

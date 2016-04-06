@@ -257,8 +257,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             for assignment in assignments:
                 r_group, p_group = [assignment[v.name] for v in [c.result, c.projected]]
-                assert isinstance(r_group, Group)
-                assert isinstance(p_group, Group)
                 if p_group not in masks:
                     bool_mask = numpy.vectorize(Operation.blank_filter(p_group.data)[1])(p_group.data)
                     masks[p_group] = numpy.vectorize(lambda e: 1 if e else 0)(bool_mask)
