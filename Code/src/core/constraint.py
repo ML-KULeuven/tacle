@@ -66,8 +66,14 @@ class Operation(Enum):
             if axis == 1:
                 data = data.T
             rows, cols = data.shape
-            results = numpy.array([None] * cols)
-            mask = numpy.vectorize(lambda e: e is not None)
+            if data.dtype == numpy.object:
+                blank = None
+                blank_test = lambda e: e is not None
+            else:
+                blank = numpy.nan
+                blank_test = lambda e: not numpy.isnan(e)
+            results = numpy.array([blank] * cols)
+            mask = numpy.vectorize(blank_test)
             for i in range(cols):
                 vec = data[:, i][mask(data[:, i])]
                 if len(vec) != 0:

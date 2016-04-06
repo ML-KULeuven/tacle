@@ -25,10 +25,10 @@ def cast(gtype: GType, value):
     if detect_type(value) == GType.nan.value:
         return None
     if gtype == GType.int:
-        return int(value)
+        return float(str(value).replace(",", ""))
     elif gtype == GType.float:
         match = percent_pattern.match(str(value))
-        return float(value) if not match else float(str(value).replace("%", "")) / 100.0
+        return float(str(value).replace(",", "")) if not match else float(str(value).replace("%", "")) / 100.0
     elif gtype == GType.string:
         return str(value)
     raise ValueError("Unexpected GType: " + str(gtype))
@@ -38,7 +38,7 @@ def detect_type(val):
     if percent_pattern.match(str(val)):
         return GType.float.value
     try:
-        val = float(val)
+        val = float(str(val).replace(",", ""))
         if np.isnan(val):
             return GType.nan.value
         return GType.int.value if float(val) == int(val) else GType.float.value
@@ -56,7 +56,6 @@ def infer_type(data):
     if detected == GType.nan:
         raise Exception("NaN type not allowed for groups")
     return detected
-
 
 
 def get_groups_tables(csv_file, groups_file=None):
@@ -102,7 +101,6 @@ def get_groups_tables(csv_file, groups_file=None):
 
 
 def create_group(bounds_list, table):
-
     if bounds_list[0] == ":":
         bounds = Bounds([1, table.rows] + bounds_list[1:3])
         row = False

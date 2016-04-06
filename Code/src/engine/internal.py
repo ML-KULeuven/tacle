@@ -5,6 +5,7 @@ from core.group import Group
 from core.solutions import Solutions
 from core.strategy import AssignmentStrategy, DictSolvingStrategy
 
+
 # TODO Sum IF with Nones
 class InternalCSPStrategy(AssignmentStrategy):
     def __init__(self):
@@ -288,6 +289,8 @@ def equal(x, y):
     delta = pow(10, -10)
     if x is None or y is None:
         return x is y
+    if numpy.isnan(x) or numpy.isnan(y):
+        return numpy.isnan(x) == numpy.isnan(y)
     if isinstance(x, float) or isinstance(y, float):
         return abs(x - y) < delta
     else:
