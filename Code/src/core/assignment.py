@@ -1,7 +1,8 @@
 from typing import List, Dict
 
 from constraint import Problem
-from core.group import Group, GType
+from core.group import Group
+from parse.parser import GType
 
 
 class Variable:
@@ -44,9 +45,9 @@ class Source:
         return self._variables
 
     def candidates(self, groups, solutions, filters):
-        return self._complete([{}], self.variables, groups, filters)
+        return self._complete([{}], groups, filters)
 
-    def _complete(self, assignments, v_unassigned, groups, filters):
+    def _complete(self, assignments, groups, filters):
         result = []
 
         def try_assignment():
@@ -84,10 +85,8 @@ class ConstraintSource(Source):
         self.dictionary = dictionary
 
     def candidates(self, groups, solutions, filters):
-        v_assigned = {v for v in self.dictionary.values()}
         assignments = [{self.dictionary[k]: v for k, v in s.items()} for s in solutions.get_solutions(self.constraint)]
-        v_unassigned = [v for v in self.variables if v.name not in v_assigned]
-        return self._complete(assignments, v_unassigned, groups, filters)
+        return self._complete(assignments, groups, filters)
 
 
 class Filter:

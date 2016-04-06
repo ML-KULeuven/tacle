@@ -1,8 +1,16 @@
 from enum import Enum
 
 import numpy
-import re
 
+
+class GType(Enum):
+    nan = -1
+    int = 0
+    float = 1
+    string = 2
+
+
+# --- Orientation ---
 
 class Orientation(Enum):
     HORIZONTAL = True
@@ -20,6 +28,8 @@ class Orientation(Enum):
 def null(var, val):
     return val if var is None else var
 
+
+# --- Bounds ---
 
 class Bounds:
     def __init__(self, bounds_list):
@@ -72,6 +82,8 @@ class Bounds:
         return self.bounds == other.bounds
 
 
+# --- Table ---
+
 class Table:
     def __init__(self, name, data, orientation=None):
         self.name = name
@@ -104,37 +116,16 @@ class Table:
         return self.name < other.name
 
 
-class GType(Enum):
-    nan = -1
-    int = 0
-    float = 1
-    string = 2
-
-
-def cast(gtype: GType, value):
-    if detect_type(value) == GType.nan.value:
-        return None
-    if gtype == GType.int:
-        return int(value)
-    elif gtype == GType.float:
-        match = percent_pattern.match(str(value))
-        return float(value) if not match else float(str(value).replace("%", "")) / 100.0
-    elif gtype == GType.string:
-        return str(value)
-    raise ValueError("Unexpected GType: " + str(gtype))
-
+# --- Group ---
 
 class Group:
-    def __init__(self, table, bounds, row):
+    def __init__(self, table, bounds, row, data, dtype):
         self._table = table
         self._bounds = bounds
         self._row = row
-        data = bounds.subset(table.data)
-        self._dtype = self.infer_type(data)
-        self._data = numpy.vectorize(lambda x: cast(self.dtype, x))(data)
-        print(str(self), self.data)
+        self._dtype = dtype
+        self._data = data
         self._is_partial = numpy.any(numpy.vectorize(lambda x: x is None)(self._data))
-        print(str(self), self.is_partial)
 
     @property
     def is_partial(self):
@@ -206,7 +197,8 @@ class Group:
         return self.row
 
     def subgroup(self, bounds):
-        return Group(self.table, self.bounds.combine(bounds), self.row)
+        sub_bounds = Bounds([1, self.rows(), 1, self.columns()]).combine(bounds)
+        return Group(self.table, self.bounds.combine(bounds), self.row, sub_bounds.subset(self.data), self.dtype)
 
     def get_vector(self, i):
         return self.data[i - 1, :] if self.row else self.data[:, i - 1]
@@ -246,32 +238,3 @@ class Group:
         if self.row == other.row and self.bounds.bounds[index] < other.bounds.bounds[index]:
             return True
         return False
-
-    @staticmethod
-    def infer_type(data):
-        types = list(detect_type(val) for val in (data.flatten()))
-        detected = GType(max(list(types)))
-        if detected == GType.nan:
-            raise Exception("NaN type not allowed for groups")
-        return detected
-
-
-# --- Type detection ---
-
-percent_pattern = re.compile(r"\d+(\.\d+)?%")
-
-
-def detect_type(val):
-    if percent_pattern.match(str(val)):
-        return GType.float.value
-    try:
-        val = float(val)
-        if numpy.isnan(val):
-            return GType.nan.value
-        return GType.int.value if float(val) == int(val) else GType.float.value
-    except ValueError:
-        return GType.string.value
-
-
-def numeric_type(data_type):
-    return data_type == GType.int.value or data_type == GType.float.value or data_type == GType.nan.value

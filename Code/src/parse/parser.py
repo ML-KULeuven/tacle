@@ -2,8 +2,10 @@ import json
 
 import numpy as np
 import pandas as pd
+import re
 
-from core.group import Bounds, Table, Group, GType, detect_type, numeric_type, Orientation
+from core.group import Bounds, Table, Group, Orientation, GType
+
 
 # TODO Deal with currency's
 # TODO Single vector => try both orientations
@@ -12,6 +14,49 @@ def parse(filename):
     with open(filename, "r") as file:
         data = np.array(pd.read_csv(file, header=None))
         return data
+
+
+# --- Type detection ---
+
+percent_pattern = re.compile(r"\d+(\.\d+)?%")
+
+
+def cast(gtype: GType, value):
+    if detect_type(value) == GType.nan.value:
+        return None
+    if gtype == GType.int:
+        return int(value)
+    elif gtype == GType.float:
+        match = percent_pattern.match(str(value))
+        return float(value) if not match else float(str(value).replace("%", "")) / 100.0
+    elif gtype == GType.string:
+        return str(value)
+    raise ValueError("Unexpected GType: " + str(gtype))
+
+
+def detect_type(val):
+    if percent_pattern.match(str(val)):
+        return GType.float.value
+    try:
+        val = float(val)
+        if np.isnan(val):
+            return GType.nan.value
+        return GType.int.value if float(val) == int(val) else GType.float.value
+    except ValueError:
+        return GType.string.value
+
+
+def numeric_type(data_type):
+    return data_type == GType.int.value or data_type == GType.float.value or data_type == GType.nan.value
+
+
+def infer_type(data):
+    types = list(detect_type(val) for val in (data.flatten()))
+    detected = GType(max(list(types)))
+    if detected == GType.nan:
+        raise Exception("NaN type not allowed for groups")
+    return detected
+
 
 
 def get_groups_tables(csv_file, groups_file=None):
@@ -57,12 +102,19 @@ def get_groups_tables(csv_file, groups_file=None):
 
 
 def create_group(bounds_list, table):
+
     if bounds_list[0] == ":":
-        return Group(table, Bounds([1, table.rows] + bounds_list[1:3]), False)
+        bounds = Bounds([1, table.rows] + bounds_list[1:3])
+        row = False
     elif bounds_list[2] == ":":
-        return Group(table, Bounds(bounds_list[0:2] + [1, table.columns]), True)
+        bounds = Bounds(bounds_list[0:2] + [1, table.columns])
+        row = True
     else:
         raise Exception("Could not create group")
+
+    data = bounds.subset(table.data)
+    dtype = infer_type(data)
+    return Group(table, bounds, row, np.vectorize(lambda x: cast(dtype, x))(data), dtype)
 
 
 def detect_tables(type_data):
