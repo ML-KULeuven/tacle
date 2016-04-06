@@ -253,6 +253,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         def project(c: Projection, assignments, _):
             solutions = []
             masks = {}
+            size = 2
+
             for assignment in assignments:
                 r_group, p_group = [assignment[v.name] for v in [c.result, c.projected]]
                 assert isinstance(r_group, Group)
@@ -261,7 +263,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     bool_mask = numpy.vectorize(Operation.blank_filter(p_group.data)[1])(p_group.data)
                     masks[p_group] = numpy.vectorize(lambda e: 1 if e else 0)(bool_mask)
                 p_masked = masks[p_group] if p_group.row else masks[p_group].T
-                size = 2
 
                 def check(start, end):
                     result = numpy.sum(p_masked[start:end, :], 0)
@@ -275,11 +276,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     return False
 
                 max_range = MaxRange(check)
-                if r_group == p_group:
-                    for r_i in range(r_group.vectors()):
+                for r_i in range(r_group.vectors()):
+                    if r_group == p_group:
                         max_range.find(0, r_i, size)
                         max_range.find(r_i + 1, p_group.vectors(), size)
-
+                    else:
+                        max_range.find(0, p_group.vectors(), size)
             return solutions
 
         self.add_strategy(Series(), series)
