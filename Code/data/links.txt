@@ -1,40 +1,40 @@
+XLS_FILE,CSV_FILE,SOURCE_LINK
 # Official Microsoft Excel Help and Templates
-1) sumif.xls: https://support.office.com/en-us/article/SUMIF-function-169b8c99-c05c-4483-a712-1697a653039b
-2) household_organizer: sum: https://templates.office.com/en-us/Household%20Organizer-TM10000099
-3) help_lookup.csv: https://support.office.com/en-us/article/LOOKUP-function-446d94af-663b-451d-8251-369d5e3864cb
-4) product.odt (excel guidlines for array formulas): https://support.office.com/en-us/article/Guidelines-and-examples-of-array-formulas-7d94a64e-3ff3-4686-9372-ecfd5caa57c7
+sumif.ods,NA,https://support.office.com/en-us/article/SUMIF-function-169b8c99-c05c-4483-a712-1697a653039b
+household_organizer.ods,household.csv,https://templates.office.com/en-us/Household%20Organizer-TM10000099
+NA,help_lookup.csv,https://support.office.com/en-us/article/LOOKUP-function-446d94af-663b-451d-8251-369d5e3864cb
+product.ods,NA,https://support.office.com/en-us/article/Guidelines-and-examples-of-array-formulas-7d94a64e-3ff3-4686-9372-ecfd5caa57c7
 
-# Exercises from KU Leuven Faculty of Business Management Course
-1) expenses.csv: "OEF 24.xlsx"
-2) price_weight.csv: "Prijs volgens gewicht.xlsx"
-3) bmi.csv: "Body Mass Index.xslx"
-4) rides.csv: "Afgelegde ritten per chauffeur.xlsx"
-5) score.csv: "scoreboard.xlsx"
-6) shares.csv: "Aandelen in bezit.xlsx"
+# Exercises from Odisee Faculty of Business Management Course
+OEF 24.xlsx,expenses.csv,NA
+Prijs volgens gewicht.xlsx,price_weight.csv,NA
+Body Mass Index.xslx,bmi.csv,NA
+Afgelegde ritten per chauffeur.xlsx,rides.csv,NA
+scoreboard.xlsx,score.csv,NA 
+Aandelen in bezit.xlsx,shares.csv,NA
 
 # From popular online tutorials on excel
-1) function-min-max.xls: http://www.free-training-tutorial.com/animations/max-min.html
-2) sumif2.xls: http://www.free-training-tutorial.com/animations/sumif-basic.html
-3) sumproduct: http://www.excel-easy.com/examples/sumproduct.html
-4) Excel2013_practise.xls: http://www.gcflearnfree.org/excel2013/13.4
-5) sumif_texas: https://tutorials.ischool.utexas.edu/index.php/Excel:_Advanced_Formulas_and_Functions
-6) sumif_subtotal: https://www.ablebits.com/office-addins-blog/2014/11/04/excel-sumif-function-formula-examples/
-7) pc_world_aggregates http://www.pcworld.com/article/2877236/software-productivity/excel-formulas-cheat-sheet-15-essential-tips-for-calculations-and-common-tasks.html
-8) sumif_uk: http://www.homeandlearn.co.uk/excel2007/excel2007s6p4.html
-9) sumif_region: https://exceljet.net/lessons/how-to-use-the-sumif-function
-10) avg: https://www.ablebits.com/office-addins-blog/2015/08/28/excel-average-averageif/
-11) bussiness.xls big one: https://people.highline.edu/mgirvin/YouTubeExcelIsFun/Week2Busn214.xls
-12) sumif_discettes.xls http://duygua.bilkent.edu.tr/Sumifl.xls
-
-13) chemistry xls: d32ogoqmya1dw8.cloudfront.net/files/research_education/equilibria/cpx_formula.v2.xls
-14) sumtable from excel guide: www.yamyeda.co.il/images/tutorials/Excel-Guide.xls
-15) multsum.xls multiplication and sum: https://faculty.fuqua.duke.edu/~pecklund/ExcelReview/DemoWorkbooks/SimpleArrayExamples.xls
-16) sumif_toys: www.excel-erate.biz/excel/SumIf.xls
-17) sumif_double_condition: https://faculty.fuqua.duke.edu/~pecklund/ExcelReview/DemoWorkbooks/SimpleArrayExamples.xls
-18) sumif_example: http://www.fundamentalfinance.com
-19) multiple_groups_sumproduct: http://www.maysstuff.com/excel/sumproduct.xls
+function-min-max.xls,NA,http://www.free-training-tutorial.com/animations/max-min.html
+sumif2.xls,NA,http://www.free-training-tutorial.com/animations/sumif-basic.html
+sumproduct.xls,sumproduct.csv,http://www.excel-easy.com/examples/sumproduct.html
+Excel2013_practise.xls,NA,http://www.gcflearnfree.org/excel2013/13.4
+sumif_texas.ods,NA,https://tutorials.ischool.utexas.edu/index.php/Excel:_Advanced_Formulas_and_Functions
+sumif_subtotal.ods,NA,https://www.ablebits.com/office-addins-blog/2014/11/04/excel-sumif-function-formula-examples/
+pc_world_aggregates.ods,NA,http://www.pcworld.com/article/2877236/software-productivity/excel-formulas-cheat-sheet-15-essential-tips-for-calculations-and-common-tasks.html
+sumif_UK.ods,NA,http://www.homeandlearn.co.uk/excel2007/excel2007s6p4.html
+sumif_region.ods,NA,https://exceljet.net/lessons/how-to-use-the-sumif-function
+average_ablebits.ods,https://www.ablebits.com/office-addins-blog/2015/08/28/excel-average-averageif/
+Week2Busn214.xls,NA,https://people.highline.edu/mgirvin/YouTubeExcelIsFun/Week2Busn214.xls
+sumif_diskettes.xls,NA,http://duygua.bilkent.edu.tr/Sumifl.xls
+chemistry.xls,NA,d32ogoqmya1dw8.cloudfront.net/files/research_education/equilibria/cpx_formula.v2.xls
+sum_table_from_guide.xls,NA,www.yamyeda.co.il/images/tutorials/Excel-Guide.xls
+multsum.xls,NA,https://faculty.fuqua.duke.edu/~pecklund/ExcelReview/DemoWorkbooks/SimpleArrayExamples.xls
+sumif_games_toys.ods,NA,www.excel-erate.biz/excel/SumIf.xls
+sum_if_double_condition.ods,NA,https://faculty.fuqua.duke.edu/~pecklund/ExcelReview/DemoWorkbooks/SimpleArrayExamples.xls
+sumif_example.xls,NA,http://www.fundamentalfinance.com
+multiple_groups_sumproduct.xls,NA,http://www.maysstuff.com/excel/sumproduct.xls
 
 # Financial / Statistical
-1) glance.xls https://www.bea.gov/newsreleases/xls/glance.xls
-2) RWE-Annual-Report-tables-2014.xls http://www.rwe.com/app/wartung/hv2014/bpk_docs/RWE-Annual-Report-tables-2014.xls
-3) fbi_offenses.xls https://www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2012/preliminary-annual-uniform-crime-report-january-december-2012/tables/table-4-cuts/table_4_offenses_reported_to_law_enforcement_by_state_oklahoma_through_wisconsin_2012.xls/output.xls, https://www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2012/preliminary-annual-uniform-crime-report-january-december-2012/tables/table-4-cuts/table_4_offenses_reported_to_law_enforcement_by_state_oklahoma_through_wisconsin_2012.xls
+glance.xls,NA,https://www.bea.gov/newsreleases/xls/glance.xls
+RWE-Annual-Report-tables-2014.xls,NA,http://www.rwe.com/app/wartung/hv2014/bpk_docs/RWE-Annual-Report-tables-2014.xls
+fbi_offenses.xlsfbi_offenses_2.csv,https://www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2012/preliminary-annual-uniform-crime-report-january-december-2012/tables/table-4-cuts/table_4_offenses_reported_to_law_enforcement_by_state_oklahoma_through_wisconsin_2012.xls/output.xls, https://www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2012/preliminary-annual-uniform-crime-report-january-december-2012/tables/table-4-cuts/table_4_offenses_reported_to_law_enforcement_by_state_oklahoma_through_wisconsin_2012.xls
