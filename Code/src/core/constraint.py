@@ -66,12 +66,7 @@ class Operation(Enum):
             if axis == 1:
                 data = data.T
             rows, cols = data.shape
-            if data.dtype == numpy.object:
-                blank = None
-                blank_test = lambda e: e is not None
-            else:
-                blank = numpy.nan
-                blank_test = lambda e: not numpy.isnan(e)
+            blank, blank_test = self.blank_filter(data)
             results = numpy.array([blank] * cols)
             mask = numpy.vectorize(blank_test)
             for i in range(cols):
@@ -85,6 +80,13 @@ class Operation(Enum):
     @property
     def func(self):
         return self._func
+
+    @staticmethod
+    def blank_filter(data):
+        if numpy.issubdtype(data.dtype, numpy.float):
+            return numpy.nan, lambda e: not numpy.isnan(e)
+        else:
+            return None, lambda e: e is not None
 
 
 class Aggregate(Constraint):
@@ -343,7 +345,7 @@ class Projection(Constraint):
         source = Source(variables)
         filters = [SameLength(variables), SameOrientation(variables), SameTable(variables), SameType(variables),
                    SizeFilter([self.projected], vectors=2), Partial([self.projected])]
-        super().__init__("project", "{R} = PROJECT({R})", source, filters)
+        super().__init__("project", "{R} = PROJECT({P})", source, filters)
 
 
 class SumProduct(Constraint):
