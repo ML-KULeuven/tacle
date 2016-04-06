@@ -23,7 +23,7 @@ sumif_subtotal.ods,fruits.csv,www.ablebits.com/office-addins-blog/2014/11/04/exc
 pc_world_aggregates.ods,inventory.csv,www.pcworld.com/article/2877236/software-productivity/excel-formulas-cheat-sheet-15-essential-tips-for-calculations-and-common-tasks.html
 sumif_UK.ods,NA,www.homeandlearn.co.uk/excel2007/excel2007s6p4.html
 sumif_region.ods,NA,exceljet.net/lessons/how-to-use-the-sumif-function
-average_ablebits.ods,www.ablebits.com/office-addins-blog/2015/08/28/excel-average-averageif/
+average_ablebits.ods,NA,www.ablebits.com/office-addins-blog/2015/08/28/excel-average-averageif/
 Week2Busn214.xls,NA,people.highline.edu/mgirvin/YouTubeExcelIsFun/Week2Busn214.xls
 sumif_diskettes.xls,NA,duygua.bilkent.edu.tr/Sumifl.xls
 chemistry.xls,NA,d32ogoqmya1dw8.cloudfront.net/files/research_education/equilibria/cpx_formula.v2.xls
@@ -33,6 +33,7 @@ sumif_games_toys.ods,NA,www.excel-erate.biz/excel/SumIf.xls
 sum_if_double_condition.ods,NA,faculty.fuqua.duke.edu/~pecklund/ExcelReview/DemoWorkbooks/SimpleArrayExamples.xls
 sumif_example.xls,NA,www.fundamentalfinance.com
 multiple_groups_sumproduct.xls,NA,www.maysstuff.com/excel/sumproduct.xls
+Excel2013_SimpleFormulas_Practice.xlsx,paper_supply.csv,content.gcflearnfree.org/topics/248/simple_formula_practice.xlsx
 
 # Financial / Statistical
 glance.xls,NA,www.bea.gov/newsreleases/xls/glance.xls
