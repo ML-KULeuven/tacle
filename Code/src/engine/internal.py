@@ -222,15 +222,23 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         solutions += [{c.x.name: x, c.y.name: y_vector_group} for x in x_match
                                       if not x.overlaps_with(y_vector_group)]
                 else:
-                    x_length = x_group.rows() if o_column else x_group.columns()
-                    for x1 in range(x_length - 1):
-                        for x2 in range(x1 + 2, x_length + 1):
-                            sums = operation_f(x_data[x1:x2, :], 0) if o_column else operation_f(x_data[:, x1:x2], 1)
-                            for y_vector_group in y_group:
-                                if numpy.vectorize(equal)(sums, y_vector_group.get_vector(1)).all():
-                                    x_subgroup = x_group.vector_subset(x1 + 1, x2)
-                                    if not x_subgroup.overlaps_with(y_vector_group):
-                                        solutions.append({c.x.name: x_subgroup, c.y.name: y_vector_group})
+                    if not o_column:
+                        x_data = x_data.T
+
+                    def check(start, end):
+                        result = operation_f(x_data[start:end, :], 0)
+                        if equal_v(result, y_group.get_vector(y_i + 1)).all():
+                            x_subgroup = x_group.vector_subset(start + 1, end)
+                            y_subgroup = y_group.vector_subset(y_i + 1, y_i + 1)
+                            solutions.append({c.x.name: x_subgroup, c.y.name: y_subgroup})
+
+                    max_range = MaxRange(check)
+                    for y_i in range(y_group.vectors()):
+                        if y_group == x_group:
+                            max_range.find(0, y_i, 2)
+                            max_range.find(y_i + 1, x_group.vectors(), 2)
+                        else:
+                            max_range.find(0, x_group.vectors(), 2)
 
             return solutions
 
