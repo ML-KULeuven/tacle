@@ -23,7 +23,7 @@
 8) sumif_uk: http://www.homeandlearn.co.uk/excel2007/excel2007s6p4.html
 9) sumif_region: https://exceljet.net/lessons/how-to-use-the-sumif-function
 10) avg: https://www.ablebits.com/office-addins-blog/2015/08/28/excel-average-averageif/
-11) bussness.xls big one: https://people.highline.edu/mgirvin/YouTubeExcelIsFun/Week2Busn214.xls
+11) bussiness.xls big one: https://people.highline.edu/mgirvin/YouTubeExcelIsFun/Week2Busn214.xls
 12) sumif_discettes.xls http://duygua.bilkent.edu.tr/Sumifl.xls
 
 13) chemistry xls: d32ogoqmya1dw8.cloudfront.net/files/research_education/equilibria/cpx_formula.v2.xls
@@ -34,4 +34,6 @@
 18) sumif_example: http://www.fundamentalfinance.com
 19) multiple_groups_sumproduct: http://www.maysstuff.com/excel/sumproduct.xls
 
- 
+# Financial
+1) glance.xls https://www.bea.gov/newsreleases/xls/glance.xls
+2) RWE-Annual-Report-tables-2014.xls http://www.rwe.com/app/wartung/hv2014/bpk_docs/RWE-Annual-Report-tables-2014.xls
