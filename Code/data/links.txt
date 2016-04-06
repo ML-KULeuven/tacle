@@ -34,6 +34,7 @@
 18) sumif_example: http://www.fundamentalfinance.com
 19) multiple_groups_sumproduct: http://www.maysstuff.com/excel/sumproduct.xls
 
-# Financial
+# Financial / Statistical
 1) glance.xls https://www.bea.gov/newsreleases/xls/glance.xls
 2) RWE-Annual-Report-tables-2014.xls http://www.rwe.com/app/wartung/hv2014/bpk_docs/RWE-Annual-Report-tables-2014.xls
+3) fbi_offenses.xls https://www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2012/preliminary-annual-uniform-crime-report-january-december-2012/tables/table-4-cuts/table_4_offenses_reported_to_law_enforcement_by_state_oklahoma_through_wisconsin_2012.xls/output.xls, https://www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2012/preliminary-annual-uniform-crime-report-january-december-2012/tables/table-4-cuts/table_4_offenses_reported_to_law_enforcement_by_state_oklahoma_through_wisconsin_2012.xls
