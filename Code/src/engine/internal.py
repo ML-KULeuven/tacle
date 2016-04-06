@@ -6,6 +6,27 @@ from core.solutions import Solutions
 from core.strategy import AssignmentStrategy, DictSolvingStrategy
 
 
+class MaxRange:
+    def __init__(self, test: callable):
+        self._test = test
+
+    def find(self, start, end, size, limit=None, last=None):
+        limit = start + size - 1 if limit is None else limit
+        last = end if last is None else last
+        self._find(start, end, size, limit, last)
+
+    def _find(self, start, end, size, limit, last):
+        if last - start < size:
+            pass
+        elif end - start < size or end <= limit:
+            self._find(start + 1, last, size, max(start + size, limit), last)
+        else:
+            if self._test(start, end):
+                self._find(start + 1, last, size, end, last)
+            else:
+                self._find(start, end - 1, size, limit, last)
+
+
 # TODO Sum IF with Nones
 class InternalCSPStrategy(AssignmentStrategy):
     def __init__(self):
@@ -230,20 +251,36 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return self._generate_test_vectors(assignments, keys, is_sum_product, lambda r, o1, o2: ordered(o1, o2))
 
         def project(c: Projection, assignments, _):
+            solutions = []
             masks = {}
             for assignment in assignments:
                 r_group, p_group = [assignment[v.name] for v in [c.result, c.projected]]
                 assert isinstance(r_group, Group)
                 assert isinstance(p_group, Group)
                 if p_group not in masks:
-                    masks[p_group] = numpy.vectorize(lambda x: x is not None)(p_group.data)
+                    bool_mask = numpy.vectorize(Operation.blank_filter(p_group.data)[1])(p_group.data)
+                    masks[p_group] = numpy.vectorize(lambda e: 1 if e else 0)(bool_mask)
                 p_masked = masks[p_group] if p_group.row else masks[p_group].T
-                print(p_masked)
                 size = 2
-                for s in range(p_group.vectors() - 1):
-                    for e in range(s + size - 1, p_group.vectors() - 1):
-                        pass
-            return []
+
+                def check(start, end):
+                    result = numpy.sum(p_masked[start:end, :], 0)
+                    if numpy.vectorize(lambda e: e == 1)(result).all():
+                        p_subgroup = p_group.vector_subset(start + 1, end)
+                        p_data = p_subgroup.data if p_subgroup.row else p_subgroup.data.T
+                        if equal_v(r_group.get_vector(r_i + 1), Operation.SUM.aggregate(p_data, 0)).all():
+                            r_subgroup = r_group.vector_subset(r_i + 1, r_i + 1)
+                            solutions.append({c.result.name: r_subgroup, c.projected.name: p_subgroup})
+                        return True
+                    return False
+
+                max_range = MaxRange(check)
+                if r_group == p_group:
+                    for r_i in range(r_group.vectors()):
+                        max_range.find(0, r_i, size)
+                        max_range.find(r_i + 1, p_group.vectors(), size)
+
+            return solutions
 
         self.add_strategy(Series(), series)
         self.add_strategy(AllDifferent(), all_different)
@@ -289,12 +326,13 @@ def equal(x, y):
     delta = pow(10, -10)
     if x is None or y is None:
         return x is y
-    if numpy.isnan(x) or numpy.isnan(y):
-        return numpy.isnan(x) == numpy.isnan(y)
     if isinstance(x, float) or isinstance(y, float):
-        return abs(x - y) < delta
+        return (numpy.isnan(x) and numpy.isnan(y)) or abs(x - y) < delta
     else:
         return x == y
+
+
+equal_v = numpy.vectorize(equal)
 
 
 def pattern_finder(source, pattern):

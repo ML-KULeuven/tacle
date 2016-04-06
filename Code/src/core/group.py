@@ -125,7 +125,8 @@ class Group:
         self._row = row
         self._dtype = dtype
         self._data = data
-        self._is_partial = numpy.any(numpy.vectorize(lambda x: x is None)(self._data))
+        from core.constraint import Operation
+        self._is_partial = numpy.any(numpy.vectorize(Operation.blank_filter(self._data)[1])(self._data))
 
     @property
     def is_partial(self):
