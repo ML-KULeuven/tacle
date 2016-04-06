@@ -1,0 +1,16 @@
+Example: Using an array formula ,,,,,
+      to eliminate intermediate formulas,,,,,
+,,,,,
+,Product,Units Sold,Unit Price,Normal Calcs,
+,Widgets,3,$50,$150,
+,Ridgets,10,$100,"$1,000",
+,Lidgets,5,$20,$100,
+,Kidgets,9,$10,$90,
+,Fidgets,3,$60,$180,
+,Zidgets,1,$200,$200,
+,,,,,
+,,,,"$1,720",-SUM formula
+,,,,,
+,,,," $1,720 ",-a single array formula that can replace
+,,,,,the SUM formula and the six 
+,,,,,formulas in D4:D9.

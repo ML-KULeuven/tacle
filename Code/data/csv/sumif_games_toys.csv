@@ -1,0 +1,29 @@
+Region,Product,Sales
+East,Games,3 
+North,Games,452 
+South,Games,726 
+West,Games,579 
+East,Sports,92 
+North,Sports,449 
+South,Sports,133 
+West,Sports,663 
+East,Toys,257 
+North,Toys,339 
+South,Toys,631 
+West,Toys,309 
+,,"4,633 "
+,,
+East,,352 
+North,,"1,240 "
+South,,"1,490 "
+West,,"1,551 "
+Total,,"4,633 "
+,,
+,,
+,,
+,,
+,,
+Exercises:,,
+- create totals by region,,
+- create totals by product,,
+- total sales by dollar range in multiples of $200,,

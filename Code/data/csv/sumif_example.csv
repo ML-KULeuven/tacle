@@ -1,0 +1,22 @@
+SUMIF Function Example,,,
+,,,
+Account,Subaccount,Entry,
+10100,a,50,
+10200,b,25,
+10300,c,200,
+10100,a,100,
+10100,b,75,
+10300,c,100,
+10100,c,25,
+10200,a,25,
+,,,
+Account,Total,,Formula
+10100,250,,"=SUMIF($A$4:$A$11,$A14,$C$4:$C$11)"
+10200,50,,"=SUMIF($A$4:$A$11,$A15,$C$4:$C$11)"
+10300,300,,"=SUMIF($A$4:$A$11,$A16,$C$4:$C$11)"
+10400,0,,"=SUMIF($A$4:$A$11,$A17,$C$4:$C$11)"
+,,,
+,,,
+,,,
+,,,
+http://www.fundamentalfinance.com,,,
