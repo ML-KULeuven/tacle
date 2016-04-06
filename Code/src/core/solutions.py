@@ -17,4 +17,4 @@ class Solutions:
 
     @staticmethod
     def _to_tuple(constraint, solution):
-        return (solution[v.name] for v in constraint.variables)
+        return tuple(solution[v.name] for v in constraint.variables)

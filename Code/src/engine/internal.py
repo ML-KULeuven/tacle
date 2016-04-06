@@ -200,11 +200,16 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return self._generate_test_vectors(assignments, keys, is_foreign_product)
 
         def aggregate(c: Aggregate, assignments: List[Dict[str, Group]], solutions: Solutions):
-            solutions = []
+            results = []
             o_column = Orientation.column(c.orientation)
             operation_f = c.operation.aggregate
+            projection = Projection()
 
-            # TODO Largest Area?
+            def add(solution):
+                mapping = {c.x: projection.projected, c.y: projection.result}
+                mapped = {mapping[v].name: solution[v.name] for v in c.variables}
+                if not solutions.has_solution(projection, mapped):
+                    results.append(solution)
 
             for assignment in assignments:
                 x_group, y_group = (assignment[k.name] for k in [c.x, c.y])
@@ -219,8 +224,9 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     for y_vector_group in y_group:
                         match = pattern_finder(sums, y_vector_group.get_vector(1))
                         x_match = [x_group.vector_subset(m + 1, m + y_length) for m in match]
-                        solutions += [{c.x.name: x, c.y.name: y_vector_group} for x in x_match
-                                      if not x.overlaps_with(y_vector_group)]
+                        for x in x_match:
+                            if not x.overlaps_with(y_vector_group):
+                                add({c.x.name: x, c.y.name: y_vector_group})
                 else:
                     if not o_column:
                         x_data = x_data.T
@@ -230,7 +236,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         if equal_v(result, y_group.get_vector(y_i + 1)).all():
                             x_subgroup = x_group.vector_subset(start + 1, end)
                             y_subgroup = y_group.vector_subset(y_i + 1, y_i + 1)
-                            solutions.append({c.x.name: x_subgroup, c.y.name: y_subgroup})
+                            add({c.x.name: x_subgroup, c.y.name: y_subgroup})
 
                     max_range = MaxRange(check)
                     for y_i in range(y_group.vectors()):
@@ -240,7 +246,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         else:
                             max_range.find(0, x_group.vectors(), 2)
 
-            return solutions
+            return results
 
         def product(c: Product, assignments, solutions):
             keys = [c.result, c.first, c.second]
