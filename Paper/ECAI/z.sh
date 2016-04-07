@@ -6,4 +6,4 @@ pdflatex $file
 
 rm *log *aux *bbl *blg
 
-evince ${file}.pdf &
+evince ${file}.pdf &> /dev/null &
