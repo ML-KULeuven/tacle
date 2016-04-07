@@ -30,9 +30,13 @@ class DType(Enum):
     def to_gtype(self):
         return GType(int(self.value))
 
+    def __repr__(self):
+        return "DT.{}".format(self.name[0:3])
+
 
 percent_pattern = re.compile(r"\d+(\.\d+)?%")
-currency_pattern = re.compile(r"[\$€£]")
+currency_pattern = re.compile(r"(\s*[\$€£]\s*\d+[\d,]*\s*)|(\s*\d+[\d,]*\s*[\$€£]\s*)")
+currency_symbols = re.compile(r"[\$€£]")
 
 
 def cast(g_type: GType, v_type: DType, value):
@@ -45,7 +49,7 @@ def cast(g_type: GType, v_type: DType, value):
         if v_type == DType.percent:
             value = float(str(value).replace("%", "")) / 100.0
         elif v_type == DType.currency:
-            value = re.sub(currency_pattern, "", str(value))
+            value = re.sub(currency_symbols, "", str(value))
         value = str(value).replace(",", "")
         if g_type == GType.int or g_type == GType.float:
             return float(value)
@@ -55,7 +59,7 @@ def cast(g_type: GType, v_type: DType, value):
 def detect_type(val) -> DType:
     if percent_pattern.match(str(val)):
         return DType.percent
-    elif re.match(currency_pattern, str(val)[0]) or re.match(currency_pattern, str(val)[-1]):
+    elif re.match(currency_pattern, str(val)):
         return DType.currency
     try:
         val = float(str(val).replace(",", ""))
