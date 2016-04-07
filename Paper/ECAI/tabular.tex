@@ -71,13 +71,17 @@ Can we discover or reconstruct structural relations in flat tabular spreadsheet 
 \newcommand{\findassignment}{\format{findSolutions}}
 \newcommand{\postprocess}{\format{pruneRedundant}}
 
+\newcommand{\CName}{Name\xspace}
+\newcommand{\CSignature}{Signature\xspace}
+\newcommand{\CFunction}{Function\xspace}
+
 \begin{algorithm}[thb]
   \begin{algorithmic}
     \footnotesize
     \State \textbf{Input:} $G$ -- set of groups
     \State \textbf{Output:} $S$ -- learned constraints with their satisfaction assignments
     \State $S \gets \emptyset$ \Comment{The set of solutions}
-  \For{$c \in \constraints$} \Comment{\constraints -- the set of predefined Excel constraints}
+  \For{$c \in \constraints$} \Comment{\constraints -- partially ordered set of Excel constraints; Table \ref{table:constraints}}
   \State $v_1, ..., v_n =$ variables of $c$ 
     \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(c, G, S)$}
       \State $S \gets S \cup \findassignment(c, v_1{:}~G_1, \dots, v_n{:}~G_n, S)$
@@ -88,22 +92,31 @@ Can we discover or reconstruct structural relations in flat tabular spreadsheet 
 \caption{Tabular constraint learning}
 \label{algo:tcl}
 \end{algorithm}
-
-\sergey{we assume an order on the constraints (it doesn't have to be complete though)}
-
-\subsection{Groups}
-In this work we distinguish the following types of data: numeric and textual. The numeric type has two subtypes: integers and floats. We also consider the special element called \textit{None}, which has two types: numeric and textual. A set is called type-consistent iff all elements are either numeric or textual. Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric sub-types by requiring its arguments to be integers.
+\subsection{Groups, Type-consistency and Constraints}
+In this work we distinguish the following types of data: numeric and textual. The numeric type has two subtypes: integers and floats. We also consider the special element called \textit{None}, which has two types: numeric and textual. A set is called \textit{type-consistent} iff all elements are either numeric or textual. Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric sub-types by requiring its arguments to be integers.
 
 A \textit{vector} is a subrange of a column or of a row that is type-consistent. If a vector is a subrange of a row (column), we say that it has a \textit{row} (\textit{column}) orientation. A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row group $G$ in the $N$-th table with rows ranging from $a$ to $b$: $G = T_N[a{:}b,:]$, where $N,a,b$ are natural numbers. Similarly for a column group $G$ ranging from $a$ to $b$ columns in the $N$-th table we write $G = T_N[{:},a{:}b]$.
 
-\subsection{Algorithm description}
+A \textit{constraint} is a triple of \textit{(\CName,\CSignature,\CFunction)}, where \CName is a textual name of the constraint; \CSignature is the signature of the constraint consisting of its arity and properties of the arguments, such as their types, sizes (properties might constrain sizes of two arguments as well, by for example, require them to be equal), etc; \CFunction is the function over arguments specified in \CSignature that represents constraint satisfaction. For example, a column-wise sum constraint has \CName equal to \textit{Y = SUM(X, col)}, its \CFunction sets arity to 2 and both arguments must be numeric and \sergey{Samuel, could you put the actual properties and \CFunction here?}
 
-Let us describe the key functions in Algorithm \ref{algo:tcl}.
-\paragraph{$\generategroups(\textit{Constraint,GroupSet,Solutions})$} is the function generating tuples of groups that are legitimate solution candidates e.g., $X,Y$ are variables of \textit{Y = SUM(X)} and $X,Y$ satisfy the following constraints \sergey{Samuel, can you add here, what is actually used for the sum now?}. Essentially, the group generation step is a constraint satisfaction problem associated with the specific constraint. However, many constraints have the same candidate generation procedures, e.g., min, max, avg, count, etc.
+\subsection{Constraint learning algorithm description}
+Let us describe the key steps and functions in Algorithm \ref{algo:tcl}. Essentially, the algorithm has two steps: candidate group generation and subgroup satisfaction search, which is in line with the well-known in AI paradigm of ``generate-and-test'' \cite{whaisasp}. Let us elaborate on each step in detail.
 
-\paragraph{$\findassignment(\textit{Constraint,Candidates,Solutions})$} is the function looking for the subsets of vectors in the candidates satisfying the constraint. If multiple subsets satisfy the constraint, a maximal is selected. If $G_1,G_2$, associated with the variables $X,Y$ in \textit{Y = SUM(X)}, are candidates, then \findassignment selects a single vector $y$ in $G_2$ and consecutive subset of vectors $x$ in $G_1$ such that the sum over $x$ is equal to $y$. For example, in Figure \ref{fig:main_example} the group $G = T_1[{:},3{:}7]$ can be used for both $X$ and $Y$ in the row-wise sum constraint, then as $x$ would be selected $T_1[{:},3{:}6]$ and as $y$ would be $T_1[{:},7]$.
+\paragraph{Candidate group generation} $\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups that are legitimate solution candidates e.g., $X,Y$ are variables of \textit{Y = SUM(X)} and $X,Y$ satisfy the following constraints \sergey{Samuel, can you add here, what is actually used for the sum now?}. Essentially, the group generation step is a constraint satisfaction problem associated with the specific constraint. However, many constraints have the same candidate generation procedures, e.g., min, max, avg, count, etc.
 
-\paragraph{}
+\paragraph{Subgroup satisfaction search} $\findassignment(\textit{Constraint,Candidates,Solutions})$ is the function looking for the subsets of vectors in the candidates satisfying the constraint. If multiple subsets satisfy the constraint, a maximal is selected. If $G_1,G_2$, associated with the variables $X,Y$ in the constraint \textit{Y = SUM(X)}, are candidates, then \findassignment selects a single vector $y$ in $G_2$ and consecutive subset of vectors $x$ in $G_1$ such that the sum over $x$ is equal to $y$. For example, in Figure \ref{fig:main_example} the group $G = T_1[{:},3{:}7]$ can be used for both $X$ and $Y$ in the row-wise sum constraint, then as $x$ would be selected $T_1[{:},3{:}6]$ and as $y$ would be $T_1[{:},7]$.
+
+\subsection{Constraints}
+\sergey{we need to explain that constraints order is a partial order, which is a DAG}
+\begin{table}
+  \centering
+  \begin{tabular}{lcc}
+    \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ 
+  \end{tabular}
+  \caption{Tabular Constraints}
+  \label{table:constraints}
+\end{table}
+
 
 \begin{algorithm}[thb]
   \begin{algorithmic}
