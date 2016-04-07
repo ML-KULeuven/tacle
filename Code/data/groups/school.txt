@@ -1,0 +1,14 @@
+{
+	"Tables":
+		[
+			{
+				"Name": "T1",
+				"Bounds": [3, 12, 2, 5],
+				"Orientation": "Column"
+			}, {
+				"Name": "T2",
+				"Bounds": [14, 15, 4, 6],
+				"Orientation": "Row"
+			}
+		]
+}

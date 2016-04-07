@@ -1,11 +1,11 @@
-Sales Person,Car Type,Number Sold,Unit Price,Total Sales
-Barnhill,Sedan,5,2200,11000
-,Coupe,4,1800,7200
-Ingle,Sedan,6,2300,13800
-,Coupe,8,1700,79800
-Jordan,Sedan,3,2000,6000
-,Coupe,1,1600,1600
-Pica,Sedan,9,2150,19350
-,Coupe,5,1950,9750
-Sanchez,Sedan,6,2250,13500
-,Coupe,8,2000,16000
+Sales Person,Car Type,Number Sold,Unit Price,Total Sales,
+Barnhill,Sedan,5,2200,11000,
+,Coupe,4,1800,7200,
+Ingle,Sedan,6,2300,13800,
+,Coupe,8,1700,13600,Originally: 79800 (probably a mistake)
+Jordan,Sedan,3,2000,6000,
+,Coupe,1,1600,1600,
+Pica,Sedan,9,2150,19350,
+,Coupe,5,1950,9750,
+Sanchez,Sedan,6,2250,13500,
+,Coupe,8,2000,16000,

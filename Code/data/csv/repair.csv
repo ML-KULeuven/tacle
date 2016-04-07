@@ -1,7 +1,7 @@
 Item,condition,costEstimate,,Cost Estimate per Condition,
 Book001,good,0,,good,0
 Book002,poor,15,,poor,42.5
-Book003,poor,7.5,,repairNow,80
+Book003,poor,7.5,,repairNOW,80
 Book004,repairNOW,30,,-----------------------------,
 Book005,repairNOW,50,,Total:,122.5
 Book006,good,0,,,
