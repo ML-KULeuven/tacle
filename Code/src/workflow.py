@@ -9,38 +9,38 @@ from engine.internal import InternalCSPStrategy, InternalSolvingStrategy
 from engine.minizinc import MinizincAssignmentStrategy, MinizincSolvingStrategy
 from parse.parser import get_groups_tables
 
+constraint_list = [
+    Permutation(),
+    Series(),
+    AllDifferent(),
+    Projection(),
+    ColumnSum(),
+    RowSum(),
+    ColumnAverage(),
+    RowAverage(),
+    ColumnMax(),
+    RowMax(),
+    ColumnMin(),
+    RowMin(),
+    Rank(),
+    ForeignKey(),
+    Lookup(),
+    FuzzyLookup(),
+    SumIf(),
+    MaxIf(),
+    RunningTotal(),
+    ForeignProduct(),
+    Product(),
+    SumProduct(),
+]
 
-def main(csv_file, groups_file, verbose):
+
+def main(csv_file, groups_file, verbose, silent=False, constraints=constraint_list):
     manager = get_manager()
-    groups = list(get_groups_tables(csv_file, groups_file))
+    groups = list(get_groups_tables(csv_file, groups_file, silent=silent))
 
     solutions = Solutions()
     t_origin = time.time()
-
-    constraints = [
-        Permutation(),
-        Series(),
-        AllDifferent(),
-        Projection(),
-        ColumnSum(),
-        RowSum(),
-        ColumnAverage(),
-        RowAverage(),
-        ColumnMax(),
-        RowMax(),
-        ColumnMin(),
-        RowMin(),
-        Rank(),
-        ForeignKey(),
-        Lookup(),
-        FuzzyLookup(),
-        SumIf(),
-        MaxIf(),
-        RunningTotal(),
-        ForeignProduct(),
-        Product(),
-        SumProduct(),
-    ]
 
     supported = []
     unsupported_assignment = []
@@ -53,11 +53,11 @@ def main(csv_file, groups_file, verbose):
         else:
             supported.append(constraint)
 
-    if len(unsupported_assignment) > 0:
+    if len(unsupported_assignment) > 0 and not silent:
         print("No assignment strategy for: {}".format(", ".join(str(c) for c in unsupported_assignment)))
-    if len(unsupported_solving) > 0:
+    if len(unsupported_solving) > 0 and not silent:
         print("No solving strategies for: {}".format(", ".join(str(c) for c in unsupported_solving)))#
-    if len(unsupported_assignment) > 0 or len(unsupported_solving) > 0:
+    if (len(unsupported_assignment) > 0 or len(unsupported_solving) > 0) and not silent:
         print()
 
     for constraint in supported:
@@ -67,15 +67,17 @@ def main(csv_file, groups_file, verbose):
         solutions.add(constraint, manager.find_solutions(constraint, assignments, solutions))
         t_end = time.time()
         f_string = "{name} [assignment time: {assign:.3f}, solving time: {solve:.3f}]"
-        if verbose:
+        if verbose and not silent:
             print(f_string.format(name=constraint.name, assign=t_assign - t_start, solve=t_end - t_assign))
-        if len(solutions.get_solutions(constraint)) > 0:
+        if len(solutions.get_solutions(constraint)) > 0 and not silent:
             print("\n".join(["\t" + constraint.to_string(s) for s in solutions.get_solutions(constraint)]))
-        if len(solutions.get_solutions(constraint)) > 0 or verbose:
+        if (len(solutions.get_solutions(constraint)) > 0 or verbose) and not silent:
             print()
 
-    if verbose:
+    if verbose and not silent:
         print("Total: {0:.3f}".format(time.time() - t_origin))
+
+    return solutions
 
 
 def get_manager():

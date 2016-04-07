@@ -1,4 +1,5 @@
 import json
+from enum import Enum
 
 import numpy as np
 import pandas as pd
@@ -18,57 +19,81 @@ def parse(filename):
 
 # --- Type detection ---
 
+class DType(Enum):
+    nan = -1
+    int = 0
+    float = 1
+    percent = 1.1
+    currency = 1.2
+    string = 2
+
+    def to_gtype(self):
+        return GType(int(self.value))
+
+
 percent_pattern = re.compile(r"\d+(\.\d+)?%")
+currency_pattern = re.compile(r"[\$€£]")
 
 
-def cast(gtype: GType, value):
-    if detect_type(value) == GType.nan.value:
+def cast(g_type: GType, v_type: DType, value):
+    if v_type is DType.nan:
         return None
-    if gtype == GType.int:
-        return float(str(value).replace(",", ""))
-    elif gtype == GType.float:
-        match = percent_pattern.match(str(value))
-        return float(str(value).replace(",", "")) if not match else float(str(value).replace("%", "")) / 100.0
-    elif gtype == GType.string:
+
+    if g_type == GType.string:
         return str(value)
-    raise ValueError("Unexpected GType: " + str(gtype))
+    else:
+        if v_type == DType.percent:
+            value = float(str(value).replace("%", "")) / 100.0
+        elif v_type == DType.currency:
+            value = re.sub(currency_pattern, "", str(value))
+        value = str(value).replace(",", "")
+        if g_type == GType.int or g_type == GType.float:
+            return float(value)
+        raise ValueError("Unexpected GType: " + str(g_type))
 
 
-def detect_type(val):
+def detect_type(val) -> DType:
     if percent_pattern.match(str(val)):
-        return GType.float.value
+        return DType.percent
+    elif re.match(currency_pattern, str(val)[0]) or re.match(currency_pattern, str(val)[-1]):
+        return DType.currency
     try:
         val = float(str(val).replace(",", ""))
         if np.isnan(val):
-            return GType.nan.value
-        return GType.int.value if float(val) == int(val) else GType.float.value
+            return DType.nan
+        return DType.int if float(val) == int(val) else DType.float
     except ValueError:
-        return GType.string.value
+        return DType.string
 
 
-def numeric_type(data_type):
-    return data_type == GType.int.value or data_type == GType.float.value or data_type == GType.nan.value
+def numeric_type(d_type: DType):
+    return d_type == DType.percent or d_type == DType.currency or d_type == DType.int \
+        or d_type == DType.float or d_type == DType.nan
 
 
-def infer_type(data):
-    types = list(detect_type(val) for val in (data.flatten()))
-    detected = GType(max(list(types)))
-    if detected == GType.nan:
+def infer_type(types):
+    if all(t == DType.nan for t in types):
         raise Exception("NaN type not allowed for groups")
-    return detected
+    if any(t == DType.string for t in types):
+        return GType.string
+    if all(t == DType.int for t in types):
+        return GType.int
+    return GType.float
 
 
-def get_groups_tables(csv_file, groups_file=None):
+def get_groups_tables(csv_file, groups_file=None, silent=False):
     data = parse(csv_file)
     type_data = np.vectorize(detect_type)(data)
     if groups_file is None:
         t = list(detect_tables(type_data))
         t = [(b, Table("T{}".format(i + 1), Bounds(b).subset(data), o)) for i, (b, o) in enumerate(t)]
-        print("PARSE: Detected tables: {}".format(", ".join(["{} = [{}:{}, {}:{}]".format(table.name, *bounds)
-                                                             for bounds, table in t])))
-        groups = detect_groups(data, type_data, t)
-        print("PARSE: Detected groups: {}".format(", ".join(str(g) for g in groups)))
-        print()
+        if not silent:
+            print("PARSE: Detected tables: {}".format(", ".join(["{} = [{}:{}, {}:{}]".format(table.name, *bounds)
+                                                                 for bounds, table in t])))
+        groups = detect_groups(type_data, t)
+        if not silent:
+            print("PARSE: Detected groups: {}".format(", ".join(str(g) for g in groups)))
+            print()
         return groups
     else:
         table_dict = {}
@@ -94,13 +119,14 @@ def get_groups_tables(csv_file, groups_file=None):
                     table = table_dict[group_description["Table"]]
                     groups.append(create_group(group_description["Bounds"], table))
             else:
-                groups = detect_groups(data, type_data, t)
-                print("PARSE: Detected groups: {}".format(", ".join(str(g) for g in groups)))
-                print()
+                groups = detect_groups(type_data, t)
+                if not silent:
+                    print("PARSE: Detected groups: {}".format(", ".join(str(g) for g in groups)))
+                    print()
         return groups
 
 
-def create_group(bounds_list, table):
+def create_group(bounds_list, table: Table):
     if bounds_list[0] == ":":
         bounds = Bounds([1, table.rows] + bounds_list[1:3])
         row = False
@@ -111,8 +137,9 @@ def create_group(bounds_list, table):
         raise Exception("Could not create group")
 
     data = bounds.subset(table.data)
-    dtype = infer_type(data)
-    return Group(table, bounds, row, np.vectorize(lambda x: cast(dtype, x))(data), dtype)
+    types = np.vectorize(detect_type)(data)
+    g_type = infer_type(types.flatten())
+    return Group(table, bounds, row, np.vectorize(lambda t, v: cast(g_type, t, v))(types, data), g_type)
 
 
 def detect_tables(type_data):
@@ -122,7 +149,7 @@ def detect_tables(type_data):
         rect = None
         cols = np.size(type_data, 1)
         for col in range(cols):
-            if type_data[row, col] != GType.nan.value:
+            if type_data[row, col] != DType.nan:
                 if rect is None:
                     rect = col
             elif rect is not None:
@@ -153,7 +180,7 @@ def detect_tables(type_data):
     return sorted(tables, key=lambda t: (t[0][0], t[0][2], t[0][1], t[0][3]))
 
 
-def detect_groups(data, type_data, tables):
+def detect_groups(type_data, tables):
     groups = []
 
     def detect_horizontal():
@@ -201,10 +228,10 @@ def detect_groups(data, type_data, tables):
 def remove_header(rec, type_data):
     r1, r2, c1, c2 = rec
     o = None
-    if all(type_data[r1, i] == GType.string.value for i in range(c1, c2)):
+    if all(type_data[r1, i] == DType.string for i in range(c1, c2)):
         rec = r1 + 1, r2, c1, c2
         o = Orientation.VERTICAL
-    elif all(type_data[i, c1] == GType.string.value for i in range(r1, r2)):
+    elif all(type_data[i, c1] == DType.string for i in range(r1, r2)):
         rec = r1, r2, c1 + 1, c2
         o = Orientation.HORIZONTAL
 
