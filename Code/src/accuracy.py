@@ -15,7 +15,6 @@ files = ["bmi", "age_department_sumif", "average_ablebits", "columnwise-sum-rows
          "shares", "sum_if_double_condition", "sum_table_from_guide", "sumif_blanks", "sumif_example",
          "sumif_games_toys", "sumif_region", "sumif_uk", "sumproduct", "week_2_busn_store_2"]
 
-# TODO sumif_example
 
 def main():
     categories = {"essential constraints": "Essential"}
