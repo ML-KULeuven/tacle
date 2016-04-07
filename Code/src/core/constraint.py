@@ -200,8 +200,9 @@ class Rank(Constraint):
 
     def __init__(self):
         variables = [self.x, self.y]
+        source = Source(variables)  # Not from Permutation because of possible ties
         filters = [SameLength(variables), NotPartial(variables)]
-        super().__init__("rank", "{Y} = RANK({X})", Source(variables), filters)
+        super().__init__("rank", "{Y} = RANK({X})", source, filters)
 
 
 class ForeignKey(Constraint):
@@ -248,9 +249,9 @@ class FuzzyLookup(Constraint):
 
 
 class ConditionalAggregate(Constraint):
-    o_key = Variable("OK", vector=True, types=textual)
+    o_key = Variable("OK", vector=True, types=discrete)
     result = Variable("R", vector=True, types=numeric)
-    f_key = Variable("FK", vector=True, types=textual)
+    f_key = Variable("FK", vector=True, types=discrete)
     values = Variable("V", vector=True, types=numeric)
 
     def __init__(self, name: str, operator, default=0):
@@ -259,7 +260,7 @@ class ConditionalAggregate(Constraint):
         variables = [self.o_key, self.result, self.f_key, self.values]
         foreign_key = ForeignKey()
         source = ConstraintSource(variables, foreign_key, {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"})
-        filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]), NotPartial(variables),
+        filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]),
                    SameTable([self.o_key, self.result]), SameTable([self.f_key, self.values]),
                    SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
         super().__init__("{}-if".format(name.lower()), "{R} = " + name.upper() + "IF({FK}={OK}, {V})", source, filters)

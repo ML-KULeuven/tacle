@@ -1,0 +1,6 @@
+{
+	"Essential":
+		{
+			"percentual-diff": [{"WAS": "T1[:, 3]", "IS": "T1[:, 2]", "D": "T1[:, 4]"}]
+		}
+}

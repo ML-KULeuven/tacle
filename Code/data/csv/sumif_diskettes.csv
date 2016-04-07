@@ -1,16 +1,15 @@
-,,,,,,,,,,
 The SUMIF function,,,,,,,,,,
 ,,,,,,,,,,
 Unit Sales for September,,,,,Syntax:,,,,,
-Item,Invoice,Quantity,Sales,,"=SUMIF( range,  criteria,  sum_range)",,,,,
-Name,Number,Sold,Income,,"=SUMIF( range,  criteria)",,,,,
+Item,Invoice,Quantity,Sales,," =SUMIF( range,  criteria,  sum_range)",,,,,
+Name,Number,Sold,Income,," =SUMIF( range,  criteria)",,,,,
 Printer,10101,7, $ 875 ,,,,,,,
 RAM-32,10102,9, $ 855 ,,Example,,,,,
 Printer,10103,4, $ 500 ,,How many Printers were sold in September? (units),,,,,
-CPU,10104,3, $ 672 ,,"=SUMIF( B7:B27,""Printer"",D7:D27)",,,,, $ 13 
+CPU,10104,3, $ 672 ,,0,,,,,13
 RAM-16,10105,2, $ 150 ,,,,,,,
 Mouse,10106,5, $ 25 ,,Sales income for Invoices over $500 ?,,,,,
-Printer,10107,2, $ 250 ,,"=SUMIF( E7:E27 , "">=500"")",,,,," $ 8,006 "
+Printer,10107,2, $ 250 ,,0,,,,," $ 8,006 "
 Diskettes,10108,9, $ 9 ,,,,,,,
 Diskettes,10109,5, $ 5 ,,Exercises:,,,,,
 RAM-16,10110,2, $ 150 ,,(a),How many of each of the following were sold in September?,,,,

@@ -3,7 +3,7 @@
 		[
 			{
 				"Name": "T1",
-				"Bounds": [7, 154, 5, 14],
+				"Bounds": [7, 154, 1, 14],
 				"Orientation": "Column"
 			}
 		],
@@ -11,7 +11,23 @@
 		[
 			{
 				"Table": "T1",
-				"Bounds": [":", 1, 10]
+				"Bounds": [":", 1, 1]
+			},
+			{
+				"Table": "T1",
+				"Bounds": [":", 2, 2]
+			},
+			{
+				"Table": "T1",
+				"Bounds": [":", 3, 3]
+			},
+			{
+				"Table": "T1",
+				"Bounds": [":", 4, 4]
+			},
+			{
+				"Table": "T1",
+				"Bounds": [":", 5, 14]
 			}
 		]
 }

@@ -14,7 +14,7 @@ scoreboard.xlsx,score.csv,NA
 Aandelen in bezit.xlsx,shares.csv,NA
 
 # From popular online tutorials on excel
-function-min-max.xls,function-min-max.csv,www.free-training-tutorial.com/animations/max-min.html
+function-min-max.xls,school.csv,www.free-training-tutorial.com/animations/max-min.html
 sumif2.xls,age_department_sumif.csv,www.free-training-tutorial.com/animations/sumif-basic.html
 sumproduct.xls,sumproduct.csv,www.excel-easy.com/examples/sumproduct.html
 sumif_texas.ods,repair.csv,tutorials.ischool.utexas.edu/index.php/Excel:_Advanced_Formulas_and_Functions

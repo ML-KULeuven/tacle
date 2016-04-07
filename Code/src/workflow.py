@@ -35,9 +35,9 @@ constraint_list = [
 ]
 
 
-def main(csv_file, groups_file, verbose, silent=False, constraints=constraint_list):
+def main(csv_file, groups_file, verbose, silent=False, parse_silent=False, constraints=constraint_list):
     manager = get_manager()
-    groups = list(get_groups_tables(csv_file, groups_file, silent=silent))
+    groups = list(get_groups_tables(csv_file, groups_file, silent=parse_silent))
 
     solutions = Solutions()
     t_origin = time.time()

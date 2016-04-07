@@ -166,6 +166,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             keys = [c.o_key, c.result, c.f_key, c.values]
 
             def is_aggregate(ok_v, r_v, fk_v, v_v):
+                if not all(all(numpy.vectorize(Operation.blank_filter(v)[1])(v)) for v in [ok_v, r_v, fk_v, v_v]):
+                    return False
                 m = dict(zip(ok_v, range(len(ok_v))))
                 acc = [None] * len(r_v)
                 for i in range(len(fk_v)):
