@@ -4,7 +4,6 @@ import numpy
 
 
 class GType(Enum):
-    nan = -1
     int = 0
     float = 1
     string = 2

@@ -37,6 +37,7 @@ class DType(Enum):
 percent_pattern = re.compile(r"\d+(\.\d+)?%")
 currency_pattern = re.compile(r"(\s*[\$€£]\s*\d+[\d,]*\s*)|(\s*\d+[\d,]*\s*[\$€£]\s*)")
 currency_symbols = re.compile(r"[\$€£]")
+place_holder = re.compile(r"[\s,]")
 
 
 def cast(g_type: GType, v_type: DType, value):
@@ -50,7 +51,7 @@ def cast(g_type: GType, v_type: DType, value):
             value = float(str(value).replace("%", "")) / 100.0
         elif v_type == DType.currency:
             value = re.sub(currency_symbols, "", str(value))
-        value = str(value).replace(",", "")
+        value = re.sub(place_holder, "", str(value))
         if g_type == GType.int or g_type == GType.float:
             return float(value)
         raise ValueError("Unexpected GType: " + str(g_type))
