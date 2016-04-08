@@ -40,8 +40,8 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(ForeignKey())
         self.add_constraint(Lookup())
         self.add_constraint(FuzzyLookup())
-        self.add_constraint(SumIf())
-        self.add_constraint(MaxIf())
+        for c in [SumIf(), MaxIf(), CountIf()]:
+            self.add_constraint(c)
         self.add_constraint(RunningTotal())
         self.add_constraint(ForeignProduct())
         self.add_constraint(Projection())
@@ -167,13 +167,14 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             keys = [c.o_key, c.result, c.f_key, c.values]
 
             def is_aggregate(ok_v, r_v, fk_v, v_v):
-                if not all(all(numpy.vectorize(Operation.blank_filter(v)[1])(v)) for v in [ok_v, r_v, fk_v, v_v]):
+                if not all(all(numpy.vectorize(blank_filter(v)[1])(v)) for v in [ok_v, r_v, fk_v, v_v]):
                     return False
                 m = dict(zip(ok_v, range(len(ok_v))))
                 acc = [None] * len(r_v)
                 for i in range(len(fk_v)):
                     key = m[fk_v[i]]
-                    acc[key] = v_v[i] if acc[key] is None else c.operator(acc[key], v_v[i])
+                    aggregated = c.operation.aggregate(v_v[i])
+                    acc[key] = aggregated if acc[key] is None else c.operation.func(acc[key], aggregated)
                 acc = [c.default if acc[i] is None else acc[i] for i in range(len(acc))]
                 return all(equal(r_v[i], acc[i]) for i in range(len(r_v)))
 
@@ -275,7 +276,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             for assignment in assignments:
                 r_group, p_group = [assignment[v.name] for v in [c.result, c.projected]]
                 if p_group not in masks:
-                    bool_mask = numpy.vectorize(Operation.blank_filter(p_group.data)[1])(p_group.data)
+                    bool_mask = numpy.vectorize(blank_filter(p_group.data)[1])(p_group.data)
                     masks[p_group] = numpy.vectorize(lambda e: 1 if e else 0)(bool_mask)
                 p_masked = masks[p_group] if p_group.row else masks[p_group].T
 
@@ -306,8 +307,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(ForeignKey(), foreign_keys)
         self.add_strategy(Lookup(), lookups)
         self.add_strategy(FuzzyLookup(), fuzzy_lookup)
-        self.add_strategy(SumIf(), conditional_aggregate)
-        self.add_strategy(MaxIf(), conditional_aggregate)
+        for c in [SumIf(), MaxIf(), CountIf()]:
+            self.add_strategy(c, conditional_aggregate)
         self.add_strategy(RunningTotal(), running_total)
         self.add_strategy(ForeignProduct(), foreign_operation)
         self.add_strategy(Projection(), project)

@@ -30,6 +30,7 @@ constraint_list = [
     FuzzyLookup(),
     SumIf(),
     MaxIf(),
+    CountIf(),
     RunningTotal(),
     ForeignProduct(),
     Product(),

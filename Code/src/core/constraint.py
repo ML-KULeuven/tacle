@@ -47,14 +47,25 @@ numeric = {GType.int, GType.float}
 textual = {GType.string}
 discrete = {GType.string, GType.int}
 
+filter_nan = lambda e: not numpy.isnan(e)
+filter_none = lambda e: e is not None
+
+
+def blank_filter(data, vectorized=False):
+    if numpy.issubdtype(data.dtype, numpy.float):
+        blank, blank_f = [numpy.nan, filter_nan]
+    else:
+        blank, blank_f = [None, filter_none]
+    return blank, (blank_f if not vectorized else numpy.vectorize(blank_f))
+
 
 class Operation(Enum):
     SUM = (numpy.sum, lambda x, y: x + y)
-    MAX = (numpy.max, lambda x, y: max(x + y))
-    MIN = (numpy.min, lambda x, y: min(x + y))
+    MAX = (numpy.max, lambda x, y: max(x, y))
+    MIN = (numpy.min, lambda x, y: min(x, y))
     AVERAGE = (numpy.average, lambda x, y: (x + y) / 2)
     PRODUCT = (numpy.product, lambda x, y: x * y)
-    COUNT = (lambda a: len(a.flatten()), None)
+    COUNT = (lambda a: len(blank_filter(a.flatten(), True)[1](a.flatten())), lambda x, y: x + y)
 
     # noinspection PyInitNewSignature
     def __init__(self, aggregate, func):
@@ -63,11 +74,13 @@ class Operation(Enum):
 
     @property
     def aggregate(self):
-        def apply(data, axis):
+        def apply(data, axis=None):
             if axis == 1:
                 data = data.T
+            if not data.shape:
+                data = numpy.array([[data]])
             rows, cols = data.shape
-            blank, blank_test = self.blank_filter(data)
+            blank, blank_test = blank_filter(data)
             results = numpy.array([blank] * cols)
             mask = numpy.vectorize(blank_test)
             for i in range(cols):
@@ -76,18 +89,12 @@ class Operation(Enum):
                     vec = numpy.array(vec, dtype=numpy.float64)
                     results[i] = self._aggregate(vec)
             return results
+
         return apply
 
     @property
     def func(self):
         return self._func
-
-    @staticmethod
-    def blank_filter(data):
-        if numpy.issubdtype(data.dtype, numpy.float):
-            return numpy.nan, lambda e: not numpy.isnan(e)
-        else:
-            return None, lambda e: e is not None
 
 
 class Aggregate(Constraint):
@@ -265,9 +272,9 @@ class ConditionalAggregate(Constraint):
     f_key = Variable("FK", vector=True, types=discrete)
     values = Variable("V", vector=True, types=numeric)
 
-    def __init__(self, name: str, operator, default=0):
+    def __init__(self, name: str, operation: Operation, default=0):
         self._default = default
-        self._operator = operator
+        self._operation = operation
         variables = [self.o_key, self.result, self.f_key, self.values]
         foreign_key = ForeignKey()
         source = ConstraintSource(variables, foreign_key, {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"})
@@ -277,8 +284,8 @@ class ConditionalAggregate(Constraint):
         super().__init__("{}-if".format(name.lower()), "{R} = " + name.upper() + "IF({FK}={OK}, {V})", source, filters)
 
     @property
-    def operator(self):
-        return self._operator
+    def operation(self) -> Operation:
+        return self._operation
 
     @property
     def default(self):
@@ -287,12 +294,17 @@ class ConditionalAggregate(Constraint):
 
 class SumIf(ConditionalAggregate):
     def __init__(self):
-        super().__init__("SUM", lambda acc, new: acc + new)
+        super().__init__("SUM", Operation.SUM)
 
 
 class MaxIf(ConditionalAggregate):
     def __init__(self):
-        super().__init__("MAX", lambda acc, new: max(acc, new))
+        super().__init__("MAX", Operation.MAX)
+
+
+class CountIf(ConditionalAggregate):
+    def __init__(self):
+        super().__init__("COUNT", Operation.COUNT)
 
 
 class RunningTotal(Constraint):
