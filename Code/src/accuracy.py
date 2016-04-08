@@ -73,14 +73,15 @@ def main():
 
 class CategoryCounter:
     def __init__(self, constraint_json):
-        self._constraints = constraint_json
-        self._not_found = []
-        self._not_present = []
+        self._constraints = set()
+        self._not_found = set()
+        self._not_present = set()
         self._count = 0
         for constraint in constraint_json:
             self._count += len(constraint_json[constraint])
             for solution in constraint_json[constraint]:
-                self._not_found.append((constraint, solution))
+                self._not_found.add((constraint, frozenset(solution.items())))
+                self._constraints.add((constraint, frozenset(solution.items())))
         self._present = 0
 
     @property
@@ -92,12 +93,12 @@ class CategoryCounter:
         return self._not_present
 
     def count(self, constraint: Constraint, solution):
-        s_strings = {name: str(group) for name, group in solution.items()}
-        if constraint.name in self._constraints and s_strings in self._constraints[constraint.name]:
+        s_strings = frozenset({name: str(group) for name, group in solution.items()}.items())
+        if (constraint.name, s_strings) in self._constraints:
             self._present += 1
             self._not_found.remove((constraint.name, s_strings))
         else:
-            self._not_present.append((constraint.name, s_strings))
+            self._not_present.add((constraint.name, s_strings))
 
     def accuracy(self):
         return (self._present / self._count) if self._count > 0 else 1

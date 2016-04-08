@@ -22,6 +22,8 @@ constraint_list = [
     RowMax(),
     ColumnMin(),
     RowMin(),
+    ColumnCount(),
+    RowCount(),
     Rank(),
     ForeignKey(),
     Lookup(),

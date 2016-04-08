@@ -45,7 +45,8 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(RunningTotal())
         self.add_constraint(ForeignProduct())
         self.add_constraint(Projection())
-        for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin()]:
+        for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin(),
+                  ColumnCount(), RowCount()]:
             self.add_constraint(c)
         self.add_constraint(Product())
         self.add_constraint(SumProduct())
@@ -310,7 +311,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(RunningTotal(), running_total)
         self.add_strategy(ForeignProduct(), foreign_operation)
         self.add_strategy(Projection(), project)
-        for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin()]:
+        for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin(),
+                  ColumnCount(), RowCount()]:
             self.add_strategy(c, aggregate)
         self.add_strategy(Product(), product)
         self.add_strategy(SumProduct(), sum_product)

@@ -54,6 +54,7 @@ class Operation(Enum):
     MIN = (numpy.min, lambda x, y: min(x + y))
     AVERAGE = (numpy.average, lambda x, y: (x + y) / 2)
     PRODUCT = (numpy.product, lambda x, y: x * y)
+    COUNT = (lambda a: len(a.flatten()), None)
 
     # noinspection PyInitNewSignature
     def __init__(self, aggregate, func):
@@ -160,6 +161,16 @@ class ColumnMin(Aggregate):
 class RowMin(Aggregate):
     def __init__(self):
         super().__init__(Orientation.HORIZONTAL, Operation.MIN)
+
+
+class ColumnCount(Aggregate):
+    def __init__(self):
+        super().__init__(Orientation.VERTICAL, Operation.COUNT)
+
+
+class RowCount(Aggregate):
+    def __init__(self):
+        super().__init__(Orientation.HORIZONTAL, Operation.COUNT)
 
 
 # TODO Same table, different orientation, overlapping bounds => prune assignment already
