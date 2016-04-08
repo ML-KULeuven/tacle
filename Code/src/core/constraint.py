@@ -336,3 +336,23 @@ class SumProduct(Constraint):
                    SizeFilter([self.first, self.second], length=2), SizeFilter([self.result], rows=1, cols=1)]
         super().__init__("sum-product", "{R} = SUMPRODUCT({O1}, {O2})", source, filters)
 
+
+class Equal(Constraint):
+    first = Variable("O1", vector=True)
+    second = Variable("O2", vector=True)
+
+    def __init__(self):
+        variables = [self.first, self.second]
+        source = Source(variables)
+        filters = [SameLength(variables), SameType(variables)]
+        super().__init__("equal", "{O1} = {O2}", source, filters)
+
+
+class EqualGroup(Constraint):
+    x = Variable("X")
+
+    def __init__(self):
+        variables = [self.x]
+        source = Source(variables)
+        filters = [SizeFilter(variables, vectors=2)]
+        super().__init__("equal-group", "EQUAL({X})", source, filters)

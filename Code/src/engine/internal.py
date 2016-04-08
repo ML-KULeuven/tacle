@@ -33,6 +33,8 @@ class InternalCSPStrategy(AssignmentStrategy):
         super().__init__()
         self._constraints = set()
 
+        self.add_constraint(Equal())
+        self.add_constraint(EqualGroup())
         self.add_constraint(Series())
         self.add_constraint(AllDifferent())
         self.add_constraint(Permutation())
@@ -212,7 +214,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 mapping = {c.x: projection.projected, c.y: projection.result}
                 mapped = {mapping[v].name: solution[v.name] for v in c.variables}
                 if not solutions.has_solution(projection, mapped):
-                    results.append(solution)
+                    if not equal_groups(solutions, solution):
+                        results.append(solution)
 
             for assignment in assignments:
                 x_group, y_group = (assignment[k.name] for k in [c.x, c.y])
@@ -240,6 +243,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                             x_subgroup = x_group.vector_subset(start + 1, end)
                             y_subgroup = y_group.vector_subset(y_i + 1, y_i + 1)
                             add({c.x.name: x_subgroup, c.y.name: y_subgroup})
+                            return True
+                        return False
 
                     max_range = MaxRange(check)
                     for y_i in range(y_group.vectors()):
@@ -299,6 +304,28 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         max_range.find(0, p_group.vectors(), size)
             return solutions
 
+        def equality(c: Equal, assignments, _):
+            test = lambda x, y: equal_v(x, y).all()
+            return self._generate_test_vectors(assignments, [c.first, c.second], test, ordered)
+
+        def equal_group(c: EqualGroup, assignments, solutions: Solutions):
+            result = []
+            for assignment in assignments:
+                x = assignment[c.x.name]
+
+                def test(start, end):
+                    solution = {c.x.name: x.vector_subset(start + 1, end)}
+                    if equal_groups(solutions, solution):
+                        result.append(solution)
+                        return True
+                    return False
+
+                max_range = MaxRange(test)
+                max_range.find(0, x.vectors(), 2)
+            return result
+
+        self.add_strategy(Equal(), equality)
+        self.add_strategy(EqualGroup(), equal_group)
         self.add_strategy(Series(), series)
         self.add_strategy(AllDifferent(), all_different)
         self.add_strategy(Permutation(), permutation)
@@ -369,3 +396,17 @@ def ordered(*args):
         if args[i] < args[i - 1]:
             return False
     return True
+
+
+def to_vector_groups(*args):
+    for arg in args:
+        for g_v in arg:
+            yield g_v
+
+
+def equal_groups(solutions, solution):
+    vector_set = to_vector_groups(*solution.values())
+    sols = itertools.combinations(sorted(vector_set), 2)
+    equal_c = Equal()
+    sols = [{equal_c.first.name: v1, equal_c.second.name: v2} for (v1, v2) in sols]
+    return all(solutions.has_solution(equal_c, sol) for sol in sols)

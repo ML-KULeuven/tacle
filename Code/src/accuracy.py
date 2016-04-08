@@ -1,10 +1,11 @@
 import os
+from typing import Union
 
 from pandas import json
 
 import print_truth
 import workflow
-from core.constraint import Constraint
+from core.constraint import *
 from engine.util import local
 
 files = ["bmi", "age_department_sumif", "average_ablebits", "columnwise-sum-rows", "examples", "expenses",
@@ -15,9 +16,25 @@ files = ["bmi", "age_department_sumif", "average_ablebits", "columnwise-sum-rows
          "sumif_games_toys", "sumif_region", "sumif_uk", "sumproduct", "week_2_busn_store_2"]
 
 
+def is_excel_constraint(c: Constraint):
+    return isinstance(c, Aggregate) or isinstance(c, ConditionalAggregate) or isinstance(c, Series) \
+        or isinstance(c, Rank) or isinstance(c, Lookup) or isinstance(c, FuzzyLookup) or isinstance(c, RunningTotal) \
+        or isinstance(c, Product) or isinstance(c, SumProduct) or isinstance(c, ForeignProduct) or isinstance(c, Equal)
+
+
+constraint_map = {c.name: c for c in workflow.constraint_list}
+
+
+def print_constraints(prefix, constraints):
+    if len(constraints) > 0:
+        print()
+        for cons_name, sol in constraints:
+            print("\t{prefix}:\t{constraint}: {solution}".format(prefix=prefix, constraint=cons_name, solution=sol))
+
+
 def main():
     categories = {"essential constraints": "Essential"}
-    accuracies = {n: [] for n in categories}
+    cat_counters = {n: [] for n in categories}
     for name in files:
         print(name)
         csv_file = local("data/csv/{}.csv".format(name))
@@ -42,31 +59,30 @@ def main():
                         for counter in counters.values():
                             counter.count(constraint, solution)
                 for c_name, c in counters.items():
-                    accuracies[c_name].append(c.present_count())
-                    print("\tAccuracy for {}: {:.2%} ({} of {})".format(c_name, c.accuracy(), *c.present_count()))
-                    if len(c.not_found) > 0:
-                        print()
-                        for cons_name, sol in c.not_found:
-                            print("\tMISSING:\t{constraint}: {solution}".format(constraint=cons_name, solution=sol))
+                    cat_counters[c_name].append(c)
+                    total, hits, expected = calc_accuracy(c, per_file=False)
+                    print("\tAccuracy for {}: {:.2%} ({} of {})".format(c_name, total, hits, expected))
+                    ratio, r, expected = calc_redundancy(c, per_file=False)
+                    print("\tRedundancy {}: {:.2%} ({} over {})".format(c_name, ratio, r, expected))
+
+                    print_constraints("MISSING", c.not_found)
+                    redundant = CategoryCounter.filter_constraints(c.not_present, is_excel_constraint)
+                    print_constraints("REDUNDANT", redundant)
             print()
         elif groups_file is not None:
             with open(truth_file, "w+") as f:
                 print("{\n\t\"Essential\":\n\t\t{\n\n\t\t}\n}", file=f, flush=True)
                 print_truth.main(name)
-    for n, accuracy in accuracies.items():
-        accuracy_t = [(p, c) for p, c in accuracy if c > 0]
-        present = sum([t[0] for t in accuracy_t])
-        count = sum([t[1] for t in accuracy_t])
+    for n in categories:
+        per_file, not_zero, file_count = calc_accuracy(cat_counters[n], per_file=True)
+        total, hits, expected = calc_accuracy(cat_counters[n], per_file=False)
+        print("{} accuracy per file ({} of {} files): {:.2%}".format(n.capitalize(), not_zero, file_count, per_file))
+        print("Total {} accuracy: {:.2%} ({} of {})".format(n, total, hits, expected))
 
-        not_zero = len(accuracy_t)
-        if not_zero > 0:
-            per_file = sum([p / c for p, c in accuracy_t]) / not_zero
-            total = present / count
-        else:
-            per_file = 1
-            total = 1
-        print("{} accuracy per file ({} of {} files): {:.2%}".format(n.capitalize(), not_zero, len(accuracy), per_file))
-        print("Total {} accuracy: {:.2%} ({} of {})".format(n, total, present, count))
+        per_file, not_zero, file_count = calc_redundancy(cat_counters[n], per_file=True)
+        ratio, r, expected = calc_redundancy(cat_counters[n], per_file=False)
+        print("{} redundancy per file ({} of {} files): {:.2%}".format(n.capitalize(), not_zero, file_count, per_file))
+        print("Redundancy {}: {:.2%} ({} over {})".format(n, ratio, r, expected))
 
 
 class CategoryCounter:
@@ -81,6 +97,14 @@ class CategoryCounter:
                 self._not_found.add((constraint, frozenset(solution.items())))
                 self._constraints.add((constraint, frozenset(solution.items())))
         self._present = 0
+
+    @property
+    def hits(self):
+        return self._present
+
+    @property
+    def expected(self):
+        return self._count
 
     @property
     def not_found(self):
@@ -98,11 +122,38 @@ class CategoryCounter:
         else:
             self._not_present.add((constraint.name, s_strings))
 
-    def accuracy(self):
-        return (self._present / self._count) if self._count > 0 else 1
+    @staticmethod
+    def filter_constraints(constraints, test_f):
+        return list(c for c in constraints if test_f(constraint_map[c[0]]))
 
-    def present_count(self):
-        return self._present, self._count
+
+def calc_accuracy(counters: Union[List[CategoryCounter], CategoryCounter], per_file=False):
+    if isinstance(counters, CategoryCounter):
+        counters = [counters]
+    filtered = [(counter.hits, counter.expected) for counter in counters if counter.expected > 0]
+    if len(filtered) == 0:
+        return 1.0, 0.0, 0.0
+    elif per_file:
+        return sum(hits / exp for hits, exp in filtered) / len(filtered), len(filtered), len(counters)
+    else:
+        hits = sum(hits for hits, _ in filtered)
+        expected = sum(exp for _, exp in filtered)
+        return hits / expected, hits, expected
+
+
+def calc_redundancy(counters: Union[List[CategoryCounter], CategoryCounter], per_file=False):
+    if isinstance(counters, CategoryCounter):
+        counters = [counters]
+    filtered = [(len(CategoryCounter.filter_constraints(counter.not_present, is_excel_constraint)), counter.expected)
+                for counter in counters if counter.expected > 0]
+    if len(filtered) == 0:
+        return 1.0, 0.0, 0.0
+    elif per_file:
+        return sum(r / (exp + r) for r, exp in filtered) / len(filtered), len(filtered), len(counters)
+    else:
+        r = sum(r for r, _ in filtered)
+        expected = sum(exp for _, exp in filtered)
+        return r / (expected + r), r, expected
 
 if __name__ == '__main__':
     main()
