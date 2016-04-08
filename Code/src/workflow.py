@@ -10,6 +10,8 @@ from engine.minizinc import MinizincAssignmentStrategy, MinizincSolvingStrategy
 from parse.parser import get_groups_tables
 
 constraint_list = [
+    Equal(),
+    # EqualGroup(),
     Permutation(),
     Series(),
     AllDifferent(),
