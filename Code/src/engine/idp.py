@@ -1,3 +1,5 @@
+import re
+
 from core.constraint import *
 from core.group import *
 from core.strategy import DictAssignmentStrategy

@@ -14,23 +14,16 @@ constraint_list = [
     Series(),
     AllDifferent(),
     Projection(),
-    ColumnSum(),
-    RowSum(),
-    ColumnAverage(),
-    RowAverage(),
-    ColumnMax(),
-    RowMax(),
-    ColumnMin(),
-    RowMin(),
-    ColumnCount(),
-    RowCount(),
     Rank(),
     ForeignKey(),
     Lookup(),
-    FuzzyLookup(),
-    SumIf(),
-    MaxIf(),
-    CountIf(),
+    FuzzyLookup()
+]
+
+constraint_list += Aggregate.instances()
+constraint_list += ConditionalAggregate.instances()
+
+constraint_list += [
     RunningTotal(),
     ForeignProduct(),
     Product(),

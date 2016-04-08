@@ -40,13 +40,12 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(ForeignKey())
         self.add_constraint(Lookup())
         self.add_constraint(FuzzyLookup())
-        for c in [SumIf(), MaxIf(), CountIf()]:
+        for c in ConditionalAggregate.instances():
             self.add_constraint(c)
         self.add_constraint(RunningTotal())
         self.add_constraint(ForeignProduct())
         self.add_constraint(Projection())
-        for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin(),
-                  ColumnCount(), RowCount()]:
+        for c in Aggregate.instances():
             self.add_constraint(c)
         self.add_constraint(Product())
         self.add_constraint(SumProduct())
@@ -307,13 +306,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(ForeignKey(), foreign_keys)
         self.add_strategy(Lookup(), lookups)
         self.add_strategy(FuzzyLookup(), fuzzy_lookup)
-        for c in [SumIf(), MaxIf(), CountIf()]:
+        for c in ConditionalAggregate.instances():
             self.add_strategy(c, conditional_aggregate)
         self.add_strategy(RunningTotal(), running_total)
         self.add_strategy(ForeignProduct(), foreign_operation)
         self.add_strategy(Projection(), project)
-        for c in [ColumnSum(), RowSum(), ColumnAverage(), RowAverage(), ColumnMax(), RowMax(), ColumnMin(), RowMin(),
-                  ColumnCount(), RowCount()]:
+        for c in Aggregate.instances():
             self.add_strategy(c, aggregate)
         self.add_strategy(Product(), product)
         self.add_strategy(SumProduct(), sum_product)

@@ -129,55 +129,13 @@ class Aggregate(Constraint):
     def operation(self):
         return self._operation
 
+    @classmethod
+    def instance(cls, orientation: Orientation, operation: Operation):
+        return Aggregate(orientation, operation)
 
-class ColumnSum(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.VERTICAL, Operation.SUM)
-
-
-class RowSum(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.HORIZONTAL, Operation.SUM)
-
-
-class ColumnAverage(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.VERTICAL, Operation.AVERAGE)
-
-
-class RowAverage(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.HORIZONTAL, Operation.AVERAGE)
-
-
-class ColumnMax(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.VERTICAL, Operation.MAX)
-
-
-class RowMax(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.HORIZONTAL, Operation.MAX)
-
-
-class ColumnMin(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.VERTICAL, Operation.MIN)
-
-
-class RowMin(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.HORIZONTAL, Operation.MIN)
-
-
-class ColumnCount(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.VERTICAL, Operation.COUNT)
-
-
-class RowCount(Aggregate):
-    def __init__(self):
-        super().__init__(Orientation.HORIZONTAL, Operation.COUNT)
+    @classmethod
+    def instances(cls):
+        return list(cls.instance(o, op) for o in Orientation for op in Operation if not op == Operation.PRODUCT)
 
 
 # TODO Same table, different orientation, overlapping bounds => prune assignment already
@@ -272,9 +230,10 @@ class ConditionalAggregate(Constraint):
     f_key = Variable("FK", vector=True, types=discrete)
     values = Variable("V", vector=True, types=numeric)
 
-    def __init__(self, name: str, operation: Operation, default=0):
+    def __init__(self, operation: Operation, default=0):
         self._default = default
         self._operation = operation
+        name = operation.name
         variables = [self.o_key, self.result, self.f_key, self.values]
         foreign_key = ForeignKey()
         source = ConstraintSource(variables, foreign_key, {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"})
@@ -291,20 +250,13 @@ class ConditionalAggregate(Constraint):
     def default(self):
         return self._default
 
+    @classmethod
+    def instance(cls, operation: Operation):
+        return ConditionalAggregate(operation)
 
-class SumIf(ConditionalAggregate):
-    def __init__(self):
-        super().__init__("SUM", Operation.SUM)
-
-
-class MaxIf(ConditionalAggregate):
-    def __init__(self):
-        super().__init__("MAX", Operation.MAX)
-
-
-class CountIf(ConditionalAggregate):
-    def __init__(self):
-        super().__init__("COUNT", Operation.COUNT)
+    @classmethod
+    def instances(cls):
+        return list(cls.instance(op) for op in Operation if not op == Operation.PRODUCT)
 
 
 class RunningTotal(Constraint):
@@ -383,3 +335,4 @@ class SumProduct(Constraint):
         filters = [SameLength([self.first, self.second]), NotPartial(variables),
                    SizeFilter([self.first, self.second], length=2), SizeFilter([self.result], rows=1, cols=1)]
         super().__init__("sum-product", "{R} = SUMPRODUCT({O1}, {O2})", source, filters)
+

@@ -126,17 +126,9 @@ class MinizincAssignmentStrategy(DictAssignmentStrategy):
             # TODO Implementation not finished
             return self._get_assignments(groups, constraint, local("minizinc/group/rank.mzn"))
 
-        self.add_strategy(ColumnSum(), aggregate_columns) # probably, sum_columns should be renamed into binary assignments?
-        self.add_strategy(RowSum(), aggregate_rows)
-
-        self.add_strategy(ColumnAverage(), aggregate_columns)
-        self.add_strategy(RowAverage(), aggregate_rows)
-
-        self.add_strategy(ColumnMax(), aggregate_columns)
-        self.add_strategy(RowMax(), aggregate_rows)
-
-        self.add_strategy(ColumnMin(), aggregate_columns)
-        self.add_strategy(RowMin(), aggregate_rows)
+        for aggregate in Aggregate.instances():
+            f = aggregate_columns if aggregate.orientation == Orientation.VERTICAL else aggregate_rows
+            self.add_strategy(aggregate, f)
 
     def applies_to(self, constraint):
         return constraint in self.strategies
@@ -171,14 +163,8 @@ class MinizincSolvingStrategy(DictSolvingStrategy):
             results = [self._find_constraints(a, f, constraint) for a, f in assignment_tuples]
             return [item for solutions in results for item in solutions]
 
-        def sum_if(constraint, assignments, solutions):
-            filename = "minizinc/constraint/conditional_sum.mzn"
-            results = [self._find_constraints(assignment, filename, constraint) for assignment in assignments]
-            return [item for solutions in results for item in solutions]
-
-        self.add_strategy(ColumnSum(), sum_columns)
-        self.add_strategy(RowSum(), sum_rows)
-        self.add_strategy(SumIf(), sum_if)
+        self.add_strategy(Aggregate.instance(Orientation.VERTICAL, Operation.SUM), sum_columns)
+        self.add_strategy(Aggregate.instance(Orientation.HORIZONTAL, Operation.SUM), sum_rows)
 
     @staticmethod
     def _find_constraints(assignment, file, constraint):
