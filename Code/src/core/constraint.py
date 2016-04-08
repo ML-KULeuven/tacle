@@ -9,11 +9,12 @@ from core.group import GType, Group, Orientation
 
 
 class Constraint:
-    def __init__(self, name, print_format, source: Source, filters: List[Filter]):
+    def __init__(self, name, print_format, source: Source, filters: List[Filter], depends_on=set()):
         self.name = name
         self.print_format = print_format
         self.source = source
         self._filters = filters
+        self._depends_on = set.union(depends_on, source.depends_on())
 
     @property
     def filters(self):
@@ -22,6 +23,9 @@ class Constraint:
     @property
     def variables(self):
         return self.source.variables
+
+    def depends_on(self):
+        return self._depends_on
 
     def get_variables(self):
         return self.variables
@@ -119,7 +123,8 @@ class Aggregate(Constraint):
         size_filter = SizeFilter([self.x], rows=2) if Orientation.column(orientation) else SizeFilter([self.x], cols=2)
         filters = [size_filter, filter_class(variables)]
         format_s = "{Y} = " + op_string.upper() + "({X}, " + or_string + ")"
-        super().__init__("{} ({})".format(op_string.lower(), or_string), format_s, Source(variables), filters)
+        name = "{} ({})".format(op_string.lower(), or_string)
+        super().__init__(name, format_s, Source(variables), filters, {Equal(), Projection()})
 
     @property
     def orientation(self):

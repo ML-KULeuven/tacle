@@ -10,7 +10,6 @@ from engine.minizinc import MinizincAssignmentStrategy, MinizincSolvingStrategy
 from parse.parser import get_groups_tables
 
 constraint_list = [
-    Equal(),
     # EqualGroup(),
     Permutation(),
     Series(),
@@ -30,7 +29,26 @@ constraint_list += [
     ForeignProduct(),
     Product(),
     SumProduct(),
+    Equal(),
 ]
+
+
+def order_constraints(constraints: List[Constraint]):
+    ordered = []
+    found = set()
+    spill = constraints
+    while len(spill) > 0:
+        new_spill = []
+        for constraint in constraints:
+            if constraint.depends_on().issubset(found):
+                ordered.append(constraint)
+                found.add(constraint)
+            else:
+                spill.append(constraint)
+        if len(new_spill) == len(spill):
+            raise Exception("Dependency order is not a DAG")
+        spill = new_spill
+    return ordered
 
 
 def main(csv_file, groups_file, verbose, silent=False, parse_silent=False, constraints=constraint_list):
@@ -58,7 +76,9 @@ def main(csv_file, groups_file, verbose, silent=False, parse_silent=False, const
     if (len(unsupported_assignment) > 0 or len(unsupported_solving) > 0) and not silent:
         print()
 
-    for constraint in supported:
+    ordered = order_constraints(supported)
+
+    for constraint in ordered:
         t_start = time.time()
         assignments = manager.find_assignments(constraint, groups, solutions)
         t_assign = time.time()
