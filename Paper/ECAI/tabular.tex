@@ -23,11 +23,13 @@
 \newcommand{\learnconstraints}{\format{learnConstraints}}
 \newcommand{\findassignment}{\format{findSolutions}}
 \newcommand{\postprocess}{\format{pruneRedundant}}
+\newcommand{\constrainttorder}{\format{orderedConstraints}}
+
 
 \newcommand{\CName}{Name\xspace}
 \newcommand{\CSignature}{Signature\xspace}
 \newcommand{\CFunction}{Function\xspace}
-\newcommand{\dependecies}{\ensuremath{\mathcal{D}}\xspace}
+\newcommand{\dependencies}{\ensuremath{\mathcal{D}}\xspace}
 \newcommand{\groups}{\ensuremath{\mathcal{G}}\xspace}
 
 
@@ -83,23 +85,6 @@ Can we discover or reconstruct structural relations in flat tabular spreadsheet 
 \section{Formalization}
 
 
-\begin{algorithm}[thb]
-  \begin{algorithmic}
-    \footnotesize
-    \State \textbf{Input:} $G$ -- set of groups
-    \State \textbf{Output:} $S$ -- learned constraints with their satisfaction assignments
-    \State $S \gets \emptyset$ \Comment{The set of solutions}
-  \For{$c \in \constraints$} \Comment{\constraints -- partially ordered set of Excel constraints; Table \ref{table:constraints}}
-  \State $v_1, ..., v_n =$ variables of $c$ 
-    \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(c, G, S)$}
-      \State $S \gets S \cup \findassignment(c, v_1{:}~G_1, \dots, v_n{:}~G_n, S)$
-    \EndFor
-  \EndFor\\
-\Return $S$
-\end{algorithmic}
-\caption{Tabular constraint learning}
-\label{algo:tcl}
-\end{algorithm}
 \subsection{Groups, Type-consistency and Constraints}
 In this work we distinguish the following types of data: numeric and textual. The numeric type has two subtypes: integers and floats. We also consider the special element called \textit{None}, which has two types: numeric and textual. A set is called \textit{type-consistent} iff all elements are either numeric or textual. Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric sub-types by requiring its arguments to be integers.
 
@@ -110,19 +95,40 @@ An \textit{Excel constraint} is a triple \textit{(\CName, \CSignature, \CFunctio
 \section{Problem Statement}
 In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of Excel constraints and group assignments.
 
-\begin{framed}
+\begin{minipage}[c]{14em}
+  \vspace{5pt}
   \begin{tabular}{ll}
-  
-    \multicolumn{2}{c}{{\textbf{Tabular Constraint Learning Problem}}}\\
+    \multicolumn{2}{l}{{\textbf{Tabular Constraint Learning Problem}}}\\
+    \vspace{-4pt}
     &\\
-    \textbf{Given:} & The set of all groups $\groups$ and the set of Excel  \\
-    \phantom{Given:} & constraints $\constraints$ with its dependencies DAG $\dependecies$\\
-    \textbf{Find:} & For each constraint $c$ in \constraints all the subgroups of $\groups$ satisfying the \CSignature and \CFunction of $c$
+    \textbf{Given:}& the set of all groups $\groups$ and of Excel constraints $\constraints$\\
+    \textbf{Find:}& for each constraint  $c$ in \constraints all the subgroups of $\groups$\\ 
+    & satisfying the \CSignature and \CFunction of $c$ 
   \end{tabular}
-\end{framed}
+\end{minipage}
 
 \section{Approach to Tabular Constraint Learning}
-Let us describe the key steps and functions in Algorithm \ref{algo:tcl}. Essentially, the algorithm has two steps: candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail.
+\begin{algorithm}[thb]
+  \begin{algorithmic}
+    \footnotesize
+    \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- Excel constraints, \dependencies -- dependency graph 
+    \State \textbf{Output:} $S$ -- learned constraints with their satisfaction assignments
+    \State $S \gets \emptyset$ \Comment{The set of solutions}
+  \For{$c \in \constrainttorder(\constraints,\dependencies)$} 
+  \State $v_1, ..., v_n =$ variables of $c$ 
+    \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(c, G, S)$}
+      \State $S \gets S \cup \findassignment(c, v_1{:}~G_1, \dots, v_n{:}~G_n, S)$
+    \EndFor
+  \EndFor\\
+\Return $S$
+\end{algorithmic}
+\caption{Tabular constraint learning}
+\label{algo:tcl}
+\end{algorithm}
+
+Let us describe the key steps and functions in Algorithm \ref{algo:tcl}. Essentially, the algorithm has three steps: constraint ordering, candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail.
+
+\paragraph{Constraint ordering} $\constrainttorder(\constraints,\dependencies)$ \sergey{explaination that solutions to certain constraints allows us to prune solutions to other constraints -- subsumption, condensed representation}
 
 \paragraph{Candidate group generation} $\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups that are legitimate solution candidates e.g., $X,Y$ are variables of \textit{Y = RANK(X)} and $X,Y$ satisfy the constraints from \CSignature above. Essentially, the group generation step is a constraint satisfaction problem associated with the specific constraint. However, many constraints have the same candidate generation procedures, e.g., sum, min, max, avg, count, etc.
 
@@ -134,7 +140,7 @@ The set of Excel constraints has a partial order in which they should be learned
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.20\textwidth]{figures/constraint_dependency.png}
-  \caption{Constraint Learning Order. The \textcolor{green}{solid} arrows indicate a construction order, i.e., learning one constraint is necessary to build the other. The \textcolor{red}{dashed} arrows indicate a pruning order, the former constraint is used to prune the latter.}
+  \caption{Constraint Learning Order. The \textcolor{green}{solid} arrows indicate a construction order, i.e., learning one constraint is necessary to build the other. The \textcolor{red}{dashed} arrows indicate a subsumption order, the former constraint is used to prune the latter.}
   \label{fig:learning_order}
 \end{figure}
 
@@ -160,7 +166,7 @@ The set of Excel constraints has a partial order in which they should be learned
 \begin{algorithm}[thb]
   \begin{algorithmic}
     \footnotesize
-    \State \textbf{Input:} $D$ -- dataset, (optional: tables $T$, groups $G$)
+    \State \textbf{Input:} $D$ -- dataset, \constraints -- constraints, \dependencies -- dependencies \\(optional: tables $T$, groups $G$)
     \State \textbf{Output:} $S$ -- learned constraints with their satisfaction assignment
     \If{$T$ is \textbf{not} provided}
       \State $T \gets \extracttables(D)$
@@ -168,7 +174,7 @@ The set of Excel constraints has a partial order in which they should be learned
     \If{$G$ is \textbf{not} provided}
       \State $G \gets \extractgroups(D, T)$
     \EndIf
-    \State $S \gets \learnconstraints(G)$
+    \State $S \gets \learnconstraints(G,\constraints,\dependencies)$
     \State $S \gets \postprocess(S)$
     \State \Return $S$
 \end{algorithmic}
