@@ -95,9 +95,9 @@ Can we discover or reconstruct structural relations in flat tabular spreadsheet 
 \subsection{Groups, Type-consistency and Constraints}
 In this work we distinguish the following types of data: numeric and textual. The numeric type has two subtypes: integers and floats. We also consider the special element called \textit{None}, which has two types: numeric and textual. A set is called \textit{type-consistent} iff all elements are either numeric or textual. Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric sub-types by requiring its arguments to be integers.
 
-A \textit{vector} is either a column or a row that is type-consistent. If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers.
+A \textit{vector} is either a column or a row that is type-consistent. If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers. We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if its vectors contain numeric (textual, etc) elements.
 
-An \textit{Excel constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}, where \textit{\CName} is a textual name of the constraint; \textit{\CSignature} is a set of constraints specifying the properties of the arguments, such as their types, e.g., to require them to be integers or sizes, e.g. the length of vectors in the arguments must be equal, i.e., these are constraints on the group meta-information not on the actual group content; \textit{\CFunction} is a set of constraints specifying that the data in the subgroups satisfies the function. For example, an excel constraint \textit{rank} has \CName \textit{Y = RANK(X)}; its \CSignature is: $X$ is numeric, $Y$ is integer and the length of vectors in $X$ is the same as in $Y$; its \CFunction is the following constraint: a pair of vectors $x,y$ is a solution iff $x \in X, y \in Y$ and each value in $x$ has the rank (possibly with ties) specified in $y$.
+An \textit{Excel constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}, where \textit{\CName} is a textual name of the constraint; \textit{\CSignature} is a set of constraints specifying the properties of the arguments, such as their types, e.g., to require them to be integers or sizes, e.g. the length of vectors in the arguments must be equal, i.e., these are constraints on the group meta-information not on the actual group content; \textit{\CFunction} is a set of constraints specifying that the data in the subgroups satisfies the function. For example, an excel constraint \textit{rank} has \CName \textit{Y = RANK(X)}; its \CSignature is: the group $G_X$ (associated with X) is numeric, $G_Y$ is integer and the length of vectors in $G_X$ is the same as in $G_Y$; its \CFunction is the following constraint: a pair of vectors $X,Y$ is a solution iff $X \in G_X, Y \in G_Y$ and each value in $X$ has the rank (possibly with ties) specified in $Y$.
 
 \subsection{Constraint learning algorithm description}
 Let us describe the key steps and functions in Algorithm \ref{algo:tcl}. Essentially, the algorithm has two steps: candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail.
@@ -107,16 +107,32 @@ Let us describe the key steps and functions in Algorithm \ref{algo:tcl}. Essenti
 \paragraph{Subgroup satisfaction search} $\findassignment(\textit{Constraint,Candidates,Solutions})$ is the function looking for the subsets of vectors in the candidates satisfying the constraint. If multiple subsets satisfy the constraint, a maximal is selected. If $G_1,G_2$, associated with the variables $X,Y$ in the constraint \textit{Y = RANK(X)}, are candidates, then \findassignment selects a single vector $y$ in $G_2$ and a single vector $x$ in $G_1$ such that $x$ is ranked by $y$. For example, in Figure \ref{fig:main_example} the group $G = T_1[{:},3{:}8]$ serves as $X$ and $Y$ and $x$ can be picked as $T_1[{:},7]$ and $y$ would be $T_1[{:},8]$.
 
 \subsection{Constraints}
-The set of Excel constraints has a partial order in which they should be learned. For certain constraints this order does not matter, such as rank or product. For many others they have to be learned in the order, which is specified as a DAG in Figure \ref{fig:learning_order} \sergey{add the figure here}. This figure specifies a potential parallelization of the computation, since each connected component is independent of the others.
+The set of Excel constraints has a partial order in which they should be learned. For certain constraints this order does not matter, such as rank or product. For many others they have to be learned in the order, which is specified as a DAG in Figure \ref{fig:learning_order} (if a constraint is not in the graph, it is independent). This figure specifies a potential parallelization of the computation, since each connected component is independent of the others.
 
-\begin{table}
+\begin{figure}[htb]
   \centering
-  \begin{tabular}{lcc}
+  \includegraphics[width=0.20\textwidth]{figures/constraint_dependency.png}
+  \caption{Constraint Learning Order. The \textcolor{green}{solid} arrows indicate a construction order, i.e., learning one constraint is necessary to build the other. The \textcolor{red}{dashed} arrows indicate a pruning order, the former constraint is used to prune the latter.}
+  \label{fig:learning_order}
+\end{figure}
+
+
+\newcommand{\numeric}{\format{numeric}}
+\newcommand{\textual}{\format{textual}}
+\newcommand{\integer}{\format{integer}}
+\newcommand{\length}{\format{length}}
+\newcommand{\nat}{\mathcal{N}}
+
+\begin{table*}
+  \centering
+  \begin{tabular}{ccc}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ 
+    Y = RANK(X)     & $\numeric(G_X) \wedge \integer(G_Y) \wedge \length(G_X) = \length(G_Y)$ & $\begin{array}{r} X \in G_X, Y \in G_Y{:}~\forall i,j \in \nat{:}~(Y_i \leq Y_j \rightarrow X_{Y_i} \leq X_{Y_j}) \\ \wedge~ 1 \leq Y_i \leq \length(G_Y) \end{array}$ \\
+    ALLDIFFERENT(X) & $\textual(G_X) \vee \integer(G_X) $ & $X \in G_X{:}~\forall i,j \in \nat{:}~i \neq j \rightarrow X[i] \neq X[j]$ \\
   \end{tabular}
-  \caption{Tabular Constraints}
+  \caption{Excel Tabular Constraints \sergey{Luc, we need your comments here on the notation of $X,Y$ and $G_X,G_Y$}}
   \label{table:constraints}
-\end{table}
+\end{table*}
 
 \subsection{Workflow}
 \begin{algorithm}[thb]
