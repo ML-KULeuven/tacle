@@ -46,9 +46,8 @@ def main():
                     print("\tAccuracy for {}: {:.2%} ({} of {})".format(c_name, c.accuracy(), *c.present_count()))
                     if len(c.not_found) > 0:
                         print()
-                        print("\tMissing:")
                         for cons_name, sol in c.not_found:
-                            print("\t\t%s: %s" % (cons_name, sol))
+                            print("\tMISSING:\t{constraint}: {solution}".format(constraint=cons_name, solution=sol))
             print()
         elif groups_file is not None:
             with open(truth_file, "w+") as f:
