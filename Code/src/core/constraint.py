@@ -124,6 +124,7 @@ class Aggregate(Constraint):
         filters = [size_filter, filter_class(variables)]
         format_s = "{Y} = " + op_string.upper() + "({X}, " + or_string + ")"
         name = "{} ({})".format(op_string.lower(), or_string)
+        # TODO Dependency only min max average
         super().__init__(name, format_s, Source(variables), filters, {Equal(), Projection()})
 
     @property
