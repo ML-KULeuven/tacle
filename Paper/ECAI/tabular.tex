@@ -8,10 +8,29 @@
 \usepackage[noend]{algpseudocode}
 \usepackage[numbers]{natbib}
 \usepackage{notoccite}
+\usepackage{framed}
+
 
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
 \newcommand{\samuel}[1]{\textcolor{green}{{\sc Samuel:} #1}\xspace}
+
+\newcommand{\constraints}{\ensuremath{\mathcal{C}}\xspace}
+\newcommand{\format}[1]{\textit{#1}\xspace}
+\newcommand{\generategroups}{\format{generateAssignments}}
+\newcommand{\extractgroups}{\format{extractGroups}}
+\newcommand{\extracttables}{\format{extractTables}}
+\newcommand{\learnconstraints}{\format{learnConstraints}}
+\newcommand{\findassignment}{\format{findSolutions}}
+\newcommand{\postprocess}{\format{pruneRedundant}}
+
+\newcommand{\CName}{Name\xspace}
+\newcommand{\CSignature}{Signature\xspace}
+\newcommand{\CFunction}{Function\xspace}
+\newcommand{\dependecies}{\ensuremath{\mathcal{D}}\xspace}
+\newcommand{\groups}{\ensuremath{\mathcal{G}}\xspace}
+
+
 
 %%\ecaisubmission   % inserts page numbers. Use only for submission of paper.
                   % Do NOT use for camera-ready version of paper.
@@ -63,18 +82,6 @@ Can we discover or reconstruct structural relations in flat tabular spreadsheet 
 
 \section{Formalization}
 
-\newcommand{\constraints}{\ensuremath{\mathcal{C}}\xspace}
-\newcommand{\format}[1]{\textit{#1}\xspace}
-\newcommand{\generategroups}{\format{generateAssignments}}
-\newcommand{\extractgroups}{\format{extractGroups}}
-\newcommand{\extracttables}{\format{extractTables}}
-\newcommand{\learnconstraints}{\format{learnConstraints}}
-\newcommand{\findassignment}{\format{findSolutions}}
-\newcommand{\postprocess}{\format{pruneRedundant}}
-
-\newcommand{\CName}{Name\xspace}
-\newcommand{\CSignature}{Signature\xspace}
-\newcommand{\CFunction}{Function\xspace}
 
 \begin{algorithm}[thb]
   \begin{algorithmic}
@@ -101,8 +108,18 @@ A \textit{vector} is either a column or a row that is type-consistent. If a vect
 An \textit{Excel constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. \textit{\CName} is the textual name of the constraint together with its variable names. \textit{\CSignature} is a set of constraints specifying the properties of the group assignments, corresponding to the variables in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. \textit{\CFunction} is a set of constraints specifying that the data in the subgroups satisfies the function. For example, an excel constraint \textit{rank} has \CName \textit{Y = RANK(X)}, where $X$ and $Y$ are the variables; its \CSignature is: the group $G_X$ (associated with X) is numeric, $G_Y$ is integer and the length of vectors in $G_X$ is the same as in $G_Y$; its \CFunction is the following constraint: a pair of vectors $X,Y$ is a solution iff $X \in G_X, Y \in G_Y$ and each value in $X$ has the rank (possibly with ties) specified in $Y$.
 
 \section{Problem Statement}
+In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of Excel constraints and group assignments.
 
-
+\begin{framed}
+  \begin{tabular}{ll}
+  
+    \multicolumn{2}{c}{{\textbf{Tabular Constraint Learning Problem}}}\\
+    &\\
+    \textbf{Given:} & The set of all groups $\groups$ and the set of Excel  \\
+    \phantom{Given:} & constraints $\constraints$ with its dependencies DAG $\dependecies$\\
+    \textbf{Find: } & text
+  \end{tabular}
+\end{framed}
 
 \section{Approach to Tabular Constraint Learning}
 Let us describe the key steps and functions in Algorithm \ref{algo:tcl}. Essentially, the algorithm has two steps: candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail.
