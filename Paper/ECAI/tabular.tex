@@ -154,9 +154,24 @@ The set of Excel constraints has a partial order in which they should be learned
 \begin{table*}
   \centering
   \begin{tabular}{ccc}
-    \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ 
-    Y = RANK(X)     & $\numeric(G_X) \wedge \integer(G_Y) \wedge \length(G_X) = \length(G_Y)$ & $\begin{array}{r} X \in G_X, Y \in G_Y{:}~\forall i,j \in \nat{:}~(Y_i \leq Y_j \rightarrow X_{Y_i} \leq X_{Y_j}) \\ \wedge~ 1 \leq Y_i \leq \length(G_Y) \end{array}$ \\
+    \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\
     ALLDIFFERENT(X) & $\textual(G_X) \vee \integer(G_X) $ & $X \in G_X{:}~\forall i,j \in \nat{:}~i \neq j \rightarrow X[i] \neq X[j]$ \\
+    X = Y & & \\
+    FK -> PK & & \\
+    R = PRODUCT(FV, FK=PK | PV) & & \\
+    FV = FUZZY-LOOKUP(FK, PK, PV) & & \\
+    FV = LOOKUP(FK, PK, PV) & & \\
+    PERMUTATION(X) & & \\
+    R = O1 * O2 & & \\
+    R = PROJECT(P) & & \\
+     Y = RANK(X)     & $\numeric(G_X) \wedge \integer(G_Y) \wedge \length(G_X) = \length(G_Y)$ & $\begin{array}{r} X \in G_X, Y \in G_Y{:}~\forall i,j \in \nat{:}~(Y_i \leq Y_j \rightarrow X_{Y_i} \leq X_{Y_j}) \\ \wedge~ 1 \leq Y_i \leq \length(G_Y) \end{array}$ \\
+    A = PREV(A) + P - N & & \\
+    SERIES(X) & & \\
+    Y = SUM(X, col) & & \\
+    Y = SUM(X, row) & & \\
+    R = SUMIF(FK=PK, V) & & \\
+    R = SUMPRODUCT(O1, O2) & & \\
+
   \end{tabular}
   \caption{Excel Tabular Constraints \sergey{Luc, we need your comments here on the notation of $X,Y$ and $G_X,G_Y$}}
   \label{table:constraints}

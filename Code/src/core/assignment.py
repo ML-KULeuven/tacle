@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Set
 
 from constraint import Problem
 from core.group import Group
@@ -77,16 +77,26 @@ class Source:
             result += solutions
         return result
 
+    def depends_on(self) -> Set:
+        return set()
+
 
 class ConstraintSource(Source):
     def __init__(self, variables, constraint, dictionary):
         super().__init__(variables)
-        self.constraint = constraint
+        self._constraint = constraint
         self.dictionary = dictionary
+
+    @property
+    def constraint(self):
+        return self._constraint
 
     def candidates(self, groups, solutions, filters):
         assignments = [{self.dictionary[k]: v for k, v in s.items()} for s in solutions.get_solutions(self.constraint)]
         return self._complete(assignments, groups, filters)
+
+    def depends_on(self):
+        return {self.constraint}
 
 
 class Filter:
