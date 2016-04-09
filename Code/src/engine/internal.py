@@ -103,7 +103,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 fk_group = assignment[constraint.fk.name]
 
                 fk_vectors = [fk_group.vector_subset(j, j) for j in range(1, fk_group.vectors() + 1)]
-                fk_sets = map(lambda v: (v, set(v.get_vector(1))), fk_vectors)
+                blank_f = blank_filter(fk_group.data, vectorized=True)[1]
+                fk_sets = map(lambda v: (v, set(filter(blank_f, v.get_vector(1)))), fk_vectors)
 
                 pk_vectors = [pk_group.vector_subset(j, j) for j in range(1, pk_group.vectors() + 1)]
                 pk_sets = map(lambda v: (v, set(v.get_vector(1))), pk_vectors)
@@ -169,14 +170,18 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             keys = [c.o_key, c.result, c.f_key, c.values]
 
             def is_aggregate(ok_v, r_v, fk_v, v_v):
-                if not all(all(numpy.vectorize(blank_filter(v)[1])(v)) for v in [ok_v, r_v, fk_v, v_v]):
+                if not all(all(numpy.vectorize(blank_filter(v)[1])(v)) for v in [ok_v, r_v, v_v]):
+                    return False
+                blank_f = blank_filter(fk_v)[1]
+                if not blank_f(fk_v[0]):
                     return False
                 m = dict(zip(ok_v, range(len(ok_v))))
                 acc = [None] * len(r_v)
                 for i in range(len(fk_v)):
-                    key = m[fk_v[i]]
-                    aggregated = c.operation.aggregate(v_v[i])
-                    acc[key] = aggregated if acc[key] is None else c.operation.func(acc[key], aggregated)
+                    if blank_f(fk_v[i]):
+                        key = m[fk_v[i]]
+                        aggregated = c.operation.aggregate(v_v[i])
+                        acc[key] = aggregated if acc[key] is None else c.operation.func(acc[key], aggregated)
                 acc = [c.default if acc[i] is None else acc[i] for i in range(len(acc))]
                 return all(equal(r_v[i], acc[i]) for i in range(len(r_v)))
 
@@ -214,9 +219,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             def add(solution):
                 mapping = {c.x: projection.projected, c.y: projection.result}
                 mapped = {mapping[v].name: solution[v.name] for v in c.variables}
-                if not solutions.has_solution(projection, mapped):
-                    if not equal_groups(solutions, solution):
-                        results.append(solution)
+                if not solutions.has_solution(projection, mapped) and not equal_groups(solutions, solution):
+                    results.append(solution)
 
             for assignment in assignments:
                 x_group, y_group = (assignment[k.name] for k in [c.x, c.y])
@@ -269,16 +273,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             def is_diff(r, o1, o2):
                 return numpy.vectorize(equal)(r, o1 - o2).all()
 
-            def not_summed(r: Group, _, o2: Group):
-                if not o2 < r:
-                    return False
-                if r.row:
-                    return not abs(r.bounds.bounds[0] - o2.bounds.bounds[0]) == 1
-                else:
-                    return not abs(r.bounds.bounds[2] - o2.bounds.bounds[2]) == 1
-
             keys = [c.result, c.first, c.second]
-            return self._generate_test_vectors(assignments, keys, is_diff, not_summed)
+            return self._generate_test_vectors(assignments, keys, is_diff, lambda r, _, o2: o2 < r)
 
         def sum_product(c: Product, assignments, solutions):
             keys = [c.result, c.first, c.second]
@@ -427,3 +423,13 @@ def equal_groups(solutions, solution):
     equal_c = Equal()
     sols = [{equal_c.first.name: v1, equal_c.second.name: v2} for (v1, v2) in sols]
     return all(solutions.has_solution(equal_c, sol) for sol in sols)
+
+
+def complete(vector):
+    _, blank_f = blank_filter(vector)
+    if not blank_f(vector[0]):
+        return False
+    for i in range(1, len(vector)):
+        if not blank_f(vector[i]):
+            vector[i] = vector[i - 1]
+    return vector

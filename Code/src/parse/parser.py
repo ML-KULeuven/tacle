@@ -42,7 +42,6 @@ place_holder = re.compile(r"[\s,]")
 def cast(g_type: GType, v_type: DType, value):
     if v_type is DType.nan:
         return None
-
     if g_type == GType.string:
         return str(value)
     else:
@@ -143,7 +142,8 @@ def create_group(bounds_list, table: Table):
     data = bounds.subset(table.data)
     types = np.vectorize(detect_type)(data)
     g_type = infer_type(types.flatten())
-    return Group(table, bounds, row, np.vectorize(lambda t, v: cast(g_type, t, v))(types, data), g_type)
+    cast_f = np.vectorize(lambda t, v: cast(g_type, t, v), otypes=[np.object if g_type is GType.string else np.float])
+    return Group(table, bounds, row, cast_f(types, data), g_type)
 
 
 def detect_tables(type_data):
@@ -191,9 +191,7 @@ def detect_groups(type_data, tables):
         t_data = Bounds(b).subset(type_data)
         rows, cols = (table.rows, table.columns)
         for row in range(rows):
-            row_same_type = all(numeric_type(t_data[row, col]) == numeric_type(t_data[row, col - 1])
-                                for col in range(1, cols))
-            if not row_same_type:
+            if not is_type_consistent(t_data[row, :]):
                 return []
         same = [numeric_type(t_data[row, 0]) == numeric_type(t_data[row - 1, 0]) for row in range(1, rows)] + [False]
 
@@ -207,9 +205,7 @@ def detect_groups(type_data, tables):
         t_data = Bounds(b).subset(type_data)
         rows, cols = (table.rows, table.columns)
         for col in range(cols):
-            col_same_type = all(numeric_type(t_data[row, col]) == numeric_type(t_data[row - 1, col])
-                                for row in range(1, rows))
-            if not col_same_type:
+            if not is_type_consistent(t_data[:, col]):
                 return []
         same = [numeric_type(t_data[0, col]) == numeric_type(t_data[0, col - 1]) for col in range(1, cols)] + [False]
 
@@ -239,3 +235,10 @@ def remove_header(rec, type_data):
         rec = r1, r2, c1 + 1, c2
         o = Orientation.HORIZONTAL
     return tuple(rec), o
+
+
+def is_type_consistent(v):
+    for i in range(1, len(v)):
+        if v[i] != DType.nan and v[i - 1] != DType.nan and numeric_type(v[i]) != numeric_type(v[i - 1]):
+            return False
+    return True

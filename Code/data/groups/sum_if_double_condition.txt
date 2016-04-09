@@ -4,7 +4,7 @@
 			{
 				"Name": "T1",
 				"Bounds": [6, 8, 4, 4],
-				"Orientation": "None"
+				"Orientation": "Column"
 			}, {
 				"Name": "T2",
 				"Bounds": [12, 227, 2, 6],

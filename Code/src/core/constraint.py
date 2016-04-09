@@ -194,7 +194,7 @@ class ForeignKey(Constraint):
     def __init__(self):
         variables = [self.pk, self.fk]
         source = ConstraintSource(variables, AllDifferent(), {"X": "PK"})
-        filters = [Not(SameTable([self.pk, self.fk])), SameType(variables), NotPartial(variables)]
+        filters = [Not(SameTable(variables)), SameType(variables), NotPartial([self.pk])]
         super().__init__("foreign-key", "{FK} -> {PK}", source, filters)
 
 
@@ -244,7 +244,7 @@ class ConditionalAggregate(Constraint):
         foreign_key = ForeignKey()
         source = ConstraintSource(variables, foreign_key, {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"})
         filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]),
-                   SameTable([self.o_key, self.result]), SameTable([self.f_key, self.values]),
+                   SameTable([self.f_key, self.values]),
                    SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
         super().__init__("{}-if".format(name.lower()), "{R} = " + name.upper() + "IF({FK}={OK}, {V})", source, filters)
 
@@ -306,25 +306,35 @@ class ForeignProduct(ForeignOperation):
         super().__init__("PRODUCT", Operation.PRODUCT)
 
 
-class Product(Constraint):
+class VectorOperation(Constraint):
     result = Variable("R", vector=True, types=numeric)
     first = Variable("O1", vector=True, types=numeric)
     second = Variable("O2", vector=True, types=numeric)
 
+    def __init__(self, name, p_format, source, filters, symmetric=False, depends_on=set):
+        self._symmetric = symmetric
+        super().__init__(name, p_format, source, filters, depends_on=depends_on)
+
+    @property
+    def symmetric(self):
+        return self._symmetric
+
+    @classmethod
+    def get_variables(cls):
+        return [cls.result, cls.first, cls.second]
+
+
+class Product(VectorOperation):
     def __init__(self):
-        variables = [self.result, self.first, self.second]
+        variables = self.get_variables()
         source = Source(variables)
         filters = [SameLength(variables), NotPartial(variables)]
-        super().__init__("product", "{R} = {O1} * {O2}", source, filters)
+        super().__init__("product", "{R} = {O1} * {O2}", source, filters, True)
 
 
 class Diff(Constraint):
-    result = Variable("R", vector=True, types=numeric)
-    first = Variable("O1", vector=True, types=numeric)
-    second = Variable("O2", vector=True, types=numeric)
-
     def __init__(self):
-        variables = [self.result, self.first, self.second]
+        variables = self.get_variables()
         source = Source(variables)
         filters = [SameLength(variables), NotPartial(variables), SameOrientation(variables)]
         super().__init__("difference", "{R} = {O1} - {O2}", source, filters)
