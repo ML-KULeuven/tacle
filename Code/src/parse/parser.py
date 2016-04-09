@@ -8,7 +8,6 @@ import re
 from core.group import Bounds, Table, Group, Orientation, GType
 
 
-# TODO Deal with currency's
 # TODO Single vector => try both orientations
 
 def parse(filename):
@@ -238,11 +237,5 @@ def remove_header(rec, type_data):
         o = Orientation.VERTICAL
     elif all(type_data[i, c1] == DType.string for i in range(r1, r2)):
         rec = r1, r2, c1 + 1, c2
-        o = Orientation.HORIZONTAL
-
-    r1, r2, c1, c2 = rec
-    if c1 == c2 - 1:
-        o = Orientation.VERTICAL
-    elif r1 == r2 - 1:
         o = Orientation.HORIZONTAL
     return tuple(rec), o

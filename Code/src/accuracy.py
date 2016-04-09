@@ -35,6 +35,9 @@ def print_constraints(prefix, constraints):
 def main():
     categories = {"essential constraints": "Essential"}
     cat_counters = {n: [] for n in categories}
+    measures = [("accuracy", calc_accuracy), ("expected accuracy", calc_expected_accuracy),
+                ("redundancy", calc_redundancy)]
+
     for name in files:
         print(name)
         csv_file = local("data/csv/{}.csv".format(name))
@@ -60,10 +63,10 @@ def main():
                             counter.count(constraint, solution)
                 for c_name, c in counters.items():
                     cat_counters[c_name].append(c)
-                    total, hits, expected = calc_accuracy(c, per_file=False)
-                    print("\tAccuracy for {}: {:.2%} ({} of {})".format(c_name, total, hits, expected))
-                    ratio, r, expected = calc_redundancy(c, per_file=False)
-                    print("\tRedundancy {}: {:.2%} ({} over {})".format(c_name, ratio, r, expected))
+                    for m_name, m_func in measures:
+                        res, actual, expected = m_func([c], per_file=False)
+                        print("\t{} for {}: {:.2%} ({} of {})"
+                              .format(m_name.capitalize(), c_name, res, actual, expected))
 
                     print_constraints("MISSING", c.not_found)
                     redundant = CategoryCounter.filter_constraints(c.not_present, is_excel_constraint)
@@ -74,16 +77,12 @@ def main():
                 print("{\n\t\"Essential\":\n\t\t{\n\n\t\t}\n}", file=f, flush=True)
                 print_truth.main(name)
     for n in categories:
-        per_file, not_zero, file_count = calc_accuracy(cat_counters[n], per_file=True)
-        total, hits, expected = calc_accuracy(cat_counters[n], per_file=False)
-        print("{} accuracy per file ({} of {} files): {:.2%}".format(n.capitalize(), not_zero, file_count, per_file))
-        print("Total {} accuracy: {:.2%} ({} of {})".format(n, total, hits, expected))
-
-        per_file, not_zero, file_count = calc_redundancy(cat_counters[n], per_file=True)
-        ratio, r, expected = calc_redundancy(cat_counters[n], per_file=False)
-        print("{} redundancy per file ({} of {} files): {:.2%}".format(n.capitalize(), not_zero, file_count, per_file))
-        print("Redundancy {}: {:.2%} ({} over {})".format(n, ratio, r, expected))
-
+        for m_name, m_func in measures:
+            res, not_zero, file_count = m_func(cat_counters[n], per_file=True)
+            print("{} {} per file ({} of {} files): {:.2%}".format(n.capitalize(), m_name, not_zero, file_count, res))
+            res, actual, expected = m_func(cat_counters[n], per_file=False)
+            print("Total {} {}: {:.2%} ({} of {})".format(n, m_name, res, actual, expected))
+            print()
 
 class CategoryCounter:
     def __init__(self, constraint_json):
@@ -97,6 +96,10 @@ class CategoryCounter:
                 self._not_found.add((constraint, frozenset(solution.items())))
                 self._constraints.add((constraint, frozenset(solution.items())))
         self._present = 0
+
+    @property
+    def constraints(self):
+        return self._constraints
 
     @property
     def hits(self):
@@ -127,33 +130,32 @@ class CategoryCounter:
         return list(c for c in constraints if test_f(constraint_map[c[0]]))
 
 
-def calc_accuracy(counters: Union[List[CategoryCounter], CategoryCounter], per_file=False):
-    if isinstance(counters, CategoryCounter):
-        counters = [counters]
-    filtered = [(counter.hits, counter.expected) for counter in counters if counter.expected > 0]
+def calc_accuracy(counters: List[CategoryCounter], per_file=False):
+    return calc_ratio(counters, lambda c: c.hits, lambda c: c.expected, per_file)
+
+
+def calc_expected_accuracy(counters: List[CategoryCounter], per_file=False):
+    exp_f = lambda c: c[0] in constraint_map and is_excel_constraint(constraint_map[c[0]])
+    return calc_ratio(counters, lambda c: c.hits, lambda c: len([x for x in c.constraints if exp_f(x)]), per_file)
+
+
+def calc_redundancy(counters: List[CategoryCounter], per_file=False):
+    count_f = lambda c: len(CategoryCounter.filter_constraints(c.not_present, is_excel_constraint))
+    return calc_ratio(counters, count_f, lambda c: c.expected + count_f(c), per_file)
+
+
+def calc_ratio(counters: List[CategoryCounter], ex_f1, ex_f2, per_file):
+    tuples = [(ex_f1(c), ex_f2(c)) for c in counters]
+    filtered = [t for t in tuples if t[1] > 0]
     if len(filtered) == 0:
         return 1.0, 0.0, 0.0
     elif per_file:
-        return sum(hits / exp for hits, exp in filtered) / len(filtered), len(filtered), len(counters)
+        return sum(t[0] / t[1] for t in filtered) / len(filtered), len(filtered), len(counters)
     else:
-        hits = sum(hits for hits, _ in filtered)
-        expected = sum(exp for _, exp in filtered)
-        return hits / expected, hits, expected
+        s1 = sum(x for x, _ in filtered)
+        s2 = sum(x for _, x in filtered)
+        return s1 / s2, s1, s2
 
-
-def calc_redundancy(counters: Union[List[CategoryCounter], CategoryCounter], per_file=False):
-    if isinstance(counters, CategoryCounter):
-        counters = [counters]
-    filtered = [(len(CategoryCounter.filter_constraints(counter.not_present, is_excel_constraint)), counter.expected)
-                for counter in counters if counter.expected > 0]
-    if len(filtered) == 0:
-        return 1.0, 0.0, 0.0
-    elif per_file:
-        return sum(r / (exp + r) for r, exp in filtered) / len(filtered), len(filtered), len(counters)
-    else:
-        r = sum(r for r, _ in filtered)
-        expected = sum(exp for _, exp in filtered)
-        return r / (expected + r), r, expected
 
 if __name__ == '__main__':
     main()
