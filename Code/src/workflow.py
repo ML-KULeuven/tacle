@@ -23,6 +23,7 @@ constraint_list = [
     ForeignProduct(),
     Product(),
     Diff(),
+    PercentualDiff(),
     SumProduct(),
     Equal(),
 ]

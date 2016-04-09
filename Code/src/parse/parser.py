@@ -33,7 +33,7 @@ class DType(Enum):
         return "DT.{}".format(self.name[0:3])
 
 
-percent_pattern = re.compile(r"\d+(\.\d+)?%")
+percent_pattern = re.compile(r"\s*-?\s*\d+(\.\d+)?\s*%")
 currency_pattern = re.compile(r"(\s*[\$€£]\s*\d+[\d,]*\s*)|(\s*\d+[\d,]*\s*[\$€£]\s*)")
 currency_symbols = re.compile(r"[\$€£]")
 place_holder = re.compile(r"[\s,]")

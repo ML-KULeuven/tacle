@@ -311,7 +311,7 @@ class VectorOperation(Constraint):
     first = Variable("O1", vector=True, types=numeric)
     second = Variable("O2", vector=True, types=numeric)
 
-    def __init__(self, name, p_format, source, filters, symmetric=False, depends_on=set):
+    def __init__(self, name, p_format, source, filters, symmetric=False, depends_on=set()):
         self._symmetric = symmetric
         super().__init__(name, p_format, source, filters, depends_on=depends_on)
 
@@ -320,24 +320,32 @@ class VectorOperation(Constraint):
         return self._symmetric
 
     @classmethod
-    def get_variables(cls):
+    def list_variables(cls):
         return [cls.result, cls.first, cls.second]
 
 
 class Product(VectorOperation):
     def __init__(self):
-        variables = self.get_variables()
+        variables = self.list_variables()
         source = Source(variables)
         filters = [SameLength(variables), NotPartial(variables)]
         super().__init__("product", "{R} = {O1} * {O2}", source, filters, True)
 
 
-class Diff(Constraint):
+class Diff(VectorOperation):
     def __init__(self):
-        variables = self.get_variables()
+        variables = self.list_variables()
         source = Source(variables)
         filters = [SameLength(variables), NotPartial(variables), SameOrientation(variables)]
         super().__init__("difference", "{R} = {O1} - {O2}", source, filters)
+
+
+class PercentualDiff(VectorOperation):
+    def __init__(self):
+        variables = self.list_variables()
+        source = Source(variables)
+        filters = [SameLength(variables), NotPartial(variables), SameOrientation(variables)]
+        super().__init__("percentual-diff", "{R} = ({O1} - {O2}) / {O2}", source, filters, False)
 
 
 class Projection(Constraint):

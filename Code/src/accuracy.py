@@ -7,7 +7,7 @@ from core.constraint import *
 from engine.util import local
 
 files = ["bmi", "age_department_sumif", "average_ablebits", "columnwise-sum-rows", "examples", "expenses",
-         "external_revenue", "fbi_offenses",
+         "external_revenue", "fbi_offenses_corr",
          "financial_result", "fruits", "help_lookup", "household", "inventory", "multsum",
          "paper_supply", "price_weight", "repair", "rides", "sales_blanks", "school", "score",
          "shares", "sum_if_double_condition", "sum_table_from_guide", "sumif_blanks", "sumif_example",
@@ -18,7 +18,7 @@ def is_excel_constraint(c: Constraint):
     return isinstance(c, Aggregate) or isinstance(c, ConditionalAggregate) or isinstance(c, Series) \
         or isinstance(c, Rank) or isinstance(c, Lookup) or isinstance(c, FuzzyLookup) or isinstance(c, RunningTotal) \
         or isinstance(c, Product) or isinstance(c, Diff) or isinstance(c, SumProduct) \
-        or isinstance(c, ForeignProduct) or isinstance(c, Equal)
+        or isinstance(c, ForeignProduct) or isinstance(c, Equal) or isinstance(c, PercentualDiff)
 
 
 constraint_map = {c.name: c for c in workflow.constraint_list}

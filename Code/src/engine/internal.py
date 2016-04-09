@@ -1,5 +1,7 @@
 import itertools
 
+import math
+
 from core.constraint import *
 from core.group import Group
 from core.solutions import Solutions
@@ -51,6 +53,7 @@ class InternalCSPStrategy(AssignmentStrategy):
             self.add_constraint(c)
         self.add_constraint(Product())
         self.add_constraint(Diff())
+        self.add_constraint(PercentualDiff())
         self.add_constraint(SumProduct())
 
     def add_constraint(self, constraint: Constraint):
@@ -276,6 +279,17 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             keys = [c.result, c.first, c.second]
             return self._generate_test_vectors(assignments, keys, is_diff, lambda r, _, o2: o2 < r)
 
+        def percent_diff(c: PercentualDiff, assignments, solutions):
+            def is_diff(r, o1, o2):
+                if equal_v(o2, 0).any():
+                    return False
+                calculated = (o1 - o2) / o2
+                equal_t = numpy.vectorize(lambda x, y: equal(x, y, True))
+                return equal_t(r, calculated).all()
+
+            keys = [c.result, c.first, c.second]
+            return self._generate_test_vectors(assignments, keys, is_diff)
+
         def sum_product(c: Product, assignments, solutions):
             keys = [c.result, c.first, c.second]
 
@@ -354,6 +368,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             self.add_strategy(c_instance, aggregate)
         self.add_strategy(Product(), product)
         self.add_strategy(Diff(), diff)
+        self.add_strategy(PercentualDiff(), percent_diff)
         self.add_strategy(SumProduct(), sum_product)
 
     @staticmethod
@@ -379,14 +394,33 @@ def rank_data(a):
     return [table[e] for e in a]
 
 
-def equal(x, y):
-    delta = pow(10, -10)
+def equal(x, y, scale=False):
     if x is None or y is None:
         return x is y
     if isinstance(x, float) or isinstance(y, float):
+        delta = pow(10, -10)
+        if scale:
+            n_digits = min(precision_and_scale(x)[1], precision_and_scale(y)[1])
+            x = numpy.round(x, n_digits)
+            y = numpy.round(y, n_digits)
         return (numpy.isnan(x) and numpy.isnan(y)) or abs(x - y) < delta
     else:
         return x == y
+
+
+def precision_and_scale(x):
+    max_digits = 14
+    int_part = int(abs(x))
+    magnitude = 1 if int_part == 0 else int(math.log10(int_part)) + 1
+    if magnitude >= max_digits:
+        return (magnitude, 0)
+    frac_part = abs(x) - int_part
+    multiplier = 10 ** (max_digits - magnitude)
+    frac_digits = multiplier + int(multiplier * frac_part + 0.5)
+    while frac_digits % 10 == 0:
+        frac_digits /= 10
+    scale = int(math.log10(frac_digits))
+    return magnitude + scale, scale
 
 
 equal_v = numpy.vectorize(equal)
