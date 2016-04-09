@@ -16,8 +16,12 @@ def main(name):
     for constraint in solutions.solutions:
         sols = solutions.get_solutions(constraint)
         if len(sols) > 0:
-            sols_s = ["{%s}" % ", ".join(["\"%s\": \"%s\"" % (k, str(v)) for k, v in sol.items()]) for sol in sols]
-            print("\t\t\t\"%s\": [%s]," % (constraint.name, ", ".join(sols_s)))
+            print_solutions(constraint, sols)
+
+
+def print_solutions(constraint, solutions):
+    sols_s = ["{%s}" % ", ".join(["\"%s\": \"%s\"" % (k, str(v)) for k, v in sol.items()]) for sol in solutions]
+    print("\t\t\t\"%s\": [%s]," % (constraint.name, ", ".join(sols_s)))
 
 
 def arg_parser():
