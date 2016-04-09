@@ -1,6 +1,4 @@
 import os
-from typing import Union
-
 from pandas import json
 
 import print_truth
@@ -19,7 +17,8 @@ files = ["bmi", "age_department_sumif", "average_ablebits", "columnwise-sum-rows
 def is_excel_constraint(c: Constraint):
     return isinstance(c, Aggregate) or isinstance(c, ConditionalAggregate) or isinstance(c, Series) \
         or isinstance(c, Rank) or isinstance(c, Lookup) or isinstance(c, FuzzyLookup) or isinstance(c, RunningTotal) \
-        or isinstance(c, Product) or isinstance(c, SumProduct) or isinstance(c, ForeignProduct) or isinstance(c, Equal)
+        or isinstance(c, Product) or isinstance(c, Diff) or isinstance(c, SumProduct) \
+        or isinstance(c, ForeignProduct) or isinstance(c, Equal)
 
 
 constraint_map = {c.name: c for c in workflow.constraint_list}
@@ -83,6 +82,8 @@ def main():
             res, actual, expected = m_func(cat_counters[n], per_file=False)
             print("Total {} {}: {:.2%} ({} of {})".format(n, m_name, res, actual, expected))
             print()
+    return cat_counters
+
 
 class CategoryCounter:
     def __init__(self, constraint_json):

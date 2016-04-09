@@ -50,6 +50,7 @@ class InternalCSPStrategy(AssignmentStrategy):
         for c in Aggregate.instances():
             self.add_constraint(c)
         self.add_constraint(Product())
+        self.add_constraint(Diff())
         self.add_constraint(SumProduct())
 
     def add_constraint(self, constraint: Constraint):
@@ -264,6 +265,21 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return self._generate_test_vectors(assignments, keys, is_product, lambda r, o1, o2: ordered(o1, o2))
 
+        def diff(c: Diff, assignments, solutions):
+            def is_diff(r, o1, o2):
+                return numpy.vectorize(equal)(r, o1 - o2).all()
+
+            def not_summed(r: Group, _, o2: Group):
+                if not o2 < r:
+                    return False
+                if r.row:
+                    return not abs(r.bounds.bounds[0] - o2.bounds.bounds[0]) == 1
+                else:
+                    return not abs(r.bounds.bounds[2] - o2.bounds.bounds[2]) == 1
+
+            keys = [c.result, c.first, c.second]
+            return self._generate_test_vectors(assignments, keys, is_diff, not_summed)
+
         def sum_product(c: Product, assignments, solutions):
             keys = [c.result, c.first, c.second]
 
@@ -333,14 +349,15 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(ForeignKey(), foreign_keys)
         self.add_strategy(Lookup(), lookups)
         self.add_strategy(FuzzyLookup(), fuzzy_lookup)
-        for c in ConditionalAggregate.instances():
-            self.add_strategy(c, conditional_aggregate)
+        for c_instance in ConditionalAggregate.instances():
+            self.add_strategy(c_instance, conditional_aggregate)
         self.add_strategy(RunningTotal(), running_total)
         self.add_strategy(ForeignProduct(), foreign_operation)
         self.add_strategy(Projection(), project)
-        for c in Aggregate.instances():
-            self.add_strategy(c, aggregate)
+        for c_instance in Aggregate.instances():
+            self.add_strategy(c_instance, aggregate)
         self.add_strategy(Product(), product)
+        self.add_strategy(Diff(), diff)
         self.add_strategy(SumProduct(), sum_product)
 
     @staticmethod

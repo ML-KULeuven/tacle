@@ -318,6 +318,18 @@ class Product(Constraint):
         super().__init__("product", "{R} = {O1} * {O2}", source, filters)
 
 
+class Diff(Constraint):
+    result = Variable("R", vector=True, types=numeric)
+    first = Variable("O1", vector=True, types=numeric)
+    second = Variable("O2", vector=True, types=numeric)
+
+    def __init__(self):
+        variables = [self.result, self.first, self.second]
+        source = Source(variables)
+        filters = [SameLength(variables), NotPartial(variables), SameOrientation(variables)]
+        super().__init__("difference", "{R} = {O1} - {O2}", source, filters)
+
+
 class Projection(Constraint):
     result = Variable("R", vector=True)
     projected = Variable("P")

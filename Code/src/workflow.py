@@ -18,20 +18,16 @@ constraint_list = [
     Rank(),
     ForeignKey(),
     Lookup(),
-    FuzzyLookup()
-]
-
-constraint_list += Aggregate.instances()
-constraint_list += ConditionalAggregate.instances()
-
-constraint_list += [
+    FuzzyLookup(),
     RunningTotal(),
     ForeignProduct(),
     Product(),
+    Diff(),
     SumProduct(),
     Equal(),
 ]
-
+constraint_list += Aggregate.instances()
+constraint_list += ConditionalAggregate.instances()
 
 def order_constraints(constraints: List[Constraint]):
     ordered = []
