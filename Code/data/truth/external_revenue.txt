@@ -1,6 +1,6 @@
 {
 	"Essential":
 		{
-			"percentual-diff": [{"WAS": "T1[:, 3]", "IS": "T1[:, 2]", "D": "T1[:, 4]"}]
+			"percentual-diff": [{"O2": "T1[:, 3]", "O1": "T1[:, 2]", "R": "T1[:, 4]"}]
 		}
 }
