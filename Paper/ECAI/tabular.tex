@@ -9,7 +9,7 @@
 \usepackage[numbers]{natbib}
 \usepackage{notoccite}
 \usepackage{framed}
-
+\usepackage{amsmath}
 
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
@@ -32,7 +32,11 @@
 \newcommand{\dependencies}{\ensuremath{\mathcal{D}}\xspace}
 \newcommand{\groups}{\ensuremath{\mathcal{G}}\xspace}
 
+\newcommand{\range}[3]{\ensuremath{#1[#2,#3]}}
+\newcommand{\rangeto}[2]{#1{:}#2}
+\newcommand{\rangeall}{:}
 
+\newcommand{\ecrank}[2]{\ensuremath{#1 = \mathit{RANK}(#2)}}
 
 %%\ecaisubmission   % inserts page numbers. Use only for submission of paper.
                   % Do NOT use for camera-ready version of paper.
@@ -153,7 +157,7 @@ The set of Excel constraints has a partial order in which they should be learned
 
 \begin{table*}
   \centering
-  \begin{tabular}{ccc}
+  \begin{tabular}{lcc}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\
     ALLDIFFERENT(X) & $\textual(G_X) \vee \integer(G_X) $ & $X \in G_X{:}~\forall i,j \in \nat{:}~i \neq j \rightarrow X[i] \neq X[j]$ \\
     X = Y & & \\
@@ -197,13 +201,63 @@ The set of Excel constraints has a partial order in which they should be learned
 \label{algo:workflow}
 \end{algorithm}
 
-\section{Case Study aka Experiments}
-
 \textbf{Approach}
 \begin{itemize}
   \item Notation
   \item Algorithm (select constraints, find assignments, find solutions)
 \end{itemize}
+
+\section{Case Study aka Experiments}
+In this section we experimentally validate our approach.
+The implementation is first illustrated using a case study on a specific Excel sheet.
+In order to quantify the results and generalize our findings we created a benchmark of 30 (\samuel{check number}) Excel sheets from various sources.
+
+\subsection{Benchmark}
+There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel at an affiliated University, spreadsheets from tutorials online, publicly available spreadsheets such as crime statistics or financial reports\footnote{\samuel{link to links.txt}}.
+
+All spreadsheets have been converted to CSV with no manual intervention unless noted.
+Definitions of tables where added manually, providing a way to compare results and overcoming shortcomings in the table detection algorithm (in some harder cases groups where also provided manually).
+
+For every spreadsheet a ground-truth has been provided manually, specifying the essential (or original) constraints that are expressible in Excel and expected to be discovered.
+\footnote{Constraints currently outside of the scope of this system (e.g. generic nested mathematical formulas) are in a separate category (non-trivial).}
+
+\subsection{Case study}
+Let us illustrate our implementation using the example presented in the introduction.
+We obtained this example by combining several Excel sheets from exercise sessions into one.
+Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
+
+\paragraph{Accuracy}
+Our current implementation finds 18 constraints, containing all of the 12 solutions described in figure~\ref{fig:sol_example}.
+Of the 6 remaining (redundant) constraints, 5 are $\mathit{RANK}$ constraints that are true by accident, such as: \begin{align*}
+  & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5})} \\
+  & \ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{4}}
+\end{align*}
+The other redundant constraint is a additional $\mathit{LOOKUP}$ that holds because the vectors in \range{T_2}{\rangeall}{\rangeto{2}{3}} can both be used to look each other up in \range{T_1}{\rangeall}{\rangeto{1}{2}} and we considered only one of them to be essential (lookup using the ID).
+
+We conclude that for this example our primary goal of finding all constraints is achieved.
+A number of redundant constraints ($33.33\%$ of the total) are also found, which, as we will show, is rather high compared to other spreadsheets.
+However, this example also contains many short vectors which increases the chance for constraints to be true by accident.
+
+\begin{figure}
+  \label{fig:sol_example}
+  {\small
+    \begin{align*}
+      & SERIES(\range{T_{1}}{\rangeall}{1}) \\
+      & \range{T_{1}}{\rangeall}{8} = RANK(\range{T_{1}}{\rangeall}{7}) \\
+      & \range{T_{2}}{1}{\rangeall} = SUM(\range{T_{1}}{\rangeall}{\rangeto{3}{7}}, col) \\
+      & \range{T_{6}}{\rangeall}{2} = SUM(\range{T_{1}}{\rangeall}{\rangeto{3}{6}}, col) \\
+      & \range{T_{1}}{\rangeall}{7} = SUM(\range{T_{1}}{\rangeall}{\rangeto{3}{6}}, row) \\
+      & \range{T_{2}}{2}{\rangeall} = AVERAGE(\range{T_{1}}{\rangeall}{\rangeto{3}{7}}, col) \\
+      & \range{T_{2}}{3}{\rangeall} = MAX(\range{T_{1}}{\rangeall}{\rangeto{3}{7}}, col) \\
+      & \range{T_{2}}{4}{\rangeall} = MIN(\range{T_{1}}{\rangeall}{\rangeto{3}{7}}, col) \\
+      & \range{T_{1}}{\rangeall}{10} = SUMIF(\range{T_{5}}{\rangeall}{1}=\range{T_{1}}{\rangeall}{2}, \range{T_{5}}{\rangeall}{2}) \\
+      & \range{T_{1}}{\rangeall}{11} = MAXIF(\range{T_{5}}{\rangeall}{1}=\range{T_{1}}{\rangeall}{2}, \range{T_{5}}{\rangeall}{2}) \\
+      & \range{T_{4}}{\rangeall}{3} = LOOKUP(\range{T_{4}}{\rangeall}{2}, \range{T_{1}}{\rangeall}{1}, \range{T_{1}}{\rangeall}{2}) \\
+      & \range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
+    \end{align*}
+  }%
+  \caption{Expected constraints case study}
+\end{figure}
 
 {\bfseries 
   Experimental questions

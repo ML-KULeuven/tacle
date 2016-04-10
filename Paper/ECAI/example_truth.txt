@@ -1,0 +1,25 @@
+SERIES(T1[:, 1])
+T1[:, 8] = RANK(T1[:, 7])
+T2[1, :] = SUM(T1[:, 3:7], col)
+T6[:, 2] = SUM(T1[:, 3:6], col)
+T1[:, 7] = SUM(T1[:, 3:6], row)
+T2[2, :] = AVERAGE(T1[:, 3:7], col)
+T2[3, :] = MAX(T1[:, 3:7], col)
+T2[4, :] = MIN(T1[:, 3:7], col)
+T1[:, 10] = SUMIF(T5[:, 1]=T1[:, 2], T5[:, 2])
+T1[:, 11] = MAXIF(T5[:, 1]=T1[:, 2], T5[:, 2])
+T4[:, 3] = LOOKUP(T4[:, 2], T1[:, 1], T1[:, 2])
+T6[:, 4] = PREV(T6[:, 4]) + T6[:, 2] - T6[:, 3]
+
+SERIES(\range{T_{1}{\rangeall}{1}) \\
+\range{T_{1}{\rangeall}{8} = RANK(\range{T_{1}{\rangeall}{7}) \\
+\range{T_{2}{1}{\rangeall} = SUM(\range{T_{1}{\rangeall}{\rangeto{3}{7}}, col) \\
+\range{T_{6}{\rangeall}{2} = SUM(\range{T_{1}{\rangeall}{\rangeto{3}{6}}, col) \\
+\range{T_{1}{\rangeall}{7} = SUM(\range{T_{1}{\rangeall}{\rangeto{3}{6}}, row) \\
+\range{T_{2}{2}{\rangeall} = AVERAGE(\range{T_{1}{\rangeall}{\rangeto{3}{7}}, col) \\
+\range{T_{2}{3}{\rangeall} = MAX(\range{T_{1}{\rangeall}{\rangeto{3}{7}}, col) \\
+\range{T_{2}{4}{\rangeall} = MIN(\range{T_{1}{\rangeall}{\rangeto{3}{7}}, col) \\
+\range{T_{1}{\rangeall}{10} = SUMIF(\range{T_{5}{\rangeall}{1}=\range{T_{1}{\rangeall}{2}, \range{T_{5}{\rangeall}{2}) \\
+\range{T_{1}{\rangeall}{11} = MAXIF(\range{T_{5}{\rangeall}{1}=\range{T_{1}{\rangeall}{2}, \range{T_{5}{\rangeall}{2}) \\
+\range{T_{4}{\rangeall}{3} = LOOKUP(\range{T_{4}{\rangeall}{2}, \range{T_{1}{\rangeall}{1}, \range{T_{1}{\rangeall}{2}) \\
+\range{T_{6}{\rangeall}{4} = PREV(\range{T_{6}{\rangeall}{4}) + \range{T_{6}{\rangeall}{2} - \range{T_{6}{\rangeall}{3}

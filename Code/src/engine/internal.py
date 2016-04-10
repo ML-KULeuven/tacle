@@ -119,6 +119,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return solutions
 
         def lookups(c: Lookup, assignments, solutions):
+            # TODO redundant lookups
             results = []
 
             def is_lookup(reference_dictionary, keys, values):

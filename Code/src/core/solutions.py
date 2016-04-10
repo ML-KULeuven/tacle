@@ -15,6 +15,9 @@ class Solutions:
     def has_solution(self, constraint, solution):
         return self._to_tuple(constraint, solution) in self.properties[constraint]
 
+    def has(self, constraint, keys, values):
+        return self.has_solution(constraint, {k.name: v for k, v in zip(keys, values)})
+
     @staticmethod
     def _to_tuple(constraint, solution):
         return tuple(solution[v.name] for v in constraint.variables)
