@@ -250,7 +250,8 @@ class ConditionalAggregate(Constraint):
                    SameTable([self.f_key, self.values]), Not(SameTable([self.f_key, self.o_key])),
                    NotPartial([self.o_key]), SameType([self.f_key, self.o_key]),
                    SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
-        super().__init__("{}-if".format(name.lower()), "{R} = " + name.upper() + "IF({FK}={OK}, {V})", source, filters)
+        p_format = "{R} = " + name.upper() + "IF({FK}={OK}, {V})"
+        super().__init__("{}-if".format(name.lower()), p_format, source, filters, depends_on={ForeignKey()})
 
     @property
     def operation(self) -> Operation:

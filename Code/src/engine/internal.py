@@ -170,7 +170,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return self._generate_test_vectors(assignments, keys, is_lookup)
 
-        def conditional_aggregate(c: ConditionalAggregate, assignments, solutions):
+        def conditional_aggregate(c: ConditionalAggregate, assignments, solutions: Solutions):
             keys = [c.o_key, c.result, c.f_key, c.values]
 
             def is_aggregate(ok_v, r_v, fk_v, v_v):
@@ -183,7 +183,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         return False
                 return True
 
-            return list(self._generate_test_vectors(assignments, keys, is_aggregate))
+            def not_inverted(ok, r, fk, v):
+                foreign_key = ForeignKey()
+                return not solutions.has(foreign_key, [foreign_key.fk, foreign_key.pk], [ok, fk]) \
+                    and not solutions.has(foreign_key, [foreign_key.fk, foreign_key.pk], [r, v])
+
+            return list(self._generate_test_vectors(assignments, keys, is_aggregate, not_inverted))
 
         def running_total(c: RunningTotal, assignments, solutions):
             def is_running_diff(acc, pos, neg):
