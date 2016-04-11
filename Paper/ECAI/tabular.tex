@@ -4,6 +4,7 @@
 \usepackage{latexsym}
 \usepackage{xspace}
 \usepackage{hyperref}
+\usepackage{amssymb}
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 \usepackage[numbers]{natbib}
@@ -96,8 +97,10 @@ A \textit{vector} is either a column or a row that is type-consistent. If a vect
 
 An \textit{Excel constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. \textit{\CName} is the textual name of the constraint together with its variable names. \textit{\CSignature} is a set of constraints specifying the properties of the group assignments, corresponding to the variables in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. \textit{\CFunction} is a set of constraints specifying that the data in the subgroups satisfies the function. For example, an excel constraint \textit{rank} has \CName \textit{Y = RANK(X)}, where $X$ and $Y$ are the variables; its \CSignature is: the group $G_X$ (associated with X) is numeric, $G_Y$ is integer and the length of vectors in $G_X$ is the same as in $G_Y$; its \CFunction is the following constraint: a pair of vectors $X,Y$ is a solution iff $X \in G_X, Y \in G_Y$ and each value in $X$ has the rank (possibly with ties) specified in $Y$.
 
+A \textit{tabular solution} $S$ to a constraint $C$ is a tuple $(X_1, \dots, X_n)$ where $n$ is the number of variables in $C$ and each $X_i$ is a subgroup in \groups, such that $(X_1,\dots,X_n)$ satisfies both the \CSignature and \CFunction of the constraint $C$.
+
 \section{Problem Statement}
-In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of Excel constraints and group assignmentsd as follows: 
+In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of Excel constraints and group assignments as follows: 
 
 \begin{minipage}[c]{14em}
   \vspace{5pt}
@@ -106,13 +109,37 @@ In the previous section we introduced the problem of tabular constraint learning
     \vspace{-4pt}
     &\\
     \textbf{Given:}& the set of all groups $\groups$ and of Excel constraints $\constraints$\\
-    \textbf{Find:}& for each constraint  $c$ in \constraints all the subgroups of $\groups$\\ 
-    & satisfying the \CSignature and \CFunction of $c$ \\
+    \textbf{Find:}&  all tabular solution $S$ in \groups for each constraint $c$ \constraints \\ 
   \end{tabular}
   \vspace{6pt}
 \end{minipage}
 
   The key observation here is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in Excel each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
+
+
+In theory each constraint is independent and equally useful. In practice, however, things are different. Assume that for some $X$ both \textit{series(X)} and \textit{alldifferent(X)} hold. From a user's perspective the last solution is useless, since he or she already knows that series constraint implies alldifferent constraint. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity (generality) order between constraints, which is depicted using solid (dashed) arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $X$ is a not permutation, then $X$ should not be tested for the series constraint at all. A dashed arrow from $C_1$ to $C_2$ indicates that $C_1$ is a more specific constraint than $C_2$ and therefore if $X$ is a solution for $C_1$ it should not be tested for $C_2$.
+
+We call a tabular solution $S$ to a constraint $C$ \textit{the most specific} wrt \dependencies, iff there is no other constraint $C'$ for which $S$ is a solution and $C'$ is more specific in \dependencies.
+
+
+Let us introduce the version of tabular constraint learning that takes into account the specificity relation between constraints.
+
+\begin{minipage}[c]{14em}
+  \vspace{5pt}
+  \begin{tabular}{ll}
+    \multicolumn{2}{l}{{\textbf{Condensed Tabular Constraint Learning Problem}}}\\
+    \vspace{-4pt}
+    &\\
+    \textbf{Given:}& the set of all groups $\groups$ and of Excel constraints $\constraints$,\\ 
+    & a constraint specificity DAG \dependencies \\
+    \textbf{Find:}& all the most specific solution $S$ in \groups\\
+    & for each $c$ in \constraints \\
+  \end{tabular}
+  \vspace{6pt}
+\end{minipage}
+
+
+
 
 \section{Approach to Tabular Constraint Learning}
 \begin{algorithm}[thb]
@@ -129,11 +156,9 @@ In the previous section we introduced the problem of tabular constraint learning
   \EndFor\\
 \Return $S$
 \end{algorithmic}
-\caption{Tabular constraint learning \sergey{Samuel, I think \generategroups takes \dependencies as an argument}}
+\caption{Tabular constraint learning}
 \label{algo:tcl}
 \end{algorithm}
-In theory each constraint is independent and equally useful. In practice, however, things are different. Assume that for some $X$ and $Y$ it holds that \textit{SUM(X)=Y}, and also we discovered that the vector $Y$ is equal to a vector $Z$. Then, of course, \textit{SUM(X)=Z} holds and it is a valid solution to the sum constraint problem. From a user's perspective the last solution is useless, since he or she already knows that $Y=Z$ and the latter constraint satisfaction follows. To capture this condensed representation \cite{condensed} of solutions, we have introduced a subsumption (generality) order between constraints, which is depicted using \textcolor{red}{dashed} lines in Figure \ref{fig:learning_order}. Besides generality, we know that certain constraints have as a subproblem other constraints, e.g. if $X$ is a \textit{series}, then it is also a \textit{permutation}. If discovered that $X$ is a not permutation, then $X$ should not be tested for the series constraint at all. To capture this solving strategy we introduced a constraint construction order depicted using \textcolor{green}{solid} lines in Figure \ref{fig:learning_order}.
-
 Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail. 
 
 \paragraph{Constraint ordering} $\constrainttorder(\constraints,\dependencies)$ uses the DAG \dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of \dependencies. Also, if there is a construction edge from $C_1$ to $C_2$, and $X$ is not a solution to $C_1$, then $X$ is not generated as a candidate group for $C_2$. If there is a sumsumption edge from $C_1$ to $C_2$ and $X$ is a solution to $C_1$, then $X$ is not generated as a candidate group for $C_2$.
@@ -150,7 +175,7 @@ As emphasized before, the set of Excel constraints has a partial order in which 
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.20\textwidth]{figures/constraint_dependency.png}
-  \caption{Constraint Learning Order. The \textcolor{green}{solid} arrows indicate a construction order, i.e., learning one constraint is necessary to build the other. The \textcolor{red}{dashed} arrows indicate a subsumption order, the former constraint is used to prune the latter.}
+  \caption{Constraint Learning Order. The solid arrows indicate a specificity order, i.e., \textit{permutation} $\rightarrow$ \textit{series} means that the series constraint is more specific than permutation. The dashed arrows indicate an inverse construction order, \textit{project} $\dashrightarrow$ \textit{aggregates} means the project constraint is more specific than aggregates. \sergey{Samuel,  can you give an explanation why we keep both arrow and how it is internally motivated?}}
   \label{fig:learning_order}
 \end{figure}
 
@@ -213,8 +238,6 @@ As emphasized before, the set of Excel constraints has a partial order in which 
   \item Algorithm (select constraints, find assignments, find solutions)
 \end{itemize}
 
-\section{Declarative modeling}
-\sergey{We need to fit ASP, Minizinc and all that here, I mean it is supposed to be an important point after all}
 
 \section{Case Study aka Experiments}
 In this section we experimentally validate our approach.
