@@ -178,10 +178,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     return False
                 for i in range(len(ok_v)):
                     data = v_v[fk_v == ok_v[i]]
-                    try:
-                        res = c.operation.aggregate(data) if len(data) > 0 else c.default
-                    except TypeError:
-                        print(v_v, v_v[fk_v == "Management"], fk_v, ok_v[i])
+                    res = c.operation.aggregate(data) if len(data) > 0 else c.default
                     if not equal(res, r_v[i], True):
                         return False
                 return True
