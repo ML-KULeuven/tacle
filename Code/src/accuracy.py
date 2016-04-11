@@ -1,4 +1,6 @@
 import os
+
+import time
 from pandas import json
 
 import print_truth
@@ -37,6 +39,7 @@ def main():
     cat_counters = {n: [] for n in categories}
     measures = [("accuracy", calc_accuracy), ("expected accuracy", calc_expected_accuracy),
                 ("redundancy", calc_redundancy)]
+    speed = []
 
     for name in files:
         print(name)
@@ -50,7 +53,11 @@ def main():
                 print("{\n\t\"Tables\":\n\t\t[\n\n\t\t]\n}", file=f, flush=True)
             groups_file = None
             silent = False
+        t_before = time.time()
         solutions = workflow.main(csv_file, groups_file, False, silent=True, parse_silent=silent)
+        t_elapsed = time.time() - t_before
+        speed.append(t_elapsed)
+        print("\tTook: {:.2f} seconds".format(t_elapsed))
         truth_file = local("data/truth/{}.txt".format(name))
         # constraint_map = {c.name: c for c in workflow.constraint_list}
         if os.path.isfile(truth_file):
@@ -77,6 +84,7 @@ def main():
                 print("{\n\t\"Essential\":\n\t\t{\n\n\t\t}\n}", file=f, flush=True)
                 print_truth.main(name)
     for n in categories:
+        print("Time elapsed: {:.2f}s (total), {:.2f}s (average)".format(sum(speed), numpy.average(speed)))
         for m_name, m_func in measures:
             res, not_zero, file_count = m_func(cat_counters[n], per_file=True)
             print("{} {} per file ({} of {} files): {:.2%}".format(n.capitalize(), m_name, not_zero, file_count, res))

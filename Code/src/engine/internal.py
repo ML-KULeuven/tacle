@@ -173,22 +173,42 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         def conditional_aggregate(c: ConditionalAggregate, assignments, solutions: Solutions):
             keys = [c.o_key, c.result, c.f_key, c.values]
 
-            def is_aggregate(ok_v, r_v, fk_v, v_v):
-                if not all(all(numpy.vectorize(blank_filter(v)[1])(v)) for v in [ok_v, r_v, v_v]):
+            partial_cache = dict()
+            fk_dict = dict()
+
+            def is_aggregate(ok, r, fk, v):
+                foreign_key = ForeignKey()
+                if solutions.has(foreign_key, [foreign_key.fk, foreign_key.pk], [ok, fk]):
                     return False
-                for i in range(len(ok_v)):
-                    data = v_v[fk_v == ok_v[i]]
-                    res = c.operation.aggregate(data) if len(data) > 0 else c.default
-                    if not equal(res, r_v[i], True):
+                if solutions.has(foreign_key, [foreign_key.fk, foreign_key.pk], [r, v]):
+                    return False
+
+                vectors = {g: g.get_vector(1) for g in [ok, r, fk, v]}
+
+                for g in [ok, r, v]:
+                    if g not in partial_cache:
+                        partial_cache[g] = all(numpy.vectorize(blank_filter(vectors[g])[1])(vectors[g]))
+                    if not partial_cache[g]:
+                        return False
+
+                if fk not in fk_dict:
+                    filtered = vectors[fk][blank_filter(vectors[fk], True)[1](vectors[fk])]
+                    unique = set(filtered)
+                    masks = {u: vectors[fk] == u for u in unique}
+                    fk_dict[fk] = masks
+
+                for i in range(len(vectors[ok])):
+                    if vectors[ok][i] not in fk_dict[fk]:
+                        res = c.default
+                    else:
+                        k = vectors[ok][i]
+                        data = vectors[v][fk_dict[fk][k]]
+                        res = c.operation.aggregate(data) if len(data) > 0 else c.default
+                    if not equal(res, vectors[r][i], True):
                         return False
                 return True
 
-            def not_inverted(ok, r, fk, v):
-                foreign_key = ForeignKey()
-                return not solutions.has(foreign_key, [foreign_key.fk, foreign_key.pk], [ok, fk]) \
-                    and not solutions.has(foreign_key, [foreign_key.fk, foreign_key.pk], [r, v])
-
-            return list(self._generate_test_vectors(assignments, keys, is_aggregate, not_inverted))
+            return list(self._generate_test_vectors(assignments, keys, lambda *args: True, is_aggregate))
 
         def running_total(c: RunningTotal, assignments, solutions):
             def is_running_diff(acc, pos, neg):
@@ -216,7 +236,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         def aggregate(c: Aggregate, assignments: List[Dict[str, Group]], solutions: Solutions):
             results = []
             o_column = Orientation.column(c.orientation)
-            operation_f = c.operation.aggregate
             projection = Projection()
 
             def add(solution):
@@ -234,7 +253,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
                 o_match = x_group.row == Orientation.row(c.orientation)
                 if o_match:
-                    sums = operation_f(x_group.data, 0 if o_column else 1)
+                    sums = c.operation.aggregate(x_group.data, 0 if o_column else 1, x_group.is_partial)
                     for y_vector_group in y_group:
                         match = pattern_finder(sums, y_vector_group.get_vector(1))
                         x_match = [x_group.vector_subset(m + 1, m + y_length) for m in match]
@@ -246,7 +265,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         x_data = x_data.T
 
                     def check(start, end):
-                        result = operation_f(x_data[start:end, :], 0)
+                        result = c.operation.aggregate(x_data[start:end, :], 0, x_group.is_partial)
                         if equal_v(result, y_group.get_vector(y_i + 1)).all():
                             x_subgroup = x_group.vector_subset(start + 1, end)
                             y_subgroup = y_group.vector_subset(y_i + 1, y_i + 1)

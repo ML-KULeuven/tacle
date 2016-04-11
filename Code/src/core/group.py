@@ -126,6 +126,7 @@ class Group:
         self._data = data
         from core.constraint import blank_filter
         self._is_partial = not numpy.all(numpy.vectorize(blank_filter(self._data)[1])(self._data))
+        self._subgroups = dict()
 
     @property
     def is_partial(self):
@@ -197,8 +198,13 @@ class Group:
         return self.row
 
     def subgroup(self, bounds):
-        sub_bounds = Bounds([1, self.rows(), 1, self.columns()]).combine(bounds)
-        return Group(self.table, self.bounds.combine(bounds), self.row, sub_bounds.subset(self.data), self.dtype)
+        if bounds not in self._subgroups:
+            sub_bounds = Bounds([1, self.rows(), 1, self.columns()]).combine(bounds)
+            sub_data = sub_bounds.subset(self.data)
+            group = Group(self.table, self.bounds.combine(bounds), self.row, sub_data, self.dtype)
+            self._subgroups[bounds] = group
+            return group
+        return self._subgroups[bounds]
 
     def get_vector(self, i):
         return self.data[i - 1, :] if self.row else self.data[:, i - 1]

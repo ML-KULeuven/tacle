@@ -88,14 +88,14 @@ Can we discover or reconstruct structural relations in flat tabular spreadsheet 
 
 \section{Formalization}
 
-
+\samuel{Explain concepts on example}
 \subsection{Groups, Type-consistency and Constraints}
 In this work we distinguish the following types of data: numeric and textual. The numeric type has two subtypes: integers and floats. We also consider the special element called \textit{None}, which has two types: numeric and textual. A set is called \textit{type-consistent} iff all elements are either numeric or textual. Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric sub-types by requiring its arguments to be integers.
 
 A \textit{vector} is either a column or a row that is type-consistent. If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers. We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if its vectors contain numeric (textual, etc) elements.
 
 An \textit{Excel constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. \textit{\CName} is the textual name of the constraint together with its variable names. \textit{\CSignature} is a set of constraints specifying the properties of the group assignments, corresponding to the variables in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. \textit{\CFunction} is a set of constraints specifying that the data in the subgroups satisfies the function. For example, an excel constraint \textit{rank} has \CName \textit{Y = RANK(X)}, where $X$ and $Y$ are the variables; its \CSignature is: the group $G_X$ (associated with X) is numeric, $G_Y$ is integer and the length of vectors in $G_X$ is the same as in $G_Y$; its \CFunction is the following constraint: a pair of vectors $X,Y$ is a solution iff $X \in G_X, Y \in G_Y$ and each value in $X$ has the rank (possibly with ties) specified in $Y$.
-
+\samuel{2nd problem statement (from approach), remove EQUAL}
 \section{Problem Statement}
 In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of Excel constraints and group assignmentsd as follows: 
 
@@ -136,6 +136,7 @@ In theory each constraint is independent and equally useful. In practice, howeve
 
 Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail. 
 
+\samuel{Running example (RANK?)}
 \paragraph{Constraint ordering} $\constrainttorder(\constraints,\dependencies)$ uses the DAG \dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of \dependencies. Also, if there is a construction edge from $C_1$ to $C_2$, and $X$ is not a solution to $C_1$, then $X$ is not generated as a candidate group for $C_2$. If there is a sumsumption edge from $C_1$ to $C_2$ and $X$ is a solution to $C_1$, then $X$ is not generated as a candidate group for $C_2$.
 
 \paragraph{Candidate group generation} $\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups that are legitimate solution candidates e.g., $X,Y$ are variables of \textit{Y = RANK(X)} and $X,Y$ satisfy the constraints from \CSignature above. Essentially, the group generation step is a constraint satisfaction problem associated with the specific constraint. However, many constraints have the same candidate generation procedures, e.g., sum, min, max, avg, count, etc.
@@ -168,7 +169,8 @@ As emphasized before, the set of Excel constraints has a partial order in which 
     ALLDIFFERENT(X) & & \\
     X = Y & & \\
     FK $\rightarrow$ PK & & \\
-    R = PRODUCT(FV, FK=PK | PV) & & \\
+    % TODO check out
+    R = LOOKUP-PRODUCT(FV, FK=PK, PV) & & \\
     FV = FUZZY-LOOKUP(FK, PK, PV) & & \\
     FV = LOOKUP(FK, PK, PV) & & \\
     PERMUTATION(X) & & \\
@@ -182,11 +184,14 @@ As emphasized before, the set of Excel constraints has a partial order in which 
     R = SUMIF(FK=PK, V) & & \\
     R = SUMPRODUCT(O1, O2) & & \\
 
+\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display}
+
   \end{tabular}
   \caption{Excel Tabular Constraints \sergey{Luc, we need your comments here on the notation of $X,Y$ and $G_X,G_Y$}}
   \label{table:constraints}
 \end{table*}
 
+\samuel{Move to beginning without algo}
 \subsection{Workflow}
 \begin{algorithm}[thb]
   \begin{algorithmic}
@@ -200,7 +205,6 @@ As emphasized before, the set of Excel constraints has a partial order in which 
       \State $G \gets \extractgroups(D, T)$
     \EndIf
     \State $S \gets \learnconstraints(G,\constraints,\dependencies)$
-    \State $S \gets \postprocess(S)$
     \State \Return $S$
 \end{algorithmic}
 \caption{Workflow}
@@ -213,6 +217,7 @@ As emphasized before, the set of Excel constraints has a partial order in which 
   \item Algorithm (select constraints, find assignments, find solutions)
 \end{itemize}
 
+\samuel{Move next to subgroup satisfaction search}
 \section{Declarative modeling}
 \sergey{We need to fit ASP, Minizinc and all that here, I mean it is supposed to be an important point after all}
 
@@ -273,6 +278,7 @@ However, this example also contains many short vectors which increases the chanc
 {\bfseries 
   Experimental questions
 }
+
 \begin{itemize}
   \item  How accurate are we? (Accuracy / recall)
   \item  How fast are we and which factors affect the runtime (how)?
