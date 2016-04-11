@@ -4,7 +4,7 @@ from typing import List, Dict
 import numpy
 
 from core.assignment import Source, Filter, Variable, SameLength, ConstraintSource, SameTable, \
-    SameOrientation, SameType, SizeFilter, Not, NotPartial, Partial, If, OrientationFilter
+    SameOrientation, SameType, SizeFilter, Not, NotPartial, Partial
 from core.group import GType, Group, Orientation
 
 
