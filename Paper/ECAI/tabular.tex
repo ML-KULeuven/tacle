@@ -124,7 +124,7 @@ In the previous section we introduced the problem of tabular constraint learning
   \For{$c \in \constrainttorder(\constraints,\dependencies)$} 
   \State $v_1, ..., v_n =$ variables of $c$ 
     \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(c, G, S, \dependencies)$}
-      \State $S \gets S \cup \findassignment(c, v_1{:}~G_1, \dots, v_n{:}~G_n, S)$
+      \State $S \gets S \cup \findassignment(c, v_1{:}~G_1, \dots, v_n{:}~G_n, S, \dependencies)$
     \EndFor
   \EndFor\\
 \Return $S$
