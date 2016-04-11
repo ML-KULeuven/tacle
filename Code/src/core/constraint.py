@@ -244,10 +244,11 @@ class ConditionalAggregate(Constraint):
         self._operation = operation
         name = operation.name
         variables = [self.o_key, self.result, self.f_key, self.values]
-        foreign_key = ForeignKey()
-        source = ConstraintSource(variables, foreign_key, {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"})
+        all_diff = AllDifferent()
+        source = ConstraintSource(variables, all_diff, {all_diff.x.name: "OK"})
         filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]),
-                   SameTable([self.f_key, self.values]),
+                   SameTable([self.f_key, self.values]), Not(SameTable([self.f_key, self.o_key])),
+                   NotPartial([self.o_key]), SameType([self.f_key, self.o_key]),
                    SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
         super().__init__("{}-if".format(name.lower()), "{R} = " + name.upper() + "IF({FK}={OK}, {V})", source, filters)
 
