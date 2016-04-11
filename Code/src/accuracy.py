@@ -18,7 +18,8 @@ def is_excel_constraint(c: Constraint):
     return isinstance(c, Aggregate) or isinstance(c, ConditionalAggregate) or isinstance(c, Series) \
         or isinstance(c, Rank) or isinstance(c, Lookup) or isinstance(c, FuzzyLookup) or isinstance(c, RunningTotal) \
         or isinstance(c, Product) or isinstance(c, Diff) or isinstance(c, SumProduct) \
-        or isinstance(c, ForeignProduct) or isinstance(c, Equal) or isinstance(c, PercentualDiff)
+        or isinstance(c, ForeignProduct) or isinstance(c, Equal) or isinstance(c, PercentualDiff) \
+        or isinstance(c, Projection)
 
 
 constraint_map = {c.name: c for c in workflow.constraint_list}
