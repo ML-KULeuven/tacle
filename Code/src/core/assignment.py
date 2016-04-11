@@ -1,5 +1,6 @@
 from typing import List, Dict, Set
 
+import itertools
 from constraint import Problem
 from core.group import Group
 from parse.parser import GType

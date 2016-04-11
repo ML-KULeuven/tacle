@@ -111,6 +111,7 @@ class Aggregate(Constraint):
     def __init__(self, orientation: Orientation, operation: Operation):
         self._orientation = orientation
         self._operation = operation
+        self.min_size = 3 if operation == Operation.PRODUCT else 2
         size = Group.columns if orientation == Orientation.VERTICAL else Group.rows
         or_string = "col" if orientation == Orientation.VERTICAL else "row"
         op_string = operation.name
@@ -123,8 +124,9 @@ class Aggregate(Constraint):
 
         filter_class = type("{}{}Length".format(op_string.lower().capitalize(), or_string.capitalize()),
                             (Filter,), {"test": test})
-        size_filter = SizeFilter([self.x], rows=2) if Orientation.column(orientation) else SizeFilter([self.x], cols=2)
-        filters = [size_filter, filter_class(variables)]
+        x_size_filter = SizeFilter([self.x], rows=self.min_size) if Orientation.column(orientation)\
+            else SizeFilter([self.x], cols=self.min_size)
+        filters = [x_size_filter, filter_class(variables)]
         format_s = "{Y} = " + op_string.upper() + "({X}, " + or_string + ")"
         name = "{} ({})".format(op_string.lower(), or_string)
         # TODO Dependency only min max average
@@ -144,7 +146,7 @@ class Aggregate(Constraint):
 
     @classmethod
     def instances(cls):
-        return list(cls.instance(o, op) for o in Orientation for op in Operation if not op == Operation.PRODUCT)
+        return list(cls.instance(o, op) for o in Orientation for op in Operation)  # if not op == Operation.PRODUCT)
 
 
 # TODO Same table, different orientation, overlapping bounds => prune assignment already
