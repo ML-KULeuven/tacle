@@ -97,7 +97,7 @@ A \textit{vector} is either a column or a row that is type-consistent. If a vect
 An \textit{Excel constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. \textit{\CName} is the textual name of the constraint together with its variable names. \textit{\CSignature} is a set of constraints specifying the properties of the group assignments, corresponding to the variables in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. \textit{\CFunction} is a set of constraints specifying that the data in the subgroups satisfies the function. For example, an excel constraint \textit{rank} has \CName \textit{Y = RANK(X)}, where $X$ and $Y$ are the variables; its \CSignature is: the group $G_X$ (associated with X) is numeric, $G_Y$ is integer and the length of vectors in $G_X$ is the same as in $G_Y$; its \CFunction is the following constraint: a pair of vectors $X,Y$ is a solution iff $X \in G_X, Y \in G_Y$ and each value in $X$ has the rank (possibly with ties) specified in $Y$.
 
 \section{Problem Statement}
-In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of Excel constraints and group assignments.
+In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of Excel constraints and group assignmentsd as follows: 
 
 \begin{minipage}[c]{14em}
   \vspace{5pt}
@@ -107,9 +107,12 @@ In the previous section we introduced the problem of tabular constraint learning
     &\\
     \textbf{Given:}& the set of all groups $\groups$ and of Excel constraints $\constraints$\\
     \textbf{Find:}& for each constraint  $c$ in \constraints all the subgroups of $\groups$\\ 
-    & satisfying the \CSignature and \CFunction of $c$ 
+    & satisfying the \CSignature and \CFunction of $c$ \\
   \end{tabular}
+  \vspace{6pt}
 \end{minipage}
+
+  The key observation here is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in Excel each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
 
 \section{Approach to Tabular Constraint Learning}
 \begin{algorithm}[thb]
@@ -120,26 +123,29 @@ In the previous section we introduced the problem of tabular constraint learning
     \State $S \gets \emptyset$ \Comment{The set of solutions}
   \For{$c \in \constrainttorder(\constraints,\dependencies)$} 
   \State $v_1, ..., v_n =$ variables of $c$ 
-    \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(c, G, S)$}
+    \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(c, G, S, \dependencies)$}
       \State $S \gets S \cup \findassignment(c, v_1{:}~G_1, \dots, v_n{:}~G_n, S)$
     \EndFor
   \EndFor\\
 \Return $S$
 \end{algorithmic}
-\caption{Tabular constraint learning}
+\caption{Tabular constraint learning \sergey{Samuel, I think \generategroups takes \dependencies as an argument}}
 \label{algo:tcl}
 \end{algorithm}
+In theory each constraint is independent and equally useful. In practice, however, things are different. Assume that for some $X$ and $Y$ it holds that \textit{SUM(X)=Y}, and also we discovered that the vector $Y$ is equal to a vector $Z$. Then, of course, \textit{SUM(X)=Z} holds and it is a valid solution to the sum constraint problem. From a user's perspective the last solution is useless, since he or she already knows that $Y=Z$ and the latter constraint satisfaction follows. To capture this condensed representation \cite{condensed} of solutions, we have introduced a subsumption (generality) order between constraints, which is depicted using \textcolor{red}{dashed} lines in Figure \ref{fig:learning_order}. Besides generality, we know that certain constraints have as a subproblem other constraints, e.g. if $X$ is a \textit{series}, then it is also a \textit{permutation}. If discovered that $X$ is a not permutation, then $X$ should not be tested for the series constraint at all. To capture this solving strategy we introduced a constraint construction order depicted using \textcolor{green}{solid} lines in Figure \ref{fig:learning_order}.
 
-Let us describe the key steps and functions in Algorithm \ref{algo:tcl}. Essentially, the algorithm has three steps: constraint ordering, candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail.
+Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail. 
 
-\paragraph{Constraint ordering} $\constrainttorder(\constraints,\dependencies)$ \sergey{explaination that solutions to certain constraints allows us to prune solutions to other constraints -- subsumption, condensed representation}
+\paragraph{Constraint ordering} $\constrainttorder(\constraints,\dependencies)$ uses the DAG \dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of \dependencies. Also, if there is a construction edge from $C_1$ to $C_2$, and $X$ is not a solution to $C_1$, then $X$ is not generated as a candidate group for $C_2$. If there is a sumsumption edge from $C_1$ to $C_2$ and $X$ is a solution to $C_1$, then $X$ is not generated as a candidate group for $C_2$.
 
 \paragraph{Candidate group generation} $\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups that are legitimate solution candidates e.g., $X,Y$ are variables of \textit{Y = RANK(X)} and $X,Y$ satisfy the constraints from \CSignature above. Essentially, the group generation step is a constraint satisfaction problem associated with the specific constraint. However, many constraints have the same candidate generation procedures, e.g., sum, min, max, avg, count, etc.
 
 \paragraph{Subgroup satisfaction search} $\findassignment(\textit{Constraint,Candidates,Solutions})$ is the function looking for the subsets of vectors in the candidates satisfying the constraint. If multiple subsets satisfy the constraint, a maximal is selected. If $G_1,G_2$, associated with the variables $X,Y$ in the constraint \textit{Y = RANK(X)}, are candidates, then \findassignment selects a single vector $y$ in $G_2$ and a single vector $x$ in $G_1$ such that $x$ is ranked by $y$. For example, in Figure \ref{fig:main_example} the group $G = T_1[{:},3{:}8]$ serves as $X$ and $Y$ and $x$ can be picked as $T_1[{:},7]$ and $y$ would be $T_1[{:},8]$.
 
 \subsection{Constraints}
-The set of Excel constraints has a partial order in which they should be learned. For certain constraints this order does not matter, such as rank or product. For many others they have to be learned in the order, which is specified as a DAG in Figure \ref{fig:learning_order} (if a constraint is not in the graph, it is independent). This figure specifies a potential parallelization of the computation, since each connected component is independent of the others.
+As emphasized before, the set of Excel constraints has a partial order in which they should be learned. For certain constraints this order does not matter, such as \textit{rank} or \textit{product}. For many others they have to be learned in the order, which is specified as a DAG in Figure \ref{fig:learning_order} (if a constraint is not in the graph, it is independent). This figure also specifies a potential parallelization of the computation, since each connected component is independent of the others.
+
+\sergey{need to elaborate here especially on the structure and how the constraints we picked}
 
 \begin{figure}[htb]
   \centering
@@ -159,16 +165,16 @@ The set of Excel constraints has a partial order in which they should be learned
   \centering
   \begin{tabular}{lcc}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\
-    ALLDIFFERENT(X) & $\textual(G_X) \vee \integer(G_X) $ & $X \in G_X{:}~\forall i,j \in \nat{:}~i \neq j \rightarrow X[i] \neq X[j]$ \\
+    ALLDIFFERENT(X) & & \\
     X = Y & & \\
-    FK -> PK & & \\
+    FK $\rightarrow$ PK & & \\
     R = PRODUCT(FV, FK=PK | PV) & & \\
     FV = FUZZY-LOOKUP(FK, PK, PV) & & \\
     FV = LOOKUP(FK, PK, PV) & & \\
     PERMUTATION(X) & & \\
     R = O1 * O2 & & \\
     R = PROJECT(P) & & \\
-     Y = RANK(X)     & $\numeric(G_X) \wedge \integer(G_Y) \wedge \length(G_X) = \length(G_Y)$ & $\begin{array}{r} X \in G_X, Y \in G_Y{:}~\forall i,j \in \nat{:}~(Y_i \leq Y_j \rightarrow X_{Y_i} \leq X_{Y_j}) \\ \wedge~ 1 \leq Y_i \leq \length(G_Y) \end{array}$ \\
+     Y = RANK(X)   & & \\
     A = PREV(A) + P - N & & \\
     SERIES(X) & & \\
     Y = SUM(X, col) & & \\
@@ -207,6 +213,9 @@ The set of Excel constraints has a partial order in which they should be learned
   \item Algorithm (select constraints, find assignments, find solutions)
 \end{itemize}
 
+\section{Declarative modeling}
+\sergey{We need to fit ASP, Minizinc and all that here, I mean it is supposed to be an important point after all}
+
 \section{Case Study aka Experiments}
 In this section we experimentally validate our approach.
 The implementation is first illustrated using a case study on a specific Excel sheet.
@@ -226,16 +235,18 @@ Let us illustrate our implementation using the example presented in the introduc
 We obtained this example by combining several Excel sheets from exercise sessions into one.
 Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
 
+\sergey{I think there should be three things: key example evaluated, benchmark of 30 spreadsheets and maybe the FBI example, how we can detect interesting dependecies and correct potential mistakes}
+
 \paragraph{Accuracy}
 Our current implementation finds 18 constraints, containing all of the 12 solutions described in figure~\ref{fig:sol_example}.
 Of the 6 remaining (redundant) constraints, 5 are $\mathit{RANK}$ constraints that are true by accident, such as: \begin{align*}
-  & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5})} \\
+  & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}} \\
   & \ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{4}}
 \end{align*}
 The other redundant constraint is a additional $\mathit{LOOKUP}$ that holds because the vectors in \range{T_2}{\rangeall}{\rangeto{2}{3}} can both be used to look each other up in \range{T_1}{\rangeall}{\rangeto{1}{2}} and we considered only one of them to be essential (lookup using the ID).
 
 We conclude that for this example our primary goal of finding all constraints is achieved.
-A number of redundant constraints ($33.33\%$ of the total) are also found, which, as we will show, is rather high compared to other spreadsheets.
+A number of redundant constraints ($\frac{1}{3}$ of the total) are also found, which, as we will show, is rather high compared to other spreadsheets.
 However, this example also contains many short vectors which increases the chance for constraints to be true by accident.
 
 \begin{figure}
@@ -312,3 +323,4 @@ claudien \cite{claudien} \sergey{Samuel, Luc, you would need to help with this o
 \bibliography{references}
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
