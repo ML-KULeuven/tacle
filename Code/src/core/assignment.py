@@ -2,7 +2,7 @@ from typing import List, Dict, Set
 
 import itertools
 from constraint import Problem
-from core.group import Group
+from core.group import Group, Orientation
 from parse.parser import GType
 
 
@@ -115,6 +115,10 @@ class Filter:
         groups = list([assignment[v.name] for v in self.variables])
         return all(f(groups[i]) == f(groups[j]) for i in range(len(groups)) for j in range(i + 1, len(groups)))
 
+    def test_all(self, assignment, f):
+        groups = list([assignment[v.name] for v in self.variables])
+        return all(f(g) for g in groups)
+
 
 class Not(Filter):
     def __init__(self, original_filter: Filter):
@@ -123,6 +127,35 @@ class Not(Filter):
 
     def test(self, assignment):
         return not self._original_filter.test(assignment)
+
+
+class If(Filter):
+    def __init__(self, if_filter: Filter, then_filter: Filter, else_filter: Filter=None):
+        if else_filter is None:
+            else_filter = NoFilter([])
+        variables = set(if_filter.variables).union(set(then_filter.variables)).union(set(else_filter.variables))
+        super().__init__(variables)
+        self._if_filter = if_filter
+        self._then_filter = then_filter
+        self._else_filter = else_filter
+
+    @property
+    def if_filter(self):
+        return self._if_filter
+
+    @property
+    def then_filter(self):
+        return self._then_filter
+
+    @property
+    def else_filter(self):
+        return self._else_filter
+
+    def test(self, assignment: Dict[str, Group]):
+        if self.if_filter.test(assignment):
+            return self.then_filter.test(assignment)
+        else:
+            return self.else_filter.test(assignment)
 
 
 class NoFilter(Filter):
@@ -166,6 +199,19 @@ class SizeFilter(Filter):
             and all(self._cols is None or op(g.columns(), self._cols) for g in groups) \
             and all(self._length is None or op(g.length(), self._length) for g in groups) \
             and all(self._vectors is None or op(g.vectors(), self._vectors) for g in groups)
+
+
+class OrientationFilter(Filter):
+    def __init__(self, variables, orientation):
+        self._orientation = orientation
+        super().__init__(variables)
+
+    @property
+    def orientation(self):
+        return self._orientation
+
+    def test(self, assignment: Dict[str, Group]):
+        return self.test_all(assignment, lambda g: g.row == (self.orientation == Orientation.HORIZONTAL))
 
 
 class NotPartial(Filter):

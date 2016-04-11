@@ -4,7 +4,7 @@ from typing import List, Dict
 import numpy
 
 from core.assignment import Source, Filter, Variable, SameLength, ConstraintSource, SameTable, \
-    SameOrientation, SameType, SizeFilter, Not, NotPartial, Partial
+    SameOrientation, SameType, SizeFilter, Not, NotPartial, Partial, If, OrientationFilter
 from core.group import GType, Group, Orientation
 
 
@@ -111,7 +111,8 @@ class Aggregate(Constraint):
     def __init__(self, orientation: Orientation, operation: Operation):
         self._orientation = orientation
         self._operation = operation
-        self.min_size = 3 if operation == Operation.PRODUCT else 2
+        self.min_size = 2
+        self.min_vectors = 3 if operation == Operation.PRODUCT else 2
         size = Group.columns if orientation == Orientation.VERTICAL else Group.rows
         or_string = "col" if orientation == Orientation.VERTICAL else "row"
         op_string = operation.name
@@ -120,12 +121,14 @@ class Aggregate(Constraint):
         def test(_, a: Dict[str, Group]):
             x_group, y_group = [a[v.name] for v in variables]
             o_match = x_group.row == (orientation == Orientation.HORIZONTAL)
+            if not o_match and x_group.vectors() < self.min_vectors:
+                return False
             return y_group.length() <= size(x_group) if o_match else y_group.length() == size(x_group)
 
         filter_class = type("{}{}Length".format(op_string.lower().capitalize(), or_string.capitalize()),
                             (Filter,), {"test": test})
-        x_size_filter = SizeFilter([self.x], rows=self.min_size) if Orientation.column(orientation)\
-            else SizeFilter([self.x], cols=self.min_size)
+        x_size_filter = SizeFilter([self.x], rows=self.min_size)\
+            if Orientation.column(orientation) else SizeFilter([self.x], cols=self.min_size)
         filters = [x_size_filter, filter_class(variables)]
         format_s = "{Y} = " + op_string.upper() + "({X}, " + or_string + ")"
         name = "{} ({})".format(op_string.lower(), or_string)

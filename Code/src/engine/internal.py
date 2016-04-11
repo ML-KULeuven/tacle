@@ -257,10 +257,10 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     max_range = MaxRange(check)
                     for y_i in range(y_group.vectors()):
                         if y_group == x_group:
-                            max_range.find(0, y_i, c.min_size)
-                            max_range.find(y_i + 1, x_group.vectors(), c.min_size)
+                            max_range.find(0, y_i, c.min_vectors)
+                            max_range.find(y_i + 1, x_group.vectors(), c.min_vectors)
                         else:
-                            max_range.find(0, x_group.vectors(), c.min_size)
+                            max_range.find(0, x_group.vectors(), c.min_vectors)
 
             return results
 
