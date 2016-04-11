@@ -240,7 +240,7 @@ Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
 \paragraph{Accuracy}
 Our current implementation finds 18 constraints, containing all of the 12 solutions described in figure~\ref{fig:sol_example}.
 Of the 6 remaining (redundant) constraints, 5 are $\mathit{RANK}$ constraints that are true by accident, such as: \begin{align*}
-  & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5})} \\
+  & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}} \\
   & \ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{4}}
 \end{align*}
 The other redundant constraint is a additional $\mathit{LOOKUP}$ that holds because the vectors in \range{T_2}{\rangeall}{\rangeto{2}{3}} can both be used to look each other up in \range{T_1}{\rangeall}{\rangeto{1}{2}} and we considered only one of them to be essential (lookup using the ID).
@@ -323,3 +323,4 @@ claudien \cite{claudien} \sergey{Samuel, Luc, you would need to help with this o
 \bibliography{references}
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
