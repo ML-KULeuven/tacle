@@ -63,13 +63,25 @@ def blank_filter(data, vectorized=False):
     return blank, (blank_f if not vectorized else numpy.vectorize(blank_f))
 
 
+def count_agg(data, axis=None):
+    if axis is None:
+        res = [len(data.flatten())]
+    elif axis == 0:
+        res = [data.shape[0]] * data.shape[1]
+    elif axis == 1:
+        res = [data.shape[1]] * data.shape[0]
+    else:
+        raise Exception("Invalid axis: {}".format(axis))
+    return numpy.array(res)
+
+
 class Operation(Enum):
     SUM = (numpy.sum, lambda x, y: x + y)
     MAX = (numpy.max, lambda x, y: max(x, y))
     MIN = (numpy.min, lambda x, y: min(x, y))
     AVERAGE = (numpy.average, lambda x, y: (x + y) / 2)
     PRODUCT = (numpy.product, lambda x, y: x * y)
-    COUNT = (lambda a: len(blank_filter(a.flatten(), True)[1](a.flatten())), lambda x, y: x + y)
+    COUNT = (count_agg, lambda x, y: x + y)
 
     # noinspection PyInitNewSignature
     def __init__(self, aggregate, func):
@@ -78,7 +90,7 @@ class Operation(Enum):
 
     @property
     def aggregate(self):
-        def apply(data, axis=None):
+        def apply(data, axis=None, partial=True):
             if axis == 1:
                 data = data.T
             if not data.shape:
@@ -86,16 +98,22 @@ class Operation(Enum):
             blank, blank_test = blank_filter(data, vectorized=True)
             if len(data.shape) > 1:
                 rows, cols = data.shape
-                results = numpy.array([blank] * cols)
-                for i in range(cols):
-                    vec = data[:, i][blank_test(data[:, i])]
-                    if len(vec) != 0:
-                        vec = numpy.array(vec, dtype=numpy.float64)
-                        results[i] = self._aggregate(vec)
-                return results
+                if partial:
+                    results = numpy.array([blank] * cols)
+                    for i in range(cols):
+                        vec = data[:, i][blank_test(data[:, i])]
+                        if len(vec) != 0:
+                            vec = numpy.array(vec, dtype=numpy.float64)
+                            results[i] = self._aggregate(vec)
+                    return results
+                else:
+                    return self._aggregate(data, 0)
             else:
-                array = numpy.array(data[blank_test(data)], dtype=numpy.float64)
-                return self._aggregate(array) if len(array) > 0 else blank
+                if partial:
+                    array = numpy.array(data[blank_test(data)], dtype=numpy.float64)
+                    return self._aggregate(array) if len(array) > 0 else blank
+                else:
+                    return self._aggregate(data)
 
         return apply
 
