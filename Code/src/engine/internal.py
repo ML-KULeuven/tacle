@@ -176,18 +176,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             def is_aggregate(ok_v, r_v, fk_v, v_v):
                 if not all(all(numpy.vectorize(blank_filter(v)[1])(v)) for v in [ok_v, r_v, v_v]):
                     return False
-                blank_f = blank_filter(fk_v)[1]
-                if not blank_f(fk_v[0]):
-                    return False
-                m = dict(zip(ok_v, range(len(ok_v))))
-                acc = [None] * len(r_v)
-                for i in range(len(fk_v)):
-                    if blank_f(fk_v[i]):
-                        key = m[fk_v[i]]
-                        aggregated = c.operation.aggregate(v_v[i])
-                        acc[key] = aggregated if acc[key] is None else c.operation.func(acc[key], aggregated)
-                acc = [c.default if acc[i] is None else acc[i] for i in range(len(acc))]
-                return all(equal(r_v[i], acc[i]) for i in range(len(r_v)))
+                for i in range(len(ok_v)):
+                    data = v_v[fk_v == ok_v[i]]
+                    res = c.operation.aggregate(data) if len(data) > 0 else c.default
+                    if not equal(res, r_v[i], True):
+                        return False
+                return True
 
             return list(self._generate_test_vectors(assignments, keys, is_aggregate))
 

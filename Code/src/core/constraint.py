@@ -83,16 +83,19 @@ class Operation(Enum):
                 data = data.T
             if not data.shape:
                 data = numpy.array([[data]])
-            rows, cols = data.shape
-            blank, blank_test = blank_filter(data)
-            results = numpy.array([blank] * cols)
-            mask = numpy.vectorize(blank_test)
-            for i in range(cols):
-                vec = data[:, i][mask(data[:, i])]
-                if len(vec) != 0:
-                    vec = numpy.array(vec, dtype=numpy.float64)
-                    results[i] = self._aggregate(vec)
-            return results
+            blank, blank_test = blank_filter(data, vectorized=True)
+            if len(data.shape) > 1:
+                rows, cols = data.shape
+                results = numpy.array([blank] * cols)
+                for i in range(cols):
+                    vec = data[:, i][blank_test(data[:, i])]
+                    if len(vec) != 0:
+                        vec = numpy.array(vec, dtype=numpy.float64)
+                        results[i] = self._aggregate(vec)
+                return results
+            else:
+                array = numpy.array(data[blank_test(data)], dtype=numpy.float64)
+                return self._aggregate(array) if len(array) > 0 else blank
 
         return apply
 
