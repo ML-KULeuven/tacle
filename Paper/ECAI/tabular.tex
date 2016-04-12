@@ -175,6 +175,8 @@ Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, 
 
 \paragraph{Subgroup satisfaction search} $\findassignment(\textit{Constraint,Candidates,Solutions})$ is the function looking for the subsets of vectors in the candidates satisfying the constraint. If multiple subsets satisfy the constraint, a maximal is selected. If $G_1,G_2$, associated with the variables $X,Y$ in the constraint \textit{Y = RANK(X)}, are candidates, then \findassignment selects a single vector $y$ in $G_2$ and a single vector $x$ in $G_1$ such that $x$ is ranked by $y$. For example, in Figure \ref{fig:main_example} the group $G = T_1[{:},3{:}8]$ serves as $X$ and $Y$ and $x$ can be picked as $T_1[{:},7]$ and $y$ would be $T_1[{:},8]$.
 
+\samuel{Expand aggregates to max within group, tweak groups if necessary}
+
 \subsection{Constraints}
 As emphasized before, the set of Excel constraints has a partial order in which they should be learned. For certain constraints this order does not matter, such as \textit{rank} or \textit{product}. For many others they have to be learned in the order, which is specified as a DAG in Figure \ref{fig:learning_order} (if a constraint is not in the graph, it is independent). This figure also specifies a potential parallelization of the computation, since each connected component is independent of the others.
 
@@ -253,38 +255,19 @@ As emphasized before, the set of Excel constraints has a partial order in which 
 % \section{Declarative modeling}
 % \sergey{We need to fit ASP, Minizinc and all that here, I mean it is supposed to be an important point after all}
 
-\section{Case Study aka Experiments}
+\section{Evaluation}
 In this section we experimentally validate our approach.
-The implementation is first illustrated using a case study on a specific Excel sheet.
-In order to quantify the results and generalize our findings we created a benchmark of 30 (\samuel{check number}) Excel sheets from various sources.
+We studied various questions, most notably with what accuracy our algorithm can find essential constraints.
 
-\subsection{Benchmark}
-There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel at an affiliated University, spreadsheets from tutorials online, publicly available spreadsheets such as crime statistics or financial reports\footnote{\samuel{link to links.txt}}.
+The implementation is illustrated using a case study on the spreadsheet corresponding with the previously introduced example (figure~\ref{fig:main_example}).
+In order to quantify the results and generalize our findings we also evaluate our algorithm on a benchmark of 30 (\samuel{check number}) spreadsheets that we assembled from various sources.
 
-All spreadsheets have been converted to CSV with no manual intervention unless noted.
-Definitions of tables where added manually, providing a way to compare results and overcoming shortcomings in the table detection algorithm (in some harder cases groups where also provided manually).
-
-For every spreadsheet a ground-truth has been provided manually, specifying the essential (or original) constraints that are expressible in Excel and expected to be discovered.
-\footnote{Constraints currently outside of the scope of this system (e.g. generic nested mathematical formulas) are in a separate category (non-trivial).}
+In this section we focus on \textit{functional} constraints that could be used in Excel, ignoring constraints such as all-different or foreign-key.
 
 \subsection{Case study}
-Let us illustrate our implementation using the example presented in the introduction.
-We obtained this example by combining several Excel sheets from exercise sessions into one.
+Let us illustrate our implementation using the example presented in figure~\ref{fig:main_example}.
+This example combines several smaller examples that were used in an exercise session to teach Excel into one spreadsheet.
 Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
-
-\sergey{I think there should be three things: key example evaluated, benchmark of 30 spreadsheets and maybe the FBI example, how we can detect interesting dependecies and correct potential mistakes}
-
-\paragraph{Accuracy}
-Our current implementation finds 18 constraints, containing all of the 12 solutions described in figure~\ref{fig:sol_example}.
-Of the 6 remaining (redundant) constraints, 5 are $\mathit{RANK}$ constraints that are true by accident, such as: \begin{align*}
-  & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}} \\
-  & \ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{4}}
-\end{align*}
-The other redundant constraint is a additional $\mathit{LOOKUP}$ that holds because the vectors in \range{T_2}{\rangeall}{\rangeto{2}{3}} can both be used to look each other up in \range{T_1}{\rangeall}{\rangeto{1}{2}} and we considered only one of them to be essential (lookup using the ID).
-
-We conclude that for this example our primary goal of finding all constraints is achieved.
-A number of redundant constraints ($\frac{1}{3}$ of the total) are also found, which, as we will show, is rather high compared to other spreadsheets.
-However, this example also contains many short vectors which increases the chance for constraints to be true by accident.
 
 \begin{figure}
   \label{fig:sol_example}
@@ -303,9 +286,68 @@ However, this example also contains many short vectors which increases the chanc
       & \range{T_{4}}{\rangeall}{3} = LOOKUP(\range{T_{4}}{\rangeall}{2}, \range{T_{1}}{\rangeall}{1}, \range{T_{1}}{\rangeall}{2}) \\
       & \range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
     \end{align*}
-  }%
+  }
   \caption{Expected constraints case study}
 \end{figure}
+
+\subsubsection{Results}
+Our current implementation takes a few seconds\footnote{3 seconds on our Macbook Pro} to find 18 constraints, including all of the 12 solutions described in figure~\ref{fig:sol_example}.
+Of the 6 remaining (redundant) constraints, 5 are $\mathit{RANK}$ constraints that are true by accident, such as: \begin{align*}
+  & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}} \\
+  & \ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{4}}
+\end{align*}
+The other redundant constraint is an additional $\mathit{LOOKUP}$ that holds because the vectors in \range{T_2}{\rangeall}{\rangeto{2}{3}} can both be used to look each other up in \range{T_1}{\rangeall}{\rangeto{1}{2}} and we considered only one of them to be essential (lookup using the ID).
+
+For this example our primary goal of finding all constraints is achieved.
+The implementation also returns a number of redundant constraints ($33.33\%$ of the total).
+This ratio is, as we will show, rather high compared to other spreadsheets.
+However, this example contains many short vectors which increases the chance for constraints to be true by accident.
+
+\subsection{Benchmark}
+There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel at an affiliated University, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{\samuel{link to links.txt}}.
+The case study is also included.
+
+All spreadsheets have been converted to CSV with no manual intervention unless noted.
+Definitions of tables where added manually, providing a way to compare results and overcoming shortcomings in the table detection algorithm (in some harder cases groups where also provided manually).
+
+For every spreadsheet a ground-truth has been provided manually, specifying the essential (or original) constraints that are expected to be discovered.
+We consider three types of constraints:
+\begin{description}
+  \item[Expected] Constraint that have been implemented and are expected to be found
+  \item[Essential] Constraint that have or have not been implemented but could be found using our algorithm
+  \item[Non-trivial] Constraints currently outside of the scope of this system (e.g. generic nested mathematical or logical formulas or n-ary constraints)
+\end{description}
+
+\subsubsection*{Q1. How accurate is the approach?}
+Fortunately, our system is currently able to find $100\%$ of the expected constraints (90) on the benchmark suite.
+There are only three essential constraints that have not been implemented yet, therefore our system currently identifies $96.77\%$ of the constraints that we hope to discover.
+
+\subsubsection*{Q2. How many redundant constraints are discovered?}
+Our primary focus was accuracy, therefore we sometimes traded off less redundancy for more accuracy.
+The motivation is that solutions can still be pruned using entailment or heuristics afterwards.
+The constraints we considered to be redundant are either duplications (results that can be calculated in different ways, one of which seems superior) or constraints that hold by accident.
+Duplications should be detected in a post-processing step while accidental constraints should primarily be removed by adding data.
+
+Across all spreadsheets our implementation finds 121 constraints, 28 ($23.14\%$) of which are redundant.
+However, the average redundancy per spreadsheet is only $8.33\%$.
+Examining the redundant constraints reveals that many (12) of them are duplications occurring in a single spreadsheet.
+Many of the remaining constraints are duplications stemming from the overlapping role of difference and sum.
+Accidental constraints are limited to the 5 rank constraints that were discussed in the case study.
+
+\subsubsection*{Q3. How fast is the algorithm?}
+Concerning the speed of the algorithm we also prioritized accuracy when a trade-off had to be made.
+For the 32 spreadsheets in the benchmark our implementation ran in $17.86s \pm 0.87s$\footnote{Macbook Pro, Intel Core i7 2.3 GHz, 16GB RAM}.
+The execution times vary widely though between spreadsheets, only four spreadsheets taking more than $0.2s$.
+Most of the execution time in these cases goes towards searching either aggregate constraints or conditional aggregates.
+The search for aggregates will is slow on spreadsheets containing larger groups of numeric data.
+For conditional aggregates the number of candidate primary keys (all-different) and numeric vectors determines the running time.
+
+\subsection{Insights}
+- Running time -> dependency
+
+
+\sergey{I think there should be three things: key example evaluated, benchmark of 30 spreadsheets and maybe the FBI example, how we can detect interesting dependencies and correct potential mistakes}
+
 
 {\bfseries 
   Experimental questions
