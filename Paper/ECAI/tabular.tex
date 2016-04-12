@@ -339,11 +339,16 @@ Concerning the speed of the algorithm we also prioritized accuracy when a trade-
 For the 32 spreadsheets in the benchmark our implementation ran in $17.86s \pm 0.87s$\footnote{Macbook Pro, Intel Core i7 2.3 GHz, 16GB RAM}.
 The execution times vary widely though between spreadsheets, only four spreadsheets taking more than $0.2s$.
 Most of the execution time in these cases goes towards searching either aggregate constraints or conditional aggregates.
-The search for aggregates will is slow on spreadsheets containing larger groups of numeric data.
-For conditional aggregates the number of candidate primary keys (all-different) and numeric vectors determines the running time.
+The search for aggregates will be slow on spreadsheets containing larger groups of numeric data.
+For conditional aggregates the number of candidate primary keys (all-different) and numeric vectors determines the running time (e.g. the case study example).
+
+\paragraph{Dependencies}
+In order for the algorithm to run efficiently it is crucial to use dependencies and find constraint incrementally whenever possible.
+This avoids some of the explosion of combinations for constraints that have variables.
+For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to under 1 second.
+Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys present.
 
 \subsection{Insights}
-- Running time -> dependency
 
 
 \sergey{I think there should be three things: key example evaluated, benchmark of 30 spreadsheets and maybe the FBI example, how we can detect interesting dependencies and correct potential mistakes}
