@@ -38,6 +38,8 @@
 \newcommand{\rangeall}{:}
 
 \newcommand{\ecrank}[2]{\ensuremath{#1 = \mathit{RANK}(#2)}}
+\newcommand{\ecfkey}[2]{\ensuremath{#1 \rightarrow #2}}
+\newcommand{\ecalldiff}[1]{\ensuremath{\mathit{ALLDIFFERENT}(#1)}}
 
 %%\ecaisubmission   % inserts page numbers. Use only for submission of paper.
                   % Do NOT use for camera-ready version of paper.
@@ -151,11 +153,11 @@ Let us introduce the version of tabular constraint learning that takes into acco
 This version explicitly takes into account the specificity of the constraints and invalidates some of the solutions that are entailed by the tabular other solutions.
 
 \section{Approach to Tabular Constraint Learning}
-As we have seen the statement before assumes the set of groups to be given. It is often, however, not the case and a possible approach is to extract the groups from the CSV file directly. In our system, we have implement the group construction step using the type-consistency check. \sergey{Samuel, we need details here, I think} In general, separating data from a header is a task on its own  \cite{header} and goes beyond the scope of this paper. 
+As we have seen the statement before we assume the set of groups to be given. It is often, however, not the case and a possible approach is to extract the groups from the CSV file directly. In our system, we have implement the group construction step using the type-consistency check. \sergey{Samuel, we need details here, I think} In general, separating data from a header is a task on its own  \cite{header} and goes beyond the scope of this paper. 
 
 Another solution to the group extraction problem is to make it interactive, when a user can select the groups in the spreadsheet or correct automatically generated groups. We regard this approach to be a possible future direction in the system development. Later in the paper we assume the groups to be given.
 
-Now we describe how the problem of Condensed Tabular Constraint Learning can be solved. The algorithm mimics the structure of the problem in the following way: first we need to order constraints in the order of specificity, then for each constraint we need to generate possible candidate groups, and in the next step we find the subgroups satisfying the constrain. After an iteration we accumulate all solutions and proceed to the next constraint.
+Now we describe how the problem of Condensed Tabular Constraint Learning can be solved. The algorithm mimics the structure of the problem in the following way: first we need to order constraints in the order of specificity, then for each constraint we need to generate possible candidate groups, and in the next step we find the subgroups satisfying the constraint. After an iteration we accumulate all solutions and proceed to the next constraint.
 
 \begin{algorithm}[thb]
   \begin{algorithmic}
@@ -177,16 +179,44 @@ Now we describe how the problem of Condensed Tabular Constraint Learning can be 
 Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail. 
 
 \samuel{Running example (RANK?)}
-\paragraph{Constraint ordering} $\constrainttorder(\constraints,\dependencies)$ uses the DAG \dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of \dependencies. Also, if there is a solid edge from $C_1$ to $C_2$, and $X$ is not a solution to $C_1$, then $X$ is not generated as a candidate group for $C_2$. If there is a dashed edge from $C_1$ to $C_2$ and $X$ is a solution to $C_1$, then $X$ is not generated as a candidate group for $C_2$.
+\subsection{Constraint ordering} $\constrainttorder(\constraints,\dependencies)$ uses the DAG \dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of \dependencies.
+Solid edges point from more general to more specific constraints.
+Therefore, if there is a solid edge from $C_1$ to $C_2$, then a set of subgroups satisfying $C_2$ must contain the subgroups satisfying $C_1$.
 
-\paragraph{Candidate group generation} $\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups that are legitimate solution candidates e.g., $X,Y$ are variables of \textit{Y = RANK(X)} and $X,Y$ satisfy the constraints from \CSignature above. Essentially, the group generation step is a constraint satisfaction problem associated with the specific constraint. However, many constraints have the same candidate generation procedures, e.g., sum, min, max, avg, count, etc.
+Dashed edges represent the inverse relationship, pointing from specific to more general constraints.
+If there is a dashed edge from $C_1$ to $C_2$, then a set of subgroups satisfying $C_2$ may not contain a subset that also satisfies $C_1$.
 
-\paragraph{Subgroup satisfaction search} $\findassignment(\textit{Constraint,Candidates,Solutions})$ is the function looking for the subsets of vectors in the candidates satisfying the constraint. If multiple subsets satisfy the constraint, a maximal is selected. If $G_1,G_2$, associated with the variables $X,Y$ in the constraint \textit{Y = RANK(X)}, are candidates, then \findassignment selects a single vector $y$ in $G_2$ and a single vector $x$ in $G_1$ such that $x$ is ranked by $y$. For example, in Figure \ref{fig:main_example} the group $G = T_1[{:},3{:}8]$ serves as $X$ and $Y$ and $x$ can be picked as $T_1[{:},7]$ and $y$ would be $T_1[{:},8]$.
+\paragraph{Example}
+Consider the \ecfkey{FK}{PK} (foreign-key) constraint: for every solution the subgroup (vector) $G_{PK}$ assigned to $PK$ must fulfill \ecalldiff{G_{PK}}.
+Therefore, we say indicate \textit{foreign-key} as being dependent on \textit{all-different} and the latter will be treated first.
+The \ecrank{Y}{X} constraint does not have any dependencies, however in a restricted version without ties the vector $Y$ would always be a permutation of numbers $1, 2, ..., length(Y)$.
 
-\samuel{Expand aggregates to max within group, tweak groups if necessary}
-\sergey{[23:32:21] Samuel Kolb: And the motivation is that you can make the group smaller if you want to exclude a column from the aggregate that does not belong in it but accidentally gets included}
+\subsection{Candidate group generation}
+$\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups that may contains subgroups satisfying the constraint.
+The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
 
-\paragraph{Implementation note} Essentially for each constraint both \generategroups and \findassignment are separate constraint satisfaction problems. Hence, it is natural to solve them using declarative solvers. Even though each is a separate constraint problem, they are variations of each other and can be modeled using similar techniques. It also makes an extension of the system easy, we can solve new variations by adding, removing or modifying constraints from a similar constraint satisfaction problem. Furthermore, the declarative languages such as ASP \cite{whaisasp} and Minizinc \cite{minizinc} provide primitives that make modeling transparent and generic.
+Finding candidate groups for an excel constraint~$c$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of $c$.
+Several constraints (e.g. sum, max, count), however, have the same candidate generation procedure as they share the same \CSignature.
+
+\paragraph{Example}
+The \ecrank{Y}{X} constraint requires $Y$ to be integer or textual and $X$ to be numeric.
+This allows to filter candidate groups for these variables.
+Additionally, $Y$ and~$X$ must be vectors of the same length, therefore, only groups with the same length are considered.
+Groups that does not satisfy these requirements cannot contain subgroups (vectors) that satisfy \ecrank{Y}{X}.
+
+\subsection{Subgroup satisfaction search}
+$\findassignment(\textit{Constraint,Candidates,Solutions})$ is the function that searches for subsets of vectors in the candidate groups that satisfy the constraint.
+
+\paragraph{Example}
+Consider a candidate assignment $G_X, G_Y$ associated with the variables $X,Y$ of \ecrank{Y}{X}, then \findassignment selects single vectors $G_X^{i}, G_Y^{j}$ such that \ecrank{G_Y^{j}}{G_X^{i}} is true.
+For example, in Figure~\ref{fig:main_example} the group $G = \range{T_1}{\rangeall}{\rangeto{3}{8}}$ can serve as both $G_X$ and $G_Y$.
+\findassignment could then select $G_X^{i}$ to be $\range{T_1}{\rangeall}{7}$ and $G_Y^{j}$ to be $\range{T_1}{\rangeall}{8}$ which forms a valid solution.
+\\\\
+For some constraints (most notably aggregates) there may be multiple overlapping subsets that satisfy the constraint.
+We chose to omit subsets that are fully contained within a larger subset since this can lead to overfitting.
+If the returned subsets are too large and accidentally contains unrelated vectors, the user can split the group to reflect this structure.
+
+\subsection{Implementation note} Essentially for each constraint both \generategroups and \findassignment are separate constraint satisfaction problems. Hence, it is natural to solve them using declarative solvers. Even though each is a separate constraint problem, they are variations of each other and can be modeled using similar techniques. It also makes an extension of the system easy, we can solve new variations by adding, removing or modifying constraints from a similar constraint satisfaction problem. Furthermore, the declarative languages such as ASP \cite{whaisasp} and Minizinc \cite{minizinc} provide primitives that make modeling transparent and generic.
 
 Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc (Gecode-backend 2.0.2 \cite{minizinc}) and a native python CSP solver \cite{python_constraint}. All the constraints mentored in the paper can be run purely in the internal python engine without any external software. The future versions of the system will provide user interfaces to the ASP, Minizinc and Python-Constraint languages.
 
