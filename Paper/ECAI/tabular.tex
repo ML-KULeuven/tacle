@@ -11,6 +11,7 @@
 \usepackage{notoccite}
 \usepackage{framed}
 \usepackage{amsmath}
+\usepackage{tabularx}
 
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
@@ -240,7 +241,7 @@ As emphasized before, the set of Excel constraints has a partial order in which 
 
 \begin{table*}
   \centering
-  \begin{tabular}{ccc}
+  \begin{tabularx}{\textwidth}{XXX}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\
     ALLDIFFERENT(X) & X is integer or textual & All elements in X are different \\
     %X = Y & & \\
@@ -262,7 +263,7 @@ As emphasized before, the set of Excel constraints has a partial order in which 
 
 \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display}
 
-  \end{tabular}
+  \end{tabularx}
   \caption{Excel Tabular Constraints \sergey{Luc, we need your comments here on the notation of $X,Y$ and $G_X,G_Y$}}
   \label{table:constraints}
 \end{table*}
