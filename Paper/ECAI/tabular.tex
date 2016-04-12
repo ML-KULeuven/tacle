@@ -240,11 +240,11 @@ As emphasized before, the set of Excel constraints has a partial order in which 
 
 \begin{table*}
   \centering
-  \begin{tabular}{lcc}
+  \begin{tabular}{ccc}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\
-    ALLDIFFERENT(X) & & \\
-    X = Y & & \\
-    FK $\rightarrow$ PK & & \\
+    ALLDIFFERENT(X) & X is integer or textual & All elements in X are different \\
+    %X = Y & & \\
+    FK $\rightarrow$ PK & FK and PK have the same type; they originate from different tables and PK is all-different & all values in FK exist in PK \\
     % TODO check out
     R = LOOKUP-PRODUCT(FV, FK=PK, PV) & & \\
     FV = FUZZY-LOOKUP(FK, PK, PV) & & \\
@@ -252,11 +252,11 @@ As emphasized before, the set of Excel constraints has a partial order in which 
     PERMUTATION(X) & & \\
     R = O1 * O2 & & \\
     R = PROJECT(P) & & \\
-     Y = RANK(X)   & & \\
-    A = PREV(A) + P - N & & \\
+     Y = RANK(X) & & \\
+    A = PREV(A) + P - N & A, P and N have the same length and their length is at least 2 & *\\
     SERIES(X) & & \\
-    Y = SUM(X, col) & & \\
-    Y = SUM(X, row) & & \\
+    Y = SUM(X, col) & & Y is the result of summing each column in X \\
+    Y = SUM(X, row) & & Y is the result of summing each row in X \\
     R = SUMIF(FK=PK, V) & & \\
     R = SUMPRODUCT(O1, O2) & & \\
 
