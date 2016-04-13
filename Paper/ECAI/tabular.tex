@@ -39,9 +39,31 @@
 \newcommand{\rangeto}[2]{#1{:}#2}
 \newcommand{\rangeall}{:}
 
-\newcommand{\ecrank}[2]{\ensuremath{#1 = \mathit{RANK}(#2)}}
+\newcommand{\eccalc}[2]{\ensuremath{#1 = #2}}
+\newcommand{\ecrank}[2]{\eccalc{#1}{\mathit{RANK}(#2)}}
 \newcommand{\ecfkey}[2]{\ensuremath{#1 \rightarrow #2}}
 \newcommand{\ecalldiff}[1]{\ensuremath{\mathit{ALLDIFFERENT}(#1)}}
+\newcommand{\eclookupf}[4]{\ensuremath{\mathit{LOOKUP}_{#4}(#1, #2, #3)}}
+\newcommand{\eclookup}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{}}}
+\newcommand{\eclookupprod}[5]{\eccalc{#1}{#2 \times \eclookupf{#3}{#4}{#5}{}}}
+\newcommand{\eclookupfuzzy}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{fuzzy}}}
+\newcommand{\ecperm}[1]{\ensuremath{\mathit{PERMUTATION}(#1)}}
+\newcommand{\ecseries}[1]{\ensuremath{\mathit{SERIES}(#1)}}
+\newcommand{\ecprod}[3]{\eccalc{#1}{#2 \times #3}}
+\newcommand{\ectotal}[3]{\eccalc{#1}{\mathit{PREV}(#1) + #2 - #3}}
+\newcommand{\ecproj}[2]{\eccalc{#1}{\mathit{PROJECT}(#2)}}
+\newcommand{\ecaggc}[3]{\eccalc{#2}{\mathit{#1}(#3, col)}}
+\newcommand{\ecaggr}[3]{\eccalc{#2}{\mathit{#1}(#3, row)}}
+\newcommand{\ecsumc}[2]{\eccalc{#1}{\mathit{SUM}(#2, col)}}
+\newcommand{\ecsumr}[2]{\eccalc{#1}{\mathit{SUM}(#2, row)}}
+\newcommand{\ecaggif}[5]{\eccalc{#2}{\mathit{#1IF}(#3, #4, #5)}}
+\newcommand{\ecsumif}[4]{\eccalc{#1}{\mathit{SUMIF}(#2, #3, #4)}}
+\newcommand{\ecsumprod}[3]{\eccalc{#1}{\mathit{SUMPRODUCT}(#2, #3)}}
+
+
+
+
+
 
 %%\ecaisubmission   % inserts page numbers. Use only for submission of paper.
                   % Do NOT use for camera-ready version of paper.
@@ -68,7 +90,7 @@ Imagine you have received a CSV file. Upon examining the content it becomes fair
 This brings us to the \textbf{key question}:\\
 Can we discover or reconstruct structural relations in flat tabular spreadsheet data? [in a general way that allows declarative specification of constraints to discover]\\
 
-Of course, it is stated semi-informally here, but it already allows us to provide an intuition on the task. We know that often people work in Excel with ranges, e.g. if we look at the Table 1  and at the first row in the Table 2 in Figure \ref{fig:main_example}, it is clear that one could have selected the first columns, clicked on the \textit{SUM} function and then just used the drag fill handle to apply the formula to the other columns. Similarly, that would work for the second (\textit{Average}), third (\textit{Min})  and forth (\textit{Max}) rows in Table 2. I.e., all operations are vectorized and make use of the standard Excel functions. 
+Of course, it is stated semi-informally here, but it already allows us to provide an intuition on the task. We (know) that often people work in spreadsheets with ranges, e.g. if we look at the Table 1  and at the first row in the Table 2 in Figure \ref{fig:main_example}, it is clear that one could have selected the first columns, clicked on the \textit{SUM} function and then just used the drag fill handle to apply the formula to the other columns. Similarly, that would work for the second (\textit{Average}), third (\textit{Min})  and forth (\textit{Max}) rows in Table 2. I.e., all operations are vectorized and make use of the standard spreadsheet functions. 
 
 It is not hard to see that computation goes not only in columns but in rows as well: if we sum the values in Table 1 in the first row in all four quarters, we would obtain the seventh column in Table 1. That gives us already a hint how this problem is different from the standard data mining settings, when the data is in rows and variables are in columns. Here everything is mixed, some values are missing in the results, some missing the arguments, even a header might have missing values. The data is relational on one hand, since we have multiple table with relationships between them. And on the other hand, the data is numeric, since people tend to use spreadsheets for financial and accounting computations, which is heavily numeric.
 
@@ -115,14 +137,14 @@ In this work we distinguish the following types of data: numeric and textual. Th
 A \textit{vector} is either a column or a row that is type-consistent. If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers. We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if its vectors contain numeric (textual, etc) elements.
 
 \tias{Use generic constraint}
-An \textit{Excel constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. \textit{\CName} is the textual name of the constraint together with its variable names. \textit{\CSignature} is a set of constraints specifying the properties of the group assignments, corresponding to the variables in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. \textit{\CFunction} is a set of constraints specifying that the data in the subgroups satisfies the function. For example, an excel constraint \textit{rank} has \CName \textit{Y = RANK(X)}, where $X$ and $Y$ are the variables; its \CSignature is: the group $G_X$ (associated with X) is numeric, $G_Y$ is integer and the length of vectors in $G_X$ is the same as in $G_Y$; its \CFunction is the following constraint: a pair of vectors $X,Y$ is a solution iff $X \in G_X, Y \in G_Y$ and each value in $X$ has the rank (possibly with ties) specified in $Y$.
+A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. \textit{\CName} is the textual name of the constraint together with its variable names. \textit{\CSignature} is a set of constraints specifying the properties of the group assignments, corresponding to the variables in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. \textit{\CFunction} is a set of constraints specifying that the data in the subgroups satisfies the function. For example, an excel constraint \textit{rank} has \CName \textit{Y = RANK(X)}, where $X$ and $Y$ are the variables; its \CSignature is: the group $G_X$ (associated with X) is numeric, $G_Y$ is integer and the length of vectors in $G_X$ is the same as in $G_Y$; its \CFunction is the following constraint: a pair of vectors $X,Y$ is a solution iff $X \in G_X, Y \in G_Y$ and each value in $X$ has the rank (possibly with ties) specified in $Y$.
 
 \samuel{2nd problem statement (from approach), remove EQUAL}
 
-A \textit{tabular solution} $S$ to an Excel constraint $C$ is a tuple $(X_1, \dots, X_n)$ where $n$ is the number of variables in $C$ and each $X_i$ is a subgroup in \groups, such that $(X_1,\dots,X_n)$ satisfies both the \CSignature and \CFunction of the constraint $C$.
+A \textit{tabular solution} $S$ to an spreadsheet constraint $C$ is a tuple $(X_1, \dots, X_n)$ where $n$ is the number of variables in $C$ and each $X_i$ is a subgroup in \groups, such that $(X_1,\dots,X_n)$ satisfies both the \CSignature and \CFunction of the constraint $C$.
 
 \section{Problem Statement}
-In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of Excel constraints and group assignments as follows: 
+In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of spreadsheet constraints and group assignments as follows: 
 
 \begin{minipage}[c]{14em}
   \vspace{5pt}
@@ -130,13 +152,13 @@ In the previous section we introduced the problem of tabular constraint learning
     \multicolumn{2}{l}{{\textbf{Tabular Constraint Learning Problem}}}\\
     \vspace{-4pt}
     &\\
-    \textbf{Given:}& the set of all groups $\groups$ and of Excel constraints $\constraints$\\
+    \textbf{Given:}& the set of all groups $\groups$ and of spreadsheet constraints $\constraints$\\
     \textbf{Find:}&  all tabular solution $S$ in \groups for each constraint $c$ \constraints \\ 
   \end{tabular}
   \vspace{6pt}
 \end{minipage}
 
-  The key observation here is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in Excel each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
+  The key observation here is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in spreadsheets each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
 
 
   In theory each constraint is independent and equally useful. In practice, however, things are different. Assume that for some $X$ both \textit{series(X)} and \textit{alldifferent(X)} hold. From a user's perspective the last solution is useless, since he or she already knows that series constraint implies alldifferent constraint. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity (generality) order between constraints, which is depicted using solid (dashed) arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $X$ is a not permutation, then $X$ should not be tested for the series constraint at all. A solid lines from $C_1$ to $C_2$ indicates that $C_2$ is \textit{more specific} than $C_1$ and if $X$ is not a solution to $C_1$, then it is not a solution to $C_2$. A dashed arrow from $C_1$ to $C_2$ indicates that $C_1$ is \textit{a more specific} constraint than $C_2$ and therefore if $X$ is a solution for $C_1$ it should not be tested for $C_2$.
@@ -152,7 +174,7 @@ Let us introduce the version of tabular constraint learning that takes into acco
     \multicolumn{2}{l}{{\textbf{Condensed Tabular Constraint Learning Problem}}}\\
     \vspace{-4pt}
     &\\
-    \textbf{Given:}& the set of all groups $\groups$ and of Excel constraints $\constraints$,\\ 
+    \textbf{Given:}& the set of all groups $\groups$ and of spreadsheet constraints $\constraints$,\\ 
     & a constraint specificity DAG \dependencies \\
     \textbf{Find:}& all the most specific wrt \dependencies solutions $S$ in \groups\\ 
     & for each $c$ in \constraints \\
@@ -172,7 +194,7 @@ Now we describe how the problem of Condensed Tabular Constraint Learning can be 
 \begin{algorithm}[thb]
   \begin{algorithmic}
     \footnotesize
-    \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- Excel constraints, \dependencies -- dependency graph 
+    \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- Spreadsheet constraints, \dependencies -- dependency graph 
     \State \textbf{Output:} $S$ -- learned constraints with their satisfaction assignments
     \State $S \gets \emptyset$ \Comment{The set of solutions}
   \For{$c \in \constrainttorder(\constraints,\dependencies)$} 
@@ -189,12 +211,17 @@ Now we describe how the problem of Condensed Tabular Constraint Learning can be 
 Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail. 
 
 \samuel{Running example (RANK?)}
+
 \subsection{Constraint ordering} $\constrainttorder(\constraints,\dependencies)$ uses the DAG \dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of \dependencies.
 Solid edges point from more general to more specific constraints.
 Therefore, if there is a solid edge from $C_1$ to $C_2$, then a set of subgroups satisfying $C_2$ must contain the subgroups satisfying $C_1$.
 
 Dashed edges represent the inverse relationship, pointing from specific to more general constraints.
 If there is a dashed edge from $C_1$ to $C_2$, then a set of subgroups satisfying $C_2$ may not contain a subset that also satisfies $C_1$.
+
+\dependencies thus describes a partial order in which constraints should be learned.
+Some constraints have no dependencies (ommitted from the figure) and can be learned independently.
+Generally, a parallel version of the algorithm could learn each connected component independently, only taking into account the partial ordering within components.
 
 \paragraph{Example}
 Consider the \ecfkey{FK}{PK} (foreign-key) constraint: for every solution the subgroup (vector) $G_{PK}$ assigned to $PK$ must fulfill \ecalldiff{G_{PK}}.
@@ -231,7 +258,7 @@ If the returned subsets are too large and accidentally contains unrelated vector
 Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc (Gecode-backend 2.0.2 \cite{minizinc}) and a native python CSP solver \cite{python_constraint}. All the constraints mentored in the paper can be run purely in the internal python engine without any external software. The future versions of the system will provide user interfaces to the ASP, Minizinc and Python-Constraint languages.
 
 \subsection{Constraints}
-As emphasized before, the set of Excel constraints has a partial order in which they should be learned. For certain constraints this order does not matter, such as \textit{rank} or \textit{product}. For many others they have to be learned in the order, which is specified as a DAG in Figure \ref{fig:learning_order} (if a constraint is not in the graph, it is independent). This figure also specifies a potential parallelization of the computation, since each connected component is independent of the others.
+% As emphasized before, the set of Excel constraints has a partial order in which they should be learned. For certain constraints this order does not matter, such as \textit{rank} or \textit{product}. For many others they have to be learned in the order, which is specified as a DAG in Figure \ref{fig:learning_order} (if a constraint is not in the graph, it is independent). This figure also specifies a potential parallelization of the computation, since each connected component is independent of the others.
 
 
 \begin{figure}[htb]
@@ -252,28 +279,28 @@ As emphasized before, the set of Excel constraints has a partial order in which 
   \centering
   \begin{tabularx}{\textwidth}{XXX}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\
-    ALLDIFFERENT(X) & X is integer or textual & All elements in X are different \\
+    \ecalldiff{V_x} & X is integer or textual & All elements in X are different \\
     %X = Y & & \\
-    FK $\rightarrow$ PK & FK and PK have the same type; they originate from different tables and PK is all-different & all values in FK exist in PK \\
+    \ecfkey{V_{fk}}{V_{pk}} & FK and PK have the same type; they originate from different tables and PK is all-different & all values in FK exist in PK \\
     % TODO check out
-    R = LOOKUP-PRODUCT(FV, FK=PK, PV) & & \\
-    FV = FUZZY-LOOKUP(FK, PK, PV) & & \\
-    FV = LOOKUP(FK, PK, PV) & & \\
-    PERMUTATION(X) & & \\
-    R = O1 * O2 & & \\
-    R = PROJECT(P) & & \\
-    Y = RANK(X) & Y and X have the same length & Y is the rank of X (including ties)\\
-    A = PREV(A) + P - N & A, P and N have the same length and their length is at least 2 & *\\
-    SERIES(X) & & \\
-    Y = SUM(X, col) & & Y is the result of summing each column in X \\
-    Y = SUM(X, row) & & Y is the result of summing each row in X \\
-    R = SUMIF(FK=PK, V) & & \\
-    R = SUMPRODUCT(O1, O2) & & \\
+    \eclookupprod{V_r}{V_1}{V_{fk}}{V_{pk}}{V_{val}} & & \\
+    \eclookup{V_r}{V_{fk}}{V_{pk}}{V_{val}} & & \\
+    \eclookupfuzzy{V_r}{V_{fk}}{V_{pk}}{V_{val}} & & \\
+    \ecperm{V_x} & & \\
+    \ecprod{V_r}{V_1}{V_2} & & \\
+    \ecproj{V_r}{G_x} & & \\
+    \ecrank{V_r}{V_1} & Y and X have the same length & Y is the rank of X (including ties)\\
+    \ectotal{V_r}{V_{pos}}{V_{neg}} & A, P and N have the same length and their length is at least 2 & *\\
+    \ecseries{V_1} & & \\
+    \ecsumc{V_r}{G_1} & & Y is the result of summing each column in X \\
+    \ecsumr{V_r}{G_1} & & Y is the result of summing each row in X \\
+    \ecsumif{V_r}{V_{fk}}{V_{pk}}{V_{val}} & & \\
+    \ecsumprod{V_r}{V_1}{V_2} & & \\
 
 \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display}
 
   \end{tabularx}
-  \caption{Excel Tabular Constraints \sergey{Luc, we need your comments here on the notation of $X,Y$ and $G_X,G_Y$}}
+  \caption{Spreadsheet Constraints \sergey{Luc, we need your comments here on the notation of $X,Y$ and $G_X,G_Y$}}
   \label{table:constraints}
 \end{table*}
 
@@ -314,7 +341,7 @@ We studied various questions, most notably with what accuracy our algorithm can 
 The implementation is illustrated using a case study on the spreadsheet corresponding with the previously introduced example (figure~\ref{fig:main_example}).
 In order to quantify the results and generalize our findings we also evaluate our algorithm on a benchmark of 30 (\samuel{check number}) spreadsheets that we assembled from various sources.
 
-In this section we focus on \textit{functional} constraints that could be used in Excel, ignoring constraints such as all-different or foreign-key.
+In this section we focus on \textit{functional} constraints that could be used in spreadsheets, ignoring constraints such as all-different or foreign-key.
 
 \subsection{Case study}
 Let us illustrate our implementation using the example presented in figure~\ref{fig:main_example}.
@@ -326,16 +353,27 @@ Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
   {\small
     \begin{align*}
       & SERIES(\range{T_{1}}{\rangeall}{1}) \\
-      & \range{T_{1}}{\rangeall}{8} = RANK(\range{T_{1}}{\rangeall}{7}) \\
-      & \range{T_{2}}{1}{\rangeall} = SUM(\range{T_{1}}{\rangeall}{\rangeto{3}{7}}, col) \\
-      & \range{T_{6}}{\rangeall}{2} = SUM(\range{T_{1}}{\rangeall}{\rangeto{3}{6}}, col) \\
-      & \range{T_{1}}{\rangeall}{7} = SUM(\range{T_{1}}{\rangeall}{\rangeto{3}{6}}, row) \\
-      & \range{T_{2}}{2}{\rangeall} = AVERAGE(\range{T_{1}}{\rangeall}{\rangeto{3}{7}}, col) \\
-      & \range{T_{2}}{3}{\rangeall} = MAX(\range{T_{1}}{\rangeall}{\rangeto{3}{7}}, col) \\
-      & \range{T_{2}}{4}{\rangeall} = MIN(\range{T_{1}}{\rangeall}{\rangeto{3}{7}}, col) \\
-      & \range{T_{1}}{\rangeall}{10} = SUMIF(\range{T_{5}}{\rangeall}{1}=\range{T_{1}}{\rangeall}{2}, \range{T_{5}}{\rangeall}{2}) \\
-      & \range{T_{1}}{\rangeall}{11} = MAXIF(\range{T_{5}}{\rangeall}{1}=\range{T_{1}}{\rangeall}{2}, \range{T_{5}}{\rangeall}{2}) \\
-      & \range{T_{4}}{\rangeall}{3} = LOOKUP(\range{T_{4}}{\rangeall}{2}, \range{T_{1}}{\rangeall}{1}, \range{T_{1}}{\rangeall}{2}) \\
+%
+      & \ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}} \\
+%
+      & \ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      & \ecsumc{\range{T_{6}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+%
+      & \ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+%
+      & \ecaggc{AVERAGE}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      & \ecaggc{MAX}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      & \ecaggc{MIN}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      & \ecaggif{SUM}{\range{T_{1}}{\rangeall}{10}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
+%
+      & \ecaggif{MAX}{\range{T_{1}}{\rangeall}{11}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
+%
+      & \eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}} \\
+%
       & \range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
     \end{align*}
   }
