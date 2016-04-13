@@ -16,6 +16,7 @@
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
 \newcommand{\samuel}[1]{\textcolor{green}{{\sc Samuel:} #1}\xspace}
+\newcommand{\tias}[1]{\textcolor{blue}{{\sc Tias:} #1}\xspace}
 
 \newcommand{\constraints}{\ensuremath{\mathcal{C}}\xspace}
 \newcommand{\format}[1]{\textit{#1}\xspace}
@@ -56,6 +57,11 @@
 \begin{abstract}
   abstract
 \end{abstract}
+
+\tias{Use spreadsheet instead of Excel}
+\tias{Spreadsheet is an instance of tabular data, but not the only one?}
+
+\tias{Rewrite}
 \section{Introduction}
 Imagine you have received a CSV file. Upon examining the content it becomes fairly clear it was made in Excel. Even the names of the fields such as Total or Avg indicated the usage of the standard functions. Having a closer look, you could deduce the functional dependencies in the table that look as in Figure \ref{fig:main_example}. Provided that a spreadsheet and the numbers in it are small, and dependencies are not complicated, one can examine the spreadsheet and find all connections. But wouldn't it be good to do it automatically?
 
@@ -79,6 +85,8 @@ It is not hard to see that computation goes not only in columns but in rows as w
   \item Completion, gain speed and insights (Complicated constraints, also complicated to verify, too much output)
 \end{itemize}
 
+\samuel{Spreadsheet risks: financial losses due to errors in spreadsheets}
+
 \textbf{Novelty:}
 \begin{itemize}
   \item Unsupervised setting (contrary to flashfill, etc)
@@ -99,13 +107,14 @@ It is not hard to see that computation goes not only in columns but in rows as w
 \end{figure*}
 
 \section{Formalization}
-
+\tias{More gentle}
 \samuel{Explain concepts on example}
 \subsection{Groups, Type-consistency and Constraints}
 In this work we distinguish the following types of data: numeric and textual. The numeric type has two subtypes: integers and floats. We also consider the special element called \textit{None}, which has two types: numeric and textual. A set is called \textit{type-consistent} iff all elements are either numeric or textual. Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric sub-types by requiring its arguments to be integers.
 
 A \textit{vector} is either a column or a row that is type-consistent. If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers. We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if its vectors contain numeric (textual, etc) elements.
 
+\tias{Use generic constraint}
 An \textit{Excel constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. \textit{\CName} is the textual name of the constraint together with its variable names. \textit{\CSignature} is a set of constraints specifying the properties of the group assignments, corresponding to the variables in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. \textit{\CFunction} is a set of constraints specifying that the data in the subgroups satisfies the function. For example, an excel constraint \textit{rank} has \CName \textit{Y = RANK(X)}, where $X$ and $Y$ are the variables; its \CSignature is: the group $G_X$ (associated with X) is numeric, $G_Y$ is integer and the length of vectors in $G_X$ is the same as in $G_Y$; its \CFunction is the following constraint: a pair of vectors $X,Y$ is a solution iff $X \in G_X, Y \in G_Y$ and each value in $X$ has the rank (possibly with ties) specified in $Y$.
 
 \samuel{2nd problem statement (from approach), remove EQUAL}
