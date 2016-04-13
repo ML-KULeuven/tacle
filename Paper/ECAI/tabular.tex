@@ -435,6 +435,15 @@ For example, using foreign keys as a base constraint to find conditional aggrega
 Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys present.
 
 \subsection{Insights}
+We should explain Figure \ref{fig:fbi}, e.g. if we aggregate by the crime now, the missing value would not get into statistics, which seems faulty, since we can directly compute it.
+
+\begin{figure*}[thb]
+  \begin{center}
+    \includegraphics[width=0.85\textwidth]{figures/fbi_figure_highlighted.png}
+  \end{center}
+  \caption{Real world tabular constraint reconstruction: FBI crime statistics}
+  \label{fig:fbi}
+\end{figure*}
 
 
 \sergey{I think there should be three things: key example evaluated, benchmark of 30 spreadsheets and maybe the FBI example, how we can detect interesting dependencies and correct potential mistakes}
