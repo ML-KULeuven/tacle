@@ -128,6 +128,7 @@ This makes tabular data understanding and constraint learning new and challengin
 \section{Formalization}
 \tias{More gentle}
 \samuel{Explain concepts on example}
+\sergey{subgroup notation, rework the solution definition}
 \subsection{Groups, Type-consistency and Constraints}
 In this work we distinguish the following types of data: numeric and textual. The numeric type has two subtypes: integers and floats. We also consider the special element called \textit{None}, which has two types: numeric and textual. A set is called \textit{type-consistent} iff all elements are either numeric or textual. Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric sub-types by requiring its arguments to be integers.
 
@@ -141,6 +142,7 @@ A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFu
 A \textit{tabular solution} $S$ to a spreadsheet constraint $C$ is a tuple $(X_1, \dots, X_n)$ where $n$ is the number of variables in $C$ and each $X_i$ is a subgroup in \groups, such that $(X_1,\dots,X_n)$ satisfies both the \CSignature and \CFunction of the constraint $C$.
 
 \section{Problem Statement}
+\sergey{should reflect all the changes, Luc wants to introduce constraint satisfation into problem statement, maybe we should move the definition of a solution here? Like a solution is actually constraint satisfaction?}
 In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of spreadsheet constraints and group assignments as follows: 
 
 \begin{minipage}[c]{14em}
@@ -182,6 +184,7 @@ Let us introduce the version of tabular constraint learning that takes into acco
 This version explicitly takes into account the specificity of the constraints and invalidates some of the solutions that are entailed by the tabular other solutions.
 
 \section{Approach to Tabular Constraint Learning}
+\sergey{Luc wants this to be more intuitive, should we just add some examples here to make it easier to follow and refer to the running example?}
 As we have seen the statement before we assume the set of groups to be given. It is often, however, not the case and a possible approach is to extract the groups from the CSV file directly. In our system, we have implement the group construction step using the type-consistency check. \sergey{Samuel, we need details here, I think} In general, separating data from a header is a task on its own  \cite{header} and goes beyond the scope of this paper. 
 
 Another solution to the group extraction problem is to make it interactive, when a user can select the groups in the spreadsheet or correct automatically generated groups. We regard this approach to be a possible future direction in the system development. Later in the paper we assume the groups to be given.
@@ -272,6 +275,7 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 \newcommand{\length}{\format{length}}
 \newcommand{\nat}{\mathcal{N}}
 
+\sergey{Table should take into account our new notation and balance between formality and intuition, heh}
 \begin{table*}
   \centering
   \begin{tabularx}{\textwidth}{XXX}
