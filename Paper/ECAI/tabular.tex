@@ -138,7 +138,7 @@ A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFu
 
 \samuel{2nd problem statement (from approach), remove EQUAL}
 
-A \textit{tabular solution} $S$ to an spreadsheet constraint $C$ is a tuple $(X_1, \dots, X_n)$ where $n$ is the number of variables in $C$ and each $X_i$ is a subgroup in \groups, such that $(X_1,\dots,X_n)$ satisfies both the \CSignature and \CFunction of the constraint $C$.
+A \textit{tabular solution} $S$ to a spreadsheet constraint $C$ is a tuple $(X_1, \dots, X_n)$ where $n$ is the number of variables in $C$ and each $X_i$ is a subgroup in \groups, such that $(X_1,\dots,X_n)$ satisfies both the \CSignature and \CFunction of the constraint $C$.
 
 \section{Problem Statement}
 In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of spreadsheet constraints and group assignments as follows: 
@@ -150,7 +150,7 @@ In the previous section we introduced the problem of tabular constraint learning
     \vspace{-4pt}
     &\\
     \textbf{Given:}& the set of all groups $\groups$ and of spreadsheet constraints $\constraints$\\
-    \textbf{Find:}&  all tabular solution $S$ in \groups for each constraint $c$ \constraints \\ 
+    \textbf{Find:}&  all tabular solution $S$ in \groups for each constraint $c$ in \constraints \\ 
   \end{tabular}
   \vspace{6pt}
 \end{minipage}
