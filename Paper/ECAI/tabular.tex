@@ -185,13 +185,13 @@ A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFu
 Let us elaborate on each of them. 
 \begin{itemize}
 \item
-\textit{\CName} is the textual name of the constraint together with the list of its variables $v_1,\dots,v_n$.
+\textit{\CName} is the textual name of the constraint together with the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
 \item
   \textit{\CSignature} is a set of constraints on the properties of the group assignments, corresponding to the variables $v_1,\dots,v_n$ in \CName.
   For example, the signature can restrict the types of the groups, e.g., requiring them to be integers or constrain their sizes, e.g. the length of vectors in the arguments must be equal.
-  The constraints act on porperties or group meta-information, not on the actual group content. 
-\item \textit{\CFunction} is a constraint specifying that the data in the subgroups satisfies the function.
-  \end{itemize}
+  The constraints act on properties or group meta-information, not on the actual group content. In ILP, it is known as mode declarations, when one needs to declare types of variables in the vocabulary. Also, it is analogous to standard linear algebra well-defined requirements, e.g., in order to multiply matrices $A$ and $B$, $A$ must have the size of $n \times k$ and $B$ the size $k \times m$.
+\item \textit{\CFunction} is a constraint specifying that the data in the subgroups satisfies the function. In ILP, it is known as bias, where we constrain ourselves to only particular subset of language in which we perform the search. 
+\end{itemize}
 
 \paragraph{Example}
 \sergey{need to use this below:}
