@@ -82,35 +82,26 @@
 \end{abstract}
 
 \section{Introduction}
-<<<<<<< HEAD
-Millions of people across use spreadsheets everyday. Yet, many people lack a complete understanding of the structures and existing dependencies in the data. Indeed, the most useful part of spreadsheets is often the formulas and often these formula disappear, when a file is exported and shared as a CSV file. This brings us to the question: can we discover or reconstruct structural relations in flat tabular spreadsheet data? [in a general way that allows declarative specification of constraints to discover]
-
-Let us have a look at the example in Figure \ref{fig:main_example}. Certainly there are several constraint present in the data and even the names in the headers already suggest the usage of standard spreadsheet operations such as \textit{average} or \textit{sum}. If we look at the Table 1 and at the first row in the Table 2, it is clear that one could have selected the column called \textbf{1st Quarter} in the Table  in the Table 11, clicked on the \textit{SUM} function and then just used the drag fill handle to apply the formula to the other columns. Similarly, that would work for the second (\textit{Average}), third (\textit{Min})  and forth (\textit{Max}) rows in Table 2. I.e., all operations are vectorized and make use of the standard spreadsheet operations. 
-
-It is not hard to see that computation goes not only in columns but in rows as well: if we sum the values in Table 1 in the first row in all four quarters, we obtain the seventh column in Table 1. That gives us already a hint how this problem is different from the standard data mining setting, when the data is in rows and variables are in columns. Here everything is mixed, also some values are missing in the results, some missing the arguments, even a header might have missing values. The data is relational on the one hand, since we have multiple tables with relationships between them. And on the other hand, the data is numeric, since people tend to use spreadsheets for financial and accounting computations, which is heavily numeric.
-
-This makes tabular data understanding and constraint learning new and challenging, and it is not only challenging for a machine but for a human as well. Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to so called the \textit{Spreadsheet risk}\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaws in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggesting possible fixes.
-=======
 Millions of people across the world use spreadsheets everyday.
 Yet, many people lack a complete understanding of the structures and existing dependencies in the data.
 Indeed, the most useful part of spreadsheets is often the formulas and often these formula disappear when a file is exported and shared, for example as a CSV file.
 This brings us to the question: can we discover or reconstruct structural relations in flat tabular spreadsheet data?
 Moreover, can we accomplish this task in a general way that allows declarative specification of constraints to discover?
 
-\samuel{Maybe slightly more formal:}
+
 Let us look at an example in Figure~\ref{fig:main_example}, the header names already suggest the usage of standard spreadsheet operations such as \textit{average} or \textit{sum}.
 If we look at Table~1 and at the first row in Table~2, it is clear that one could have selected the column called \textbf{1st Quarter}, clicked on the \textit{SUM} function and then just used the drag fill handle to apply the formula to the other columns.
 Similarly, that would work for the second (\textit{Average}), third (\textit{Min})  and forth (\textit{Max}) rows in Table 2.
 I.e., all operations are vectorized and make use of the standard spreadsheet operations.
 
 Examining Table~1 also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by taking the row-wise sum of the previous four columns.
-\samuel{Maybe slightly more formal:}
+
 That gives us already a hint how this problem is different from the standard data mining settings, when the data is in rows and variables are in columns. Here everything is mixed, some values are missing in the results, some missing the arguments, even a header might have missing values. The data is relational on one hand, since we have multiple table with relationships between them. And on the other hand, the data is numeric, since people tend to use spreadsheets for financial and accounting computations, which is heavily numeric.
 
 Given these novel aspects, we conclude that understanding and learning constraints in tabular data is a new and challenging problem setting.
 Futhermore, it is not only challenging for a machine but for a human as well.
-\samuel{Maybe slightly more formal:} Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to so called the Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and caused billion-losses in the financial industry. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
->>>>>>> fc6f339fbf88c9c55ff5168114106612d5c63c0c
+
+Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to so called the Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and caused billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
 \sergey{bullet points for Luc and Tias to rework introduction}\\
 \textbf{Motivation}:
@@ -232,8 +223,6 @@ all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of t
 
 \luc{ADD/REFER TO EXAMPLE}
 
-<<<<<<< HEAD
-
 
 Let us now define what is a tabular solution for a spreadsheet constraint in general. Let $C$ denote a spreadsheet constraint, $S$ a mapping from variables to the subgroups of \groups, and $C^S$ the constraint $C$, in which all variables are substituted with the corresponding subgroups from $S$, then $S$ is a \textit{tabular solution} to $C$ iff both $\CSignature^S$ and $\CFunction^S$ hold.
 
@@ -242,13 +231,6 @@ Let us now define what is a tabular solution for a spreadsheet constraint in gen
 \section{Problem Statement}
 \sergey{should reflect all the changes, Luc wants to introduce constraint satisfaction into problem statement, maybe we should move the definition of a solution here? Like a solution is actually constraint satisfaction?}
 In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of spreadsheet constraints and group assignments as follows: 
-=======
-%A \textit{tabular solution} $S$ to a spreadsheet constraint $C$ (with $n$ variables) is a subgroup assignment $(g_1, \dots, g_n)$ where $g_i$, such that $(g_1,\dots,g_n)$ satisfies both the \CSignature and \CFunction of the constraint $C$. \sergey{to finish this definition later, need to say that $g_i$ is the subgroup assigned to the $i$-th variable in $C$}
-
-\section{Problem Statement}
-\sergey{should reflect all the changes, Luc wants to introduce constraint satisfaction into problem statement, maybe we should move the definition of a solution here? Like a solution is actually constraint satisfaction?}
-In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of spreadsheet constraints and group assignments as follows:
->>>>>>> fc6f339fbf88c9c55ff5168114106612d5c63c0c
 
 \begin{minipage}[c]{14em}
   \vspace{5pt}
