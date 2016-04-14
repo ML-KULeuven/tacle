@@ -81,8 +81,8 @@
   abstract
 \end{abstract}
 
-
 \section{Introduction}
+<<<<<<< HEAD
 Millions of people across use spreadsheets everyday. Yet, many people lack a complete understanding of the structures and existing dependencies in the data. Indeed, the most useful part of spreadsheets is often the formulas and often these formula disappear, when a file is exported and shared as a CSV file. This brings us to the question: can we discover or reconstruct structural relations in flat tabular spreadsheet data? [in a general way that allows declarative specification of constraints to discover]
 
 Let us have a look at the example in Figure \ref{fig:main_example}. Certainly there are several constraint present in the data and even the names in the headers already suggest the usage of standard spreadsheet operations such as \textit{average} or \textit{sum}. If we look at the Table 1 and at the first row in the Table 2, it is clear that one could have selected the column called \textbf{1st Quarter} in the Table  in the Table 11, clicked on the \textit{SUM} function and then just used the drag fill handle to apply the formula to the other columns. Similarly, that would work for the second (\textit{Average}), third (\textit{Min})  and forth (\textit{Max}) rows in Table 2. I.e., all operations are vectorized and make use of the standard spreadsheet operations. 
@@ -90,6 +90,27 @@ Let us have a look at the example in Figure \ref{fig:main_example}. Certainly th
 It is not hard to see that computation goes not only in columns but in rows as well: if we sum the values in Table 1 in the first row in all four quarters, we obtain the seventh column in Table 1. That gives us already a hint how this problem is different from the standard data mining setting, when the data is in rows and variables are in columns. Here everything is mixed, also some values are missing in the results, some missing the arguments, even a header might have missing values. The data is relational on the one hand, since we have multiple tables with relationships between them. And on the other hand, the data is numeric, since people tend to use spreadsheets for financial and accounting computations, which is heavily numeric.
 
 This makes tabular data understanding and constraint learning new and challenging, and it is not only challenging for a machine but for a human as well. Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to so called the \textit{Spreadsheet risk}\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaws in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggesting possible fixes.
+=======
+Millions of people across the world use spreadsheets everyday.
+Yet, many people lack a complete understanding of the structures and existing dependencies in the data.
+Indeed, the most useful part of spreadsheets is often the formulas and often these formula disappear when a file is exported and shared, for example as a CSV file.
+This brings us to the question: can we discover or reconstruct structural relations in flat tabular spreadsheet data?
+Moreover, can we accomplish this task in a general way that allows declarative specification of constraints to discover?
+
+\samuel{Maybe slightly more formal:}
+Let us look at an example in Figure~\ref{fig:main_example}, the header names already suggest the usage of standard spreadsheet operations such as \textit{average} or \textit{sum}.
+If we look at Table~1 and at the first row in Table~2, it is clear that one could have selected the column called \textbf{1st Quarter}, clicked on the \textit{SUM} function and then just used the drag fill handle to apply the formula to the other columns.
+Similarly, that would work for the second (\textit{Average}), third (\textit{Min})  and forth (\textit{Max}) rows in Table 2.
+I.e., all operations are vectorized and make use of the standard spreadsheet operations.
+
+Examining Table~1 also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by taking the row-wise sum of the previous four columns.
+\samuel{Maybe slightly more formal:}
+That gives us already a hint how this problem is different from the standard data mining settings, when the data is in rows and variables are in columns. Here everything is mixed, some values are missing in the results, some missing the arguments, even a header might have missing values. The data is relational on one hand, since we have multiple table with relationships between them. And on the other hand, the data is numeric, since people tend to use spreadsheets for financial and accounting computations, which is heavily numeric.
+
+Given these novel aspects, we conclude that understanding and learning constraints in tabular data is a new and challenging problem setting.
+Futhermore, it is not only challenging for a machine but for a human as well.
+\samuel{Maybe slightly more formal:} Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to so called the Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and caused billion-losses in the financial industry. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
+>>>>>>> fc6f339fbf88c9c55ff5168114106612d5c63c0c
 
 \sergey{bullet points for Luc and Tias to rework introduction}\\
 \textbf{Motivation}:
@@ -102,17 +123,15 @@ This makes tabular data understanding and constraint learning new and challengin
   \item Completion, gain speed and insights (Complicated constraints, also complicated to verify, too much output)
 \end{itemize}
 
-\samuel{Spreadsheet risks: financial losses due to errors in spreadsheets}
-
 \textbf{Novelty:}
 \begin{itemize}
   \item Unsupervised setting (contrary to flashfill, etc)
   \item Numeric, different constraints (contrary to single textual function solution in flashfill, etc)
   \item Data format (2D) -- data is no longer in rows like a classic ML or DM settings
-  \item Declarative, general / modular, stacking of constraint problems 
+  \item Declarative, general / modular, stacking of constraint problems
 \end{itemize}
 
-\sergey{need to elaborate the example here: like in a story} 
+\sergey{need to elaborate the example here: like in a story}
 
 \begin{figure*}[tbh]
   \begin{center}
@@ -127,29 +146,34 @@ This makes tabular data understanding and constraint learning new and challengin
 \samuel{Explain concepts on example}
 \sergey{subgroup notation, rework the solution definition}
 \subsection{Groups, Type-consistency and Constraints}
-In this work we focus on the spreadsheet data, which is physically one big table, but conceptually consists of multiple tables, see Fig \ref{fig:main_example} for an example. Formally, a table is $n \times m$ matrix, each entry table is called  a \textit{cell}.
+In this work we focus on spreadsheet data, which is physically one big table, but conceptually often consists of multiple tables, see Figure~\ref{fig:main_example} for an example.
+Formally, a table is an $n \times m$ matrix, each table entry is called  a \textit{cell}.
 
-Each cell has a {\em type} which can be numeric or textual. The numeric type has two subtypes: integers and floats. 
-We also consider the special element called \textit{None}, which has two types: numeric and textual.
-A set of cells is called \textit{type-consistent} iff all cells in the set are either numeric or textual. 
+Each cell has a {\em type} which can be numeric or textual.
+The numeric type has two subtypes: integers and floats.
+We also consider the special element called \textit{None}, which can be either type: numeric or textual.
+A set of cells is called \textit{type-consistent} iff all cells in the set are either numeric or textual.
 %Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric subtype by requiring its arguments to be integers.
 
-We consider various sets of cells in tables: 
+We consider various sets of cells in tables:
 \begin{itemize}
   \item {\bf Cells}: Each entry in the matrix/table is called  a \textit{cell}.
-  We use the notation $T[a,b]$ to refer to a particular cell in the table $T$ at the row with index $a$ and the column with index $b$. 
+  We use the notation $T[a,b]$ to refer to a particular cell in the table~$T$ at the row with index~$a$ and the column with index~$b$.
   \item {\bf Columns and rows}: To refer to the $a$-th row (column) we use the following syntax $T[a,{:}]$ ($T[{:},a]$), to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
-  \item 
-  A \textit{vector} is either a column or a row that is type-consistent. 
-  If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. 
   \item
-  A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers. We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if \luc{all?????} its vectors contain numeric (textual, etc) elements.
+  A \textit{vector} is either a column or a row that is type-consistent.
+  If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation.
+  \item
+  A \textit{group} is a subrange of vectors with the same orientation in a table.
+  We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers.
+  We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if \luc{all?????} its vectors contain numeric (textual, etc) elements.
   \item
  A \textit{subgroup} $g$ is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$.
 %We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must contain only one vector, we write $g \in G$.
 % A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
 \end{itemize}
 For notational convenience, we will refer to cells with $C$ \sergey{maybe better name? confusing with constaraints},  to vectors with $V$, and to groups and subgroups with $G$. 
+
 When we do not want to distinguish between cells, columns, rows, vectors or groups, we shall talk about a {\em set of cells}.
 \luc{add an example of group/ subgroup}
 
@@ -158,12 +182,10 @@ When we do not want to distinguish between cells, columns, rows, vectors or grou
 A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. 
 \begin{itemize}
 \item
-\textit{\CName} \textit{\CName} is the textual name of the constraint together with the list of its variables $v_1,\dots,v_n$.
+\textit{\CName} is the textual name of the constraint together with the list of its variables $v_1,\dots,v_n$.
 \item
   \textit{\CSignature} is a constraint specifying the properties of the group assignments, corresponding to the variables $v_1,\dots,v_n$ in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. 
 \item \textit{\CFunction} is a constraint specifying that the data in the subgroups satisfies the function.
-\end{itemize}
-
 
 \paragraph{Example}
 \sergey{need to use this below:}
@@ -171,23 +193,23 @@ A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFu
   For example, a spreadsheet constraint \textit{rank} has \CName \textit{$v_y$ = RANK($v_x$)}, where $v_x$ and $v_y$ are the variables; its \CSignature is: the subgroup assigned to $v_x$ must be numeric, $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$; its \CFunction is the following constraint: the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ is a solution iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_x$ has the rank (possibly with ties) specified in $g_y$. 
 
 
-The constraint \textit{rank} has 
+The constraint \textit{rank} has
 \begin{itemize}
-\item \CName = \textit{$g_Y$ = RANK($g_X$)}, where $g_X$ and $g_Y$ are the group variables; 
+\item \CName = \textit{$g_Y$ = RANK($g_X$)}, where $g_X$ and $g_Y$ are the group variables;
 \item \CSignature = subgroup $g_X$ (associated with X) is numeric, $g_Y$ is integer and the length of vectors in $g_X$ is the same as in $g_Y$; and
 \item
 \CFunction = \textit{$g_Y$ = RANK($g_X$)} iff $g_X \in G_X, g_Y \in G_Y$ and each value in $g_X$ has the rank (possibly with ties) specified in $g_Y$.
 \end{itemize}
 
 
-We can now define a classical constraint satisfaction problem on tables. 
-A {\em constraint satisfaction problem} (CSP)  consists of 1) a set of cells, and 2) a set of constraints over those cells. 
-Notice that the constraints specify the types (or the domains) that one encounters in traditional CSPs.  
+We can now define a classical constraint satisfaction problem on tables.
+A {\em constraint satisfaction problem} (CSP)  consists of 1) a set of cells, and 2) a set of constraints over those cells.
+Notice that the constraints specify the types (or the domains) that one encounters in traditional CSPs.
 Notice also, that as in traditional CSPs, the CSP problem defines the variables (the cells) of the problem
-as well as the constraint that should hold amongst them. The task of CSP-solvers is then to find an assignment 
+as well as the constraint that should hold amongst them. The task of CSP-solvers is then to find an assignment
 to the variables that satisfies all the constraints. The distinction between variables (cells) and their assignments (their values)
 is important here. So, when we speak about cells, vectors and groups, we refer to the variables;
-when we talk about values, assignments or instances, we refer to the values these cells take in a particular "instantiated" table. 
+when we talk about values, assignments or instances, we refer to the values these cells take in a particular "instantiated" table.
 
 While the traditional CSP problem is given a set of cells and a set of constraints,
 and the task is to find an assignment, the {\bf inverse CSP} or the {\bf Tabular Constraint Learning Problem}.
@@ -196,9 +218,9 @@ the can be defined as follows.\\
 {\bf Given }
 \begin{itemize}
 \item
-a set of instantiated tables (so all cells have values) ${\cal T}$; 
+a set of instantiated tables (so all cells have values) ${\cal T}$;
 \item
-a set of possible constraints ${\cal C}$; 
+a set of possible constraints ${\cal C}$;
 \item
 a set of possible groups for the tables ${\cal G}$;
 \end{itemize}
@@ -210,6 +232,7 @@ all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of t
 
 \luc{ADD/REFER TO EXAMPLE}
 
+<<<<<<< HEAD
 
 
 Let us now define what is a tabular solution for a spreadsheet constraint in general. Let $C$ denote a spreadsheet constraint, $S$ a mapping from variables to the subgroups of \groups, and $C^S$ the constraint $C$, in which all variables are substituted with the corresponding subgroups from $S$, then $S$ is a \textit{tabular solution} to $C$ iff both $\CSignature^S$ and $\CFunction^S$ hold.
@@ -219,6 +242,13 @@ Let us now define what is a tabular solution for a spreadsheet constraint in gen
 \section{Problem Statement}
 \sergey{should reflect all the changes, Luc wants to introduce constraint satisfaction into problem statement, maybe we should move the definition of a solution here? Like a solution is actually constraint satisfaction?}
 In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of spreadsheet constraints and group assignments as follows: 
+=======
+%A \textit{tabular solution} $S$ to a spreadsheet constraint $C$ (with $n$ variables) is a subgroup assignment $(g_1, \dots, g_n)$ where $g_i$, such that $(g_1,\dots,g_n)$ satisfies both the \CSignature and \CFunction of the constraint $C$. \sergey{to finish this definition later, need to say that $g_i$ is the subgroup assigned to the $i$-th variable in $C$}
+
+\section{Problem Statement}
+\sergey{should reflect all the changes, Luc wants to introduce constraint satisfaction into problem statement, maybe we should move the definition of a solution here? Like a solution is actually constraint satisfaction?}
+In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of spreadsheet constraints and group assignments as follows:
+>>>>>>> fc6f339fbf88c9c55ff5168114106612d5c63c0c
 
 \begin{minipage}[c]{14em}
   \vspace{5pt}
@@ -227,7 +257,7 @@ In the previous section we introduced the problem of tabular constraint learning
     \vspace{-4pt}
     &\\
     \textbf{Given:}& the set of all groups $\groups$ and of spreadsheet constraints $\constraints$\\
-    \textbf{Find:}&  all tabular solution $S$ in \groups for each constraint $c$ in \constraints \\ 
+    \textbf{Find:}&  all tabular solution $S$ in \groups for each constraint $c$ in \constraints \\
   \end{tabular}
   \vspace{6pt}
 \end{minipage}
@@ -248,9 +278,9 @@ Let us introduce the version of tabular constraint learning that takes into acco
     \multicolumn{2}{l}{{\textbf{Condensed Tabular Constraint Learning Problem}}}\\
     \vspace{-4pt}
     &\\
-    \textbf{Given:}& the set of all groups $\groups$ and of spreadsheet constraints $\constraints$,\\ 
+    \textbf{Given:}& the set of all groups $\groups$ and of spreadsheet constraints $\constraints$,\\
     & a constraint specificity DAG \dependencies \\
-    \textbf{Find:}& all the most specific wrt \dependencies solutions $S$ in \groups\\ 
+    \textbf{Find:}& all the most specific wrt \dependencies solutions $S$ in \groups\\
     & for each $c$ in \constraints \\
   \end{tabular}
   \vspace{6pt}
@@ -260,7 +290,7 @@ This version explicitly takes into account the specificity of the constraints an
 
 \section{Approach to Tabular Constraint Learning}
 \sergey{Luc wants this to be more intuitive, should we just add some examples here to make it easier to follow and refer to the running example?}
-As we have seen the statement before we assume the set of groups to be given. It is often, however, not the case and a possible approach is to extract the groups from the CSV file directly. In our system, we have implement the group construction step using the type-consistency check. \sergey{Samuel, we need details here, I think} In general, separating data from a header is a task on its own  \cite{header} and goes beyond the scope of this paper. 
+As we have seen the statement before we assume the set of groups to be given. It is often, however, not the case and a possible approach is to extract the groups from the CSV file directly. In our system, we have implement the group construction step using the type-consistency check. \sergey{Samuel, we need details here, I think} In general, separating data from a header is a task on its own  \cite{header} and goes beyond the scope of this paper.
 
 Another solution to the group extraction problem is to make it interactive, when a user can select the groups in the spreadsheet or correct automatically generated groups. We regard this approach to be a possible future direction in the system development. Later in the paper we assume the groups to be given.
 
@@ -269,11 +299,11 @@ Now we describe how the problem of Condensed Tabular Constraint Learning can be 
 \begin{algorithm}[thb]
   \begin{algorithmic}
     \footnotesize
-    \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- Spreadsheet constraints, \dependencies -- dependency graph 
+    \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- Spreadsheet constraints, \dependencies -- dependency graph
     \State \textbf{Output:} $S$ -- learned constraints with their satisfaction assignments
     \State $S \gets \emptyset$ \Comment{The set of solutions}
-  \For{$c \in \constrainttorder(\constraints,\dependencies)$} 
-  \State $v_1, ..., v_n =$ variables of $c$ 
+  \For{$c \in \constrainttorder(\constraints,\dependencies)$}
+  \State $v_1, ..., v_n =$ variables of $c$
     \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(c, G, S, \dependencies)$}
       \State $S \gets S \cup \findassignment(c, v_1{:}~G_1, \dots, v_n{:}~G_n, S, \dependencies)$
     \EndFor
@@ -283,7 +313,7 @@ Now we describe how the problem of Condensed Tabular Constraint Learning can be 
 \caption{Tabular constraint learning}
 \label{algo:tcl}
 \end{algorithm}
-Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail. 
+Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail.
 
 \samuel{Running example (RANK?)}
 
@@ -529,7 +559,7 @@ Unfortunately, this assumption is sometimes too strong, when users are intereste
 \sergey{I think there should be three things: key example evaluated, benchmark of 30 spreadsheets and maybe the FBI example, how we can detect interesting dependencies and correct potential mistakes}
 
 
-{\bfseries 
+{\bfseries
   Experimental questions
 }
 
@@ -589,4 +619,3 @@ claudien \cite{claudien} \sergey{Samuel, Luc, you would need to help with this o
 \bibliography{references}
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
