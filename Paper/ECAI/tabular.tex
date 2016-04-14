@@ -309,7 +309,9 @@ Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, 
 
 \samuel{Running example (RANK?)}
 
-\subsection{Constraint ordering} $\constrainttorder(\constraints,\dependencies)$ uses the DAG~\dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of~\dependencies.
+\subsection{Constraint ordering} 
+\sergey{refinement operator, we need emphasize it}
+$\constrainttorder(\constraints,\dependencies)$ uses the DAG~\dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of~\dependencies.
 Solid edges point from more general to more specific constraints.
 Therefore, if there is a solid edge from constraint~$C_1$ to constraint~$C_2$, then a set of subgroups satisfying~$C_2$ must contain the subgroups satisfying~$C_1$.
 
@@ -432,6 +434,7 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 % \sergey{We need to fit ASP, Minizinc and all that here, I mean it is supposed to be an important point after all}
 
 \section{Evaluation}
+\sergey{we need to add a summary of the dataset, avg number of constraints, cells, rows, columns}
 In this section we experimentally validate our approach.
 We studied various questions, most notably with what accuracy our algorithm can find essential constraints.
 
