@@ -138,21 +138,25 @@ A set of cells is called \textit{type-consistent} iff all cells in the set are e
 %Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric subtype by requiring its arguments to be integers.
 
 We consider various sets of cells in tables: 
-\begin{itemize}
-  \item {\bf Cells}: Each entry in the matrix/table is called  a \textit{cell}.
-  We use the notation $T[a,b]$ to refer to a particular cell in the table $T$ at the row with index $a$ and the column with index $b$. 
-  \item {\bf Columns and rows}: To refer to the $a$-th row (column) we use the following syntax $T[a,{:}]$ ($T[{:},a]$), to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
-  \item 
-  A \textit{vector} is either a column or a row that is type-consistent. 
-  If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. 
-  \item
-  A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers. We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if \luc{all?????} its vectors contain numeric (textual, etc) elements.
-  \item
-  A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
+\item {\bf Cells}: Each entry in the matrix/table is called  a \textit{cell}.
+We use the notation $T[a,b]$ to refer to a particular cell in the table $T$ at the row with index $a$ and the column with index $b$. 
+\item {\bf Columns and rows}: To refer to the $a$-th row (column) we use the following syntax $T[a,{:}]$ ($T[{:},a]$), to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
+\item 
+A \textit{vector} is either a column or a row that is type-consistent. 
+If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. 
+\item
+A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers. We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if \luc{all?????} its vectors contain numeric (textual, etc) elements.
+
+
+\item
+A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
 \end{itemize}
 For notational convenience, we will refer to cells with $C$,  to vectors with $V$, and to groups and subgroups with $G$. 
 When we do not want to distinguish between cells, columns, rows, vectors or groups, we shall talk about a {\em set of cells}.
 \luc{add an example of group/ subgroup}
+
+
+
 
 
 \tias{Use generic constraint}
@@ -167,7 +171,7 @@ e.g., requiring the variables to be integers or constraining the sizes, e.g. the
 \end{itemize}
 
 
-\paragraph{Example}
+\begin{example}
 The constraint \textit{rank} has 
 \begin{itemize}
 \item \CName = \textit{$g_Y$ = RANK($g_X$)}, where $g_X$ and $g_Y$ are the group variables; 
@@ -175,6 +179,7 @@ The constraint \textit{rank} has
 \item
 \CFunction = \textit{$g_Y$ = RANK($g_X$)} iff $g_X \in G_X, g_Y \in G_Y$ and each value in $g_X$ has the rank (possibly with ties) specified in $g_Y$.
 \end{itemize}
+\end{example}
 
 \samuel{2nd problem statement (from approach), remove EQUAL}
 
@@ -197,7 +202,7 @@ the can be defined as follows.\\
 a set of instantiated tables (so all cells have values) ${\cal T}$; 
 \item
 a set of possible constraints ${\cal C}$; 
-\item
+\ite
 a set of possible groups for the tables ${\cal G}$;
 \end{itemize}
 \noindent
