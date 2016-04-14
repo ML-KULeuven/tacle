@@ -157,17 +157,20 @@ We consider various sets of cells in tables:
   \item
   A \textit{group} is a subrange of vectors with the same orientation in a table.
   We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers.
-  We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if \luc{all?????} its vectors contain numeric (textual, etc) elements.
+  We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
   \item
  A \textit{subgroup} $g$ is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$.
 %We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must contain only one vector, we write $g \in G$.
 % A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
 \end{itemize}
-For notational convenience, we will refer to cells with $C$ \sergey{maybe better name? confusing with constaraints},  to vectors with $V$, and to groups and subgroups with $G$. 
+For notational convenience, we will refer to vectors with $V$ and to groups and subgroups with $G$.
 
 When we do not want to distinguish between cells, columns, rows, vectors or groups, we shall talk about a {\em set of cells}.
 \luc{add an example of group/ subgroup}
 
+\paragraph{Example}
+Consider Table~1 in the Figure~\ref{fig:main_example}, its rows are not type consistent (i.e. they contain both numeric and textual data).
+The (column) vectors of Table~1 are subdivided into five groups (\range{T_1}{\rangeall}{1}, \range{T_1}{\rangeall}{2}, \range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{9}, \range{T_1}{\rangeall}{\rangeto{10}{11}}).
 
 
 A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. 
