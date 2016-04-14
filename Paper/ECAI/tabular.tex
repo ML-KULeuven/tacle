@@ -81,15 +81,14 @@
 \end{abstract}
 
 
-\tias{Rewrite}
 \section{Introduction}
 Millions of people across use spreadsheets everyday. Yet, many people lack a complete understanding of the structures and existing dependencies in the data. Indeed, the most useful part of spreadsheets is often the formulas and often these formula disappear, when a file is exported and shared as a CSV file. This brings us to the question: can we discover or reconstruct structural relations in flat tabular spreadsheet data? [in a general way that allows declarative specification of constraints to discover]
 
-Let us have a look at the example in Figure \ref{fig:main_example}, certainly there are several constraint present in the data and even the names in the headers already suggest the usage of standard spreadsheet operations such as \textit{average} or \textit{sum}. If we look at the Table 1 and at the first row in the Table 2, it is clear that one could have selected the column called \textbf{1st Quarter}, clicked on the \textit{SUM} function and then just used the drag fill handle to apply the formula to the other columns. Similarly, that would work for the second (\textit{Average}), third (\textit{Min})  and forth (\textit{Max}) rows in Table 2. I.e., all operations are vectorized and make use of the standard spreadsheet operations. 
+Let us have a look at the example in Figure \ref{fig:main_example}. Certainly there are several constraint present in the data and even the names in the headers already suggest the usage of standard spreadsheet operations such as \textit{average} or \textit{sum}. If we look at the Table 1 and at the first row in the Table 2, it is clear that one could have selected the column called \textbf{1st Quarter} in the Table  in the Table 11, clicked on the \textit{SUM} function and then just used the drag fill handle to apply the formula to the other columns. Similarly, that would work for the second (\textit{Average}), third (\textit{Min})  and forth (\textit{Max}) rows in Table 2. I.e., all operations are vectorized and make use of the standard spreadsheet operations. 
 
-It is not hard to see that computation goes not only in columns but in rows as well: if we sum the values in Table 1 in the first row in all four quarters, we would obtain the seventh column in Table 1. That gives us already a hint how this problem is different from the standard data mining settings, when the data is in rows and variables are in columns. Here everything is mixed, some values are missing in the results, some missing the arguments, even a header might have missing values. The data is relational on one hand, since we have multiple table with relationships between them. And on the other hand, the data is numeric, since people tend to use spreadsheets for financial and accounting computations, which is heavily numeric.
+It is not hard to see that computation goes not only in columns but in rows as well: if we sum the values in Table 1 in the first row in all four quarters, we obtain the seventh column in Table 1. That gives us already a hint how this problem is different from the standard data mining setting, when the data is in rows and variables are in columns. Here everything is mixed, also some values are missing in the results, some missing the arguments, even a header might have missing values. The data is relational on the one hand, since we have multiple tables with relationships between them. And on the other hand, the data is numeric, since people tend to use spreadsheets for financial and accounting computations, which is heavily numeric.
 
-This makes tabular data understanding and constraint learning new and challenging, and it is not only challenging for a machine but for a human as well. Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to so called the \textit{Spreadsheet risk}\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaws in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
+This makes tabular data understanding and constraint learning new and challenging, and it is not only challenging for a machine but for a human as well. Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to so called the \textit{Spreadsheet risk}\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaws in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggesting possible fixes.
 
 \sergey{bullet points for Luc and Tias to rework introduction}\\
 \textbf{Motivation}:
@@ -135,14 +134,14 @@ We use the notation $T[a,b]$ to refer to a particular cell in the table $T$ at t
 
 A \textit{vector} is either a column or a row that is type-consistent. If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers. We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if its vectors contain numeric (textual, etc) elements.
 
-We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must constain only one vector, we write $g \in G$.
+We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must contain only one vector, we write $g \in G$.
 
 A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. \textit{\CName} is the textual name of the constraint together with the list of its variables $v_1,\dots,v_n$. \textit{\CSignature} is a constraint specifying the properties of the group assignments, corresponding to the variables $v_1,\dots,v_n$ in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. \textit{\CFunction} is a constraint specifying that the data in the subgroups satisfies the function. For example, a spreadsheet constraint \textit{rank} has \CName \textit{$v_y$ = RANK($v_x$)}, where $v_x$ and $v_y$ are the variables; its \CSignature is: the subgroup assigned to $v_x$ must be numeric, $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$; its \CFunction is the following constraint: the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ is a solution iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_x$ has the rank (possibly with ties) specified in $g_y$. 
 
 Let us now define what is a tabular solution for a spreadsheet constraint in general. Let $C$ denote a spreadsheet constraint, $S$ a mapping from variables to the subgroups of \groups, and $C^S$ the constraint $C$, in which all variables are substituted with the corresponding subgroups from $S$, then $S$ is a \textit{tabular solution} to $C$ iff both $\CSignature^S$ and $\CFunction^S$ hold.
 
 \section{Problem Statement}
-\sergey{should reflect all the changes, Luc wants to introduce constraint satisfation into problem statement, maybe we should move the definition of a solution here? Like a solution is actually constraint satisfaction?}
+\sergey{should reflect all the changes, Luc wants to introduce constraint satisfaction into problem statement, maybe we should move the definition of a solution here? Like a solution is actually constraint satisfaction?}
 In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of spreadsheet constraints and group assignments as follows: 
 
 \begin{minipage}[c]{14em}
@@ -219,8 +218,8 @@ Therefore, if there is a solid edge from $C_1$ to $C_2$, then a set of subgroups
 Dashed edges represent the inverse relationship, pointing from specific to more general constraints.
 If there is a dashed edge from $C_1$ to $C_2$, then a set of subgroups satisfying $C_2$ may not contain a subset that also satisfies $C_1$.
 
-\dependencies thus describes a partial order in which constraints should be learned.
-Some constraints have no dependencies (ommitted from the figure) and can be learned independently.
+Thus, \dependencies describes a partial order in which constraints should be learned.
+Some constraints have no dependencies (omitted from the figure) and can be learned independently.
 Generally, a parallel version of the algorithm could learn each connected component independently, only taking into account the partial ordering within components.
 
 \paragraph{Example}
@@ -347,7 +346,6 @@ This example combines several smaller examples that were used in an exercise ses
 Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
 
 \begin{figure}
-  \label{fig:sol_example}
   {\small
     \begin{align*}
       & SERIES(\range{T_{1}}{\rangeall}{1}) \\
@@ -376,10 +374,13 @@ Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
     \end{align*}
   }
   \caption{Expected constraints in the case study \sergey{in Figure \ref{fig:main_example}; some more explanation needed, not self explanatory}}
+  \label{fig:sol_example}
 \end{figure}
+\sergey{Samuel, hint, don't put label before caption, it can't resolve it sometimes}
 
 \subsubsection{Results}
-Our current implementation takes a few seconds\footnote{3 seconds on our Macbook Pro} to find 18 constraints, including all of the 12 solutions described in figure~\ref{fig:sol_example}.
+\sergey{Samuel, you should just say at the beginning that all experiments has been run on macbook la-la system and that's it, I guess, I don't think we need to mention it multiple times}
+Our current implementation takes a few seconds\footnote{3 seconds on our Macbook Pro} to find 18 constraints, including all of the 12 solutions described in Figure~\ref{fig:sol_example}.
 Of the 6 remaining (redundant) constraints, 5 are $\mathit{RANK}$ constraints that are true by accident, such as: \begin{align*}
   & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}} \\
   & \ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{4}}
