@@ -166,27 +166,35 @@ We consider various sets of cells in tables:
 For notational convenience, we will refer to vectors with $V$ and to groups and subgroups with $G$.
 
 When we do not want to distinguish between cells, columns, rows, vectors or groups, we shall talk about a {\em set of cells}.
-\luc{add an example of group/ subgroup}
 
 \paragraph{Example}
 Consider Table~1 in the Figure~\ref{fig:main_example}, its rows are not type consistent (i.e. they contain both numeric and textual data).
-The (column) vectors of Table~1 are subdivided into five groups (\range{T_1}{\rangeall}{1}, \range{T_1}{\rangeall}{2}, \range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{9}, \range{T_1}{\rangeall}{\rangeto{10}{11}}).
+The (column) vectors of Table~1 are subdivided into five groups:
+\begin{align*}
+&G_1 = \range{T_1}{\rangeall}{1},
+&G_2 = \range{T_1}{\rangeall}{2},\\
+&G_3 = \range{T_1}{\rangeall}{\rangeto{3}{8}},
+&G_4 = \range{T_1}{\rangeall}{9},\\
+&G_5 = \range{T_1}{\rangeall}{\rangeto{10}{11}}
+\end{align*}.
+In order to sum the results of a salesperson across quarters we can consider for example the subgroup $\range{T_1}{\rangeall}{\rangeto{3}{6}} \subset G_3$
 
-
-A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. 
+\subsection{Constraints}
+A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}.
+Let us elaborate on each of them. 
 \begin{itemize}
 \item
 \textit{\CName} is the textual name of the constraint together with the list of its variables $v_1,\dots,v_n$.
 \item
-  \textit{\CSignature} is a constraint specifying the properties of the group assignments, corresponding to the variables $v_1,\dots,v_n$ in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. 
+  \textit{\CSignature} is a set of constraints on the properties of the group assignments, corresponding to the variables $v_1,\dots,v_n$ in \CName.
+  For example, the signature can restrict the types of the groups, e.g., requiring them to be integers or constrain their sizes, e.g. the length of vectors in the arguments must be equal.
+  The constraints act on porperties or group meta-information, not on the actual group content. 
 \item \textit{\CFunction} is a constraint specifying that the data in the subgroups satisfies the function.
   \end{itemize}
 
 \paragraph{Example}
 \sergey{need to use this below:}
-
   For example, a spreadsheet constraint \textit{rank} has \CName \textit{$v_y$ = RANK($v_x$)}, where $v_x$ and $v_y$ are the variables; its \CSignature is: the subgroup assigned to $v_x$ must be numeric, $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$; its \CFunction is the following constraint: the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ is a solution iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_x$ has the rank (possibly with ties) specified in $g_y$. 
-
 
 The constraint \textit{rank} has
 \begin{itemize}
@@ -196,37 +204,34 @@ The constraint \textit{rank} has
 \CFunction = \textit{$g_Y$ = RANK($g_X$)} iff $g_X \in G_X, g_Y \in G_Y$ and each value in $g_X$ has the rank (possibly with ties) specified in $g_Y$.
 \end{itemize}
 
-
+\samuel{Should this section maybe be moved to problem statement?}
 We can now define a classical constraint satisfaction problem on tables.
 A {\em constraint satisfaction problem} (CSP)  consists of 1) a set of cells, and 2) a set of constraints over those cells.
 Notice that the constraints specify the types (or the domains) that one encounters in traditional CSPs.
-Notice also, that as in traditional CSPs, the CSP problem defines the variables (the cells) of the problem
-as well as the constraint that should hold amongst them. The task of CSP-solvers is then to find an assignment
-to the variables that satisfies all the constraints. The distinction between variables (cells) and their assignments (their values)
-is important here. So, when we speak about cells, vectors and groups, we refer to the variables;
-when we talk about values, assignments or instances, we refer to the values these cells take in a particular "instantiated" table.
+Notice also, that as in traditional CSPs, the CSP problem defines the variables (the cells) of the problem as well as the constraint that should hold amongst them. The task of CSP-solvers is then to find an assignment to the variables that satisfies all the constraints.
+The distinction between variables (cells) and their assignments (their values) is important here.
+So, when we speak about cells, vectors and groups, we refer to the variables; when we talk about values, assignments or instances, we refer to the values these cells take in a particular "instantiated" table.
 
 While the traditional CSP problem is given a set of cells and a set of constraints,
-and the task is to find an assignment, the {\bf inverse CSP} or the {\bf Tabular Constraint Learning Problem}.
-the can be defined as follows.\\
+and the task is to find an assignment, the {\bf inverse CSP} or the {\bf Tabular Constraint Learning Problem} can be defined as follows.\\
 \\
 {\bf Given }
 \begin{itemize}
 \item
 a set of instantiated tables (so all cells have values) ${\cal T}$;
 \item
-a set of possible constraints ${\cal C}$;
+a set of spreadsheet constraints ${\cal C}$;
 \item
-a set of possible groups for the tables ${\cal G}$;
+a set of groups ${\cal G}$ for the tables ${\cal T}$;
 \end{itemize}
 \noindent
+\samuel{This section is incorrect, yet, we find assignments over subgroups, associated with a spreadsheet constraint}
 {\bf Find}  the set $C\subset {\cal C}$ that contains all constraints $c(G_1, ... , G_N)$ that 1) are satisfied  in ${\cal T}$, 2)
 for which
 all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of the constraint $c$.
 
 
 \luc{ADD/REFER TO EXAMPLE}
-
 
 Let us now define what is a tabular solution for a spreadsheet constraint in general. Let $C$ denote a spreadsheet constraint, $S$ a mapping from variables to the subgroups of \groups, and $C^S$ the constraint $C$, in which all variables are substituted with the corresponding subgroups from $S$, then $S$ is a \textit{tabular solution} to $C$ iff both $\CSignature^S$ and $\CFunction^S$ hold.
 
@@ -276,7 +281,7 @@ This version explicitly takes into account the specificity of the constraints an
 
 \section{Approach to Tabular Constraint Learning}
 \sergey{Luc wants this to be more intuitive, should we just add some examples here to make it easier to follow and refer to the running example?}
-As we have seen the statement before we assume the set of groups to be given. It is often, however, not the case and a possible approach is to extract the groups from the CSV file directly. In our system, we have implement the group construction step using the type-consistency check. \sergey{Samuel, we need details here, I think} In general, separating data from a header is a task on its own  \cite{header} and goes beyond the scope of this paper.
+As we have seen in the statement before we assume the set of groups to be given. It is often, however, not the case and a possible approach is to extract the groups from the CSV file directly. In our system, we have implemented the group construction step using the type-consistency check. \sergey{Samuel, we need details here, I think} In general, separating data from a header is a task on its own  \cite{header} and goes beyond the scope of this paper.
 
 Another solution to the group extraction problem is to make it interactive, when a user can select the groups in the spreadsheet or correct automatically generated groups. We regard this approach to be a possible future direction in the system development. Later in the paper we assume the groups to be given.
 
@@ -303,9 +308,9 @@ Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, 
 
 \samuel{Running example (RANK?)}
 
-\subsection{Constraint ordering} $\constrainttorder(\constraints,\dependencies)$ uses the DAG \dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of \dependencies.
+\subsection{Constraint ordering} $\constrainttorder(\constraints,\dependencies)$ uses the DAG~\dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of~\dependencies.
 Solid edges point from more general to more specific constraints.
-Therefore, if there is a solid edge from $C_1$ to $C_2$, then a set of subgroups satisfying $C_2$ must contain the subgroups satisfying $C_1$.
+Therefore, if there is a solid edge from constraint~$C_1$ to constraint~$C_2$, then a set of subgroups satisfying~$C_2$ must contain the subgroups satisfying~$C_1$.
 
 Dashed edges represent the inverse relationship, pointing from specific to more general constraints.
 If there is a dashed edge from $C_1$ to $C_2$, then a set of subgroups satisfying $C_2$ may not contain a subset that also satisfies $C_1$.
@@ -315,7 +320,8 @@ Some constraints have no dependencies (omitted from the figure) and can be learn
 Generally, a parallel version of the algorithm could learn each connected component independently, only taking into account the partial ordering within components.
 
 \paragraph{Example}
-Consider the \ecfkey{FK}{PK} (foreign-key) constraint: for every solution the subgroup (vector) $v_{PK}$ assigned to \textit{PK} must fulfill \ecalldiff{v_{PK}}.
+\samuel{Fix notation variable vs. group}
+Consider the \ecfkey{v_{fk}}{v_{pk}} (foreign-key) constraint: for every solution the subgroup (vector) $V$ assigned to $\mathit{v_{pk}}$ must fulfill \ecalldiff{V}.
 Therefore, we say indicate \textit{foreign-key} as being dependent on \textit{all-different} and the latter will be treated first.
 The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties the vector $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
 
@@ -324,29 +330,30 @@ $\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function genera
 The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
 
 Finding candidate groups for a spreadsheet constraint~$c$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of $c$.
-Several constraints (e.g. sum, max, count), however, have the same candidate generation procedure as they share the same \CSignature.
+Several constraints (e.g. sum, max, count) have the same candidate generation procedure as they share the same \CSignature.
 
 \paragraph{Example}
-The \ecrank{v_y}{v_x} constraint requires $v_y$ to be integer or textual and $v_x$ to be numeric.
+The \ecrank{v_y}{v_x} constraint requires $v_y$ to consist of only integer or only textual data and $v_x$ to be numeric.
 This allows to filter candidate groups for these variables.
 Additionally, $v_y$ and~$v_x$ must be vectors of the same length, therefore, only groups with the same length are considered.
-Groups that does not satisfy these requirements cannot contain subgroups (vectors) that satisfy \ecrank{v_y}{v_x}.
+Groups that do not satisfy these requirements cannot contain subgroups (vectors) that satisfy \ecrank{v_y}{v_x}.
 
 \subsection{Subgroup satisfaction search}
 $\findassignment(\textit{Constraint,Candidates,Solutions})$ is the function that searches for subsets of vectors in the candidate groups that satisfy the constraint.
+Every spreadsheet constraint~$C$ needs to have an implementation that finds subgroup assignments, given set of tuples each containing a candidate group for every variable in~$C$.
 
 \paragraph{Example}
 Consider a candidate assignment $G_x, G_y$ associated with the variables $v_x,v_y$ of \ecrank{v_y}{v_x}, then \findassignment selects single vectors $g_y \in G_y, g_x \in G_x$ such that \ecrank{g_y}{g_x} is true, i.e. it searches for a mapping $S$ where $v_x$ ($v_y$) must be mapped to a subgroup of $G_x$ ($G_y$).
 For example, in Figure~\ref{fig:main_example} the group $G = \range{T_1}{\rangeall}{\rangeto{3}{8}}$ can serve as both $G_x$ and $G_y$.
 Then \findassignment could select $g_x$ to be $\range{T_1}{\rangeall}{7}$ and $g_y$ to be $\range{T_1}{\rangeall}{8}$ which forms a valid solution.
 \\\\
-For some constraints (most notably aggregates) there may be multiple overlapping subsets that satisfy the constraint.
+For some constraints (most notably aggregates) there may be multiple overlapping subsets of a given group~$G$ that satisfy the constraint.
 We chose to omit subsets that are fully contained within a larger subset since this can lead to overfitting.
-If the returned subsets are too large and accidentally contains unrelated vectors, the user can split the group to reflect this structure.
+If the returned subsets are too large and accidentally contain unrelated vectors, the user can split such a group, disallowing.
 
-\subsection{Implementation note} Essentially for each constraint both \generategroups and \findassignment are separate constraint satisfaction problems. Hence, it is natural to solve them using declarative solvers. Even though each is a separate constraint problem, they are variations of each other and can be modeled using similar techniques. It also makes an extension of the system easy, we can solve new variations by adding, removing or modifying constraints from a similar constraint satisfaction problem. Furthermore, the declarative languages such as ASP \cite{whaisasp} and Minizinc \cite{minizinc} provide primitives that make modeling transparent and generic.
+\subsection{Implementation note} Essentially for each spreadsheet constraint both \generategroups and \findassignment are separate constraint satisfaction problems. Hence, it is natural to solve them using declarative solvers. Even though each is a separate constraint problem, they are variations of each other and can be modeled using similar techniques. It also makes an extension of the system easy, we can solve new variations by adding, removing or modifying constraints from a similar constraint satisfaction problem. Furthermore, declarative languages such as ASP \cite{whaisasp} and Minizinc \cite{minizinc} provide primitives that make modeling transparent and generic.
 
-Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc (Gecode-backend 2.0.2 \cite{minizinc}) and a native Python CSP solver \cite{python_constraint}. All the constraints mentored in the paper can be run purely in the internal Python engine without any external software. The future versions of the system will provide user interfaces to the ASP, Minizinc and Python-Constraint languages to allow users to add new constraints in a declarative way.
+Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc (Gecode-backend 2.0.2 \cite{minizinc}) and a native Python CSP solver \cite{python_constraint}. All the constraints mentioned in the paper can be run purely using the internal Python engine without any external software. Future versions of the system will provide user interfaces to the ASP, Minizinc and Python-Constraint languages to allow users to add new constraints in a declarative way.
 
 \subsection{Constraints}
 
@@ -358,10 +365,10 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 \end{figure}
 
 
-\newcommand{\numeric}{\format{numeric}}
-\newcommand{\textual}{\format{textual}}
-\newcommand{\integer}{\format{integer}}
-\newcommand{\length}{\format{length}}
+\newcommand{\numeric}[1]{\format{numeric}(#1)}
+\newcommand{\textual}[1]{\format{textual}(#1)}
+\newcommand{\integer}[1]{\format{integer}(#1)}
+\newcommand{\length}[1]{\format{length}(#1)}
 \newcommand{\nat}{\mathcal{N}}
 
 \sergey{Table should take into account our new notation and balance between formality and intuition, heh}
@@ -369,23 +376,23 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
   \centering
   \begin{tabularx}{\textwidth}{XXX}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\
-    \ecalldiff{V_x} & X is integer or textual & All elements in X are different \\
+    \ecalldiff{v_x} & $\integer{v_x}$ or $\textual{v_x}$ & All elements in $v_x$ are different \\
     %X = Y & & \\
-    \ecfkey{V_{fk}}{V_{pk}} & FK and PK have the same type; they originate from different tables and PK is all-different & all values in FK exist in PK \\
+    \ecfkey{v_{fk}}{v_{pk}} & FK and PK have the same type; they originate from different tables and PK is all-different & all values in FK exist in PK \\
     % TODO check out
-    \eclookupprod{V_r}{V_1}{V_{fk}}{V_{pk}}{V_{val}} & & \\
-    \eclookup{V_r}{V_{fk}}{V_{pk}}{V_{val}} & & \\
-    \eclookupfuzzy{V_r}{V_{fk}}{V_{pk}}{V_{val}} & & \\
-    \ecperm{V_x} & & \\
-    \ecprod{V_r}{V_1}{V_2} & & \\
-    \ecproj{V_r}{G_x} & & \\
-    \ecrank{V_r}{V_1} & Y and X have the same length & Y is the rank of X (including ties)\\
-    \ectotal{V_r}{V_{pos}}{V_{neg}} & A, P and N have the same length and their length is at least 2 & *\\
-    \ecseries{V_1} & & \\
-    \ecsumc{V_r}{G_1} & & Y is the result of summing each column in X \\
-    \ecsumr{V_r}{G_1} & & Y is the result of summing each row in X \\
-    \ecsumif{V_r}{V_{fk}}{V_{pk}}{V_{val}} & & \\
-    \ecsumprod{V_r}{V_1}{V_2} & & \\
+    \eclookupprod{v_r}{v_1}{v_{fk}}{v_{pk}}{v_{val}} & & \\
+    \eclookup{v_r}{v_{fk}}{v_{pk}}{v_{val}} & & \\
+    \eclookupfuzzy{v_r}{v_{fk}}{v_{pk}}{v_{val}} & & \\
+    \ecperm{v_x} & & \\
+    \ecprod{v_r}{v_1}{v_2} & & \\
+    \ecproj{v_r}{\mathbf{v_x}} & & \\
+    \ecrank{v_r}{v_1} & Y and X have the same length & Y is the rank of X (including ties)\\
+    \ectotal{v_r}{v_{pos}}{v_{neg}} & A, P and N have the same length and their length is at least 2 & *\\
+    \ecseries{v_x} & & \\
+    \ecsumc{v_r}{\mathbf{v_x}} & & Y is the result of summing each column in X \\
+    \ecsumr{v_r}{\mathbf{v_x}} & & Y is the result of summing each row in X \\
+    \ecsumif{v_r}{v_{fk}}{v_{pk}}{v_{val}} & & \\
+    \ecsumprod{v_r}{v_1}{v_2} & & \\
 
 \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display}
 
@@ -432,6 +439,8 @@ In order to quantify the results and generalize our findings we also evaluate ou
 
 In this section we focus on \textit{functional} constraints that could be used in spreadsheets, ignoring constraints such as all-different or foreign-key.
 
+All experiments were run on a Macbook Pro, Intel Core i7 2.3 GHz with 16GB RAM.
+
 \subsection{Case study}
 Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
 This example combines several smaller examples that were used in an exercise session to teach Excel into one spreadsheet.
@@ -472,12 +481,11 @@ Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
 
 \subsubsection{Results}
 \sergey{Samuel, you should just say at the beginning that all experiments has been run on macbook la-la system and that's it, I guess, I don't think we need to mention it multiple times}
-Our current implementation takes a few seconds\footnote{3 seconds on our Macbook Pro} to find 18 constraints, including all of the 12 solutions described in Figure~\ref{fig:sol_example}.
-Of the 6 remaining (redundant) constraints, 5 are $\mathit{RANK}$ constraints that are true by accident, such as: \begin{align*}
-  & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}} \\
-  & \ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{4}}
+Our current implementation takes a few seconds to find 18 constraints, including all of the 12 solutions described in Figure~\ref{fig:sol_example}.
+Of the 6 remaining (redundant) constraints, 5 are $\mathit{rank}$ constraints that are true by accident, such as: \begin{align*}
+  & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}
 \end{align*}
-The other redundant constraint is an additional $\mathit{LOOKUP}$ that holds because the vectors in \range{T_2}{\rangeall}{\rangeto{2}{3}} can both be used to look each other up in \range{T_1}{\rangeall}{\rangeto{1}{2}} and we considered only one of them to be essential (lookup using the ID).
+The other redundant constraint is an additional $\mathit{lookup}$ that holds because the two vectors in \range{T_2}{\rangeall}{\rangeto{2}{3}} can both be used to look each other up in \range{T_1}{\rangeall}{\rangeto{1}{2}} and we considered only one of them to be essential (lookup using the ID).
 
 For this example our primary goal of finding all constraints is achieved.
 The implementation also returns a number of redundant constraints ($33.33\%$ of the total).
@@ -489,20 +497,20 @@ There are three main categories of spreadsheets in the benchmark: spreadsheets f
 The case study is also included.
 
 All spreadsheets have been converted to CSV with no manual intervention unless noted.
-Definitions of tables where added manually, providing a way to compare results and overcoming shortcomings in the table detection algorithm (in some harder cases groups where also provided manually).
+Definitions of tables were added manually, providing a way to compare results and overcoming shortcomings in the table detection algorithm (in some harder cases groups where also provided manually).
 
 For every spreadsheet a ground-truth has been provided manually, specifying the essential (or original) constraints that are expected to be discovered.
 We consider three types of constraints:
 \begin{description}
-  \item[Expected] Constraint that have been implemented and are expected to be found
+  \item[Implemented] Constraint that have been implemented and are expected to be found
   \item[Essential] Constraint that have or have not been implemented but could be found using our algorithm
   \item[Non-trivial] Constraints currently outside of the scope of this system (e.g. generic nested mathematical or logical formulas or n-ary constraints)
 \end{description}
 
 \subsubsection*{Q1. How accurate is the approach?}
 \sergey{that's confusing, it can do 100\% but then all of a sudden 96\%, short explanation needed}
-Fortunately, our system is currently able to find $100\%$ of the expected constraints (90) on the benchmark suite.
-There are only three essential constraints that have not been implemented yet, therefore our system currently identifies $96.77\%$ of the constraints that we hope to discover.
+Fortunately, our system is currently able to find $100\%$ of the implemented constraints (90) on the benchmark suite.
+There are only three essential constraints that have not been implemented yet, therefore our system currently identifies $96.77\%$ of the essential constraints.
 
 \subsubsection*{Q2. How many redundant constraints are discovered?}
 Our primary focus was accuracy, therefore we sometimes traded off less redundancy for more accuracy.
@@ -518,7 +526,7 @@ Accidental constraints are limited to the 5 rank constraints that were discussed
 
 \subsubsection*{Q3. How fast is the algorithm?}
 Concerning the speed of the algorithm we also prioritized accuracy when a trade-off had to be made.
-For the 32 spreadsheets in the benchmark our implementation ran in $17.86s \pm 0.87s$\footnote{Macbook Pro, Intel Core i7 2.3 GHz, 16GB RAM}.
+For the 32 spreadsheets in the benchmark our implementation ran in $17.86s \pm 0.87s$.
 The execution times vary widely though between spreadsheets, only four spreadsheets taking more than $0.2s$.
 Most of the execution time in these cases goes towards searching either aggregate constraints or conditional aggregates.
 The search for aggregates will be slow on spreadsheets containing larger groups of numeric data.
@@ -527,10 +535,10 @@ For conditional aggregates the number of candidate primary keys (all-different) 
 \paragraph{Dependencies}
 In order for the algorithm to run efficiently it is crucial to use dependencies and find constraint incrementally whenever possible.
 This avoids some of the explosion of combinations for constraints that have variables.
-For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to under 1 second.
-Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys present.
+For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to below 1 second.
+Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys that are present in the data.
 
-\subsection{Insights}
+\section{Discussion}
 \sergey{We should explain Figure \ref{fig:fbi}, e.g. if we aggregate by the crime now, the missing value would not get into statistics, which seems faulty, since we can directly compute it.}
 
 \begin{figure*}[thb]
