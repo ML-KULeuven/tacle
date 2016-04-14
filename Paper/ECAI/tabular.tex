@@ -194,15 +194,15 @@ Let us elaborate on each of them.
 
 \paragraph{Example}
 \sergey{need to use this below:}
-  For example, a spreadsheet constraint \textit{rank} has \CName \textit{$v_y$ = RANK($v_x$)}, where $v_x$ and $v_y$ are the variables; its \CSignature is: the subgroup assigned to $v_x$ must be numeric, $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$; its \CFunction is the following constraint: the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ is a solution iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_x$ has the rank (possibly with ties) specified in $g_y$. 
+  For example, a spreadsheet constraint \textit{rank} has \CName \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are its variables; its \CSignature is: groups assigned to $v_x$ must be numeric, groups assigned to $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$; its \CFunction is the following constraint: the mapping $\{ v_x \mapsto G_x', v_y \mapsto G_y' \}$ is a solution iff $G_x' \subset G_x, G_y' \subset G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $G_y'$ is the rank of the corresponding value in $G_x'$ (possibly with ties).
 
-The constraint \textit{rank} has
-\begin{itemize}
-\item \CName = \textit{$g_Y$ = RANK($g_X$)}, where $g_X$ and $g_Y$ are the group variables;
-\item \CSignature = subgroup $g_X$ (associated with X) is numeric, $g_Y$ is integer and the length of vectors in $g_X$ is the same as in $g_Y$; and
-\item
-\CFunction = \textit{$g_Y$ = RANK($g_X$)} iff $g_X \in G_X, g_Y \in G_Y$ and each value in $g_X$ has the rank (possibly with ties) specified in $g_Y$.
-\end{itemize}
+%The constraint \textit{rank} has
+%\begin{itemize}
+%\item \CName = \textit{$v_r$ = RANK($v_x$)}, where $v_r$ and $v_x$ are %the variables;
+%\item \CSignature = subgroup $g_X$ (associated with X) is numeric, $g_Y$ %is integer and the length of vectors in $g_X$ is the same as in $g_Y$; and
+%\item
+%\CFunction = \textit{$g_Y$ = RANK($g_X$)} iff $g_X \in G_X, g_Y \in G_Y$ %and each value in $g_X$ has the rank (possibly with ties) specified in $%g_Y$.
+%\end{itemize}
 
 \samuel{Should this section maybe be moved to problem statement?}
 We can now define a classical constraint satisfaction problem on tables.
@@ -386,7 +386,7 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
     \ecperm{v_x} & & \\
     \ecprod{v_r}{v_1}{v_2} & & \\
     \ecproj{v_r}{\mathbf{v_x}} & & \\
-    \ecrank{v_r}{v_1} & Y and X have the same length & Y is the rank of X (including ties)\\
+    \ecrank{v_r}{v_x} & Y and X have the same length & Y is the rank of X (including ties)\\
     \ectotal{v_r}{v_{pos}}{v_{neg}} & A, P and N have the same length and their length is at least 2 & *\\
     \ecseries{v_x} & & \\
     \ecsumc{v_r}{\mathbf{v_x}} & & Y is the result of summing each column in X \\
@@ -502,8 +502,8 @@ Definitions of tables were added manually, providing a way to compare results an
 For every spreadsheet a ground-truth has been provided manually, specifying the essential (or original) constraints that are expected to be discovered.
 We consider three types of constraints:
 \begin{description}
-  \item[Implemented] Constraint that have been implemented and are expected to be found
-  \item[Essential] Constraint that have or have not been implemented but could be found using our algorithm
+  \item[Implemented] Constraint that have been implemented and are expected to be found (all constraints in Table~\ref{table:constraints})
+  \item[Essential] Constraint that have or have not been implemented but could be found using our algorithm (e.g. fuzzy conditional sum)
   \item[Non-trivial] Constraints currently outside of the scope of this system (e.g. generic nested mathematical or logical formulas or n-ary constraints)
 \end{description}
 
