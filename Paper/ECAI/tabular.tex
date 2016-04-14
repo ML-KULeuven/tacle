@@ -175,11 +175,12 @@ The (column) vectors of Table~1 are subdivided into five groups:
 &G_2 = \range{T_1}{\rangeall}{2},\\
 &G_3 = \range{T_1}{\rangeall}{\rangeto{3}{8}},
 &G_4 = \range{T_1}{\rangeall}{9},\\
-&G_5 = \range{T_1}{\rangeall}{\rangeto{10}{11}}
-\end{align*}.
+&G_5 = \range{T_1}{\rangeall}{\rangeto{10}{11}}.
+\end{align*}
 In order to sum the results of a salesperson across quarters we can consider for example the subgroup $\range{T_1}{\rangeall}{\rangeto{3}{6}} \subset G_3$
 
 \subsection{Constraints}
+\sergey{write correspondence with ILP terminology}
 A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}.
 Let us elaborate on each of them. 
 \begin{itemize}
@@ -194,7 +195,7 @@ Let us elaborate on each of them.
 
 \paragraph{Example}
 \sergey{need to use this below:}
-  For example, a spreadsheet constraint \textit{rank} has \CName \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are its variables; its \CSignature is: groups assigned to $v_x$ must be numeric, groups assigned to $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$; its \CFunction is the following constraint: the mapping $\{ v_x \mapsto G_x', v_y \mapsto G_y' \}$ is a solution iff $G_x' \subset G_x, G_y' \subset G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $G_y'$ is the rank of the corresponding value in $G_x'$ (possibly with ties).
+  For example, a spreadsheet constraint \textit{rank} has \CName \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are its variables; its \CSignature is: groups assigned to $v_x$ must be numeric, groups assigned to $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$; its \CFunction is the following constraint: the mapping $\{ v_x \mapsto G_x', v_y \mapsto G_y' \}$ is a solution iff $G_x' \subseteq G_x, G_y' \subseteq G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $G_y'$ is the rank of the corresponding value in $G_x'$ (possibly with ties).
 
 %The constraint \textit{rank} has
 %\begin{itemize}
@@ -226,7 +227,7 @@ a set of groups ${\cal G}$ for the tables ${\cal T}$;
 \end{itemize}
 \noindent
 \samuel{This section is incorrect, yet, we find assignments over subgroups, associated with a spreadsheet constraint}
-{\bf Find}  the set $C\subset {\cal C}$ that contains all constraints $c(G_1, ... , G_N)$ that 1) are satisfied  in ${\cal T}$, 2)
+{\bf Find}  the set $C\subseteq {\cal C}$ that contains all constraints $c(G_1, ... , G_N)$ that 1) are satisfied  in ${\cal T}$, 2)
 for which
 all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of the constraint $c$.
 
