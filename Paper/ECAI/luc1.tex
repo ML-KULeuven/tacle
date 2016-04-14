@@ -81,15 +81,18 @@
   abstract
 \end{abstract}
 
+\tias{Use spreadsheet instead of Excel}
+\tias{Spreadsheet is an instance of tabular data, but not the only one?}
 
+\tias{Rewrite}
 \section{Introduction}
 Millions of people across use spreadsheets everyday. Yet, many people lack a complete understanding of the structures and existing dependencies in the data. Indeed, the most useful part of spreadsheets is often the formulas and often these formula disappear, when a file is exported and shared as a CSV file. This brings us to the question: can we discover or reconstruct structural relations in flat tabular spreadsheet data? [in a general way that allows declarative specification of constraints to discover]
 
-Let us have a look at the example in Figure \ref{fig:main_example}. Certainly there are several constraint present in the data and even the names in the headers already suggest the usage of standard spreadsheet operations such as \textit{average} or \textit{sum}. If we look at the Table 1 and at the first row in the Table 2, it is clear that one could have selected the column called \textbf{1st Quarter} in the Table  in the Table 11, clicked on the \textit{SUM} function and then just used the drag fill handle to apply the formula to the other columns. Similarly, that would work for the second (\textit{Average}), third (\textit{Min})  and forth (\textit{Max}) rows in Table 2. I.e., all operations are vectorized and make use of the standard spreadsheet operations. 
+Let us look at an example in Figure \ref{fig:main_example}, the name already suggest the usage of standard spreadsheet operations such as \textit{average} or \textit{sum}. If we look at the Table 1 and at the first row in the Table 2, it is clear that one could have selected the column called \textbf{1st Quarter}, clicked on the \textit{SUM} function and then just used the drag fill handle to apply the formula to the other columns. Similarly, that would work for the second (\textit{Average}), third (\textit{Min})  and forth (\textit{Max}) rows in Table 2. I.e., all operations are vectorized and make use of the standard spreadsheet operations. 
 
-It is not hard to see that computation goes not only in columns but in rows as well: if we sum the values in Table 1 in the first row in all four quarters, we obtain the seventh column in Table 1. That gives us already a hint how this problem is different from the standard data mining setting, when the data is in rows and variables are in columns. Here everything is mixed, also some values are missing in the results, some missing the arguments, even a header might have missing values. The data is relational on the one hand, since we have multiple tables with relationships between them. And on the other hand, the data is numeric, since people tend to use spreadsheets for financial and accounting computations, which is heavily numeric.
+It is not hard to see that computation goes not only in columns but in rows as well: if we sum the values in Table 1 in the first row in all four quarters, we would obtain the seventh column in Table 1. That gives us already a hint how this problem is different from the standard data mining settings, when the data is in rows and variables are in columns. Here everything is mixed, some values are missing in the results, some missing the arguments, even a header might have missing values. The data is relational on one hand, since we have multiple table with relationships between them. And on the other hand, the data is numeric, since people tend to use spreadsheets for financial and accounting computations, which is heavily numeric.
 
-This makes tabular data understanding and constraint learning new and challenging, and it is not only challenging for a machine but for a human as well. Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to so called the \textit{Spreadsheet risk}\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaws in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggesting possible fixes.
+This makes tabular data understanding and constraint learning new and challenging, and it is not only challenging for a machine but for a human as well. Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to so called the Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and caused billion-losses in the financial industry. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
 \sergey{bullet points for Luc and Tias to rework introduction}\\
 \textbf{Motivation}:
@@ -135,42 +138,40 @@ A set of cells is called \textit{type-consistent} iff all cells in the set are e
 %Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric subtype by requiring its arguments to be integers.
 
 We consider various sets of cells in tables: 
-\begin{itemize}
-  \item {\bf Cells}: Each entry in the matrix/table is called  a \textit{cell}.
-  We use the notation $T[a,b]$ to refer to a particular cell in the table $T$ at the row with index $a$ and the column with index $b$. 
-  \item {\bf Columns and rows}: To refer to the $a$-th row (column) we use the following syntax $T[a,{:}]$ ($T[{:},a]$), to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
-  \item 
-  A \textit{vector} is either a column or a row that is type-consistent. 
-  If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. 
-  \item
-  A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers. We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if \luc{all?????} its vectors contain numeric (textual, etc) elements.
-  \item
- A \textit{subgroup} $g$ is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$.
-%We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must contain only one vector, we write $g \in G$.
-% A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
+\item {\bf Cells}: Each entry in the matrix/table is called  a \textit{cell}.
+We use the notation $T[a,b]$ to refer to a particular cell in the table $T$ at the row with index $a$ and the column with index $b$. 
+\item {\bf Columns and rows}: To refer to the $a$-th row (column) we use the following syntax $T[a,{:}]$ ($T[{:},a]$), to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
+\item 
+A \textit{vector} is either a column or a row that is type-consistent. 
+If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. 
+\item
+A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers. We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if \luc{all?????} its vectors contain numeric (textual, etc) elements.
+
+
+\item
+A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
 \end{itemize}
-For notational convenience, we will refer to cells with $C$ \sergey{maybe better name? confusing with constaraints},  to vectors with $V$, and to groups and subgroups with $G$. 
+For notational convenience, we will refer to cells with $C$,  to vectors with $V$, and to groups and subgroups with $G$. 
 When we do not want to distinguish between cells, columns, rows, vectors or groups, we shall talk about a {\em set of cells}.
 \luc{add an example of group/ subgroup}
 
 
 
-A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. 
+
+
+\tias{Use generic constraint}
+A \textit{constraint} definition is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. 
 \begin{itemize}
 \item
-\textit{\CName} \textit{\CName} is the textual name of the constraint together with the list of its variables $v_1,\dots,v_n$.
-\item
-  \textit{\CSignature} is a constraint specifying the properties of the group assignments, corresponding to the variables $v_1,\dots,v_n$ in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. 
-\item \textit{\CFunction} is a constraint specifying that the data in the subgroups satisfies the function.
+\textit{\CName} is the name of the constraint together with the name of the groups, 
+\item \textit{\CSignature} is specifying a set of restrictions on the types and variables of the constraint, 
+% the properties of the group assignments, corresponding to the variables in \CName, such as their types, 
+e.g., requiring the variables to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are restrictions on the group meta-information not on the actual group content. 
+\item \textit{\CFunction} defines the actual constraint that needs to be satisfied in the data.
 \end{itemize}
 
 
-\paragraph{Example}
-\sergey{need to use this below:}
-
-  For example, a spreadsheet constraint \textit{rank} has \CName \textit{$v_y$ = RANK($v_x$)}, where $v_x$ and $v_y$ are the variables; its \CSignature is: the subgroup assigned to $v_x$ must be numeric, $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$; its \CFunction is the following constraint: the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ is a solution iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_x$ has the rank (possibly with ties) specified in $g_y$. 
-
-
+\begin{example}
 The constraint \textit{rank} has 
 \begin{itemize}
 \item \CName = \textit{$g_Y$ = RANK($g_X$)}, where $g_X$ and $g_Y$ are the group variables; 
@@ -178,7 +179,9 @@ The constraint \textit{rank} has
 \item
 \CFunction = \textit{$g_Y$ = RANK($g_X$)} iff $g_X \in G_X, g_Y \in G_Y$ and each value in $g_X$ has the rank (possibly with ties) specified in $g_Y$.
 \end{itemize}
+\end{example}
 
+\samuel{2nd problem statement (from approach), remove EQUAL}
 
 We can now define a classical constraint satisfaction problem on tables. 
 A {\em constraint satisfaction problem} (CSP)  consists of 1) a set of cells, and 2) a set of constraints over those cells. 
@@ -199,7 +202,7 @@ the can be defined as follows.\\
 a set of instantiated tables (so all cells have values) ${\cal T}$; 
 \item
 a set of possible constraints ${\cal C}$; 
-\item
+\ite
 a set of possible groups for the tables ${\cal G}$;
 \end{itemize}
 \noindent
@@ -212,12 +215,14 @@ all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of t
 
 
 
-Let us now define what is a tabular solution for a spreadsheet constraint in general. Let $C$ denote a spreadsheet constraint, $S$ a mapping from variables to the subgroups of \groups, and $C^S$ the constraint $C$, in which all variables are substituted with the corresponding subgroups from $S$, then $S$ is a \textit{tabular solution} to $C$ iff both $\CSignature^S$ and $\CFunction^S$ hold.
 
 
+
+
+%A \textit{tabular solution} $S$ to a spreadsheet constraint $C$ (with $n$ variables) is a subgroup assignment $(g_1, \dots, g_n)$ where $g_i$, such that $(g_1,\dots,g_n)$ satisfies both the \CSignature and \CFunction of the constraint $C$. \sergey{to finish this definition later, need to say that $g_i$ is the subgroup assigned to the $i$-th variable in $C$}
 
 \section{Problem Statement}
-\sergey{should reflect all the changes, Luc wants to introduce constraint satisfaction into problem statement, maybe we should move the definition of a solution here? Like a solution is actually constraint satisfaction?}
+\sergey{should reflect all the changes, Luc wants to introduce constraint satisfation into problem statement, maybe we should move the definition of a solution here? Like a solution is actually constraint satisfaction?}
 In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of spreadsheet constraints and group assignments as follows: 
 
 \begin{minipage}[c]{14em}
@@ -235,7 +240,7 @@ In the previous section we introduced the problem of tabular constraint learning
   The key observation here is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in spreadsheets each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
 
 
-  In theory each constraint is independent and equally useful. In practice, however, things are different. Assume that for some $g_x$ both \textit{series($g_x$)} and \textit{alldifferent($g_x$)} hold. From a user's perspective the last solution is useless, since he or she already knows that the series constraint implies the alldifferent constraint. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity (generality) order between constraints, which is depicted using solid (dashed) arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $g_x$ is not a permutation, then $g_x$ should not be tested for the series constraint at all. A solid lines from $C_1$ to $C_2$ indicates that $C_2$ is \textit{more specific} than $C_1$ and if $S$ is not a solution to $C_1$, then it is not a solution to $C_2$. A dashed arrow from $C_1$ to $C_2$ indicates that $C_1$ is \textit{a more specific} constraint than $C_2$ and therefore if $S$ is a solution for $C_1$ it should not be tested for $C_2$.
+  In theory each constraint is independent and equally useful. In practice, however, things are different. Assume that for some $X$ both \textit{series(X)} and \textit{alldifferent(X)} hold. From a user's perspective the last solution is useless, since he or she already knows that series constraint implies alldifferent constraint. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity (generality) order between constraints, which is depicted using solid (dashed) arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $X$ is a not permutation, then $X$ should not be tested for the series constraint at all. A solid lines from $C_1$ to $C_2$ indicates that $C_2$ is \textit{more specific} than $C_1$ and if $X$ is not a solution to $C_1$, then it is not a solution to $C_2$. A dashed arrow from $C_1$ to $C_2$ indicates that $C_1$ is \textit{a more specific} constraint than $C_2$ and therefore if $X$ is a solution for $C_1$ it should not be tested for $C_2$.
 
 We call a tabular solution $S$ to a constraint $C$ \textit{the most specific} wrt \dependencies, iff there is no other constraint $C'$ for which $S$ is a solution and $C'$ is more specific in \dependencies.
 
@@ -294,14 +299,14 @@ Therefore, if there is a solid edge from $C_1$ to $C_2$, then a set of subgroups
 Dashed edges represent the inverse relationship, pointing from specific to more general constraints.
 If there is a dashed edge from $C_1$ to $C_2$, then a set of subgroups satisfying $C_2$ may not contain a subset that also satisfies $C_1$.
 
-Thus, \dependencies describes a partial order in which constraints should be learned.
-Some constraints have no dependencies (omitted from the figure) and can be learned independently.
+\dependencies thus describes a partial order in which constraints should be learned.
+Some constraints have no dependencies (ommitted from the figure) and can be learned independently.
 Generally, a parallel version of the algorithm could learn each connected component independently, only taking into account the partial ordering within components.
 
 \paragraph{Example}
-Consider the \ecfkey{FK}{PK} (foreign-key) constraint: for every solution the subgroup (vector) $v_{PK}$ assigned to \textit{PK} must fulfill \ecalldiff{v_{PK}}.
+Consider the \ecfkey{FK}{PK} (foreign-key) constraint: for every solution the subgroup (vector) $G_{PK}$ assigned to $PK$ must fulfill \ecalldiff{G_{PK}}.
 Therefore, we say indicate \textit{foreign-key} as being dependent on \textit{all-different} and the latter will be treated first.
-The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties the vector $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
+The \ecrank{Y}{X} constraint does not have any dependencies, however in a restricted version without ties the vector $Y$ would always be a permutation of numbers $1, 2, ..., length(Y)$.
 
 \subsection{Candidate group generation}
 $\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups that may contains subgroups satisfying the constraint.
@@ -311,18 +316,18 @@ Finding candidate groups for a spreadsheet constraint~$c$ can be seen as a Const
 Several constraints (e.g. sum, max, count), however, have the same candidate generation procedure as they share the same \CSignature.
 
 \paragraph{Example}
-The \ecrank{v_y}{v_x} constraint requires $v_y$ to be integer or textual and $v_x$ to be numeric.
+The \ecrank{Y}{X} constraint requires $Y$ to be integer or textual and $X$ to be numeric.
 This allows to filter candidate groups for these variables.
-Additionally, $v_y$ and~$v_x$ must be vectors of the same length, therefore, only groups with the same length are considered.
-Groups that does not satisfy these requirements cannot contain subgroups (vectors) that satisfy \ecrank{v_y}{v_x}.
+Additionally, $Y$ and~$X$ must be vectors of the same length, therefore, only groups with the same length are considered.
+Groups that does not satisfy these requirements cannot contain subgroups (vectors) that satisfy \ecrank{Y}{X}.
 
 \subsection{Subgroup satisfaction search}
 $\findassignment(\textit{Constraint,Candidates,Solutions})$ is the function that searches for subsets of vectors in the candidate groups that satisfy the constraint.
 
 \paragraph{Example}
-Consider a candidate assignment $G_x, G_y$ associated with the variables $v_x,v_y$ of \ecrank{v_y}{v_x}, then \findassignment selects single vectors $g_y \in G_y, g_x \in G_x$ such that \ecrank{g_y}{g_x} is true, i.e. it searches for a mapping $S$ where $v_x$ ($v_y$) must be mapped to a subgroup of $G_x$ ($G_y$).
-For example, in Figure~\ref{fig:main_example} the group $G = \range{T_1}{\rangeall}{\rangeto{3}{8}}$ can serve as both $G_x$ and $G_y$.
-Then \findassignment could select $g_x$ to be $\range{T_1}{\rangeall}{7}$ and $g_y$ to be $\range{T_1}{\rangeall}{8}$ which forms a valid solution.
+Consider a candidate assignment $G_X, G_Y$ associated with the variables $X,Y$ of \ecrank{Y}{X}, then \findassignment selects single vectors $G_X^{i}, G_Y^{j}$ such that \ecrank{G_Y^{j}}{G_X^{i}} is true.
+For example, in Figure~\ref{fig:main_example} the group $G = \range{T_1}{\rangeall}{\rangeto{3}{8}}$ can serve as both $G_X$ and $G_Y$.
+\findassignment could then select $G_X^{i}$ to be $\range{T_1}{\rangeall}{7}$ and $G_Y^{j}$ to be $\range{T_1}{\rangeall}{8}$ which forms a valid solution.
 \\\\
 For some constraints (most notably aggregates) there may be multiple overlapping subsets that satisfy the constraint.
 We chose to omit subsets that are fully contained within a larger subset since this can lead to overfitting.
@@ -330,9 +335,11 @@ If the returned subsets are too large and accidentally contains unrelated vector
 
 \subsection{Implementation note} Essentially for each constraint both \generategroups and \findassignment are separate constraint satisfaction problems. Hence, it is natural to solve them using declarative solvers. Even though each is a separate constraint problem, they are variations of each other and can be modeled using similar techniques. It also makes an extension of the system easy, we can solve new variations by adding, removing or modifying constraints from a similar constraint satisfaction problem. Furthermore, the declarative languages such as ASP \cite{whaisasp} and Minizinc \cite{minizinc} provide primitives that make modeling transparent and generic.
 
-Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc (Gecode-backend 2.0.2 \cite{minizinc}) and a native Python CSP solver \cite{python_constraint}. All the constraints mentored in the paper can be run purely in the internal Python engine without any external software. The future versions of the system will provide user interfaces to the ASP, Minizinc and Python-Constraint languages to allow users to add new constraints in a declarative way.
+Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc (Gecode-backend 2.0.2 \cite{minizinc}) and a native python CSP solver \cite{python_constraint}. All the constraints mentored in the paper can be run purely in the internal python engine without any external software. The future versions of the system will provide user interfaces to the ASP, Minizinc and Python-Constraint languages.
 
 \subsection{Constraints}
+% As emphasized before, the set of Excel constraints has a partial order in which they should be learned. For certain constraints this order does not matter, such as \textit{rank} or \textit{product}. For many others they have to be learned in the order, which is specified as a DAG in Figure \ref{fig:learning_order} (if a constraint is not in the graph, it is independent). This figure also specifies a potential parallelization of the computation, since each connected component is independent of the others.
+
 
 \begin{figure}[htb]
   \centering
@@ -374,7 +381,7 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display}
 
   \end{tabularx}
-  \caption{Spreadsheet Constraints \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}}
+  \caption{Spreadsheet Constraints \sergey{Luc, we need your comments here on the notation of $X,Y$ and $G_X,G_Y$}}
   \label{table:constraints}
 \end{table*}
 
@@ -417,11 +424,12 @@ In order to quantify the results and generalize our findings we also evaluate ou
 In this section we focus on \textit{functional} constraints that could be used in spreadsheets, ignoring constraints such as all-different or foreign-key.
 
 \subsection{Case study}
-Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
+Let us illustrate our implementation using the example presented in figure~\ref{fig:main_example}.
 This example combines several smaller examples that were used in an exercise session to teach Excel into one spreadsheet.
 Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
 
 \begin{figure}
+  \label{fig:sol_example}
   {\small
     \begin{align*}
       & SERIES(\range{T_{1}}{\rangeall}{1}) \\
@@ -449,14 +457,11 @@ Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
       & \range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
     \end{align*}
   }
-  \caption{Expected constraints in the case study \sergey{in Figure \ref{fig:main_example}; some more explanation needed, not self explanatory}}
-  \label{fig:sol_example}
+  \caption{Expected constraints case study}
 \end{figure}
-\sergey{Samuel, hint, don't put label before caption, it can't resolve it sometimes}
 
 \subsubsection{Results}
-\sergey{Samuel, you should just say at the beginning that all experiments has been run on macbook la-la system and that's it, I guess, I don't think we need to mention it multiple times}
-Our current implementation takes a few seconds\footnote{3 seconds on our Macbook Pro} to find 18 constraints, including all of the 12 solutions described in Figure~\ref{fig:sol_example}.
+Our current implementation takes a few seconds\footnote{3 seconds on our Macbook Pro} to find 18 constraints, including all of the 12 solutions described in figure~\ref{fig:sol_example}.
 Of the 6 remaining (redundant) constraints, 5 are $\mathit{RANK}$ constraints that are true by accident, such as: \begin{align*}
   & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}} \\
   & \ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{4}}
@@ -484,7 +489,6 @@ We consider three types of constraints:
 \end{description}
 
 \subsubsection*{Q1. How accurate is the approach?}
-\sergey{that's confusing, it can do 100\% but then all of a sudden 96\%, short explanation needed}
 Fortunately, our system is currently able to find $100\%$ of the expected constraints (90) on the benchmark suite.
 There are only three essential constraints that have not been implemented yet, therefore our system currently identifies $96.77\%$ of the constraints that we hope to discover.
 
@@ -515,7 +519,7 @@ For example, using foreign keys as a base constraint to find conditional aggrega
 Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys present.
 
 \subsection{Insights}
-\sergey{We should explain Figure \ref{fig:fbi}, e.g. if we aggregate by the crime now, the missing value would not get into statistics, which seems faulty, since we can directly compute it.}
+We should explain Figure \ref{fig:fbi}, e.g. if we aggregate by the crime now, the missing value would not get into statistics, which seems faulty, since we can directly compute it.
 
 \begin{figure*}[thb]
   \begin{center}
@@ -578,12 +582,6 @@ modelseeker \cite{modelseeker} \sergey{Samuel, Luc, probably you would need elab
 \end{itemize}
 
 claudien \cite{claudien} \sergey{Samuel, Luc, you would need to help with this one}
-
-\section{Discussion and Conclusions}
-\sergey{link to the github with implementations and the dataset}
-
-
-\sergey{Future version, extensions, declarative stuff, bla-bla here}
 
 \bibliographystyle{ecai}
 \bibliography{references}

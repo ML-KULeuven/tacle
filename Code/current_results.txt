@@ -1,0 +1,12 @@
+Current Best:
+
+Time elapsed: 16.76s (total), 0.54s (average)
+Essential constraints accuracy per file (31 of 31 files): 95.16%
+Total essential constraints accuracy: 97.78% (88 of 90)
+
+Essential constraints expected accuracy per file (30 of 31 files): 100.00%
+Total essential constraints expected accuracy: 100.00% (88 of 88)
+
+Essential constraints redundancy per file (31 of 31 files): 8.60%
+Total essential constraints redundancy: 23.73% (28 of 118)
+ 
