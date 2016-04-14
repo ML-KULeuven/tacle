@@ -26,7 +26,7 @@
 \newcommand{\learnconstraints}{\format{learnConstraints}}
 \newcommand{\findassignment}{\format{findSolutions}}
 \newcommand{\postprocess}{\format{pruneRedundant}}
-\newcommand{\constrainttorder}{\format{orderedConstraints}}
+\newcommand{\constrainttorder}{\format{generalityOrder}}
 
 
 \newcommand{\CName}{Name\xspace}
@@ -310,7 +310,8 @@ Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, 
 \samuel{Running example (RANK?)}
 
 \subsection{Constraint ordering} 
-\sergey{refinement operator, we need emphasize it}
+Since some constraints are more general than the other, we generate them in the generality order similar to the ILP techniques known as refinement operators \cite{luc_book}.
+
 $\constrainttorder(\constraints,\dependencies)$ uses the DAG~\dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of~\dependencies.
 Solid edges point from more general to more specific constraints.
 Therefore, if there is a solid edge from constraint~$C_1$ to constraint~$C_2$, then a set of subgroups satisfying~$C_2$ must contain the subgroups satisfying~$C_1$.
