@@ -126,13 +126,18 @@ This makes tabular data understanding and constraint learning new and challengin
 \end{figure*}
 
 \section{Formalization}
-\tias{More gentle}
 \samuel{Explain concepts on example}
 \sergey{subgroup notation, rework the solution definition}
 \subsection{Groups, Type-consistency and Constraints}
-In this work we distinguish the following types of data: numeric and textual. The numeric type has two subtypes: integers and floats. We also consider the special element called \textit{None}, which has two types: numeric and textual. A set is called \textit{type-consistent} iff all elements are either numeric or textual. Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric sub-types by requiring its arguments to be integers.
+In this work we focus on the spreadsheet data, which is physically one big table, but conceptually consists of multiple tables, see Fig \ref{fig:main_example} for an example. Formally, a table is $n \times m$ matrix, each entry is called a \textit{cell}. A cell has a type, e.g. namely numeric. In this work we distinguish the two types of data: numeric and textual. The numeric type has two subtypes: integers and floats. We also consider the special element called \textit{None}, which has two types: numeric and textual.
+
+Based on these types we introduce a notation of type consistency for a set of elements. A set is called \textit{type-consistent} iff all elements are either numeric or textual. Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric sub-types by requiring its arguments to be integers.
+
+We use the notation $T[a,b]$ to refer to a particular cell in the table $T$ at the row with index $a$ and the column with index $b$. To refer to the $a$-th row (column) we use the following syntax $T[a,{:}]$ ($T[{:},a]$), to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
 
 A \textit{vector} is either a column or a row that is type-consistent. If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. A \textit{group} is a subrange of vectors with the same orientation in a table. We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers. We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if its vectors contain numeric (textual, etc) elements.
+
+
 
 \tias{Use generic constraint}
 A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}. Let us elaborate on each of them. \textit{\CName} is the textual name of the constraint together with its variable names. \textit{\CSignature} is a set of constraints specifying the properties of the group assignments, corresponding to the variables in \CName, such as their types, e.g., requiring them to be integers or constraining the sizes, e.g. the length of vectors in the arguments must be equal. These are constraints on the group meta-information not on the actual group content. \textit{\CFunction} is a set of constraints specifying that the data in the subgroups satisfies the function. For example, an excel constraint \textit{rank} has \CName \textit{Y = RANK(X)}, where $X$ and $Y$ are the variables; its \CSignature is: the group $G_X$ (associated with X) is numeric, $G_Y$ is integer and the length of vectors in $G_X$ is the same as in $G_Y$; its \CFunction is the following constraint: a pair of vectors $X,Y$ is a solution iff $X \in G_X, Y \in G_Y$ and each value in $X$ has the rank (possibly with ties) specified in $Y$.
