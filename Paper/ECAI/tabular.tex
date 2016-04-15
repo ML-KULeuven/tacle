@@ -384,59 +384,62 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 \begin{table*}
   \centering
   \begin{tabularx}{\textwidth}{l X X}
-    \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\
-    \ecalldiff{v_x} & $\discrete(v_x)$ & All values in $v_x$ are different: $v_x[i] \neq v_x[j]$ if $i \neq j$ \\
+    \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ \hline \hline
+    \ecalldiff{v_x}
+      & $\discrete(v_x)$
+      & All values in $v_x$ are different: $v_x[i] \neq v_x[j]$ if $i \neq j$
+      \\ \hline
     %X = Y & & \\
     \ecperm{v_x}
       & $\numeric(v_{x})$, $\ecalldiff{v_{x}}$
       & The values in $v_{x}$ are a permutation of the numbers $1$ through $\plength(v_{x})$.
-      \\
+      \\ \hline
     \ecseries{v_x}
       & $\numeric(v_{x})$ and $\ecperm{v_{x}}$
       & $v_{x}[1] = 1$ and $v_{x}[i] = v_{x}[i - 1] + 1$.
-      \\
-    \ecfkey{v_{fk}}{v_{pk}} & $v_{fk}$ and~$v_{pk}$ are both $\discrete$; $\ptype(v_{fk}) = \ptype(v_{pk})$; $\ptable(v_{fk}) \neq \ptable(v_{pk})$; and $\ecalldiff{v_{pk}}$ & Every value in~$v_{fk}$ also exist in~$v_{pk}$ \\
+      \\ \hline
+    \ecfkey{v_{fk}}{v_{pk}} & $v_{fk}$ and~$v_{pk}$ are both $\discrete$; $\ptype(v_{fk}) = \ptype(v_{pk})$; $\ptable(v_{fk}) \neq \ptable(v_{pk})$; and $\ecalldiff{v_{pk}}$ & Every value in~$v_{fk}$ also exist in~$v_{pk}$ \\ \hline
     % TODO check out
     \eclookup{v_r}{v_{fk}}{v_{pk}}{v_{val}}
       & $v_{fk}$ and $v_{pk}$ are both $\discrete$; variables $\{v_{fk}, v_{r}\}$ and $\{v_{pk}, v_{val}\}$ within the same set have the same \plength, \ptable and \por; $v_{r}$ and~$v_{val}$ have the same type; and \ecfkey{v_{fk}}{v_{pk}}.
       & $v_r[i]$ is the same value as looking up~$v_{fk}[i]$ in~$v_{pk}$  and returning the corresponding value in~$v_{val}$.
-      \\
+      \\ \hline
     \eclookupfuzzy{v_r}{v_{fk}}{v_{pk}}{v_{val}}
       & \textit{Same as lookup}
       & $v_r[i]$ is the same value as looking up the last item in~$v_{pk}$ smaller than~$v_{fk}[i]$ and returning the corresponding value in~$v_{val}$.
-      \\
+      \\ \hline
     \eclookupprod{v_r}{v_1}{v_{fk}}{v_{pk}}{v_{val}}
       & Variables $\{v_{r}, v_{1}, v_{fk}\}$ are $\numeric$, variables $\{v_{pk}, v_{val}\}$ are $\discrete$ and within both sets all variables have the same \plength, \ptable and \por; also \ecfkey{v_{fk}}{v_{pk}}.
       & $v_{r}[i]$ is the obtained by multiplying $v_{1}[i]$ with $\eclookupf{v_{fk}}{v_{pk}}{v_{val}}{}[i]$.
-      \\
+      \\ \hline
     \ecprod{v_r}{v_1}{v_2}
       & Variables $\{v_{r}, v_{1}, v_{2}\}$ are all $\numeric$ and have the same $\plength$
       & $v_{r}[i] = v_{1}[i] \times v_{2}[i]$.
-      \\
+      \\ \hline
     \ecproj{v_r}{\mathbf{v_x}}
       & Variables $\{v_{r}, \mathbf{v_x}\}$ all have the same $\plength$, $\por$, $\ptable$ and $\ptype$; $\mathbf{v_x}$ contains at least~2 vectors
       & At every position~$i$ in $1$ through $\plength(v_{r})$ there is exactly one vector~$v$ in $\mathbf{v_x}$ such that $v[i]$ is a non-blank value, then $v[i] = v_{r}[i]$.
-      \\
+      \\ \hline
     \ecrank{v_r}{v_x}
       & $\integer(v_{r})$; $\numeric(v_{x})$; and $\plength(v_{r}) = \plength(v_{x})$
       & The values in $v_{r}$ represent the rank (from largest to smallest) of the values in $v_{x}$ (including ties)
-      \\
+      \\ \hline
     \ectotal{v_r}{v_{pos}}{v_{neg}}
       & Variables $\{v_{r}, v_{pos}, v_{neg}\}$ are all $\numeric$ and all have the same $\plength$, which is at least $2$
       & The values in $v_{r}$ are a running total, each value $v_{r}[i] = v_{r}[i - 1] + v_{pos}[i] - v_{neg}[i]$.
-      \\
+      \\ \hline
     \ecsumc{v_r}{\mathbf{v_x}}
       & $v_r$ and $\mathbf{v_x}$ are $\numeric$; $\prows(\mathbf{v_x}) \geq 2$; and $\pcols(\mathbf{v_x}) = \plength(v_r)$
       & Each value in $v_{r}$ is obtained by summing over the corresponding column in $\mathbf{v_x}$.
-      \\
+      \\ \hline
     \ecsumr{v_r}{\mathbf{v_x}}
       & $v_r$ and $\mathbf{v_x}$ are $\numeric$; $\pcols(\mathbf{v_x}) \geq 2$; and $\prows(\mathbf{v_x}) = \plength(v_r)$
       & Each value in $v_{r}$ is obtained by summing over the corresponding row in $\mathbf{v_x}$.
-      \\
+      \\ \hline
     \ecsumif{v_r}{v_{fk}}{v_{pk}}{v_{val}}
       & $v_{fk}, v_{pk}$ are $\discrete$; $v_{r}, v_{val}$ are $\numeric$; within the sets $\{v_{val}, v_{fk}\}$ and $\{v_{pk}, v_{r}\}$ variables have the same $\plength$ and $\por$; $v_{fk}$ and $v_{val}$ have the same $\ptable$; $v_{fk}$ and $v_{pk}$ must have different $\ptable$s but the same $\ptype$; and \ecalldiff{v_{pk}}
       & The value for $v_{r}[i]$ is obtained by summing all values $v_{val}[j]$ where $v_{fk}[j] = v_{pk}[i]$
-      \\
+      \\ \hline
     \ecsumprod{v_r}{v_1}{v_2}
       & Variables $\{v_r, v_1, v_2\}$ are all $\numeric$; $\plength(v_{1}) = \plength(v_{2}) \geq 2$; and $\prows(v_{r}) = \pcols(v_{r}) = 1$
       & $v_{r}[i] = \sum_{i = 1}^{\plength(v_{1})} v_{1}[i] \times v_{2}[i]$.
