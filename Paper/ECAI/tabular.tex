@@ -159,7 +159,7 @@ We consider various sets of cells in tables:
   We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers.
   We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
   \item
- A \textit{subgroup} $g$ is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$.
+ A \textit{subgroup} $g$ is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$.it defines what it means for a constraint be well-formed
 %We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must contain only one vector, we write $g \in G$.
 % A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
 \end{itemize}
@@ -189,8 +189,8 @@ Let us elaborate on each of them.
 \item
   \textit{\CSignature} is a set of constraints on the properties of the group assignments, corresponding to the variables $v_1,\dots,v_n$ in \CName.
   For example, the signature can restrict the types of the groups, e.g., requiring them to be integers or constrain their sizes, e.g. the length of vectors in the arguments must be equal.
-  The constraints act on properties or group meta-information, not on the actual group content. In ILP, it is known as mode declarations, when one needs to declare types of variables in the vocabulary. Also, it is analogous to standard linear algebra well-defined requirements, e.g., in order to multiply matrices $A$ and $B$, $A$ must have the size of $n \times k$ and $B$ the size $k \times m$.
-\item \textit{\CFunction} is a constraint specifying that the data in the subgroups satisfies the function. In ILP, it is known as bias, where we constrain ourselves to only particular subset of language in which we perform the search. 
+  The constraints act on properties or group meta-information, not on the actual group content. In ILP, it is known as bias, it defines what it means for a constraint be well-formed.
+  \item \textit{\CFunction} is a constraint specifying that the data in the subgroups satisfies the function. In ILP, it is known as background knowledge, which provides a definition to a predicate.
 \end{itemize}
 
 \paragraph{Example}
