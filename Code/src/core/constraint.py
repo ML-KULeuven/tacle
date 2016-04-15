@@ -399,7 +399,8 @@ class SumProduct(Constraint):
         variables = [self.result, self.first, self.second]
         source = Source(variables)
         filters = [SameLength([self.first, self.second]), NotPartial(variables),
-                   SizeFilter([self.first, self.second], length=2), SizeFilter([self.result], rows=1, cols=1)]
+                   SizeFilter([self.first, self.second], length=2), SizeFilter([self.result], rows=1, cols=1),
+                    SizeFilter([self.result], rows=1, cols=1, max_size=True)]
         super().__init__("sum-product", "{R} = SUMPRODUCT({O1}, {O2})", source, filters)
 
 
