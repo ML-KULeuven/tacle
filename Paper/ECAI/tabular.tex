@@ -389,20 +389,43 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
     % TODO check out
     \eclookupprod{v_r}{v_1}{v_{fk}}{v_{pk}}{v_{val}}
       & the variables in $\{@r, @1, @fk\}$ and in $\{@pk, @val\}$ all have the same \plength, \ptable and \por.
-      & $@r$ is the obtained by multiplying $@1$ with $\eclookup{@fk}{@pk}{@val}$  
+      & $@r$ is the obtained by multiplying $@1$ with $\eclookup{@fk}{@pk}{@val}$.
       \\
     \eclookup{v_r}{v_{fk}}{v_{pk}}{v_{val}}
       & the variables in $\{@fk, @r\}$ and in $\{@pk, @val\}$ all have the same \plength, \ptable and \por; $@r$ and~$@val$ have the same type; and \ecfkey{@fk}{@pk}.
       & Lookup $@fk$ in $@pk$ and return the corresponding value in $@val$.
       \\
-    \eclookupfuzzy{v_r}{v_{fk}}{v_{pk}}{v_{val}} & & \\
-    \ecperm{v_x} & & \\
-    \ecprod{v_r}{v_1}{v_2} & & \\
-    \ecproj{v_r}{\mathbf{v_x}} & & \\
-    \ecrank{v_r}{v_x} & Y and X have the same length & Y is the rank of X (including ties)\\
-    \ectotal{v_r}{v_{pos}}{v_{neg}} & A, P and N have the same length and their length is at least 2 & *\\
-    \ecseries{v_x} & & \\
-    \ecsumc{v_r}{\mathbf{v_x}} & & Y is the result of summing each column in X \\
+    \eclookupfuzzy{v_r}{v_{fk}}{v_{pk}}{v_{val}}
+      & \textit{Same as lookup}
+      & Lookup the first item in $@pk$ smaller than $@fk$ and return the corresponding value in $@val$.
+      \\
+    \ecperm{v_x}
+      & $\numeric(@x)$, $\ecalldiff{@x}$
+      & The values in $@x$ are a permutation of the numbers $1$ through $\plength(@x)$.
+      \\
+    \ecprod{v_r}{v_1}{v_2}
+      & variables $\{@r, @1, @2\}$ are all $\numeric$ and have the same $\plength$
+      & Every element in $@r$ is the product of the corresponding elements in~$@1$ and~$@2$.
+      \\
+    \ecproj{v_r}{\mathbf{v_x}}
+      & $\{@r, @x\}$ all have the same $\plength$, $\por$, $\ptable$ and type; @x contains at least 2~vectors
+      & At every position in $1$ through $\plength(@x)$ there is exactly one vector in $@x$ with a non-blank value at that position which is the same as the corresponding value in $@r$.
+      \\
+    \ecrank{v_r}{v_x}
+      & $\integer(@r)$; $\numeric(@x)$; and $\plength(@r) = \plength(@x)$
+      & The values in $@r$ represent the rank (from largest to smallest) of the values in ($@x$) - including ties
+      \\
+    \ectotal{v_r}{v_{pos}}{v_{neg}}
+      & $\{@r, @pos, @neg\}$ all have the same $\plength$, which is at least $2$
+      & The values in $@r$ are a running total, each value $@r[i] = @r[i - 1] + @pos[i] - @neg[i]$.
+      \\
+    \ecseries{v_x}
+      & $\numeric(@x)$ and $\ecperm{@x}$
+      & $@x[1] = 1$ and $@x[i] = @x[i - 1] + 1$.
+      \\
+    \ecsumc{v_r}{\mathbf{v_x}}
+      &
+      & Y is the result of summing each column in X \\
     \ecsumr{v_r}{\mathbf{v_x}} & & Y is the result of summing each row in X \\
     \ecsumif{v_r}{v_{fk}}{v_{pk}}{v_{val}} & & \\
     \ecsumprod{v_r}{v_1}{v_2} & & \\

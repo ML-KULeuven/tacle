@@ -180,8 +180,9 @@ class Permutation(Constraint):
 
     def __init__(self):
         variables = [self.x]
+        source = ConstraintSource(variables, AllDifferent(), {AllDifferent.x.name: self.x.name})
         filters = [NotPartial(variables)]
-        super().__init__("permutation", "PERMUTATION({X})", Source(variables), filters)
+        super().__init__("permutation", "PERMUTATION({X})", source, filters)
 
 
 class Series(Constraint):
@@ -189,8 +190,9 @@ class Series(Constraint):
 
     def __init__(self):
         variables = [self.x]
+        source = ConstraintSource(variables, Permutation(), {Permutation.x.name: self.x.name})
         filters = [NotPartial(variables)]
-        super().__init__("series", "SERIES({X})", Source(variables), filters)
+        super().__init__("series", "SERIES({X})", source, filters)
 
 
 class AllDifferent(Constraint):
