@@ -27,12 +27,12 @@
 \newcommand{\findassignment}{\format{findSolutions}}
 \newcommand{\postprocess}{\format{pruneRedundant}}
 \newcommand{\constrainttorder}{\format{generalityOrder}}
-\newcommand{\template}{\format{Constraint template}}
+\newcommand{\template}{\format{constraint template}}
 
 
-\newcommand{\CName}{Name\xspace}
+\newcommand{\CName}{Syntax\xspace}
 \newcommand{\CSignature}{Signature\xspace}
-\newcommand{\CFunction}{Function\xspace}
+\newcommand{\CFunction}{Definition\xspace}
 \newcommand{\dependencies}{\ensuremath{\mathcal{D}}\xspace}
 \newcommand{\groups}{\ensuremath{\mathcal{G}}\xspace}
 
@@ -44,7 +44,7 @@
 \newcommand{\ecrank}[2]{\eccalc{#1}{\mathit{RANK}(#2)}}
 \newcommand{\ecfkey}[2]{\ensuremath{#1 \rightarrow #2}}
 \newcommand{\ecalldiff}[1]{\ensuremath{\mathit{ALLDIFFERENT}(#1)}}
-\newcommand{\eclookupf}[4]{\ensuremath{\mathit{LOOKUP}_{#4}(#1, #2, #3)}}
+\newcommand{\eclookupf}[4]{\ensuremath{\mathit{LOOKUP}_{\mathit{#4}}(#1, #2, #3)}}
 \newcommand{\eclookup}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{}}}
 \newcommand{\eclookupprod}[5]{\eccalc{#1}{#2 \times \eclookupf{#3}{#4}{#5}{}}}
 \newcommand{\eclookupfuzzy}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{fuzzy}}}
@@ -61,10 +61,23 @@
 \newcommand{\ecsumif}[4]{\eccalc{#1}{\mathit{SUMIF}(#2, #3, #4)}}
 \newcommand{\ecsumprod}[3]{\eccalc{#1}{\mathit{SUMPRODUCT}(#2, #3)}}
 
+\newcommand{\numeric}{\format{numeric}}
+\newcommand{\textual}{\format{textual}}
+\newcommand{\integer}{\format{integer}}
+\newcommand{\discrete}{\format{discrete}}
+\newcommand{\plength}{\format{length}}
+\newcommand{\ptype}{\format{type}}
+\newcommand{\ptable}{\format{table}}
+\newcommand{\por}{\format{orientation}}
+\newcommand{\prows}{\format{rows}}
+\newcommand{\pcols}{\format{columns}}
+\newcommand{\nat}{\mathcal{N}}
+
+
 \newcommand{\luc}[1]{{\textcolor{red}{#1}}}
 
 
-
+\renewcommand{\arraystretch}{1.5}
 
 
 %%\ecaisubmission   % inserts page numbers. Use only for submission of paper.
@@ -154,18 +167,19 @@ We consider various sets of cells in tables:
   We use the notation $T[a,b]$ to refer to a particular cell in the table~$T$ at the row with index~$a$ and the column with index~$b$.
   \item {\bf Columns and rows}: To refer to the $a$-th row (column) we use the following syntax $T[a,{:}]$ ($T[{:},a]$), to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
   \item
-  A \textit{vector} is either a column or a row that is type-consistent.
+  A \textbf{vector} is either a column or a row that is type-consistent.
   If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation.
   \item
-  A \textit{group} is a subrange of vectors with the same orientation in a table.
+  A \textbf{group} is a subrange of vectors with the same orientation in a table.
   We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers.
-  We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
+  The \textit{length} of a row (column) group $G$, written as \textit{length(G)}, is the number of its columns (rows); We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
   \item
- A \textit{subgroup} $g$ is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$. It defines what it means for a constraint to be well-formed
+ A \textit{subgroup} $g$ is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$. %It defines what it means for a constraint to be well-formed
 %We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must contain only one vector, we write $g \in G$.
 % A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
 \end{itemize}
-For notational convenience, we will refer to vectors with $V$ and to groups and subgroups with $G$.
+%For notational convenience, we will refer to vectors in {\rm roman} and to groups in {\bf bold}. {\bf CHECK}
+
 
 When we do not want to distinguish between cells, columns, rows, vectors or groups, we shall talk about a {\em set of cells}.
 
@@ -183,36 +197,52 @@ In order to sum the results of a salesperson across quarters we can consider for
 
 \subsection{Constraints}
 A \template is a triple \textit{(\CName, \CSignature, \CFunction)}.
-Let us elaborate on each of them. 
+Let us elaborate on this:
 \begin{itemize}
 \item
-\textit{\CName} is the textual name of the constraint together with the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
-\item
-  \textit{\CSignature} is a set of constraints on the properties of the group assignments, corresponding to the variables $v_1,\dots,v_n$ in \CName.
-  For example, the signature can restrict the types of the groups, e.g., requiring them to be integers or constrain their sizes, e.g. the length of vectors in the arguments must be equal.
-  The constraints act on properties or group meta-information, not on the actual group content. In ILP, it is known as bias, it defines what it means for a constraint be well-formed.
-  \item \textit{\CFunction} is a constraint specifying that the data in the subgroups satisfies the function. In ILP, it is known as background knowledge, which provides a definition to a predicate.
+\textit{\CName}  specifies the syntactic form of the constraint $c(A_1, ...,A_n)$, that is, the name of the constraint $c$ together
+with $n$ arguments $A_i$. Thus a constraint $c$ is viewed as a relation or predicate of arity $n$ in first order logic.
+% the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
+\item the \textit{\CSignature} constrains the arguments $A_i$ of the constraint, that is, the types of the arguments, together
+with possible further restrictions using properties of the arguments $A_i$ such as their length.  For example, the signature can restrict the types of the arguments
+to be vectors of integers and require that  the length of all arguments be equal.  In terms of logical and relational learning, this is known as the {\em bias} of the learner,
+it specifies when the constraint is well-formed.
+  %The constraints act on properties or group meta-information, not on the actual group content. In ILP, it is known as bias,
+  \item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds, in practice this will be a function that can be called when
+the arguments are full instantiated to decide whether the constraint is satisfied or not. In logical and relational learning this is known as the background knowledge, which provides the definition of the predicate.
 \end{itemize}
 
 \paragraph{Example}
-  For example, the \template \textit{rank} has
+Several example constraints are illustrated in Table 1.  For example, the \template \textit{rank} has
 \begin{itemize}
-\item \CName: \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are its variables;
-\item \CSignature: groups assigned to $v_x$ must be numeric, groups assigned to $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$;
-\item \CFunction: the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ satisfies the constraint iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
+\item \CName: \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are the arguments;
+\item \CSignature: the two arguments $v_r$ and $v_x$ must be numeric; furthermore, the first argument $v_r$ must be integer and the length of the vectors
+of $v_x$ and $v_$ be identical, i.e., $length(v_x) = length(v_r)$;
+\item \CFunction: \textit{$v_r$ = RANK($v_x$)} whenever each value of $v_r$ is the rank of the corresponding value in $v_x$.
+% is satisfied in the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ satisfies the constraint iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
 \end{itemize}
 
+When looking into constraints like \textit{$v_r$ = RANK($v_x$)}, it is important to see the analogy with both first order logic and with constraint satisfaction problems.
+From a FOL perspective, the name of the constraint ($RANK$) is just the predicate, and the arguments $v_r$ and $v_x$ are the terms, which can be either variables or values.
+This also holds in our setting: when we write
+      $\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}}$,
+we can interpret the argument ${\range{T_{1}}{\rangeall}{8}}$ as group variables that would apply to any table,
+or we can interpret the argument as the value it takes in the particular table called $T_1$ that is shown in Figure 1, that is, $\[1,2,3,4\]$. {\bf CHECK}
+This also means that we can talk about constraints being satisfied. Basically, a constraint $c(t_1, ..., t_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only
+if the constraint holds on the values that the $t_i$ take in the set of tables ${\cal T}$. Figure 3 provides a list of constraints that are satisfied by the tables
+in Figure 1.
+
+
+
+%\sergey{moved from the formalization BEGIN}
+%l 1) a set of cells, and 2) a set of constraints over those cells.  Notice that the constraints specify the types (or the domains) that one encounters in traditional CSPs.  Notice also, that as in traditional CSPs, the CSP problem defines the variables (the cells) of the problem as well as the constraint that should hold amongst them. The task of CSP-solvers is then to find an assignment to the variables that satisfies all the constraints.  The distinction between variables (cells) and their assignments (their values) is important here.  So, when we speak about cells, vectors and groups, we refer to the variables; when we talk about values, assignments or instances, we refer to the values these cells take in a particular "instantiated" table.
 
 \section{Problem Statement}
-\sergey{moved from the formalization BEGIN}
-We can now define a classical constraint satisfaction problem on tables.
-A {\em constraint satisfaction problem} (CSP)  consists of 1) a set of cells, and 2) a set of constraints over those cells.
-Notice that the constraints specify the types (or the domains) that one encounters in traditional CSPs.
-Notice also, that as in traditional CSPs, the CSP problem defines the variables (the cells) of the problem as well as the constraint that should hold amongst them. The task of CSP-solvers is then to find an assignment to the variables that satisfies all the constraints.
-The distinction between variables (cells) and their assignments (their values) is important here.
-So, when we speak about cells, vectors and groups, we refer to the variables; when we talk about values, assignments or instances, we refer to the values these cells take in a particular "instantiated" table.
+A {\em constraint satisfaction problem} (CSP) consists of a set of constraints and the
+task is to find assignments of values to the variables in the CSP so that all constraints are satisfied.  As the variables typically refer to
+cells in tables, solving a CSP problem often means completing the tables so that all constraints are satisfied.
 
-While the traditional CSP problem is given a set of cells and a set of constraints,
+While the traditional CSP problem is given a set of variables and a set of constraints,
 and the task is to find an assignment, the {\bf inverse CSP} or the {\bf Tabular Constraint Learning Problem} can be defined as follows.\\
 \\
 {\bf Given }
@@ -225,12 +255,15 @@ a set of \template ${\cal C}$;
 a set of groups ${\cal G}$ for the tables ${\cal T}$;
 \end{itemize}
 \noindent
-\samuel{This section is incorrect, yet, we find assignments over subgroups, associated with a \template}
-{\bf Find}  the set $C\subseteq {\cal C}$ that contains all constraints $c(G_1, ... , G_N)$ that 1) are satisfied  in ${\cal T}$, 2)
-for which
-all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of the constraint $c$.
+%\samuel{This section is incorrect, yet, we find assignments over subgroups, associated with a \template}
+{\bf Find}  the set of all constraints $c(G_1, ... , G_N)$ that 1) are satisfied  in ${\cal T}$, 2)
+for which all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of the constraint $c$.
+
+For instance, Figure 3 contains the solution to the tabular constraint learning problem
+that uses the tables of Figure 1, the signatures of Table 1 and the set of groups mentioned in {\bf CHECK / COMPLETE}
 
 
+\luc{Delete from here}
 \luc{ADD/REFER TO EXAMPLE}
 
 Let us introduce \template instantiation syntax. Let $S$ be a mapping from variables to the subgroups of \groups and $t$ be a \template, then $t^S$ is the template, in which all variables in all constrainst in \CSignature and \CFunction are instantiated with the corresponding subgroups from $S$. We refer to $t^S$ as a \textit{constraint} and to the instantiated \CSignature (\CFunction) as $\text{\CSignature}^S$ ($\text{\CFunction}^S$). Throughout the work we refer as \textit{find constraints} to finding all constraints that hold.
@@ -239,7 +272,7 @@ Let us introduce \template instantiation syntax. Let $S$ be a mapping from varia
 Let us now define what it means for a constraint from \template to hold in general. Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $t^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
 \sergey{moved from formalization END}
 
-In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of \template and group assignments as follows: 
+In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of \template and group assignments as follows:
 
 \begin{minipage}[c]{14em}
   \vspace{5pt}
@@ -252,6 +285,7 @@ In the previous section we introduced the problem of tabular constraint learning
   \end{tabular}
   \vspace{6pt}
 \end{minipage}
+\luc{To here}
 
   The key observation here is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in spreadsheets each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
 
@@ -259,7 +293,7 @@ In the previous section we introduced the problem of tabular constraint learning
   In theory each constraint is independent and equally useful. In practice, however, things are different. Assume that for some $g_x$ both \textit{series($g_x$)} and \textit{alldifferent($g_x$)} hold. From a user's perspective the last solution is useless, since he or she already knows that the series constraint implies the alldifferent constraint. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity (generality) order between constraints, which is depicted using solid (dashed) arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $g_x$ is not a permutation, then $g_x$ should not be tested for the series constraint at all. A solid lines from $t_1$ to $t_2$ indicates that $t_2$ is \textit{more specific} than $t_1$ and if $C_1=t_1^S$ from $t_1$ does not hold, then the constraint $C_2=t_2^S$ from $t_2$ does not hold neither. A dashed arrow from $t_1$ to $t_2$ indicates that $t_1$ is \textit{a more specific} constraint than $t_2$ and therefore if $C=t_1^S$ from $t_1$ holds it should not be tested for $t_2$.
 
 
-Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, \dependencies be the DAG of constraint specificity, then the constraint $C$ equal to $t^S$ is called  \textit{the most specific} wrt \dependencies iff $C$ holds and there is no other template $t_{*}$ for which the constraint $C_{*}=t_{*}^S$ holds and $t_{*}$ is more specific in \dependencies.
+Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, \dependencies be the DAG of constraint specificity, then the constraint $C$ equal to $t^S$ is called \textit{the most specific} wrt \dependencies iff $C$ holds and there is no other template $t_{*}$ for which the constraint $C_{*}=t_{*}^S$ holds and $t_{*}$ is more specific in \dependencies.
 
 
 Let us introduce the version of tabular constraint learning that takes into account the specificity relation between constraints.
@@ -280,19 +314,40 @@ Let us introduce the version of tabular constraint learning that takes into acco
 
 This version explicitly takes into account the specificity of the constraints and invalidates some of the solutions that are entailed by the tabular other solutions.
 
+\newcommand{\tcl}{Tabular Constraint Learning}
+\newcommand{\ctl}{Condensed Tabular Constraint Learning}
 \section{Approach to Tabular Constraint Learning}
 \sergey{Luc wants this to be more intuitive, should we just add some examples here to make it easier to follow and refer to the running example?}
-As we have seen in the statement before we assume the set of groups to be given. It is often, however, not the case and a possible approach is to extract the groups from the CSV file directly. In our system, we have implemented the group construction step using the type-consistency check. \sergey{Samuel, we need details here, I think} In general, separating data from a header is a task on its own  \cite{header} and goes beyond the scope of this paper.
+This section will describe our approach to \tcl.
+Our algorithm reasons on the level of groups and vectors on the data and assumes that these are provided.
+Often, however, this not the case and a possible approach is to extract the groups from the CSV file directly.
+This requires discovering \textit{tables} and \textit{groups}.
+Our implementation offers automated procedures for both steps.
 
-Another solution to the group extraction problem is to make it interactive, when a user can select the groups in the spreadsheet or correct automatically generated groups. We regard this approach to be a possible future direction in the system development. Later in the paper we assume the groups to be given.
+Tables are detected by detecting rectangular collections of data and attempting to detect and separate headers from the data.
+Especially this last step is a complex task on its own  \cite{header} and a sophisticated implementation goes beyond the scope of this paper.
+On well formated data, however, the user will not have to specify tables manually.
 
-Now we describe how the problem of Condensed Tabular Constraint Learning can be solved. The algorithm mimics the structure of the problem in the following way: first we need to order constraints in the order of specificity, then for each constraint we need to generate possible candidate groups, and in the next step we find the subgroups satisfying the constraint. After an iteration we accumulate all solutions and proceed to the next constraint.
+Our algorithm also attempts to detect groups within tables by partitioning the data into consecutive, type consistent groups, essentially separating textual and numerical data.
+We support some extensions such as currencies and percentual data and our approach allows us to omit manual specifications of groups.
+
+A more elaborate implementation could allow group (and table) detection could be done interactively / visually such that a user can select the groups in a spreadsheet or correct automatically generated groups.
+From here on we will assume that groups and tables are given.
+
+\newcommand{\temps}{\ensuremath{S}}
+
+\subsection{Algorithm}
+Our algorithm is illustrated in Algorithm~\ref{algo:tcl} and contains three key steps.
+First, constraint templates are ordered according to the generality ordering such that they can be treated sequentially.
+Then, for each constraint template~$s \in \temps$ we generate a set~$A$ of \textit{group-assignments} that satisfy the \CSignature of~$s$.
+Every group assignment assigns a group~$G \in \groups$ to every argument of the template.
+In the third step, for every assignments $(G_1, ..., G_n) \in A$ we find all constraints $s(G_1', ... G_n')$ that hold on the data (satisfy the \CFunction), such that every subgroup $G_i' \subseteq G_i$.
 
 \begin{algorithm}[thb]
   \begin{algorithmic}
     \footnotesize
     \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- \template's, \dependencies -- dependency graph
-    \State \textbf{Output:} $C$ -- learned constraints 
+    \State \textbf{Output:} $C$ -- learned constraints
     \State $C \gets \emptyset$ \Comment{The set of constraints}
   \For{$t \in \constrainttorder(\constraints,\dependencies)$}
   \State $v_1, ..., v_n =$ variables of $T$
@@ -305,46 +360,57 @@ Now we describe how the problem of Condensed Tabular Constraint Learning can be 
 \caption{Tabular constraint learning}
 \label{algo:tcl}
 \end{algorithm}
-Essentially, our Algorithm \ref{algo:tcl} has three steps: constraint ordering, candidate group generation and subgroup satisfaction search, which is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}. Let us elaborate on each step in detail.
 
-\samuel{Running example (RANK?)}
 
-\subsection{Constraint ordering} 
-Since some constraints are more general than the other, we generate them in the generality order similar to the ILP techniques known as refinement operators \cite{luc_book}.
+Our Algorithm \ref{algo:tcl} is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}, however, we apply the approach on two levels, generating and testing groups according to their properties and generating and testing subgroups on the actual data.
+We will explain and illustrate the three key steps in detail.
 
-$\constrainttorder(\constraints,\dependencies)$ uses the DAG~\dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of~\dependencies.
-Solid edges point from more general to more specific constraints.
-Therefore, if there is a solid edge from constraint~$t_1$ to constraint~$t_2$, then a set of subgroups satisfying~$t_2$ must contain the subgroups satisfying~$t_1$.
-
-Dashed edges represent the inverse relationship, pointing from specific to more general constraints.
-If there is a dashed edge from $t_1$ to $t_2$, then a set of subgroups satisfying $t_2$ may not contain a subset that also satisfies $t_1$.
-
-Thus, \dependencies describes a partial order in which constraints should be learned.
-Some constraints have no dependencies (omitted from the figure) and can be learned independently.
-Generally, a parallel version of the algorithm could learn each connected component independently, only taking into account the partial ordering within components.
+\subsection{Generality ordering}
+A constraint~$c_1$ is a special case of another constraint~$c_2$ iff whenever $c_1$ is true, $c_2$ must also be true.
+We consider $c_1$ to be more specific than $c_2$ or $c_2$ to be more general than $c_1$.
+A constraint template~$s_1$ is more specific than a template~$s_2$ iff a constraint applying $s_1$ to a set of subgroups is always more specific than a constraint applying $s_2$ to (part of) the same set.
 
 \paragraph{Example}
-\samuel{Fix notation variable vs. group}
-Consider the \ecfkey{v_{fk}}{v_{pk}} (foreign-key) constraint: for every solution the subgroup (vector) $V$ assigned to $\mathit{v_{pk}}$ must fulfill \ecalldiff{V}.
-Therefore, we say indicate \textit{foreign-key} as being dependent on \textit{all-different} and the latter will be treated first.
-The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties the vector $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
+Consider templates \textit{all-different} and \textit{foreign-key}.
+If \ecfkey{G_{pk}}{G_{fk}}, then \ecalldiff{G_{pk}} must also hold, therefore, \textit{all-different} is considered to be more general than \textit{foreign-key}.
+\\\\
+In ILP one often exploits these type of generality relations to structure the search for constraints using refinement operators \cite{luc_book}.
+Using such techniques leads to a more efficient traversal of the search space (of constraints).
+Aside from the efficiency gained by exploiting constraints learned earlier, the generality also allows us to build constraint templates on top of more general templates.
+
+$\constrainttorder(\constraints,\dependencies)$ uses the DAG~\dependencies in Figure \ref{fig:learning_order} to generate all constraint templates according to the topological order of~\dependencies.
+Constraint templates that have no dependencies are omitted.
+In the figure solid edges point from more general to more specific templates.
+Therefore, if there is a solid edge from constraint template~$s_1$ to template~$s_2$, then a set of subgroups satisfying~$s_2$ must contain the subgroups satisfying~$t_1$.
+
+% Dashed edges represent the inverse relationship, pointing from specific to more general constraints.
+% If there is a dashed edge from $t_1$ to $t_2$, then a set of subgroups satisfying $t_2$ may not contain a subset that also satisfies $t_1$.
+
+\paragraph{Example}
+As mentioned above \textit{foreign-key} is more specific than \textit{all-different}.
+Therefore, we can first generate all subgroups $G_i'$ for which \ecalldiff{G_i'} is satisfied and use these subgroups as candidates for $v_{pk}$ in \ecfkey{v_{fk}}{v_{pk}}.
+
+The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
+\\\\
+Most parts of the algorithm could be easily parallelized.
+However, \dependencies would impose a partial order in which constraint templates would have to be treated.
 
 \subsection{Candidate group generation}
-$\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups that may contains subgroups satisfying the constraint.
+$\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups (group-assignments~$A$) that may contains subgroups satisfying the constraint.
 The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
 
-Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of $t$.
-Several constraints (e.g. sum, max, count) have the same candidate generation procedure as they share the same \CSignature.
+Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of~$t$.
+For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that those groups or some of their subgroups satisfy the \CSignature.
+
+For some constraints (e.g. sum, max, count) that share the same \CSignature the same set of assignments~$A$ will be found.
 
 \paragraph{Example}
-The \ecrank{v_y}{v_x} constraint requires $v_y$ to consist of only integer or only textual data and $v_x$ to be numeric.
-This allows us to filter candidate groups for these variables.
-Additionally, $v_y$ and~$v_x$ must be vectors of the same length, therefore, only groups with the same length are considered.
-Groups that do not satisfy these requirements cannot contain subgroups (vectors) that satisfy \ecrank{v_y}{v_x}.
+\ecrank{v_r}{v_x} will require groups assigned to $v_r$ to be $\integer$, groups assigned to $v_x$ to be $\discrete$ (i.e. $\integer$ or $\textual$) and only allows assignments in which groups assigned to both variables have the same length.
 
 \subsection{Subgroup satisfaction search}
-$\findassignment(\textit{Constraint,Candidates,Solutions})$ is the function that searches for subsets of vectors in the candidate groups that satisfy the constraint.
-Every \template~$t$ needs to have an implementation that finds subgroup assignments, given set of tuples each containing a candidate group for every variable in~$t$.
+$\findassignment(t,A,C_{solutions})$ finds, for all assignments~$a = (G_1, ..., G_n)$ in $A$, the subgroups $G_i' \subseteq G_i$ such that $t(G_1', ..., G_n')$ is satisfied.
+For every \template~$t$ an implementation (declarative or imperative) need to be provided that finds valid subgroups given the assignments.
+ assignments, given set of tuples each containing a candidate group for every variable in~$t$.
 
 \paragraph{Example}
 Consider a candidate assignment $G_x, G_y$ associated with the variables $v_x,v_y$ of \ecrank{v_y}{v_x}, then \findassignment selects single vectors $g_y \in G_y, g_x \in G_x$ such that \ecrank{g_y}{g_x} is true, i.e. it searches for a mapping $S$ where $v_x$ ($v_y$) must be mapped to a subgroup of $G_x$ ($G_y$).
@@ -363,35 +429,22 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.20\textwidth]{figures/constraint_dependency.png}
+  \includegraphics[width=0.9\linewidth]{figures/constraint_dependency.png}
   \caption{Constraint Learning Order. The solid arrows indicate a specificity order, i.e., \textit{permutation} $\rightarrow$ \textit{series} means that the series constraint is more specific than permutation. The dashed arrows indicate an inverse construction order, \textit{project} $\dashrightarrow$ \textit{aggregates} means the project constraint is more specific than aggregates. \sergey{Samuel,  can you give an explanation why we keep both arrow and how it is internally motivated?}}
   \label{fig:learning_order}
 \end{figure}
-
-
-\newcommand{\numeric}{\format{numeric}}
-\newcommand{\textual}{\format{textual}}
-\newcommand{\integer}{\format{integer}}
-\newcommand{\discrete}{\format{discrete}}
-\newcommand{\plength}{\format{length}}
-\newcommand{\ptype}{\format{type}}
-\newcommand{\ptable}{\format{table}}
-\newcommand{\por}{\format{orientation}}
-\newcommand{\prows}{\format{rows}}
-\newcommand{\pcols}{\format{columns}}
-\newcommand{\nat}{\mathcal{N}}
 
 \sergey{Table should take into account our new notation and balance between formality and intuition, heh}
 \begin{table*}
   \centering
   \begin{tabularx}{\textwidth}{l X X}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ \hline \hline
-    \ecalldiff{v_x}
+    $\ecalldiff{v_x}^*$
       & $\discrete(v_x)$
       & All values in $v_x$ are different: $v_x[i] \neq v_x[j]$ if $i \neq j$
       \\ \hline
     %X = Y & & \\
-    \ecperm{v_x}
+    $\ecperm{v_x}^*$
       & $\numeric(v_{x})$, $\ecalldiff{v_{x}}$
       & The values in $v_{x}$ are a permutation of the numbers $1$ through $\plength(v_{x})$.
       \\ \hline
@@ -448,8 +501,8 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 
 
   \end{tabularx}
-  \caption{\template's \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display} \sergey{1) should be readable alone without lookin in the text of the paper 2) that's the constraints we found popular according the spreadsheets in the web 3) that's what is actually implemented in the system 4) corresponds to the actual Excel functions}
-} 
+  \caption{\template's \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display} \sergey{1) should be readable alone without lookin in the text of the paper 2) that's the constraints we found popular according the spreadsheets in the web 3) that's what is actually implemented in the system 4) corresponds to the actual Excel functions} These constraints are \textit{structural}, they do not compute a result. Our algorithm can and does discover these constraints, however, they cannot be directly used in spreadsheet software }
+
   \label{table:constraints}
 \end{table*}
 
