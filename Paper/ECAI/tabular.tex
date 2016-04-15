@@ -18,7 +18,7 @@
 \newcommand{\samuel}[1]{\textcolor{green}{{\sc Samuel:} #1}\xspace}
 \newcommand{\tias}[1]{\textcolor{blue}{{\sc Tias:} #1}\xspace}
 
-\newcommand{\constraints}{\ensuremath{\mathcal{C}}\xspace}
+\newcommand{\constraints}{\ensuremath{\mathcal{T}}\xspace}
 \newcommand{\format}[1]{\textit{#1}\xspace}
 \newcommand{\generategroups}{\format{generateAssignments}}
 \newcommand{\extractgroups}{\format{extractGroups}}
@@ -234,7 +234,10 @@ all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of t
 
 \luc{ADD/REFER TO EXAMPLE}
 
-Let us now define what is a tabular solution for a \template in general. Let $C$ denote a \template, $S$ a mapping from variables to the subgroups of \groups, and $C^S$ the constraint $C$, in which all variables are substituted with the corresponding subgroups from $S$, then $S$ is a \textit{tabular solution} to $C$ iff both $\CSignature^S$ and $\CFunction^S$ hold.
+Let us introduce \template instantiation syntax. Let $S$ be a mapping from variables to the subgroups of \groups and $T$ be a \template, then $T^S$ is the template, in which all variables in all constrainst in \CSignature and \CFunction are instantiated with the corresponding subgroups from $S$. We refer to $T^S$ as a \textit{constraint} and to the instantiated \CSignature (\CFunction) as $\text{\CSignature}^S$ ($\text{\CFunction}^S$).
+
+
+Let us now define what it means for a constraint from \template to hold in general. Let $T$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $T^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
 
 
 
@@ -249,7 +252,7 @@ In the previous section we introduced the problem of tabular constraint learning
     \vspace{-4pt}
     &\\
     \textbf{Given:}& the set of all groups $\groups$ and of \template $\constraints$\\
-    \textbf{Find:}&  all tabular solution $S$ in \groups for each constraint $c$ in \constraints \\
+    \textbf{Find:}&  all constraints $C$ over \groups for each template $t$ in \constraints \\
   \end{tabular}
   \vspace{6pt}
 \end{minipage}
@@ -257,9 +260,10 @@ In the previous section we introduced the problem of tabular constraint learning
   The key observation here is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in spreadsheets each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
 
 
-  In theory each constraint is independent and equally useful. In practice, however, things are different. Assume that for some $g_x$ both \textit{series($g_x$)} and \textit{alldifferent($g_x$)} hold. From a user's perspective the last solution is useless, since he or she already knows that the series constraint implies the alldifferent constraint. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity (generality) order between constraints, which is depicted using solid (dashed) arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $g_x$ is not a permutation, then $g_x$ should not be tested for the series constraint at all. A solid lines from $C_1$ to $C_2$ indicates that $C_2$ is \textit{more specific} than $C_1$ and if $S$ is not a solution to $C_1$, then it is not a solution to $C_2$. A dashed arrow from $C_1$ to $C_2$ indicates that $C_1$ is \textit{a more specific} constraint than $C_2$ and therefore if $S$ is a solution for $C_1$ it should not be tested for $C_2$.
+  In theory each constraint is independent and equally useful. In practice, however, things are different. Assume that for some $g_x$ both \textit{series($g_x$)} and \textit{alldifferent($g_x$)} hold. From a user's perspective the last solution is useless, since he or she already knows that the series constraint implies the alldifferent constraint. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity (generality) order between constraints, which is depicted using solid (dashed) arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $g_x$ is not a permutation, then $g_x$ should not be tested for the series constraint at all. A solid lines from $t_1$ to $t_2$ indicates that $t_2$ is \textit{more specific} than $t_1$ and if $C_1=t_1^S$ from $t_1$ does not hold, then the constraint $C_2=t_2^S$ from $t_2$ does not hold neither. A dashed arrow from $t_1$ to $t_2$ indicates that $t_1$ is \textit{a more specific} constraint than $t_2$ and therefore if $C=t_1^S$ from $t_1$ holds it should not be tested for $t_2$.
 
-We call a tabular solution $S$ to a constraint $C$ \textit{the most specific} wrt \dependencies, iff there is no other constraint $C'$ for which $S$ is a solution and $C'$ is more specific in \dependencies.
+
+Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, \dependencies be the DAG of constraint specificity, then the constraint $C$ equal to $t^S$ is called  \textit{the most specific} wrt \dependencies iff $C$ holds and there is no other template $t_{*}$ for which the constraint $C_{*}=t_{*}^S$ holds and $t_{*}$ is more specific in \dependencies.
 
 
 Let us introduce the version of tabular constraint learning that takes into account the specificity relation between constraints.
@@ -272,8 +276,8 @@ Let us introduce the version of tabular constraint learning that takes into acco
     &\\
     \textbf{Given:}& the set of all groups $\groups$ and of \template's $\constraints$,\\
     & a constraint specificity DAG \dependencies \\
-    \textbf{Find:}& all the most specific wrt \dependencies solutions $S$ in \groups\\
-    & for each $c$ in \constraints \\
+    \textbf{Find:}& all the most specific wrt \dependencies constraints $C$ over \groups\\
+    & for each $t$ in \constraints \\
   \end{tabular}
   \vspace{6pt}
 \end{minipage}
@@ -292,15 +296,15 @@ Now we describe how the problem of Condensed Tabular Constraint Learning can be 
   \begin{algorithmic}
     \footnotesize
     \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- \template's, \dependencies -- dependency graph
-    \State \textbf{Output:} $S$ -- learned constraints with their satisfaction assignments
-    \State $S \gets \emptyset$ \Comment{The set of solutions}
-  \For{$c \in \constrainttorder(\constraints,\dependencies)$}
-  \State $v_1, ..., v_n =$ variables of $c$
-    \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(c, G, S, \dependencies)$}
-      \State $S \gets S \cup \findassignment(c, v_1{:}~G_1, \dots, v_n{:}~G_n, S, \dependencies)$
+    \State \textbf{Output:} $C$ -- learned constraints 
+    \State $C \gets \emptyset$ \Comment{The set of constraints}
+  \For{$t \in \constrainttorder(\constraints,\dependencies)$}
+  \State $v_1, ..., v_n =$ variables of $T$
+    \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(t, \groups, C, \dependencies)$}
+      \State $C \gets C \cup \findassignment(t, v_1{:}~G_1, \dots, v_n{:}~G_n, C, \dependencies)$
     \EndFor
   \EndFor\\
-\Return $S$
+\Return $C$
 \end{algorithmic}
 \caption{Tabular constraint learning}
 \label{algo:tcl}
@@ -314,10 +318,10 @@ Since some constraints are more general than the other, we generate them in the 
 
 $\constrainttorder(\constraints,\dependencies)$ uses the DAG~\dependencies in Figure \ref{fig:learning_order} in the following way: all constraints are generated in the topological order of~\dependencies.
 Solid edges point from more general to more specific constraints.
-Therefore, if there is a solid edge from constraint~$C_1$ to constraint~$C_2$, then a set of subgroups satisfying~$C_2$ must contain the subgroups satisfying~$C_1$.
+Therefore, if there is a solid edge from constraint~$t_1$ to constraint~$t_2$, then a set of subgroups satisfying~$t_2$ must contain the subgroups satisfying~$t_1$.
 
 Dashed edges represent the inverse relationship, pointing from specific to more general constraints.
-If there is a dashed edge from $C_1$ to $C_2$, then a set of subgroups satisfying $C_2$ may not contain a subset that also satisfies $C_1$.
+If there is a dashed edge from $t_1$ to $t_2$, then a set of subgroups satisfying $t_2$ may not contain a subset that also satisfies $t_1$.
 
 Thus, \dependencies describes a partial order in which constraints should be learned.
 Some constraints have no dependencies (omitted from the figure) and can be learned independently.
@@ -333,7 +337,7 @@ The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a re
 $\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups that may contains subgroups satisfying the constraint.
 The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
 
-Finding candidate groups for a \template~$c$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of $c$.
+Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of $t$.
 Several constraints (e.g. sum, max, count) have the same candidate generation procedure as they share the same \CSignature.
 
 \paragraph{Example}
