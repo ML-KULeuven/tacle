@@ -27,6 +27,7 @@
 \newcommand{\findassignment}{\format{findSolutions}}
 \newcommand{\postprocess}{\format{pruneRedundant}}
 \newcommand{\constrainttorder}{\format{generalityOrder}}
+\newcommand{\template}{\format{Constraint template}}
 
 
 \newcommand{\CName}{Name\xspace}
@@ -180,8 +181,7 @@ The (column) vectors of Table~1 are subdivided into five groups:
 In order to sum the results of a salesperson across quarters we can consider for example the subgroup $\range{T_1}{\rangeall}{\rangeto{3}{6}} \subset G_3$
 
 \subsection{Constraints}
-\sergey{write correspondence with ILP terminology}
-A \textit{Spreadsheet constraint} is a triple \textit{(\CName, \CSignature, \CFunction)}.
+A \template is a triple \textit{(\CName, \CSignature, \CFunction)}.
 Let us elaborate on each of them. 
 \begin{itemize}
 \item
@@ -195,7 +195,7 @@ Let us elaborate on each of them.
 
 \paragraph{Example}
 \sergey{need to use this below:}
-  For example, a spreadsheet constraint \textit{rank} has \CName \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are its variables; its \CSignature is: groups assigned to $v_x$ must be numeric, groups assigned to $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$; its \CFunction is the following constraint: the mapping $\{ v_x \mapsto G_x', v_y \mapsto G_y' \}$ is a solution iff $G_x' \subseteq G_x, G_y' \subseteq G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $G_y'$ is the rank of the corresponding value in $G_x'$ (possibly with ties).
+  For example, a \template \textit{rank} has \CName \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are its variables; its \CSignature is: groups assigned to $v_x$ must be numeric, groups assigned to $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$; its \CFunction is the following constraint: the mapping $\{ v_x \mapsto G_x', v_y \mapsto G_y' \}$ is a solution iff $G_x' \subseteq G_x, G_y' \subseteq G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $G_y'$ is the rank of the corresponding value in $G_x'$ (possibly with ties).
 
 %The constraint \textit{rank} has
 %\begin{itemize}
@@ -221,12 +221,12 @@ and the task is to find an assignment, the {\bf inverse CSP} or the {\bf Tabular
 \item
 a set of instantiated tables (so all cells have values) ${\cal T}$;
 \item
-a set of spreadsheet constraints ${\cal C}$;
+a set of \template ${\cal C}$;
 \item
 a set of groups ${\cal G}$ for the tables ${\cal T}$;
 \end{itemize}
 \noindent
-\samuel{This section is incorrect, yet, we find assignments over subgroups, associated with a spreadsheet constraint}
+\samuel{This section is incorrect, yet, we find assignments over subgroups, associated with a \template}
 {\bf Find}  the set $C\subseteq {\cal C}$ that contains all constraints $c(G_1, ... , G_N)$ that 1) are satisfied  in ${\cal T}$, 2)
 for which
 all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of the constraint $c$.
@@ -234,13 +234,13 @@ all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of t
 
 \luc{ADD/REFER TO EXAMPLE}
 
-Let us now define what is a tabular solution for a spreadsheet constraint in general. Let $C$ denote a spreadsheet constraint, $S$ a mapping from variables to the subgroups of \groups, and $C^S$ the constraint $C$, in which all variables are substituted with the corresponding subgroups from $S$, then $S$ is a \textit{tabular solution} to $C$ iff both $\CSignature^S$ and $\CFunction^S$ hold.
+Let us now define what is a tabular solution for a \template in general. Let $C$ denote a \template, $S$ a mapping from variables to the subgroups of \groups, and $C^S$ the constraint $C$, in which all variables are substituted with the corresponding subgroups from $S$, then $S$ is a \textit{tabular solution} to $C$ iff both $\CSignature^S$ and $\CFunction^S$ hold.
 
 
 
 \section{Problem Statement}
 \sergey{should reflect all the changes, Luc wants to introduce constraint satisfaction into problem statement, maybe we should move the definition of a solution here? Like a solution is actually constraint satisfaction?}
-In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of spreadsheet constraints and group assignments as follows: 
+In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of \template and group assignments as follows: 
 
 \begin{minipage}[c]{14em}
   \vspace{5pt}
@@ -248,7 +248,7 @@ In the previous section we introduced the problem of tabular constraint learning
     \multicolumn{2}{l}{{\textbf{Tabular Constraint Learning Problem}}}\\
     \vspace{-4pt}
     &\\
-    \textbf{Given:}& the set of all groups $\groups$ and of spreadsheet constraints $\constraints$\\
+    \textbf{Given:}& the set of all groups $\groups$ and of \template $\constraints$\\
     \textbf{Find:}&  all tabular solution $S$ in \groups for each constraint $c$ in \constraints \\
   \end{tabular}
   \vspace{6pt}
@@ -270,7 +270,7 @@ Let us introduce the version of tabular constraint learning that takes into acco
     \multicolumn{2}{l}{{\textbf{Condensed Tabular Constraint Learning Problem}}}\\
     \vspace{-4pt}
     &\\
-    \textbf{Given:}& the set of all groups $\groups$ and of spreadsheet constraints $\constraints$,\\
+    \textbf{Given:}& the set of all groups $\groups$ and of \template's $\constraints$,\\
     & a constraint specificity DAG \dependencies \\
     \textbf{Find:}& all the most specific wrt \dependencies solutions $S$ in \groups\\
     & for each $c$ in \constraints \\
@@ -291,7 +291,7 @@ Now we describe how the problem of Condensed Tabular Constraint Learning can be 
 \begin{algorithm}[thb]
   \begin{algorithmic}
     \footnotesize
-    \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- Spreadsheet constraints, \dependencies -- dependency graph
+    \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- \template's, \dependencies -- dependency graph
     \State \textbf{Output:} $S$ -- learned constraints with their satisfaction assignments
     \State $S \gets \emptyset$ \Comment{The set of solutions}
   \For{$c \in \constrainttorder(\constraints,\dependencies)$}
@@ -333,7 +333,7 @@ The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a re
 $\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups that may contains subgroups satisfying the constraint.
 The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
 
-Finding candidate groups for a spreadsheet constraint~$c$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of $c$.
+Finding candidate groups for a \template~$c$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of $c$.
 Several constraints (e.g. sum, max, count) have the same candidate generation procedure as they share the same \CSignature.
 
 \paragraph{Example}
@@ -344,7 +344,7 @@ Groups that do not satisfy these requirements cannot contain subgroups (vectors)
 
 \subsection{Subgroup satisfaction search}
 $\findassignment(\textit{Constraint,Candidates,Solutions})$ is the function that searches for subsets of vectors in the candidate groups that satisfy the constraint.
-Every spreadsheet constraint~$C$ needs to have an implementation that finds subgroup assignments, given set of tuples each containing a candidate group for every variable in~$C$.
+Every \template~$C$ needs to have an implementation that finds subgroup assignments, given set of tuples each containing a candidate group for every variable in~$C$.
 
 \paragraph{Example}
 Consider a candidate assignment $G_x, G_y$ associated with the variables $v_x,v_y$ of \ecrank{v_y}{v_x}, then \findassignment selects single vectors $g_y \in G_y, g_x \in G_x$ such that \ecrank{g_y}{g_x} is true, i.e. it searches for a mapping $S$ where $v_x$ ($v_y$) must be mapped to a subgroup of $G_x$ ($G_y$).
@@ -355,7 +355,7 @@ For some constraints (most notably aggregates) there may be multiple overlapping
 We chose to omit subsets that are fully contained within a larger subset since this can lead to overfitting.
 If the returned subsets are too large and accidentally contain unrelated vectors, the user can split such a group, disallowing.
 
-\subsection{Implementation note} Essentially for each spreadsheet constraint both \generategroups and \findassignment are separate constraint satisfaction problems. Hence, it is natural to solve them using declarative solvers. Even though each is a separate constraint problem, they are variations of each other and can be modeled using similar techniques. It also makes an extension of the system easy, we can solve new variations by adding, removing or modifying constraints from a similar constraint satisfaction problem. Furthermore, declarative languages such as ASP \cite{whaisasp} and Minizinc \cite{minizinc} provide primitives that make modeling transparent and generic.
+\subsection{Implementation note} Essentially for each \template both \generategroups and \findassignment are separate constraint satisfaction problems. Hence, it is natural to solve them using declarative solvers. Even though each is a separate constraint problem, they are variations of each other and can be modeled using similar techniques. It also makes an extension of the system easy, we can solve new variations by adding, removing or modifying constraints from a similar constraint satisfaction problem. Furthermore, declarative languages such as ASP \cite{whaisasp} and Minizinc \cite{minizinc} provide primitives that make modeling transparent and generic.
 
 Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc (Gecode-backend 2.0.2 \cite{minizinc}) and a native Python CSP solver \cite{python_constraint}. All the constraints mentioned in the paper can be run purely using the internal Python engine without any external software. Future versions of the system will provide user interfaces to the ASP, Minizinc and Python-Constraint languages to allow users to add new constraints in a declarative way.
 
@@ -432,7 +432,7 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 
 
   \end{tabularx}
-  \caption{Spreadsheet Constraints \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display}
+  \caption{\template's \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display}
 }
   \label{table:constraints}
 \end{table*}
