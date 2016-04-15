@@ -194,16 +194,12 @@ Let us elaborate on each of them.
 \end{itemize}
 
 \paragraph{Example}
-\sergey{need to use this below:}
-  For example, a \template \textit{rank} has \CName \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are its variables; its \CSignature is: groups assigned to $v_x$ must be numeric, groups assigned to $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$; its \CFunction is the following constraint: the mapping $\{ v_x \mapsto G_x', v_y \mapsto G_y' \}$ is a solution iff $G_x' \subseteq G_x, G_y' \subseteq G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $G_y'$ is the rank of the corresponding value in $G_x'$ (possibly with ties).
-
-%The constraint \textit{rank} has
-%\begin{itemize}
-%\item \CName = \textit{$v_r$ = RANK($v_x$)}, where $v_r$ and $v_x$ are %the variables;
-%\item \CSignature = subgroup $g_X$ (associated with X) is numeric, $g_Y$ %is integer and the length of vectors in $g_X$ is the same as in $g_Y$; and
-%\item
-%\CFunction = \textit{$g_Y$ = RANK($g_X$)} iff $g_X \in G_X, g_Y \in G_Y$ %and each value in $g_X$ has the rank (possibly with ties) specified in $%g_Y$.
-%\end{itemize}
+  For example, the \template \textit{rank} has
+\begin{itemize}
+\item \CName: \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are its variables;
+\item \CSignature: groups assigned to $v_x$ must be numeric, groups assigned to $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$;
+\item \CFunction: the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ is a solution iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
+\end{itemize}
 
 \samuel{Should this section maybe be moved to problem statement?}
 We can now define a classical constraint satisfaction problem on tables.
@@ -234,7 +230,7 @@ all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of t
 
 \luc{ADD/REFER TO EXAMPLE}
 
-Let us introduce \template instantiation syntax. Let $S$ be a mapping from variables to the subgroups of \groups and $T$ be a \template, then $T^S$ is the template, in which all variables in all constrainst in \CSignature and \CFunction are instantiated with the corresponding subgroups from $S$. We refer to $T^S$ as a \textit{constraint} and to the instantiated \CSignature (\CFunction) as $\text{\CSignature}^S$ ($\text{\CFunction}^S$).
+Let us introduce \template instantiation syntax. Let $S$ be a mapping from variables to the subgroups of \groups and $T$ be a \template, then $T^S$ is the template, in which all variables in all constrainst in \CSignature and \CFunction are instantiated with the corresponding subgroups from $S$. We refer to $T^S$ as a \textit{constraint} and to the instantiated \CSignature (\CFunction) as $\text{\CSignature}^S$ ($\text{\CFunction}^S$). Throughout the work we refer as \textit{find constraints} to finding all constraints that hold.
 
 
 Let us now define what it means for a constraint from \template to hold in general. Let $T$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $T^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
@@ -348,7 +344,7 @@ Groups that do not satisfy these requirements cannot contain subgroups (vectors)
 
 \subsection{Subgroup satisfaction search}
 $\findassignment(\textit{Constraint,Candidates,Solutions})$ is the function that searches for subsets of vectors in the candidate groups that satisfy the constraint.
-Every \template~$C$ needs to have an implementation that finds subgroup assignments, given set of tuples each containing a candidate group for every variable in~$C$.
+Every \template~$t$ needs to have an implementation that finds subgroup assignments, given set of tuples each containing a candidate group for every variable in~$t$.
 
 \paragraph{Example}
 Consider a candidate assignment $G_x, G_y$ associated with the variables $v_x,v_y$ of \ecrank{v_y}{v_x}, then \findassignment selects single vectors $g_y \in G_y, g_x \in G_x$ such that \ecrank{g_y}{g_x} is true, i.e. it searches for a mapping $S$ where $v_x$ ($v_y$) must be mapped to a subgroup of $G_x$ ($G_y$).
