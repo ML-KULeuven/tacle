@@ -372,10 +372,13 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 \newcommand{\numeric}{\format{numeric}}
 \newcommand{\textual}{\format{textual}}
 \newcommand{\integer}{\format{integer}}
+\newcommand{\discrete}{\format{discrete}}
 \newcommand{\plength}{\format{length}}
 \newcommand{\ptype}{\format{type}}
 \newcommand{\ptable}{\format{table}}
 \newcommand{\por}{\format{orientation}}
+\newcommand{\prows}{\format{rows}}
+\newcommand{\pcols}{\format{columns}}
 \newcommand{\nat}{\mathcal{N}}
 
 \sergey{Table should take into account our new notation and balance between formality and intuition, heh}
@@ -383,52 +386,62 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
   \centering
   \begin{tabularx}{\textwidth}{l X X}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\
-    \ecalldiff{v_x} & $\integer(v_x)$ or $\textual(v_x)$ & All elements in $v_x$ are different \\
+    \ecalldiff{v_x} & $\discrete(v_x)$ & All values in $v_x$ are different: $v_x[i] \neq v_x[j]$ if $i \neq j$ \\
     %X = Y & & \\
-    \ecfkey{v_{fk}}{v_{pk}} & $\ptype(v_{fk})$ = $ptype(v_{pk})$,$\ptable(v_{fk}) \neq \ptable(v_{pk})$, $\ecalldiff{v_{pk}}$ & Every value in @fk also exist in @pk \\
-    % TODO check out
-    \eclookupprod{v_r}{v_1}{v_{fk}}{v_{pk}}{v_{val}}
-      & the variables in $\{@r, @1, @fk\}$ and in $\{@pk, @val\}$ all have the same \plength, \ptable and \por.
-      & $@r$ is the obtained by multiplying $@1$ with $\eclookup{@fk}{@pk}{@val}$.
+    \ecperm{v_x}
+      & $\numeric(v_{x})$, $\ecalldiff{v_{x}}$
+      & The values in $v_{x}$ are a permutation of the numbers $1$ through $\plength(v_{x})$.
       \\
+    \ecseries{v_x}
+      & $\numeric(v_{x})$ and $\ecperm{v_{x}}$
+      & $v_{x}[1] = 1$ and $v_{x}[i] = v_{x}[i - 1] + 1$.
+      \\
+    \ecfkey{v_{fk}}{v_{pk}} & $v_{fk}$ and~$v_{pk}$ are both $\discrete$; $\ptype(v_{fk}) = \ptype(v_{pk})$; $\ptable(v_{fk}) \neq \ptable(v_{pk})$; and $\ecalldiff{v_{pk}}$ & Every value in~$v_{fk}$ also exist in~$v_{pk}$ \\
+    % TODO check out
     \eclookup{v_r}{v_{fk}}{v_{pk}}{v_{val}}
-      & the variables in $\{@fk, @r\}$ and in $\{@pk, @val\}$ all have the same \plength, \ptable and \por; $@r$ and~$@val$ have the same type; and \ecfkey{@fk}{@pk}.
-      & Lookup $@fk$ in $@pk$ and return the corresponding value in $@val$.
+      & $v_{fk}$ and $v_{pk}$ are both $\discrete$; variables $\{v_{fk}, v_{r}\}$ and $\{v_{pk}, v_{val}\}$ within the same set have the same \plength, \ptable and \por; $v_{r}$ and~$v_{val}$ have the same type; and \ecfkey{v_{fk}}{v_{pk}}.
+      & $v_r[i]$ is the same value as looking up~$v_{fk}[i]$ in~$v_{pk}$  and returning the corresponding value in~$v_{val}$.
       \\
     \eclookupfuzzy{v_r}{v_{fk}}{v_{pk}}{v_{val}}
       & \textit{Same as lookup}
-      & Lookup the first item in $@pk$ smaller than $@fk$ and return the corresponding value in $@val$.
+      & $v_r[i]$ is the same value as looking up the last item in~$v_{pk}$ smaller than~$v_{fk}[i]$ and returning the corresponding value in~$v_{val}$.
       \\
-    \ecperm{v_x}
-      & $\numeric(@x)$, $\ecalldiff{@x}$
-      & The values in $@x$ are a permutation of the numbers $1$ through $\plength(@x)$.
+    \eclookupprod{v_r}{v_1}{v_{fk}}{v_{pk}}{v_{val}}
+      & Variables $\{v_{r}, v_{1}, v_{fk}\}$ are $\numeric$, variables $\{v_{pk}, v_{val}\}$ are $\discrete$ and within both sets all variables have the same \plength, \ptable and \por; also \ecfkey{v_{fk}}{v_{pk}}.
+      & $v_{r}[i]$ is the obtained by multiplying $v_{1}[i]$ with $\eclookupf{v_{fk}}{v_{pk}}{v_{val}}{}[i]$.
       \\
     \ecprod{v_r}{v_1}{v_2}
-      & variables $\{@r, @1, @2\}$ are all $\numeric$ and have the same $\plength$
-      & Every element in $@r$ is the product of the corresponding elements in~$@1$ and~$@2$.
+      & Variables $\{v_{r}, v_{1}, v_{2}\}$ are all $\numeric$ and have the same $\plength$
+      & $v_{r}[i] = v_{1}[i] \times v_{2}[i]$.
       \\
     \ecproj{v_r}{\mathbf{v_x}}
-      & $\{@r, @x\}$ all have the same $\plength$, $\por$, $\ptable$ and type; @x contains at least 2~vectors
-      & At every position in $1$ through $\plength(@x)$ there is exactly one vector in $@x$ with a non-blank value at that position which is the same as the corresponding value in $@r$.
+      & Variables $\{v_{r}, \mathbf{v_x}\}$ all have the same $\plength$, $\por$, $\ptable$ and $\ptype$; $\mathbf{v_x}$ contains at least~2 vectors
+      & At every position~$i$ in $1$ through $\plength(v_{r})$ there is exactly one vector~$v$ in $\mathbf{v_x}$ such that $v[i]$ is a non-blank value, then $v[i] = v_{r}[i]$.
       \\
     \ecrank{v_r}{v_x}
-      & $\integer(@r)$; $\numeric(@x)$; and $\plength(@r) = \plength(@x)$
-      & The values in $@r$ represent the rank (from largest to smallest) of the values in ($@x$) - including ties
+      & $\integer(v_{r})$; $\numeric(v_{x})$; and $\plength(v_{r}) = \plength(v_{x})$
+      & The values in $v_{r}$ represent the rank (from largest to smallest) of the values in $v_{x}$ (including ties)
       \\
     \ectotal{v_r}{v_{pos}}{v_{neg}}
-      & $\{@r, @pos, @neg\}$ all have the same $\plength$, which is at least $2$
-      & The values in $@r$ are a running total, each value $@r[i] = @r[i - 1] + @pos[i] - @neg[i]$.
-      \\
-    \ecseries{v_x}
-      & $\numeric(@x)$ and $\ecperm{@x}$
-      & $@x[1] = 1$ and $@x[i] = @x[i - 1] + 1$.
+      & Variables $\{v_{r}, v_{pos}, v_{neg}\}$ are all $\numeric$ and all have the same $\plength$, which is at least $2$
+      & The values in $v_{r}$ are a running total, each value $v_{r}[i] = v_{r}[i - 1] + v_{pos}[i] - v_{neg}[i]$.
       \\
     \ecsumc{v_r}{\mathbf{v_x}}
-      &
-      & Y is the result of summing each column in X \\
-    \ecsumr{v_r}{\mathbf{v_x}} & & Y is the result of summing each row in X \\
-    \ecsumif{v_r}{v_{fk}}{v_{pk}}{v_{val}} & & \\
-    \ecsumprod{v_r}{v_1}{v_2} & & \\
+      & $v_r$ and $\mathbf{v_x}$ are $\numeric$; $\prows(\mathbf{v_x}) \geq 2$; and $\pcols(\mathbf{v_x}) = \plength(v_r)$
+      & Each value in $v_{r}$ is obtained by summing over the corresponding column in $\mathbf{v_x}$.
+      \\
+    \ecsumr{v_r}{\mathbf{v_x}}
+      & $v_r$ and $\mathbf{v_x}$ are $\numeric$; $\pcols(\mathbf{v_x}) \geq 2$; and $\prows(\mathbf{v_x}) = \plength(v_r)$
+      & Each value in $v_{r}$ is obtained by summing over the corresponding row in $\mathbf{v_x}$.
+      \\
+    \ecsumif{v_r}{v_{fk}}{v_{pk}}{v_{val}}
+      & $v_{fk}, v_{pk}$ are $\discrete$; $v_{r}, v_{val}$ are $\numeric$; within the sets $\{v_{val}, v_{fk}\}$ and $\{v_{pk}, v_{r}\}$ variables have the same $\plength$ and $\por$; $v_{fk}$ and $v_{val}$ have the same $\ptable$; $v_{fk}$ and $v_{pk}$ must have different $\ptable$s but the same $\ptype$; and \ecalldiff{v_{pk}}
+      & The value for $v_{r}[i]$ is obtained by summing all values $v_{val}[j]$ where $v_{fk}[j] = v_{pk}[i]$
+      \\
+    \ecsumprod{v_r}{v_1}{v_2}
+      & Variables $\{v_r, v_1, v_2\}$ are all $\numeric$; $\plength(v_{1}) = \plength(v_{2}) \geq 2$; and $\prows(v_{r}) = \pcols(v_{r}) = 1$
+      & $v_{r}[i] = \sum_{i = 1}^{\plength(v_{1})} v_{1}[i] \times v_{2}[i]$.
+      \\
 
 
   \end{tabularx}
@@ -436,6 +449,8 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 }
   \label{table:constraints}
 \end{table*}
+
+\samuel{Satisfy signature for group assignment: find groups such that there exists a subgroup which satisfies the signature}
 
 % \subsection{Workflow}
 % \begin{algorithm}[thb]
