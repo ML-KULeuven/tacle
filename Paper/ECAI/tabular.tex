@@ -217,7 +217,7 @@ Several example constraints are illustrated in Table 1.  For example, the \templ
 \begin{itemize}
 \item \CName: \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are the arguments;
 \item \CSignature: the two arguments $v_r$ and $v_x$ must be numeric; furthermore, the first argument $v_r$ must be integer and the length of the vectors
-of $v_x$ and $v_$ be identical, i.e., $length(v_x) = length(v_r)$;
+of $v_x$ and $v_r$ be identical, i.e., $length(v_x) = length(v_r)$;
 \item \CFunction: \textit{$v_r$ = RANK($v_x$)} whenever each value of $v_r$ is the rank of the corresponding value in $v_x$.
 % is satisfied in the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ satisfies the constraint iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
 \end{itemize}
@@ -227,7 +227,7 @@ From a FOL perspective, the name of the constraint ($RANK$) is just the predicat
 This also holds in our setting: when we write
       $\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}}$,
 we can interpret the argument ${\range{T_{1}}{\rangeall}{8}}$ as group variables that would apply to any table,
-or we can interpret the argument as the value it takes in the particular table called $T_1$ that is shown in Figure 1, that is, $\[1,2,3,4\]$. {\bf CHECK}
+or we can interpret the argument as the value it takes in the particular table called $T_1$ that is shown in Figure 1, that is, $[1,2,3,4]$. {\bf CHECK}
 This also means that we can talk about constraints being satisfied. Basically, a constraint $c(t_1, ..., t_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only
 if the constraint holds on the values that the $t_i$ take in the set of tables ${\cal T}$. Figure 3 provides a list of constraints that are satisfied by the tables
 in Figure 1.
