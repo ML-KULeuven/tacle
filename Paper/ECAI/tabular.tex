@@ -198,10 +198,12 @@ Let us elaborate on each of them.
 \begin{itemize}
 \item \CName: \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are its variables;
 \item \CSignature: groups assigned to $v_x$ must be numeric, groups assigned to $v_y$ must be integer and the length of vectors in $v_x$ is the same as in $v_y$;
-\item \CFunction: the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ is a solution iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
+\item \CFunction: the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ satisfies the constraint iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
 \end{itemize}
 
-\samuel{Should this section maybe be moved to problem statement?}
+
+\section{Problem Statement}
+\sergey{moved from the formalization BEGIN}
 We can now define a classical constraint satisfaction problem on tables.
 A {\em constraint satisfaction problem} (CSP)  consists of 1) a set of cells, and 2) a set of constraints over those cells.
 Notice that the constraints specify the types (or the domains) that one encounters in traditional CSPs.
@@ -230,15 +232,12 @@ all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of t
 
 \luc{ADD/REFER TO EXAMPLE}
 
-Let us introduce \template instantiation syntax. Let $S$ be a mapping from variables to the subgroups of \groups and $T$ be a \template, then $T^S$ is the template, in which all variables in all constrainst in \CSignature and \CFunction are instantiated with the corresponding subgroups from $S$. We refer to $T^S$ as a \textit{constraint} and to the instantiated \CSignature (\CFunction) as $\text{\CSignature}^S$ ($\text{\CFunction}^S$). Throughout the work we refer as \textit{find constraints} to finding all constraints that hold.
+Let us introduce \template instantiation syntax. Let $S$ be a mapping from variables to the subgroups of \groups and $t$ be a \template, then $t^S$ is the template, in which all variables in all constrainst in \CSignature and \CFunction are instantiated with the corresponding subgroups from $S$. We refer to $t^S$ as a \textit{constraint} and to the instantiated \CSignature (\CFunction) as $\text{\CSignature}^S$ ($\text{\CFunction}^S$). Throughout the work we refer as \textit{find constraints} to finding all constraints that hold.
 
 
-Let us now define what it means for a constraint from \template to hold in general. Let $T$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $T^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
+Let us now define what it means for a constraint from \template to hold in general. Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $t^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
+\sergey{moved from formalization END}
 
-
-
-\section{Problem Statement}
-\sergey{should reflect all the changes, Luc wants to introduce constraint satisfaction into problem statement, maybe we should move the definition of a solution here? Like a solution is actually constraint satisfaction?}
 In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of \template and group assignments as follows: 
 
 \begin{minipage}[c]{14em}
