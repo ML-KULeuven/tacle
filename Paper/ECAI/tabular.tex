@@ -160,7 +160,7 @@ We consider various sets of cells in tables:
   We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers.
   We denote as the \textit{length} of a row (column) group $G$, written as \textit{length(G)}, the number of its columns (rows). We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
   \item
- A \textit{subgroup} $g$ is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$.it defines what it means for a constraint to be well-formed
+ A \textit{subgroup} $g$ is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$. It defines what it means for a constraint to be well-formed
 %We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must contain only one vector, we write $g \in G$.
 % A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
 \end{itemize}
@@ -444,8 +444,8 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 
 
   \end{tabularx}
-  \caption{\template's \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display}
-}
+  \caption{\template's \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display} \sergey{1) should be readable alone without lookin in the text of the paper 2) that's the constraints we found popular according the spreadsheets in the web 3) that's what is actually implemented in the system 4) corresponds to the actual Excel functions}
+} 
   \label{table:constraints}
 \end{table*}
 
