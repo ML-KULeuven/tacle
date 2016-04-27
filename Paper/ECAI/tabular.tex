@@ -96,6 +96,7 @@
 \end{abstract}
 
 \section{Introduction}
+\sergey{Needs to be checked, bullet points for Luc and Tias to rework introduction}\\
 Millions of people across the world use spreadsheets everyday.
 Yet, many people lack a complete understanding of the structures and existing dependencies in the data.
 Indeed, the most useful part of spreadsheets is often the formulas and often these formula disappear when a file is exported and shared, for example as a CSV file.
@@ -117,7 +118,6 @@ Furthermore, it is not only challenging for a machine but for a human as well.
 
 Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
-\sergey{bullet points for Luc and Tias to rework introduction}\\
 \textbf{Motivation}:
 \samuel{Suggest better table layouts / formula translation}
 \begin{itemize}
@@ -168,7 +168,7 @@ We consider various sets of cells in tables:
   \item {\bf Columns and rows}: To refer to the $a$-th row (column) we use the following syntax $T[a,{:}]$ ($T[{:},a]$), to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
   \item
   A \textbf{vector} is either a column or a row that is type-consistent.
-  If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation.
+  If a vector is a row (column), we say that it has the \textit{row} (\textit{column}) orientation.
   \item
   A \textbf{group} is a subrange of vectors with the same orientation in a table.
   We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers.
