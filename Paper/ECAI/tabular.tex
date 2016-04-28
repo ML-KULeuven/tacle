@@ -168,7 +168,8 @@ We consider various sets of cells in tables:
   \item {\bf Columns and rows}: To refer to the $a$-th row (column) we use the following syntax $T[a,{:}]$ ($T[{:},a]$), to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
   \item
   A \textbf{vector} is either a column or a row that is type-consistent.
-  If a vector is a row (column), we say that it has the \textit{row} (\textit{column}) orientation.
+  If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation.
+  \samuel{Vector also has a length; Group has a size}
   \item
   A \textbf{group} is a subrange of vectors with the same orientation in a table.
   We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers.
@@ -218,6 +219,7 @@ Several example constraints are illustrated in Table 1.  For example, the \templ
 \begin{itemize}
 \item \CName: \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are the arguments;
 \item \CSignature: the two arguments $v_r$ and $v_x$ must be numeric; furthermore, the first argument $v_r$ must be integer and the length of the vectors
+\samuel{Both must be vectors}
 of $v_x$ and $v_r$ be identical, i.e., $length(v_x) = length(v_r)$;
 \item \CFunction: \textit{$v_r$ = RANK($v_x$)} whenever each value of $v_r$ is the rank of the corresponding value in $v_x$.
 % is satisfied in the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ satisfies the constraint iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
@@ -228,6 +230,7 @@ From a FOL perspective, the name of the constraint ($RANK$) is just the predicat
 This also holds in our setting: when we write
       $\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}}$,
 we can interpret the argument ${\range{T_{1}}{\rangeall}{8}}$ as group variables that would apply to any table,
+\samuel{clarify, e.g. what is group variable}
 or we can interpret the argument as the value it takes in the particular table called $T_1$ that is shown in Figure 1, that is, $[1,2,3,4]$. {\bf CHECK}
 This also means that we can talk about constraints being satisfied. Basically, a constraint $c(t_1, ..., t_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only
 if the constraint holds on the values that the $t_i$ take in the set of tables ${\cal T}$. Figure 3 provides a list of constraints that are satisfied by the tables
@@ -292,6 +295,7 @@ that uses the tables of Figure 1, the signatures of Table 1 and the set of group
 
   The key observation here is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in spreadsheets each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
 
+\tias{Redundancy instead of dependency}
 
   In theory each constraint is independent and equally useful. In practice, however, things are different. Assume that for some $g_x$ both \textit{series($g_x$)} and \textit{alldifferent($g_x$)} hold. From a user's perspective the last solution is useless, since he or she already knows that the series constraint implies the alldifferent constraint. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity (generality) order between constraints, which is depicted using solid (dashed) arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $g_x$ is not a permutation, then $g_x$ should not be tested for the series constraint at all. A solid lines from $t_1$ to $t_2$ indicates that $t_2$ is \textit{more specific} than $t_1$ and if $C_1=t_1^S$ from $t_1$ does not hold, then the constraint $C_2=t_2^S$ from $t_2$ does not hold neither. A dashed arrow from $t_1$ to $t_2$ indicates that $t_1$ is \textit{a more specific} constraint than $t_2$ and therefore if $C=t_1^S$ from $t_1$ holds it should not be tested for $t_2$.
 
@@ -327,10 +331,12 @@ Often, however, this not the case and a possible approach is to extract the grou
 This requires discovering \textit{tables} and \textit{groups}.
 Our implementation offers automated procedures for both steps.
 
+\tias{Reformulate: describe there's an naive approach...}
 Tables are detected by detecting rectangular collections of data and attempting to detect and separate headers from the data.
 Especially this last step is a complex task on its own  \cite{header} and a sophisticated implementation goes beyond the scope of this paper.
 On well formated data, however, the user will not have to specify tables manually.
 
+\tias{Split extensions and group detection, clarify group detection, example (e.g. currency for extensions)}
 Our algorithm also attempts to detect groups within tables by partitioning the data into consecutive, type consistent groups, essentially separating textual and numerical data.
 We support some extensions such as currencies and percentual data and our approach allows us to omit manual specifications of groups.
 
@@ -377,6 +383,7 @@ We will explain and illustrate the three key steps in detail.
   \label{fig:learning_order}
 \end{figure}
 
+\tias{Move this to problem statement second part}
 A constraint~$c_1$ is a special case of another constraint~$c_2$ iff whenever $c_1$ is true, $c_2$ must also be true.
 We consider $c_1$ to be more specific than $c_2$ or $c_2$ to be more general than $c_1$.
 A constraint template~$s_1$ is more specific than a template~$s_2$ iff a constraint applying $s_1$ to a set of subgroups is always more specific than a constraint applying $s_2$ to (part of) the same set.
@@ -403,6 +410,7 @@ Therefore, we can first generate all subgroups $G_i'$ for which \ecalldiff{G_i'}
 
 The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
 \\\\
+\sergey{Can be parallelized by looking at connected components and respecting order}
 Most parts of the algorithm could be easily parallelized.
 However, \dependencies would impose a partial order in which constraint templates would have to be treated.
 
@@ -411,7 +419,10 @@ $\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function genera
 The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
 
 Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of~$t$.
+\tias{...such that at least one subgroup satisfies the signature}
 For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that those groups or some of their subgroups satisfy the \CSignature.
+
+\tias{Add paragraph on enforcement of group generation}
 
 For some constraints (e.g. sum, max, count) that share the same \CSignature the same set of assignments~$A$ will be found.
 
@@ -563,6 +574,7 @@ In this section we focus on \textit{functional} constraints that could be used i
 All experiments were run on a Macbook Pro, Intel Core i7 2.3 GHz with 16GB RAM.
 
 \subsection{Case study}
+\tias{Move explanation of origin to first time it is introduced}
 Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
 This example combines several smaller examples that were used in an exercise session to teach Excel into one spreadsheet.
 Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
@@ -634,6 +646,7 @@ There are only three essential constraints that have not been implemented yet, t
 Our primary focus was accuracy, therefore we sometimes traded off less redundancy for more accuracy.
 The motivation is that solutions can still be pruned using entailment or heuristics afterwards.
 The constraints we considered to be redundant are either duplications (results that can be calculated in different ways, one of which seems superior) or constraints that hold by accident.
+\tias{Advice, move to discussion}
 Duplications should be detected in a post-processing step while accidental constraints should primarily be removed by adding data.
 
 Across all spreadsheets our implementation finds 121 constraints, 28 ($23.14\%$) of which are redundant.
@@ -643,6 +656,7 @@ Many of the remaining constraints are duplications stemming from the overlapping
 Accidental constraints are limited to the 5 rank constraints that were discussed in the case study.
 
 \subsubsection*{Q3. How fast is the algorithm?}
+\tias{Mention trade-off in the approach}
 Concerning the speed of the algorithm we also prioritized accuracy when a trade-off had to be made.
 For the 32 spreadsheets in the benchmark our implementation ran in $17.86s \pm 0.87s$.
 The execution times vary widely though between spreadsheets, only four spreadsheets taking more than $0.2s$.
@@ -655,6 +669,8 @@ In order for the algorithm to run efficiently it is crucial to use dependencies 
 This avoids some of the explosion of combinations for constraints that have many arguments.
 For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to below 1 second.
 Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys that are present in the data.
+
+\sergey{Add summary table of results}
 
 \section{Discussion}
 \sergey{We should explain Figure \ref{fig:fbi}, e.g. if we aggregate by the crime now, the missing value would not get into statistics, which seems faulty, since we can directly compute it.}
