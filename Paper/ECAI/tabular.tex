@@ -410,17 +410,17 @@ Therefore, we can first generate all subgroups $G_i'$ for which \ecalldiff{G_i'}
 
 The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
 \\\\
-\sergey{Can be parallelized by looking at connected components and respecting order}
 Most parts of the algorithm could be easily parallelized.
-However, \dependencies would impose a partial order in which constraint templates would have to be treated.
+Every connected component in \dependencies can be learned independently.
+Within every component, constraint templates have to be treated respecting the order, i.e. learning the most general ones first.
+The generality ordering thus imposes a partial ordering according to which constraint templates must be learned.
 
 \subsubsection{Candidate group generation}
 $\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups (group-assignments~$A$) that may contains subgroups satisfying the constraint.
 The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
 
 Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of~$t$.
-\tias{...such that at least one subgroup satisfies the signature}
-For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that those groups or some of their subgroups satisfy the \CSignature.
+For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that a group~$G \in \groups$ is selected if there is at least one subgroup~$G' \subseteq G$ that satisfies the \CSignature.
 
 \tias{Add paragraph on enforcement of group generation}
 
