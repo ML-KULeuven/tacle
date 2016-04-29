@@ -530,6 +530,7 @@ Table~\ref{table:constraints} shows all constraint templates currently supported
 Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
 These constraints have been selected based on the most-used Excel functions as well as their occurrence in various example spreadsheets we observed.
 
+Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?}
 
 
 % \subsection{Workflow}
@@ -638,16 +639,16 @@ We consider three types of constraints:
   \item[Non-trivial] Constraints currently outside of the scope of this system (e.g. generic nested mathematical or logical formulas or n-ary constraints)
 \end{description}
 
+We examine three main questions concerning the accuracy, redundancy and efficiency of our approach, our main focus being accuracy.
+
 \subsubsection*{Q1. How accurate is the approach?}
 Fortunately, our system is currently able to find $100\%$ of the implemented constraints (90) on the benchmark suite.
 There are only three essential constraints that have not been implemented yet, therefore our system currently identifies $96.77\%$ of the essential constraints.
 
 \subsubsection*{Q2. How many redundant constraints are discovered?}
-Our primary focus was accuracy, therefore we sometimes traded off less redundancy for more accuracy.
+Our primary focus was, as mentioned before, accuracy, therefore we sometimes traded off less redundancy for more accuracy.
 The motivation is that solutions can still be pruned using entailment or heuristics afterwards.
 The constraints we considered to be redundant are either duplications (results that can be calculated in different ways, one of which seems superior) or constraints that hold by accident.
-\tias{Advice, move to discussion}
-Duplications should be detected in a post-processing step while accidental constraints should primarily be removed by adding data.
 
 Across all spreadsheets our implementation finds 121 constraints, 28 ($23.14\%$) of which are redundant.
 However, the average redundancy per spreadsheet is only $8.33\%$.
@@ -656,7 +657,6 @@ Many of the remaining constraints are duplications stemming from the overlapping
 Accidental constraints are limited to the 5 rank constraints that were discussed in the case study.
 
 \subsubsection*{Q3. How fast is the algorithm?}
-\tias{Mention trade-off in the approach}
 Concerning the speed of the algorithm we also prioritized accuracy when a trade-off had to be made.
 For the 32 spreadsheets in the benchmark our implementation ran in $17.86s \pm 0.87s$.
 The execution times vary widely though between spreadsheets, only four spreadsheets taking more than $0.2s$.
@@ -683,8 +683,12 @@ Unfortunately, this assumption is sometimes too strong, when users are intereste
   \label{fig:fbi}
 \end{figure*}
 
+\paragraph{Redundancy}
+As mentioned before, there are two types of redundant constraints: duplications and accidental constraints.
+Duplications should be detected throught in a post-processing step that uses entailment or heursitics to filter constraints.
+Accidental constraints can sometimes be detected through heuristics, as well, however they can also be removed by adding additional data.
 
-\sergey{I think there should be three things: key example evaluated, benchmark of 30 spreadsheets and maybe the FBI example, how we can detect interesting dependencies and correct potential mistakes}
+(\sergey{I think there should be three things: key example evaluated, benchmark of 30 spreadsheets and maybe the FBI example, how we can detect interesting dependencies and correct potential mistakes})
 
 
 {\bfseries
@@ -700,6 +704,8 @@ Unfortunately, this assumption is sometimes too strong, when users are intereste
 
 \section{Related Work}
 \sergey{key bullet points for Luc and possibly Samuel and me to make related work section}
+
+\samuel{Two possible takes here: 1) recent interest in topics such as flashfill, etc -> sparked the idea for this project. This actually relates to constraint learning which has seen an uptick recently and is a subfield of long-established ILP. 2) ILP established field trying to learn structure / .., has been brought to the less traditional context (constraint learning), learning constraints / programs has been picked up by specific approaches such as flashfill etc which inspired this research}
 
 \sergey{ECAI reference style file ignores their guideline and their guideline ignores what is written in the guidelines!}
 flashfill, flashextract, flashmeta \cite{flashfill,flashextract,flashmeta}
@@ -748,9 +754,10 @@ discussion: what would be a language to extend the system, what would be the use
 conclusions 
 % points: 1) can be a base for an actual plugin or a function in excel 2) novel problem and challenge for systems and constraint solvers 3) can be part of the complicated pipeline togehter with the header detection
 Our goal was to automatically identify constraints that hold in a spreadsheet.
-We have presented and evaluated an approach that is able to learn a large set constraints from CSV data.
+We have presented and evaluated an approach that is able to learn a large set of constraints from CSV data.
 
-fututre work
+\paragraph{Future work}
+...
 
 
 \bibliographystyle{ecai}
