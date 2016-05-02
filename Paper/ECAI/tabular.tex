@@ -331,16 +331,22 @@ Often, however, this not the case and a possible approach is to extract the grou
 This requires discovering \textit{tables} and \textit{groups}.
 Our implementation offers automated procedures for both steps.
 
-\tias{Reformulate: describe there's an naive approach...}
-Tables are detected by detecting rectangular collections of data and attempting to detect and separate headers from the data.
-Especially this last step is a complex task on its own  \cite{header} and a sophisticated implementation goes beyond the scope of this paper.
-On well formated data, however, the user will not have to specify tables manually.
+\subsection{Table and group detection}
+We chose to implement a naive approach to extract tables as the detection of tables and headers from data is a complex task on its own (\cite{header}) and a sophisticated implementation goes beyond the scope of this paper.
+Our approach first detects rectangular collections of data.
+It then attempts to identify the header by looking at the type of the first row.
+If this row consists only of textual entries, the row is expected to be the header and is removed, if not, the same procedure is applied on the first column.
+We suggest to provide tables in general, for well formated data, however, the user will not have to specify tables manually.
 
-\tias{Split extensions and group detection, clarify group detection, example (e.g. currency for extensions)}
-Our algorithm also attempts to detect groups within tables by partitioning the data into consecutive, type consistent groups, essentially separating textual and numerical data.
-We support some extensions such as currencies and percentual data and our approach allows us to omit manual specifications of groups.
+Our approach for detecting groups works by partitioning the data of a table into consecutive, type consistent groups, essentially separating textual and numerical data.
+The assumption is that often numerical and textual data are not mixed and this approach works well in practice as often groups do not have to be specified manually\footnote{\samuel{Check on benchmark}}.
+Unless an explicit orientation (rows or columns) is provided for the table, this approach will attempt to create both row- and column-groups.
 
-A more elaborate implementation could allow group (and table) detection could be done interactively / visually such that a user can select the groups in a spreadsheet or correct automatically generated groups.
+So far we have considered textual and numerical (floating point or integer) data.
+Our implementation also supports some extensions such as currencies and percentual data, which is considered to be numerical data.
+Moreover, percentual data is corrected to the floating point representation (i.e. divided by 100).
+
+A more elaborate implementation could allow group (and table) detection to be done interactively / visually such that a user can select the groups in a spreadsheet or correct automatically generated groups.
 From here on we will assume that groups and tables are given.
 
 \newcommand{\temps}{\ensuremath{S}}
