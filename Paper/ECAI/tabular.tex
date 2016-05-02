@@ -324,7 +324,7 @@ This version explicitly takes into account the specificity of the constraints an
 \newcommand{\tcl}{Tabular Constraint Learning}
 \newcommand{\ctl}{Condensed Tabular Constraint Learning}
 \section{Approach to Tabular Constraint Learning}
-\sergey{Luc wants this to be more intuitive, should we just add some examples here to make it easier to follow and refer to the running example?}
+% \sergey{Luc wants this to be more intuitive, should we just add some examples here to make it easier to follow and refer to the running example?}
 This section will describe our approach to \tcl.
 Our algorithm reasons on the level of groups and vectors on the data and assumes that these are provided.
 Often, however, this not the case and a possible approach is to extract the groups from the CSV file directly.
@@ -332,6 +332,7 @@ This requires discovering \textit{tables} and \textit{groups}.
 Our implementation offers automated procedures for both steps.
 
 \subsection{Table and group detection}
+\samuel{Is an example needed? I find no because it is not our main concern but open for discussion}
 We chose to implement a naive approach to extract tables as the detection of tables and headers from data is a complex task on its own (\cite{header}) and a sophisticated implementation goes beyond the scope of this paper.
 Our approach first detects rectangular collections of data.
 It then attempts to identify the header by looking at the type of the first row.
