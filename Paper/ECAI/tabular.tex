@@ -96,47 +96,44 @@
 \end{abstract}
 
 \section{Introduction}
-\sergey{Needs to be checked, bullet points for Luc and Tias to rework introduction}\\
-Millions of people across the world use spreadsheets everyday.
-Yet, many people lack a complete understanding of the structures and existing dependencies in the data.
-Indeed, the most useful part of spreadsheets is often the formulas and often these formula disappear when a file is exported and shared, for example as a CSV file.
-This brings us to the question: can we discover or reconstruct structural relations in flat tabular spreadsheet data?
-Moreover, can we accomplish this task in a general way that allows declarative specification of constraints to discover?
+Millions of people across the world use spreadsheets everyday. The tabular representation of the data is often intuitive, and the programming of functions in individual cells is quickly learned. However, large sheets (possible with multiple tables) and relations between different tables and sheets can be tedious and error-prone to handle. As a result, many people lack a complete understanding of the structures and existing dependencies in the data.
 
+This limited understanding is especially the case with spreadsheets exported from other software such as ERP packages. In this case, often a comma-separated values (CSV) format is used, meaning that all formula's are lost, including inter-sheet formulas and relations.
 
-Let us look at an example in Figure~\ref{fig:main_example}, where the header's names already suggest the usage of standard spreadsheet operations such as \textit{average} or \textit{sum}.
-If we look at Table~1 and at the first row in Table~2, it is clear that one could have selected the column called \textbf{1st Quarter}, clicked on the \textit{SUM} function and then just used the drag fill handle to apply the formula to the other columns.
-Similarly, that would work for the second (\textit{Average}), third (\textit{Min})  and forth (\textit{Max}) rows in Table 2.
-I.e., all operations here are vectorized and make use of the standard spreadsheet operations.
-
+In this work, we investigate in how far machine learning techniques can be used to infer constraints (formula's and other relations) from raw spreadsheet data. However, this is an unconventional machine learning problem. 
+Consider the example in Figure~\ref{fig:main_example}, where the header's names already suggest the usage of spreadsheet operations such as \textit{average} or \textit{sum}.
+Looking at the first row in Table~2 and the data in Table~1, it is clear that the values in this row were computed by summing the values in the corresponding column of Table~1.
 Examining Table~1 also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by taking the row-wise sum of the previous four columns.
+This already provides a flavor of how this problem is different from standard data mining settings, when the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple table with relationships between them. And on the other hand the data is mixed textual and numeric, since people tend to use spreadsheets for financial and accounting computations. One can see that understanding and learning constraints in tabular data is hence a new and challenging problem setting.
+%Furthermore, it is not only challenging for a machine but for a human as well.
 
-That gives us already a hint how this problem is different from the standard data mining settings, when the data is in rows and variables are in columns. Here everything is mixed, some values are missing in the results, some missing the arguments, even a header might have missing values. The data is relational on the one hand, since we have multiple table with relationships between them. And on the other hand, the data is numeric, since people tend to use spreadsheets for financial and accounting computations, which is heavily numeric.
+Relatedly, the field of Inductive Logic Programming has long... \tias{TODO for Sergey or Luc}. Additionally, the field of Constraint Programming has recently started investigating ways in which Constraint Satisfaction Problems can automatically be inferred from known solutions. Here, methods ranging from generate-and-test~\cite{todo:modelseeker}, concept learning~\cite{todo:conacq} and Inductive Logic Programming~\cite{todo:lallouet} have been used with encouraging results.
 
-Given these novel aspects, we conclude that understanding and learning constraints in tabular data is a new and challenging problem setting.
-Furthermore, it is not only challenging for a machine but for a human as well.
+Another line of work from which we draw inspiration is that of \tias{TODO for ?, flashfill et al}. We will consider the case where all data is given at once. However, as in the use case of flashfill, one could also use this technique to derive formula's interactively while a user is entering values in a cell \tias{TODO SAMUEL: proofread/refine last statement}.
 
-Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
+The question that we hence try to answer in this work is: can we discover or reconstruct structural constraints (relations, functions) in flat tabular spreadsheet data? Moreover, we investigate general-purpose ways for doing so, that do not require hard coding a number of constraints. Rather, we use techniques from constraint solving to derive whether and which constraints are satisfied. This approach can be extended to any constraint in a principled way.
+
+
+
+%Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
+
 
 \textbf{Motivation}:
-\samuel{Suggest better table layouts / formula translation}
 \begin{itemize}
-  \item File generated from model, model got lost, need to reconstruct
+  \item USED -- File generated from model, model got lost, need to reconstruct
   \item Constraint programming is hard - is Excel hard?
   \item Avoid manual analysis, provide selection of constraints
-  \item Error checking
+  \item SOMEWHAT USED --Error checking
   \item Completion, gain speed and insights (Complicated constraints, also complicated to verify, too much output)
 \end{itemize}
 
 \textbf{Novelty:}
 \begin{itemize}
-  \item Unsupervised setting (contrary to flashfill, etc)
+  \item USED -- Unsupervised setting (contrary to flashfill, etc)
   \item Numeric, different constraints (contrary to single textual function solution in flashfill, etc)
-  \item Data format (2D) -- data is no longer in rows like a classic ML or DM settings
-  \item Declarative, general / modular, stacking of constraint problems
+  \item USED -- Data format (2D) -- data is no longer in rows like a classic ML or DM settings
+  \item USED -- Declarative, general / modular, stacking of constraint problems
 \end{itemize}
-
-\sergey{need to elaborate the example here: like in a story}
 
 \begin{figure*}[tbh]
   \begin{center}
