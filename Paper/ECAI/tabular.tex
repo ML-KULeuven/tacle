@@ -581,6 +581,12 @@ Generally \CSignature and / or the \CFunction can be relaxed to capture more con
 % \section{Declarative modeling}
 % \sergey{We need to fit ASP, Minizinc and all that here, I mean it is supposed to be an important point after all}
 
+\newcommand{\runtotal}{16.12}
+\newcommand{\runtotalstd}{0.62}
+
+\newcommand{\runfile}{0.50}
+\newcommand{\runfilestd}{0.02}
+
 \section{Evaluation}
 \sergey{we need to add a summary of the dataset, avg number of constraints, cells, rows, columns}
 In this section we experimentally validate our approach.
@@ -677,18 +683,29 @@ Accidental constraints are limited to the 5 rank constraints that were discussed
 
 \subsubsection*{Q3. How fast is the algorithm?}
 Concerning the speed of the algorithm we also prioritized accuracy when a trade-off had to be made.
-For the 32 spreadsheets in the benchmark our implementation ran in $17.86s \pm 0.87s$.
+For the 32 spreadsheets in the benchmark our implementation ran in ${\runtotal}s \pm {\runtotalstd}s$.
 The execution times vary widely though between spreadsheets, only four spreadsheets taking more than $0.2s$.
 Most of the execution time in these cases goes towards searching either aggregate constraints or conditional aggregates.
 The search for aggregates will be slow on spreadsheets containing larger groups of numeric data.
 For conditional aggregates the number of candidate primary keys (all-different) and numeric vectors determines the running time (e.g. the case study example).
+
+\begin{table}
+  \centering
+  \begin{tabular}{lll}
+    & \textbf{Total} & \textbf{Average per spreadsheet} \\
+    \textbf{Essential constraints} & $93$ & $2.91$ \\
+    \textbf{Accuracy} & $96.77\%$ & $94.27\%$ \\
+    \textbf{Redundant} & $23.14\%~(28)$ & $8.33\%~(0.88)$ \\
+    \textbf{Speed (s)} & ${\runtotal}s \pm {\runtotalstd}s$ & ${\runfile}s \pm {\runfilestd}s$
+  \end{tabular}
+  \caption{Overview evaluation on essential constraints}
+\end{table}
 
 \paragraph{Dependencies}
 In order for the algorithm to run efficiently it is crucial to use dependencies and find constraint incrementally whenever possible.
 This avoids some of the explosion of combinations for constraints that have many arguments.
 For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to below 1 second.
 Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys that are present in the data.
-
 \sergey{Add summary table of results}
 
 \section{Discussion}
