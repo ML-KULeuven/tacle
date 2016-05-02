@@ -521,7 +521,15 @@ Future versions of the system will provide user interfaces to some of these cons
 
 
   \end{tabularx}
-  \caption{\template's \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display} \sergey{1) should be readable alone without lookin in the text of the paper 2) that's the constraints we found popular according the spreadsheets in the web 3) that's what is actually implemented in the system 4) corresponds to the actual Excel functions} These constraints are \textit{structural}, they do not compute a result. Our algorithm can and does discover these constraints, however, they cannot be directly used in spreadsheet software }
+  \caption{
+An overview of the different constraint templates that we have implemented.
+Most of the constraint correspond directly to spreadsheet functions and have been selected based on the most popular constraints in Excel and their occurence in spreadsheets that we have collected.
+The constraints marked with $*$ are \textit{structural}, they are discovered by our algorithm, however, they cannot be readily used in spreadsheet software.
+The constraints marked with $\dagger$ are aggregate constraints, the table shows the constraints for sum but the implementation also supports versions for max, min, average, product and count.
+  \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display - diff not present - pruning relation?} 
+  }
+
+  % \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display} \sergey{1) should be readable alone without lookin in the text of the paper 2) that's the constraints we found popular according the spreadsheets in the web 3) that's what is actually implemented in the system 4) corresponds to the actual Excel functions}}
 
   \label{table:constraints}
 \end{table*}
