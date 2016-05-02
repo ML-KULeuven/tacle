@@ -429,7 +429,12 @@ The goal of this step is to prune out impossible groups from the beginning by lo
 Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of~$t$.
 For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that a group~$G \in \groups$ is selected if there is at least one subgroup~$G' \subseteq G$ that satisfies the \CSignature.
 
-\tias{Add paragraph on enforcement of group generation}
+\samuel{TODO: correct code integer groups}\\
+Consider the \ecrank{v_r}{v_x} constraint template, then both arguments must be of the same length.
+Therefore, assignments containing groups of different length do not have to be considered.
+Constraints of the \CSignature cannot always be enforced directly on a group but have to consider whether subgroups could satisfy them.
+For example, the \CSignature requires $v_r$ to be integer.
+If a numeric group is assigned to $v_r$ then some subgroups may have type float while other may be of type integer, therefore, this this group cannot be discarted.
 
 For some constraints (e.g. sum, max, count) that share the same \CSignature the same set of assignments~$A$ will be found.
 
@@ -437,8 +442,8 @@ For some constraints (e.g. sum, max, count) that share the same \CSignature the 
 \ecrank{v_r}{v_x} will require groups assigned to $v_r$ to be $\integer$, groups assigned to $v_x$ to be $\discrete$ (i.e. $\integer$ or $\textual$) and only allows assignments in which groups assigned to both arguments have the same length.
 
 \subsubsection{Subgroup satisfaction search}
-$\findassignment(t,A,C_{solutions})$ finds, for all assignments~$a = (G_1, ..., G_n)$ in $A$, the subgroups $G_i' \subseteq G_i$ such that the corresponding constraint $t(G_1', ..., G_n')$ is satisfied.
-For every \template~$t$ an implementation (declarative or imperative) needs to be provided that finds valid subgroups given the assignments.
+$\findassignment(t,A,C_{solutions})$ finds, for all assignments~$a = (G_1, ..., G_n)$ in $A$, the subgroups $G_i' \subseteq G_i$ such that the corresponding constraint $t(G_1', ..., G_n')$ is satisfied (i.e. the \CSignature and \CFunction of~$t$ are satisfied).
+For every \template~$t$ an implementation (declarative or imperative) needs to be provided that, given an assignment, finds valid subgroups.
 
 \paragraph{Example}
 Consider a group assignment $G_x, G_y$ associated with the arguments $v_x,v_y$ of \ecrank{v_y}{v_x}, then \findassignment selects single vectors $V_y \in G_y, V_x \in G_x$ such that \ecrank{V_y}{V_x} is true.
