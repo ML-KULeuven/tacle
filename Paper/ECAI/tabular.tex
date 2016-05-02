@@ -117,7 +117,7 @@ The question that we hence try to answer in this work is: can we discover or rec
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
-
+{\it
 \textbf{Motivation}:
 \begin{itemize}
   \item USED -- File generated from model, model got lost, need to reconstruct
@@ -140,50 +140,52 @@ The question that we hence try to answer in this work is: can we discover or rec
     \includegraphics[width=0.75\textwidth]{figures/Demo.png}
   \end{center}
   \vspace{-10pt}
-  \caption{An example of constraint reconstruction (in blue) with indicated groups (in green)}
+  \caption{Example spreadsheet (black words and numbers only). Blue and green elements are added by us to clarify the relations.}
   \label{fig:main_example}
 \end{figure*}
+}
 
 \section{Formalization}
-\samuel{Explain concepts on example}
-\sergey{subgroup notation, rework the solution definition}
-\subsection{Groups, Type-consistency and Constraints}
-\samuel{Instantiated table... references}
-In this work we focus on spreadsheet data, which is physically one big table, but conceptually often consists of multiple tables, see Figure~\ref{fig:main_example} for an example.
-Formally, a table is an $n \times m$ matrix, each table entry is called  a \textit{cell}.
+In this work we focus on spreadsheet data. We will first introduce the general concepts of cells, group and constraint templates, using the (multi-table) sheet in Figure~\ref{fig:main_example} as running example.
 
-Each cell has a {\em type} which can be numeric or textual.
-The numeric type has two subtypes: integers and floats.
-We also consider the special element called \textit{None}, which can be either type: numeric or textual.
-A set of cells is called \textit{type-consistent} iff all cells in the set are either numeric or textual.
+\subsection{Cells, vectors and groups}
+A spreadsheet is physically one big table, but conceptually may consist of multiple tables, such as in Figure~\ref{fig:main_example}. We will describe a method of extracting tables from a big spreadsheet in Section~\ref{todo}, however this is not the core of our learning method. Our formalization reasons over tables directly.
+
+Formally, a table is an $n \times m$ matrix. Each entry is called a \textit{cell}.
+A cell has a {\em type}, which can be numeric or textual. We further distinguish numeric types in subtypes integer and float. We also consider \textit{None} as a special type when a cell is empty; \textit{None} is a subtype of all other types.
+A set of cells is called \textit{type-consistent} iff all cells in the set are of the same type.
 %Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric subtype by requiring its arguments to be integers.
 
-We consider various sets of cells in tables:
+We consider various sets of cells with the following notation:
 \begin{itemize}
-  \item {\bf Cells}: Each entry in the matrix/table is called  a \textit{cell}.
-  We use the notation $T[a,b]$ to refer to a particular cell in the table~$T$ at the row with index~$a$ and the column with index~$b$.
-  \item {\bf Columns and rows}: To refer to the $a$-th row (column) we use the following syntax $T[a,{:}]$ ($T[{:},a]$), to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
+  \item {\bf Cell}: We use the notation $T[a,b]$ to refer to a particular cell in the table~$T$ at the row with index~$a$ and the column with index~$b$.
+
+  \item {\bf Columns and rows}: For a table $T$, we use notation $T[a,{:}]$ to refer to the $a$-th row, and similarly $T[{:},a]$ for the $a$-th column. % to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
+
   \item
-  A \textbf{vector} is either a column or a row that is type-consistent.
-  If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation.
-  \samuel{Vector also has a length; Group has a size}
+  A \textbf{vector} is a type-consistent row or column.
+  If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. The \textit{length} of a vector is the number of cells in that vector.
+
   \item
-  A \textbf{group} is a subrange of vectors with the same orientation in a table.
-  We use the following notation to refer to a row (column) group $G$ in a table $T$ with rows (columns) ranging from $a$ to $b$: $G = T[a{:}b,:]$ ($G = T[{:},a{:}b]$), where $a,b$ are natural numbers.
-  The \textit{length} of a row (column) group $G$, written as \textit{length(G)}, is the number of its columns (rows); We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
+  A \textbf{group} is a projection of a matrix onto a set of consecutive rows or columns. %In this work we only consider consecutive rows and columns.
+  We use the following notation to refer to a row-oriented group with rows ranging from $a$ to $b$: $G = T[a{:}b,:]$, where $a,b$ are natural numbers. Similarly, we have $G = T[{:},a{:}b]$ for a column-oriented group.
+  The vectors in a group have to be type-consistent, consecutive in the original table and of equal length.
+  The \textit{size} of a group is the number of vectors in the group, while the \textit{length} of a group is the length of its vectors. 
+  %The \textit{length} of a row (column) group $G$, written as \textit{length(G)}, is the number of its columns (rows); We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
+
   \item
- A \textit{subgroup} $g$ is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$. %It defines what it means for a constraint to be well-formed
+  A \textbf{subgroup} $G'$ of $G$ is simply a projection of $G$ onto a consecutive subset its vectors. % is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$. %It defines what it means for a constraint to be well-formed
 %We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must contain only one vector, we write $g \in G$.
 % A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
 \end{itemize}
 %For notational convenience, we will refer to vectors in {\rm roman} and to groups in {\bf bold}. {\bf CHECK}
 
-
-When we do not want to distinguish between cells, columns, rows, vectors or groups, we shall talk about a {\em set of cells}.
+%When we do not want to distinguish between cells, columns, rows, vectors or groups, we shall talk about a {\em set of cells}.
 
 \paragraph{Example}
 Consider Table~1 in the Figure~\ref{fig:main_example}, its rows are not type consistent (i.e. they contain both numeric and textual data).
-The (column) vectors of Table~1 are subdivided into five groups:
+Ignoring the (all-textual) header, Table~1 can be divided into the following five column-oriented groups:
+{\small
 \begin{align*}
 &G_1 = \range{T_1}{\rangeall}{1},
 &G_2 = \range{T_1}{\rangeall}{2},\\
@@ -191,47 +193,47 @@ The (column) vectors of Table~1 are subdivided into five groups:
 &G_4 = \range{T_1}{\rangeall}{9},\\
 &G_5 = \range{T_1}{\rangeall}{\rangeto{10}{11}}.
 \end{align*}
-In order to sum the results of a salesperson across quarters we can consider for example the subgroup $\range{T_1}{\rangeall}{\rangeto{3}{6}} \subset G_3$
+}
+An example subgroup is $\range{T_1}{\rangeall}{\rangeto{3}{6}} \subset G_3$, which contains the sales numbers of all employees for the four quarters.
 
-\subsection{Constraints}
-A \template is a triple \textit{(\CName, \CSignature, \CFunction)}.
-Let us elaborate on this:
+\subsection{Constraint templates}
+Our method will extract the applicable constraints (including functions) in a set of tables, based on \textit{constraint templates}.
+%
+A \template is a triple \textit{(\CName, \CSignature, \CFunction)}:
+%Let us elaborate on this:
 \begin{itemize}
 \item
 \textit{\CName}  specifies the syntactic form of the constraint $c(A_1, ...,A_n)$, that is, the name of the constraint $c$ together
-with $n$ arguments $A_i$. Thus a constraint $c$ is viewed as a relation or predicate of arity $n$ in first order logic.
-\samuel{Or a function}
+with $n$ arguments $A_i$. Thus a constraint $c$ is viewed as a relation or predicate of arity $n$ in first order logic. Note that a function $B=f(A_1,...,A_n)$ can be represented with the $n+1$-ary predicate $cf(B,A_1,...,A_n)$.
 % the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
-\item the \textit{\CSignature} constrains the arguments $A_i$ of the constraint, that is, the types of the arguments, together
-with possible further restrictions using properties of the arguments $A_i$ such as their length.  For example, the signature can restrict the types of the arguments
-to be vectors of integers and require that  the length of all arguments be equal.  In terms of logical and relational learning, this is known as the {\em bias} of the learner,
-it specifies when the constraint is well-formed.
-  %The constraints act on properties or group meta-information, not on the actual group content. In ILP, it is known as bias,
-  \item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds, in practice this will be a function that can be called when
-the arguments are full instantiated to decide whether the constraint is satisfied or not. In logical and relational learning this is known as the background knowledge, which provides the definition of the predicate.
+
+\item the \textit{\CSignature} defines the properties that the arguments of the predicate must satisfy. That is, the required types of the arguments, together
+with possible further restrictions such as on their length. For example, the signature can restrict the types of the arguments to be groups integers and require that the length of all arguments be equal. \\
+In terms of logical and relational learning, such a \CSignature is known as the {\em bias} of the learner, it specifies when the constraint is well-formed.
+
+\item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments to all its arguments, it can verify whether the constraint is satisfied or not. %holds, in practice this will be a function that can be called when
+%the arguments are full instantiated to decide whether the constraint is satisfied or not.
+In logical and relational learning this is known as the background knowledge, which provides the definition of the predicate.
 \end{itemize}
 
 \paragraph{Example}
-Several example constraints are illustrated in Table 1.  For example, the \template \textit{rank} has
+Several example constraints are illustrated in Table 1.  For example, the constraint template \textit{rank} has
 \begin{itemize}
-\item \CName: \textit{$v_r$ = RANK($v_x$)}, where $v_x$ and $v_r$ are the arguments;
-\item \CSignature: the two arguments $v_r$ and $v_x$ must be numeric; furthermore, the first argument $v_r$ must be integer and the length of the vectors
-\samuel{Both must be vectors}
-of $v_x$ and $v_r$ be identical, i.e., $length(v_x) = length(v_r)$;
-\item \CFunction: \textit{$v_r$ = RANK($v_x$)} whenever each value of $v_r$ is the rank of the corresponding value in $v_x$.
+\item \CName: \textit{$B$ = RANK($A$)}, where $B$ and $A$ are the arguments;
+\item \CSignature: the two arguments $B$ and $A$ must be numeric groups and of size 1; furthermore, the group $B$ must be integer (the rank) and the length of groups $A$ and $B$ must be identical, i.e., $length(B) = length(A)$;
+\item \CFunction: \textit{$B$ = RANK($A$)} whenever each value of $B$ is the rank of the corresponding value in $A$.
 % is satisfied in the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ satisfies the constraint iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
 \end{itemize}
 
-When looking into constraints like \textit{$v_r$ = RANK($v_x$)}, it is important to see the analogy with both first order logic and with constraint satisfaction problems.
-From a FOL perspective, the name of the constraint ($RANK$) is just the predicate, and the arguments $v_r$ and $v_x$ are the terms, which can be either variables or values.
+When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
+From a FOL perspective, the name of the constraint ($RANK$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
 This also holds in our setting: when we write
-      $\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}}$,
-we can interpret the argument ${\range{T_{1}}{\rangeall}{8}}$ as group variables that would apply to any table,
-\samuel{clarify, e.g. what is group variable}
-or we can interpret the argument as the value it takes in the particular table called $T_1$ that is shown in Figure 1, that is, $[1,2,3,4]$. {\bf CHECK}
-This also means that we can talk about constraints being satisfied. Basically, a constraint $c(t_1, ..., t_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only
-if the constraint holds on the values that the $t_i$ take in the set of tables ${\cal T}$. Figure 3 provides a list of constraints that are satisfied by the tables
-in Figure 1.
+      $\ecrank{\range{T}{\rangeall}{8}}{\range{T}{\rangeall}{7}}$,
+we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table \tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...},
+or we can interpret the argument as the value it takes in a particular table $T$ such as $T_1$ in Figure 1, that is, $[1,2,3,4]$.
+This also means that we can talk about constraints being satisfied. Basically, a constraint $c(A_1, ..., A_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only
+if the constraint holds on the values that the $A_i$ take in the set of tables ${\cal T}$. \tias{I find this confusing: a group as we defined it is defined on one table, not on multiple tables. we should separate the table variable from the 'range' variables then...}
+%Figure 3 provides a list of constraints that are satisfied by the tables in Figure 1.
 
 
 
