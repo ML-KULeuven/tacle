@@ -93,7 +93,7 @@
 
 \begin{abstract}
 %Spreadsheets, comma separated value files and other tabular data representations are in wide use today. However, the correct use and maintenance of functions in and between the tabular data can be error-prone and overwhelming. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. Our method takes inspiration form inductive logic programming and constraint satisfiability. We represent common spreadsheet functions as predicates with arguments that must satisfy number of constraints over the arguments. This allows generic constraint satisfaction techniques to be used to find all such satisfying predicates/functions within the rows, columns and submatrices of the tables. We show the effectiveness and accuracy of this approach on a number of spreadsheets from varying sources.
-Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today. However, modeling, maintaining and discovering formulas in tabular data and between spreadsheets can be time consuming and error-prone. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking. Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfiability. Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints. Constraint satisfaction techniques are used to identify predicates (constraints) that hold between the rows, columns and submatrices of the tables. Therefore, new types of constraints can be easily added to the system by specifying them using declarative methods such as Minizinc or ASP. We show that our approach is able to accurately discover constraints in a number of spreadsheets from varying sources.
+Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today. However, modeling, maintaining and discovering formulas in tabular data and between spreadsheets can be time consuming and error-prone. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking. Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction. Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints. Constraint satisfaction techniques are used to identify predicates (constraints) that hold between the rows, columns and submatrices of the tables. Therefore, new types of constraints can be easily added to the system by specifying them using declarative methods such as Minizinc or ASP. We show that our approach is able to accurately discover constraints in a number of spreadsheets from varying sources.
 \end{abstract}
 
 \section{Introduction}
@@ -243,29 +243,26 @@ if the constraint holds on the values that the $A_i$ take in the set of tables $
 
 \section{Problem Statement}
 A {\em constraint satisfaction problem} (CSP) consists of a set of constraints and the
-task is to find assignments of values to the variables in the CSP so that all constraints are satisfied.  As the variables typically refer to
-cells in tables, solving a CSP problem often means completing the tables so that all constraints are satisfied.
+task is to find assignments of values to the variables in the CSP so that all constraints are satisfied.
+In the context of spreadsheets the variables typically refer to cells in tables, and solving the corresponding CSP problem means completing the tables so that all constraints in the spreadsheet are satisfied.
 
-While the traditional CSP problem is given a set of variables and a set of constraints,
-and the task is to find an assignment, the {\bf inverse CSP} or the {\bf Tabular Constraint Learning Problem} can be defined as follows.\\
+While the traditional CSP problem is given a set of variables and a set of constraints, and the task is to find an assignment, the {\bf inverse CSP} or the {\bf Tabular Constraint Learning Problem} can be defined as follows.\\
 \\
 {\bf Given }
 \begin{itemize}
 \item
 a set of instantiated tables (so all cells have values) ${\cal T}$;
 \item
-a set of \template ${\cal C}$;
+a set of {\template}s ${\cal C}$;
 \item
 a set of groups ${\cal G}$ for the tables ${\cal T}$;
 \end{itemize}
 \noindent
-%\samuel{This section is incorrect, yet, we find assignments over subgroups, associated with a \template}
-{\bf Find}  the set of all constraints $c(G_1, ... , G_N)$ that 1) are satisfied  in ${\cal T}$, 2)
-for which all $G_i \in {\cal G}$ and  3)  $c(G_1, ... , G_N)$ satisfies the signature of the constraint $c$.
+{\bf Find}  the set of all constraints $s(G_1', ..., G_n')$ that 1) are satisfied  in ${\cal T}$, 2)
+for which all $G_i' \subseteq G_i \in {\cal G}$ and  3) the groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$.
 
 For instance, Figure 3 contains the solution to the tabular constraint learning problem
-that uses the tables of Figure 1, the signatures of Table 1 and the set of groups mentioned in {\bf CHECK / COMPLETE}
-
+that uses the tables of Figure 1, the signatures of Table 1 and the set of groups mentioned in (\samuel{show groups somewhere}).
 
 % \luc{Delete from here}
 % \luc{ADD/REFER TO EXAMPLE}
@@ -394,6 +391,7 @@ We will explain and illustrate the three key steps in detail.
 A constraint~$c_1$ is a special case of another constraint~$c_2$ iff whenever $c_1$ is true, $c_2$ must also be true.
 We consider $c_1$ to be more specific than $c_2$ or $c_2$ to be more general than $c_1$.
 A constraint template~$s_1$ is more specific than a template~$s_2$ iff a constraint applying $s_1$ to a set of subgroups is always more specific than a constraint applying $s_2$ to (part of) the same set.
+\samuel{Formalize: $\forall x1..x_k s_1(x_1...x_n) => s_2(x_1...x_k)$ :: looking for most specific}
 
 \paragraph{Example}
 Consider templates \textit{all-different} and \textit{foreign-key}.
@@ -682,6 +680,10 @@ Examining the redundant constraints reveals that many (12) of them are duplicati
 Many of the remaining constraints are duplications stemming from the overlapping role of difference and sum.
 Accidental constraints are limited to the 5 rank constraints that were discussed in the case study.
 
+Redundant constraints can be reduced in different ways.
+Duplications should be detected in a post-processing step that uses entailment or heursitics to filter constraints.
+Accidental constraints may be detected through heuristics, however, they can be also be removed by adding additional data.
+
 \subsubsection*{Q3. How fast is the algorithm?}
 Concerning the speed of the algorithm we also prioritized accuracy when a trade-off had to be made.
 For the 32 spreadsheets in the benchmark our implementation ran in ${\runtotal}s \pm {\runtotalstd}s$.
@@ -709,7 +711,7 @@ For example, using foreign keys as a base constraint to find conditional aggrega
 Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys that are present in the data.
 \sergey{Add summary table of results}
 
-\section{Discussion}
+\section{Applications}
 \sergey{We should explain Figure \ref{fig:fbi}, e.g. if we aggregate by the crime now, the missing value would not get into statistics, which seems faulty, since we can directly compute it.}
 
 \begin{figure*}[thb]
@@ -720,10 +722,9 @@ Unfortunately, this assumption is sometimes too strong, when users are intereste
   \label{fig:fbi}
 \end{figure*}
 
-\paragraph{Redundancy}
-As mentioned before, there are two types of redundant constraints: duplications and accidental constraints.
-Duplications should be detected throught in a post-processing step that uses entailment or heursitics to filter constraints.
-Accidental constraints can sometimes be detected through heuristics, as well, however they can also be removed by adding additional data.
+\samuel{application autocomplete}
+
+\samuel{FBI: work out error detection algorithm}
 
 (\sergey{I think there should be three things: key example evaluated, benchmark of 30 spreadsheets and maybe the FBI example, how we can detect interesting dependencies and correct potential mistakes})
 
