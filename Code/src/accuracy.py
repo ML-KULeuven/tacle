@@ -13,7 +13,8 @@ files = ["bmi", "age_department_sumif", "average_ablebits", "columnwise-sum-rows
          "financial_result", "fruits", "help_lookup", "household", "inventory", "multsum",
          "paper_supply", "price_weight", "repair", "rides", "sales_blanks", "school", "score",
          "shares", "sum_if_double_condition", "sum_table_from_guide", "sumif_blanks", "sumif_example",
-         "sumif_games_toys", "sumif_region", "sumif_uk", "sumproduct", "week_2_busn_store_2", "sumif_diskettes"]
+         "sumif_games_toys", "sumif_region", "sumif_uk", "sumproduct", "week_2_busn_store_2", "sumif_diskettes",
+         "pattern_mining"]
 
 def is_excel_constraint(c: Constraint):
     return isinstance(c, Aggregate) or isinstance(c, ConditionalAggregate) or isinstance(c, Series) \
