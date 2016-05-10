@@ -257,8 +257,8 @@ In the context of spreadsheets where variables could represent cells in tables, 
 The inverse problem is, given an assignment to all cells, to find the constraints that are present in the spreadsheet.
 We define the {\bf Tabular Constraint Learning Problem} as follows:
 %
-\begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}
-  Given ${\cal G}$ a set of groups derived from fully instantiated tables ${\cal T}$ (all cells have values) and a set of {\template}s ${\cal S}$ ; find the set of all constraints $s(G_1', ..., G_n')$ that match the syntax of a \template~$s \in {\cal S}$ and where the groups $G_1', ... , G_n'$ with $\forall i, G_i' \subseteq G_i, G_i \in {\cal G}$ satisfy both the signature and the definition of that \template.
+\begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}\\
+  Given ${\cal G}$ a set of groups over fully instantiated tables ${\cal T}$ (all cells have values) and a set of {\template}s ${\cal S}$: find the set of all constraints $s(G_1', ..., G_n')$ that match the syntax of a \template~$s \in {\cal S}$ and where the (sub)groups $G_1', ... , G_n'$ with $\forall i: G_i' \subseteq G_i, G_i \in {\cal G}$ satisfy both the signature and the definition of that \template.
 \end{definition}
 % {\bf Given }
 % \begin{enumerate}
@@ -332,8 +332,8 @@ Formally, we say that a constraint template $t_1$ is \textit{more specific} than
 
 Let us introduce the version of tabular constraint learning by modifying Definition \ref{def:problem_statement} that takes into account the specificity relation between constraint templates.
 
-\begin{definition}[Condensed Tabular Constraint Learning]\label{def:condensed_problem_statement}
-  Let ${\cal T}$ a set of instantiated tables (all cells have values),  ${\cal C}$ be a set of {\template}s,  ${\cal G}$ be a set of groups for the tables ${\cal T}$, \dependencies be the set of all specifity rules, then find the set of all constraints $s(G_1', ..., G_n')$ that are satisfied  in ${\cal T}$, for which all $G_i' \subseteq G_i \in {\cal G}$, the groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$ and there is no $s'$ in ${\cal C}$ such that $s'(G_h',\dots,G_k')$ holds (for $1 \leq h \leq k \leq n$) and  $s'$ is more specific than $s$ in \dependencies.
+\begin{definition} \textit{Condensed Tabular Constraint Learning}\label{def:condensed_problem_statement}\\
+  Given a set of instantiated tables~${\cal T}$ (all cells have values), a set of {\template}s~${\cal S}$, a set of groups~${\cal G}$ over the tables~${\cal T}$, and the set of all specifity rules~\dependencies: find the set of all constraints $s(G_1', ..., G_n')$ that are satisfied  in ${\cal T}$, for which all $G_i' \subseteq G_i \in {\cal G}$, the (sub)groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$ and there is no $s'$ in ${\cal C}$ such that $s'(G_h',\dots,G_k')$ holds (for $1 \leq h \leq k \leq n$) and  $s'$ is more specific than $s$ in \dependencies.
 \end{definition}
 
 
