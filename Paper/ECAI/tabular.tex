@@ -28,7 +28,7 @@
 \newcommand{\learnconstraints}{\format{learnConstraints}}
 \newcommand{\findassignment}{\format{findSolutions}}
 \newcommand{\postprocess}{\format{pruneRedundant}}
-\newcommand{\constrainttorder}{\format{generalityOrder}}
+\newcommand{\constrainttorder}{\format{templateOrder}}
 \newcommand{\template}{\format{constraint template}}
 
 
@@ -44,7 +44,7 @@
 
 \newcommand{\eccalc}[2]{\ensuremath{#1 = #2}}
 \newcommand{\ecrank}[2]{\eccalc{#1}{\mathit{RANK}(#2)}}
-\newcommand{\ecfkey}[2]{\ensuremath{#1 \rightarrow #2}}
+\newcommand{\ecfkey}[2]{\ensuremath{FOREIGNKEY(#1,#2)}}
 \newcommand{\ecalldiff}[1]{\ensuremath{\mathit{ALLDIFFERENT}(#1)}}
 \newcommand{\eclookupf}[4]{\ensuremath{\mathit{LOOKUP}_{\mathit{#4}}(#1, #2, #3)}}
 \newcommand{\eclookup}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{}}}
@@ -258,85 +258,42 @@ The inverse problem is, given an assignment to all cells, to find the constraint
 We define the {\bf Tabular Constraint Learning Problem} as follows:
 %
 \begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}\\
-  Given ${\cal G}$ a set of groups over fully instantiated tables ${\cal T}$ (all cells have values) and a set of {\template}s ${\cal S}$: find the set of all constraints $s(G_1', ..., G_n')$ that match the syntax of a \template~$s \in {\cal S}$ and where the (sub)groups $G_1', ... , G_n'$ with $\forall i: G_i' \subseteq G_i, G_i \in {\cal G}$ satisfy both the signature and the definition of that \template.
+  Given ${\cal G}$ a set of groups over fully instantiated tables ${\cal T}$ (all cells have values) and a set of {\template}s ${\cal S}$: find all constraints $c_s(G'_1, ..., G'_n)$ that match the syntax of a \template~$s \in {\cal S}$ and where all subgroups $G'_i \subseteq G_i$ with $G_i \in {\cal G}$, satisfy both the signature and the definition of that \template.
 \end{definition}
-% {\bf Given }
-% \begin{enumerate}
-% \item
-% a set of instantiated tables (so all cells have values) ${\cal T}$;
-% \item
-% a set of {\template}s ${\cal C}$;
-% \item
-% a set of groups ${\cal G}$ for the tables ${\cal T}$;
-% \end{enumerate}
-% \noindent
-% {\bf Find}  the set of all constraints $s(G_1', ..., G_n')$ that 
-% \begin{enumerate}
-% \item are satisfied  in ${\cal T}$;
-% \item for which all $G_i' \subseteq G_i \in {\cal G}$ ;
-% \item the groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$.
-% \end{enumerate}
-An example solution for the type-consistent groups of the tables in Figure~\ref{fig:main_example} and {\template}'s in Table~\ref{table:constraints} is shown in Figure~\ref{fig:sol_example}.
-
-% Let us introduce \template instantiation syntax. Let $S$ be a mapping from variables to the subgroups of \groups and $t$ be a \template, then $t^S$ is the template, in which all variables in all constrainst in \CSignature and \CFunction are instantiated with the corresponding subgroups from $S$. We refer to $t^S$ as a \textit{constraint} and to the instantiated \CSignature (\CFunction) as $\text{\CSignature}^S$ ($\text{\CFunction}^S$). Throughout the work we refer as \textit{find constraints} to finding all constraints that hold.
-
-
 % Let us now define what it means for a constraint from \template to hold in general. Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $t^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
 % \sergey{moved from formalization END}
 
-% In the previous section we introduced the problem of tabular constraint learning informally using the example in Figure \ref{fig:main_example}. Here we formalize the statement in terms of \template and group assignments as follows:
-
-% \begin{minipage}[c]{14em}
-%   \vspace{5pt}
+%Here we formalize the statement in terms of \template and group assignments as follows:
 %   \begin{tabular}{ll}
 %     \multicolumn{2}{l}{{\textbf{Tabular Constraint Learning Problem}}}\\
-%     \vspace{-4pt}
-%     &\\
 %     \textbf{Given:}& the set of all groups $\groups$ and of \template $\constraints$\\
 %     \textbf{Find:}&  all constraints $C$ over \groups for each template $t$ in \constraints \\
 %   \end{tabular}
-%   \vspace{6pt}
-% \end{minipage}
-% \luc{To here}
 
-As is well-studied in Inductive Logic Programming, some constraints can \textit{entail} other constraints, meaning that some constraints are \textit{implied} by others. More formally, a constraint $c_1$ implies another constraint~$c_2$ iff whenever $c_1$ is true, $c_2$ must also be true. As a result, a solution to the tabular constraint learning problem may contain constraints that are implied by others. We can hence say that there is \textit{redundancy} in the solution set of constraints.
+An example solution for the type-consistent groups of the tables in Figure~\ref{fig:main_example} and {\template}'s in Table~\ref{table:constraints} is shown in Figure~\ref{fig:sol_example}.
 
 
-Two types of impliciation:
+Depending on the application, a solution to the tabular constraint learning problem can be considered to contain \textit{redundant} constraints. This is because constraints may be logically equivalent and constraints may also be implied by other constraints.
 
-1) on constraint definitions for same signature (example: permutation and alldiff or foreign-key and alldiff)
-
-2) on constraint signature for same definition (example: ?) \textit{Formally, we say that a constraint template $t_1$ is \textit{more specific} than a constraint template $t_2$ iff for $t_1$ and $t_2$  holds the statements of the form: $\forall g_1, \dots, g_n{:}~ t_1(g_1,\dots,g_n) \rightarrow t_2(g_h, \dots, g_k)$ where $1 \leq h \leq k \leq n$. The intuition behind the formula is the following, if a list of groups is a solution for $t_1$ then its subset is also a solution for $t_2$.}
-
-3) combination
-
-\tias{OLD TEXT:}
-
-A constraint template~$s_1$ is more specific than a template~$s_2$ iff a constraint applying $s_1$ to a set of subgroups is always more specific than a constraint applying $s_2$ to (part of) the same set.
-\samuel{Formalize: $\forall x1..x_k s_1(x_1...x_n) => s_2(x_1...x_k)$ :: looking for most specific}
+A constraint $c_1(G'_1, ... G'_n)$ \textit{implies} another constraint~$c_2(G''_1, ..., G''_m)$ where the second one ranges over a subsets of the arguments of the first, iff whenever the first constraint is true, the second must also be true. More formally, $\forall G'_1, ..., G'_n$ s.t. $\{G''_1, ..., G''_m\} \subseteq \{G'_1, ..., G'_n\},\, c_1(G'_1, ... G'_n) \rightarrow c_2(G''_1, ..., G''_m)$. We say that the first constraint is more specific than the second. \tias{Some reference?}
 
 \paragraph{Example}
-Consider templates \textit{all-different} and \textit{foreign-key}.
-If \ecfkey{G_{pk}}{G_{fk}}, then \ecalldiff{G_{pk}} must also hold, therefore, \textit{all-different} is considered to be more general than \textit{foreign-key}.
-\\\\
-In ILP one often exploits these type of generality relations to structure the search for constraints using refinement operators \cite{luc_book}.
-Using such techniques leads to a more efficient traversal of the search space (of constraints).
-Aside from the efficiency gained by exploiting constraints learned earlier, the generality also allows us to build constraint templates on top of more general templates.
+A first example is $permutation(G') \rightarrow alldifferent(G')$ (it can be seen in Table~\ref{table:constraints} that both constraints only hold if $G'$ is a vector). In this case the arguments are the same in both constraints. For most applications, it will be sufficient to output only the most specific one.
+A more involved example is that a look-up constraint implies a foreign-key constraint. The syntax of the look-up constraint is $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$, where the values in the vector $G'_2$ are determined by looking up the corresponding value in vector $G'_1$ in vector $H'_1$ and returning the corresponding value in vector $H'_2$. In Figure~\ref{fig:main_example} we have $\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}$. This implies a foreign-key constraint $\ecfkey{G'_1}{H'_1}$ where each of the values in vector $G'_1$ must appear in $H'_1$ for the look-up to work. 
 
-\tias{End old text}
+Two constraints are \textit{equivalent} if they imply each other. More formally, $\forall G'_1, ..., G'_n$ s.t. $\{G''_1, ..., G''_n\} = \{G'_1, ..., G'_n\},\, c_1(G'_1, ... G'_n) \leftrightarrow c_2(G''_1, ..., G''_n)$.
+An example within the same \template is for the sum over vectors constraint: $G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. A related example over multiple constraints is $G_1 = +(G_2, G_3) \leftrightarrow G_1 = SUM(H)$ with $size(H) = 2$ and $G_2 \subset H, G_3 \subset H$.
 
-In theory each constraint is independent and equally useful. In practice, however, things are different and some constraints are considered to be \textit{redundant}. Assume that for some $g_x$ both \textit{series($g_x$)} and \textit{alldifferent($g_x$)} hold. From a user's perspective the last solution is useless, since he or she already knows that the series constraint implies the alldifferent constraint, or formally speaking $\forall g_x{:}~\textit{series}(g_x) \rightarrow \textit{alldifferent}(g_x)$  holds. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity order between constraints, which is depicted using solid arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $g_x$ is not a permutation, then $g_x$ should not be tested for the series constraint at all. 
+A good way to deal with equivalent constraints is to identify in a generic way a \textit{canonical} constraint among the equivalent ones. For example, for equivalent constraints of the same \template, the constraint where the groups are ordered by table, orientation and row/column identifier. For equivalent constraints of different templates one could define heuristics such as that some templates are preferred over others, e.g. binary sum over n-ary sum, sum over difference, etc.
 
+\tias{I am not defining a new problem for 'most specific canonical tabular constraint learning' because we loosely showed how implications and equivalences would be expressed, but not how to express canonicity and we did not claim that most specific is always best.}
+\tias{Note also that our method finds ALL constraints; it uses specificity to faster traverse the search space, but the resulting set of constraints found would be the same, whether or not using the specificity (see 4.2.1).}
 
-Formally, we say that a constraint template $t_1$ is \textit{more specific} than a constraint template $t_2$ iff for $t_1$ and $t_2$  holds the statements of the form: $\forall g_1, \dots, g_n{:}~ t_1(g_1,\dots,g_n) \rightarrow t_2(g_h, \dots, g_k)$ where $1 \leq h \leq k \leq n$. The intuition behind the formula is the following, if a list of groups is a solution for $t_1$ then its subset is also a solution for $t_2$.
-
-
-Let us introduce the version of tabular constraint learning by modifying Definition \ref{def:problem_statement} that takes into account the specificity relation between constraint templates.
-
-\begin{definition} \textit{Condensed Tabular Constraint Learning}\label{def:condensed_problem_statement}\\
-  Given a set of instantiated tables~${\cal T}$ (all cells have values), a set of {\template}s~${\cal S}$, a set of groups~${\cal G}$ over the tables~${\cal T}$, and the set of all specifity rules~\dependencies: find the set of all constraints $s(G_1', ..., G_n')$ that are satisfied  in ${\cal T}$, for which all $G_i' \subseteq G_i \in {\cal G}$, the (sub)groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$ and there is no $s'$ in ${\cal C}$ such that $s'(G_h',\dots,G_k')$ holds (for $1 \leq h \leq k \leq n$) and  $s'$ is more specific than $s$ in \dependencies.
-\end{definition}
-
+%Let us introduce the version of tabular constraint learning by modifying Definition \ref{def:problem_statement} that takes into account the specificity relation between constraint templates.
+%
+%\begin{definition} \textit{Condensed Tabular Constraint Learning}\label{def:condensed_problem_statement}\\
+%  Given a set of instantiated tables~${\cal T}$ (all cells have values), a set of {\template}s~${\cal S}$, a set of groups~${\cal G}$ over the tables~${\cal T}$, and the set of all specifity rules~\dependencies: find the set of all constraints $s(G_1', ..., G_n')$ that are satisfied  in ${\cal T}$, for which all $G_i' \subseteq G_i \in {\cal G}$, the (sub)groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$ and there is no $s'$ in ${\cal C}$ such that $s'(G_h',\dots,G_k')$ holds (for $1 \leq h \leq k \leq n$) and  $s'$ is more specific than $s$ in \dependencies.
+%\end{definition}
 
 % \begin{minipage}[c]{14em}
 %   \vspace{5pt}
@@ -352,17 +309,12 @@ Let us introduce the version of tabular constraint learning by modifying Definit
 %   \vspace{6pt}
 % \end{minipage}
 
-This version explicitly takes into account the specificity of the constraints and invalidates some of the solutions that are entailed by the tabular other solutions.
-
-\sergey{still need to remove some repetitions later on about specisifity}
+%This version explicitly takes into account the specificity of the constraints and invalidates some of the solutions that are entailed by the tabular other solutions.
 
 \newcommand{\tcl}{Tabular Constraint Learning}
-\newcommand{\ctl}{Condensed Tabular Constraint Learning}
+%\newcommand{\ctl}{Condensed Tabular Constraint Learning}
 \section{Approach to Tabular Constraint Learning}
-% \sergey{Luc wants this to be more intuitive, should we just add some examples here to make it easier to follow and refer to the running example?}
-This section will describe our approach to \tcl.
-
-The key observation is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in spreadsheets each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
+This section describes our approach to \tcl.
 
 Our algorithm reasons on the level of groups and vectors on the data and assumes that these are provided.
 Often, however, this not the case and a possible approach is to extract the groups from the CSV file directly.
@@ -394,7 +346,7 @@ From here on we will assume that groups and tables are given.
 
 \subsection{Algorithm}
 Our algorithm is illustrated in Algorithm~\ref{algo:tcl} and contains three key steps.
-First, constraint templates are ordered according to the generality ordering such that they can be treated sequentially.
+First, constraint templates are ordered such that they can be treated sequentially and each only once.
 Then, for each constraint template~$s \in \temps$ we generate a set~$A$ of \textit{group-assignments} that satisfy the \CSignature of~$s$.
 Every group assignment assigns a group~$G \in \groups$ to every argument of the template.
 In the third step, for every assignments $(G_1, ..., G_n) \in A$ we find all constraints $s(G_1', ... G_n')$ that hold on the data (satisfy the \CFunction), such that every subgroup $G_i' \subseteq G_i$.
@@ -421,9 +373,9 @@ In the third step, for every assignments $(G_1, ..., G_n) \in A$ we find all con
 Our Algorithm \ref{algo:tcl} is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}, however, we apply the approach on two levels, generating and testing groups according to their properties and generating and testing subgroups on the actual data.
 We will explain and illustrate the three key steps in detail.
 
-\subsubsection{Generality ordering}
-\tias{ordering is because some constraint templates use other templates in their signature, doesn't have to be more complicated?}
-\samuel{That is true - is it clear now?}
+\subsubsection{Template ordering}
+Looking at the template signatures in Table~\ref{table:constraints} one can see that some signatures depend on other constraints. This dependency also translates into the template implying the other templace. In Inductive Logic Programming, one often exploits implications between constraints to structure the search space \cite{luc_book}. Similarly, we can use these implications to define an ordering over the templates, such that the more general constraints (the requirements) are verified before the more specific constraints. Figure~\ref{fig:learning_order} shows the dependency graph extracted from the signature definitions in Table~\ref{table:constraints}. 
+Constraint templates that have no dependencies are omitted. Because there are no equivalences or loops in the signatures, the resulting graph is a directed acyclic graph (DAG).
 
 \begin{figure}[tbh]
   \centering
@@ -435,8 +387,7 @@ We will explain and illustrate the three key steps in detail.
   \label{fig:learning_order}
 \end{figure}
 
-$\constrainttorder(\constraints,\dependencies)$ uses the DAG~\dependencies in Figure \ref{fig:learning_order} to generate all constraint templates according to the topological order of~\dependencies.
-Constraint templates that have no dependencies are omitted.
+$\constrainttorder(\constraints,\dependencies)$ uses such a DAG over a subset of the constraint templates to derive a topological order of~\dependencies.
 
 \paragraph{Example}
 As mentioned earlier, \textit{foreign-key} is more specific than \textit{all-different} as $\ecfkey{v_{fk}}{v_{pk}} \implies \ecalldiff{v_{pk}}$.
@@ -495,6 +446,7 @@ Future versions of the system will provide user interfaces to some of these cons
 \subsection{Constraints}
 
 \begin{table*}
+\tias{Notation inconsistent (no $G'$? also the 'bold' notation not explained. Also, in many places missing that must be vector... switched $\rightarrow$ to FOREIGNKEY to avoid confusion with implied constraints.}
   \centering
   \begin{tabularx}{\textwidth}{l X X}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ \hline \hline
