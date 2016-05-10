@@ -79,6 +79,11 @@
 
 \renewcommand{\arraystretch}{1.5}
 
+\usepackage{amsthm}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
 
 %%\ecaisubmission   % inserts page numbers. Use only for submission of paper.
                   % Do NOT use for camera-ready version of paper.
@@ -247,20 +252,25 @@ task is to find assignments of values to the variables in the CSP so that all co
 In the context of spreadsheets the variables typically refer to cells in tables, and solving the corresponding CSP problem means completing the tables so that all constraints in the spreadsheet are satisfied.
 
 While the traditional CSP problem is given a set of variables and a set of constraints, and the task is to find an assignment, the {\bf inverse CSP} or the {\bf Tabular Constraint Learning Problem} can be defined as follows.\\
-\\
-{\bf Given }
-\begin{itemize}
-\item
-a set of instantiated tables (so all cells have values) ${\cal T}$;
-\item
-a set of {\template}s ${\cal C}$;
-\item
-a set of groups ${\cal G}$ for the tables ${\cal T}$;
-\end{itemize}
-\noindent
-{\bf Find}  the set of all constraints $s(G_1', ..., G_n')$ that 1) are satisfied  in ${\cal T}$, 2)
-for which all $G_i' \subseteq G_i \in {\cal G}$ and  3) the groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$.
-
+\begin{definition}[Tabular Constraint Learning]\label{def:problem_statement}
+  Let ${\cal T}$ a set of instantiated tables (all cells have values),  ${\cal C}$ be a set of {\template}s, ${\cal G}$ be a set of groups  for the tables ${\cal T}$, then find the set of all constraints $s(G_1', ..., G_n')$ that are satisfied  in ${\cal T}$, for which all $G_i' \subseteq G_i \in {\cal G}$, and the groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$.
+\end{definition}
+% {\bf Given }
+% \begin{enumerate}
+% \item
+% a set of instantiated tables (so all cells have values) ${\cal T}$;
+% \item
+% a set of {\template}s ${\cal C}$;
+% \item
+% a set of groups ${\cal G}$ for the tables ${\cal T}$;
+% \end{enumerate}
+% \noindent
+% {\bf Find}  the set of all constraints $s(G_1', ..., G_n')$ that 
+% \begin{enumerate}
+% \item are satisfied  in ${\cal T}$;
+% \item for which all $G_i' \subseteq G_i \in {\cal G}$ ;
+% \item the groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$.
+% \end{enumerate}
 For instance, Figure 3 contains the solution to the tabular constraint learning problem
 that uses the tables of Figure 1, the signatures of Table 1 and the set of groups mentioned in (\samuel{show groups somewhere}).
 
@@ -288,35 +298,40 @@ that uses the tables of Figure 1, the signatures of Table 1 and the set of group
 % \end{minipage}
 % \luc{To here}
 
-\samuel{Not reworked yet from here ---}
 
-  The key observation here is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in spreadsheets each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
-
-\tias{Redundancy instead of dependency}
-
-  In theory each constraint is independent and equally useful. In practice, however, things are different. Assume that for some $g_x$ both \textit{series($g_x$)} and \textit{alldifferent($g_x$)} hold. From a user's perspective the last solution is useless, since he or she already knows that the series constraint implies the alldifferent constraint. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity (generality) order between constraints, which is depicted using solid (dashed) arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $g_x$ is not a permutation, then $g_x$ should not be tested for the series constraint at all. A solid lines from $t_1$ to $t_2$ indicates that $t_2$ is \textit{more specific} than $t_1$ and if $C_1=t_1^S$ from $t_1$ does not hold, then the constraint $C_2=t_2^S$ from $t_2$ does not hold neither. A dashed arrow from $t_1$ to $t_2$ indicates that $t_1$ is \textit{a more specific} constraint than $t_2$ and therefore if $C=t_1^S$ from $t_1$ holds it should not be tested for $t_2$.
+The key observation here is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in spreadsheets each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
 
 
-Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, \dependencies be the DAG of constraint specificity, then the constraint $C$ equal to $t^S$ is called \textit{the most specific} wrt \dependencies iff $C$ holds and there is no other template $t_{*}$ for which the constraint $C_{*}=t_{*}^S$ holds and $t_{*}$ is more specific in \dependencies.
+In theory each constraint is independent and equally useful. In practice, however, things are different and some constraints are considered to be \textit{redundant}. Assume that for some $g_x$ both \textit{series($g_x$)} and \textit{alldifferent($g_x$)} hold. From a user's perspective the last solution is useless, since he or she already knows that the series constraint implies the alldifferent constraint, or formally speaking $\forall g_x{:}~\textit{series}(g_x) \rightarrow \textit{alldifferent}(g_x)$  holds. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity order between constraints, which is depicted using solid arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $g_x$ is not a permutation, then $g_x$ should not be tested for the series constraint at all. 
 
 
-Let us introduce the version of tabular constraint learning that takes into account the specificity relation between constraints.
+Formally, we say that a constraint template $t_1$ is \textit{more specific} than a constraint template $t_2$ iff for $t_1$ and $t_2$  holds the statements of the form: $\forall g_1, \dots, g_n{:}~ t_1(g_1,\dots,g_n) \rightarrow t_2(g_h, \dots, g_k)$ where $1 \leq h \leq k \leq n$. The intuition behind the formula is the following, if a list of groups is a solution for $t_1$ then its subset is also a solution for $t_2$.
 
-\begin{minipage}[c]{14em}
-  \vspace{5pt}
-  \begin{tabular}{ll}
-    \multicolumn{2}{l}{{\textbf{Condensed Tabular Constraint Learning Problem}}}\\
-    \vspace{-4pt}
-    &\\
-    \textbf{Given:}& the set of all groups $\groups$ and of \template's $\constraints$,\\
-    & a constraint specificity DAG \dependencies \\
-    \textbf{Find:}& all the most specific wrt \dependencies constraints $C$ over \groups\\
-    & for each $t$ in \constraints \\
-  \end{tabular}
-  \vspace{6pt}
-\end{minipage}
+
+Let us introduce the version of tabular constraint learning by modifying Definition \ref{def:problem_statement} that takes into account the specificity relation between constraint templates.
+
+\begin{definition}[Condensed Tabular Constraint Learning]\label{def:condensed_problem_statement}
+  Let ${\cal T}$ a set of instantiated tables (all cells have values),  ${\cal C}$ be a set of {\template}s,  ${\cal G}$ be a set of groups for the tables ${\cal T}$, \dependencies be the set of all specifity rules, then find the set of all constraints $s(G_1', ..., G_n')$ that are satisfied  in ${\cal T}$, for which all $G_i' \subseteq G_i \in {\cal G}$, the groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$ and there is no $s'$ in ${\cal C}$ such that $s'(G_h',\dots,G_k')$ holds (for $1 \leq h \leq k \leq n$) and  $s'$ is more specific than $s$ in \dependencies.
+\end{definition}
+
+
+% \begin{minipage}[c]{14em}
+%   \vspace{5pt}
+%   \begin{tabular}{ll}
+%     \multicolumn{2}{l}{{\textbf{Condensed Tabular Constraint Learning Problem}}}\\
+%     \vspace{-4pt}
+%     &\\
+%     \textbf{Given:}& the set of all groups $\groups$ and of \template's $\constraints$,\\
+%     & a constraint specificity DAG \dependencies \\
+%     \textbf{Find:}& all the most specific wrt \dependencies constraints $C$ over \groups\\
+%     & for each $t$ in \constraints \\
+%   \end{tabular}
+%   \vspace{6pt}
+% \end{minipage}
 
 This version explicitly takes into account the specificity of the constraints and invalidates some of the solutions that are entailed by the tabular other solutions.
+
+\sergey{still need to remove some repetitions later on about specisifity}
 
 \newcommand{\tcl}{Tabular Constraint Learning}
 \newcommand{\ctl}{Condensed Tabular Constraint Learning}
@@ -379,6 +394,7 @@ Our Algorithm \ref{algo:tcl} is in line with the ``generate-and-test'' paradigm 
 We will explain and illustrate the three key steps in detail.
 
 \subsubsection{Generality ordering}
+\sergey{should we show all the formulas here? or some maybe and say that the specificity DAG can be extracted?}
 
 \begin{figure}[tbh]
   \centering
