@@ -92,7 +92,7 @@
 
 \begin{document}
 
-\title{Tabular Constraint Learning}
+\title{Learning constraints in tabular data}
 % see http://www.acm.org/binaries/content/assets/publications/article-templates/sig-alternate-sample.tex
 
 %\author{Name1 Surname1 \and Name2 Surname2 \and Name3 Surname3 \institute{----------------------} }
@@ -250,13 +250,15 @@ if the constraint holds on the values that the $A_i$ take in the set of tables $
 %l 1) a set of cells, and 2) a set of constraints over those cells.  Notice that the constraints specify the types (or the domains) that one encounters in traditional CSPs.  Notice also, that as in traditional CSPs, the CSP problem defines the variables (the cells) of the problem as well as the constraint that should hold amongst them. The task of CSP-solvers is then to find an assignment to the variables that satisfies all the constraints.  The distinction between variables (cells) and their assignments (their values) is important here.  So, when we speak about cells, vectors and groups, we refer to the variables; when we talk about values, assignments or instances, we refer to the values these cells take in a particular "instantiated" table.
 
 \section{Problem Statement}
-A {\em constraint satisfaction problem} (CSP) consists of a set of constraints and the
+The problem of learning constraints from tabular data can be seen as an inverse {\em constraint satisfaction problem} (CSP). A CSP consists of a set of constraints and the
 task is to find assignments of values to the variables in the CSP so that all constraints are satisfied.
-In the context of spreadsheets the variables typically refer to cells in tables, and solving the corresponding CSP problem means completing the tables so that all constraints in the spreadsheet are satisfied.
+In the context of spreadsheets where variables could represent cells in tables, solving a corresponding CSP problem would mean completing the tables so that all constraints of the spreadsheet are satisfied.
 
-While the traditional CSP problem is given a set of variables and a set of constraints, and the task is to find an assignment, the {\bf inverse CSP} or the {\bf Tabular Constraint Learning Problem} can be defined as follows.\\
-\begin{definition}[Tabular Constraint Learning]\label{def:problem_statement}
-  Let ${\cal T}$ a set of instantiated tables (all cells have values),  ${\cal C}$ be a set of {\template}s, ${\cal G}$ be a set of groups  for the tables ${\cal T}$, then find the set of all constraints $s(G_1', ..., G_n')$ that are satisfied  in ${\cal T}$, for which all $G_i' \subseteq G_i \in {\cal G}$, and the groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$.
+The inverse problem is, given an assignment to all cells, to find the constraints that are present in the spreadsheet.
+We define the {\bf Tabular Constraint Learning Problem} as follows:
+%
+\begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}
+  Given ${\cal G}$ a set of groups derived from fully instantiated tables ${\cal T}$ (all cells have values) and a set of {\template}s ${\cal C}$ ; find the set of all constraints $s(G_1', ..., G_n')$ that match the syntax of a \template in ${\cal C}$ and where the groups $G_1', ... , G_n'$ with $\forall i, G_i' \subseteq G_i, G_i \in {\cal G}$ satisfy both the signature and the definition of that \template.
 \end{definition}
 % {\bf Given }
 % \begin{enumerate}
@@ -274,11 +276,7 @@ While the traditional CSP problem is given a set of variables and a set of const
 % \item for which all $G_i' \subseteq G_i \in {\cal G}$ ;
 % \item the groups $G_1', ... , G_n'$ satisfy the signature of the constraint template~$s \in {\cal C}$.
 % \end{enumerate}
-For instance, Figure 3 contains the solution to the tabular constraint learning problem
-that uses the tables of Figure 1, the signatures of Table 1 and the set of groups mentioned in (\samuel{show groups somewhere}).
-
-% \luc{Delete from here}
-% \luc{ADD/REFER TO EXAMPLE}
+An example solution for the type-consistent groups of the tables in Figure~\ref{fig:main_example} and {\template}'s in Table~\ref{table:constraints} is shown in Figure~\ref{fig:sol_example}.
 
 % Let us introduce \template instantiation syntax. Let $S$ be a mapping from variables to the subgroups of \groups and $t$ be a \template, then $t^S$ is the template, in which all variables in all constrainst in \CSignature and \CFunction are instantiated with the corresponding subgroups from $S$. We refer to $t^S$ as a \textit{constraint} and to the instantiated \CSignature (\CFunction) as $\text{\CSignature}^S$ ($\text{\CFunction}^S$). Throughout the work we refer as \textit{find constraints} to finding all constraints that hold.
 
@@ -301,8 +299,29 @@ that uses the tables of Figure 1, the signatures of Table 1 and the set of group
 % \end{minipage}
 % \luc{To here}
 
+As is well-studied in Inductive Logic Programming, some constraints can \textit{entail} other constraints, meaning that some constraints are \textit{implied} by others. More formally, a constraint $c_1$ implies another constraint~$c_2$ iff whenever $c_1$ is true, $c_2$ must also be true. As a result, a solution to the tabular constraint learning problem may contain constraints that are implied by others. We can hence say that there is \textit{redundancy} in the solution set of constraints.
 
-The key observation here is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in spreadsheets each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
+
+Two types of impliciation:
+
+1) on constraint definitions for same signature (example: permutation and alldiff or foreign-key and alldiff)
+
+2) on constraint signature for same definition (example: ?) \textit{Formally, we say that a constraint template $t_1$ is \textit{more specific} than a constraint template $t_2$ iff for $t_1$ and $t_2$  holds the statements of the form: $\forall g_1, \dots, g_n{:}~ t_1(g_1,\dots,g_n) \rightarrow t_2(g_h, \dots, g_k)$ where $1 \leq h \leq k \leq n$. The intuition behind the formula is the following, if a list of groups is a solution for $t_1$ then its subset is also a solution for $t_2$.}
+
+3) combination
+
+\tias{OLD TEXT:}
+
+A constraint template~$s_1$ is more specific than a template~$s_2$ iff a constraint applying $s_1$ to a set of subgroups is always more specific than a constraint applying $s_2$ to (part of) the same set.
+\samuel{Formalize: $\forall x1..x_k s_1(x_1...x_n) => s_2(x_1...x_k)$ :: looking for most specific}
+
+\paragraph{Example}
+Consider templates \textit{all-different} and \textit{foreign-key}.
+If \ecfkey{G_{pk}}{G_{fk}}, then \ecalldiff{G_{pk}} must also hold, therefore, \textit{all-different} is considered to be more general than \textit{foreign-key}.
+\\\\
+In ILP one often exploits these type of generality relations to structure the search for constraints using refinement operators \cite{luc_book}.
+Using such techniques leads to a more efficient traversal of the search space (of constraints).
+Aside from the efficiency gained by exploiting constraints learned earlier, the generality also allows us to build constraint templates on top of more general templates.
 
 
 In theory each constraint is independent and equally useful. In practice, however, things are different and some constraints are considered to be \textit{redundant}. Assume that for some $g_x$ both \textit{series($g_x$)} and \textit{alldifferent($g_x$)} hold. From a user's perspective the last solution is useless, since he or she already knows that the series constraint implies the alldifferent constraint, or formally speaking $\forall g_x{:}~\textit{series}(g_x) \rightarrow \textit{alldifferent}(g_x)$  holds. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity order between constraints, which is depicted using solid arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $g_x$ is not a permutation, then $g_x$ should not be tested for the series constraint at all. 
@@ -341,10 +360,15 @@ This version explicitly takes into account the specificity of the constraints an
 \section{Approach to Tabular Constraint Learning}
 % \sergey{Luc wants this to be more intuitive, should we just add some examples here to make it easier to follow and refer to the running example?}
 This section will describe our approach to \tcl.
+
+The key observation is that essentially the problem is a constraint enumeration problem, where each constraint is independent. This property comes from fact that in spreadsheets each formula is applied based on the existing data in the cells. This allows learning constraints independently of each other by examining constraint satisfaction on the groups.
+
 Our algorithm reasons on the level of groups and vectors on the data and assumes that these are provided.
 Often, however, this not the case and a possible approach is to extract the groups from the CSV file directly.
 This requires discovering \textit{tables} and \textit{groups}.
 Our implementation offers automated procedures for both steps.
+
+
 
 \subsection{Table and group detection}
 \samuel{Is an example needed? I find no because it is not our main concern but open for discussion}
@@ -397,7 +421,7 @@ Our Algorithm \ref{algo:tcl} is in line with the ``generate-and-test'' paradigm 
 We will explain and illustrate the three key steps in detail.
 
 \subsubsection{Generality ordering}
-\sergey{should we show all the formulas here? or some maybe and say that the specificity DAG can be extracted?}
+\tias{ordering is because some constraint templates use other templates in their signature, doesn't have to be more complicated?}
 
 \begin{figure}[tbh]
   \centering
@@ -405,20 +429,6 @@ We will explain and illustrate the three key steps in detail.
   \caption{Constraint Learning Order. The solid arrows points from more general to more specific constraints templates (e.g. \textit{all-different} is more general than \textit{permutation}).}
   \label{fig:learning_order}
 \end{figure}
-
-\tias{Move this to problem statement second part}
-A constraint~$c_1$ is a special case of another constraint~$c_2$ iff whenever $c_1$ is true, $c_2$ must also be true.
-We consider $c_1$ to be more specific than $c_2$ or $c_2$ to be more general than $c_1$.
-A constraint template~$s_1$ is more specific than a template~$s_2$ iff a constraint applying $s_1$ to a set of subgroups is always more specific than a constraint applying $s_2$ to (part of) the same set.
-\samuel{Formalize: $\forall x1..x_k s_1(x_1...x_n) => s_2(x_1...x_k)$ :: looking for most specific}
-
-\paragraph{Example}
-Consider templates \textit{all-different} and \textit{foreign-key}.
-If \ecfkey{G_{pk}}{G_{fk}}, then \ecalldiff{G_{pk}} must also hold, therefore, \textit{all-different} is considered to be more general than \textit{foreign-key}.
-\\\\
-In ILP one often exploits these type of generality relations to structure the search for constraints using refinement operators \cite{luc_book}.
-Using such techniques leads to a more efficient traversal of the search space (of constraints).
-Aside from the efficiency gained by exploiting constraints learned earlier, the generality also allows us to build constraint templates on top of more general templates.
 
 $\constrainttorder(\constraints,\dependencies)$ uses the DAG~\dependencies in Figure \ref{fig:learning_order} to generate all constraint templates according to the topological order of~\dependencies.
 Constraint templates that have no dependencies are omitted.
