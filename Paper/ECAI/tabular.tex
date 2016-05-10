@@ -323,6 +323,7 @@ In ILP one often exploits these type of generality relations to structure the se
 Using such techniques leads to a more efficient traversal of the search space (of constraints).
 Aside from the efficiency gained by exploiting constraints learned earlier, the generality also allows us to build constraint templates on top of more general templates.
 
+\tias{End old text}
 
 In theory each constraint is independent and equally useful. In practice, however, things are different and some constraints are considered to be \textit{redundant}. Assume that for some $g_x$ both \textit{series($g_x$)} and \textit{alldifferent($g_x$)} hold. From a user's perspective the last solution is useless, since he or she already knows that the series constraint implies the alldifferent constraint, or formally speaking $\forall g_x{:}~\textit{series}(g_x) \rightarrow \textit{alldifferent}(g_x)$  holds. To capture this condensed representation \cite{condensed} of solutions, we have introduced a specificity order between constraints, which is depicted using solid arrows in Figure \ref{fig:learning_order}. This matters from implementation perspective as well, if we discovered that $g_x$ is not a permutation, then $g_x$ should not be tested for the series constraint at all. 
 
