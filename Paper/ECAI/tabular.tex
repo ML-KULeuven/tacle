@@ -751,7 +751,10 @@ Viable constraints that have enough input data to compute the result for a blank
 Active constraints can be used to autocomplete blank cells such that the user does not have to fill in the values manually.
 Once the user has stopped editing the new row~$i$ (column~$j$), the table~$T$ is updated to include~$i$ ($j$) and constraints are learned once again.
 
-\subsection{}
+\subsection{Error detection}
+For this application we consider a use case concerning crime statistics provided by the FBI.
+
+
 \sergey{We should explain Figure \ref{fig:fbi}, e.g. if we aggregate by the crime now, the missing value would not get into statistics, which seems faulty, since we can directly compute it.}
 
 \begin{figure*}[thb]
