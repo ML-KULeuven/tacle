@@ -423,27 +423,26 @@ We will explain and illustrate the three key steps in detail.
 
 \subsubsection{Generality ordering}
 \tias{ordering is because some constraint templates use other templates in their signature, doesn't have to be more complicated?}
+\samuel{That is true - is it clear now?}
 
 \begin{figure}[tbh]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/constraint_dependency.png}
-  \caption{Constraint Learning Order. The solid arrows points from more general to more specific constraints templates (e.g. \textit{all-different} is more general than \textit{permutation}).}
+  \caption{Constraint Learning Order.
+  An arrow from~$s_1$ to~$s_2$ indicates that the \CSignature of~$s_2$ requires some arguments of~$s_2$ to fulfill~$s_1$.
+  Therefore, constraints for the more general \template~$s_1$ are learned before constraints for the more specific \template~$s_2$.
+  }
   \label{fig:learning_order}
 \end{figure}
 
 $\constrainttorder(\constraints,\dependencies)$ uses the DAG~\dependencies in Figure \ref{fig:learning_order} to generate all constraint templates according to the topological order of~\dependencies.
 Constraint templates that have no dependencies are omitted.
-In the figure solid edges point from more general to more specific templates.
-Therefore, if there is a solid edge from constraint template~$s_1$ to template~$s_2$, then a set of subgroups satisfying~$s_2$ must contain the subgroups satisfying~$t_1$.
-
-% Dashed edges represent the inverse relationship, pointing from specific to more general constraints.
-% If there is a dashed edge from $t_1$ to $t_2$, then a set of subgroups satisfying $t_2$ may not contain a subset that also satisfies $t_1$.
 
 \paragraph{Example}
-As mentioned above \textit{foreign-key} is more specific than \textit{all-different}.
+As mentioned earlier, \textit{foreign-key} is more specific than \textit{all-different} as $\ecfkey{v_{fk}}{v_{pk}} \implies \ecalldiff{v_{pk}}$.
 Therefore, we can first generate all subgroups $G_i'$ for which \ecalldiff{G_i'} is satisfied and use these subgroups as candidates for $v_{pk}$ in \ecfkey{v_{fk}}{v_{pk}}.
 
-The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
+The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties, groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
 \\\\
 Most parts of the algorithm could be easily parallelized.
 Every connected component in \dependencies can be learned independently.
@@ -726,22 +725,33 @@ For conditional aggregates the number of candidate primary keys (all-different) 
   \centering
   \begin{tabular}{lll}
     & \textbf{Total} & \textbf{Average per spreadsheet} \\
-    \textbf{Essential constraints} & $93$ & $2.91$ \\
+    \textbf{Constraints} & $93$ & $2.91$ \\
     \textbf{Accuracy} & $96.77\%$ & $94.27\%$ \\
     \textbf{Redundant} & $23.14\%~(28)$ & $8.33\%~(0.88)$ \\
     \textbf{Speed (s)} & ${\runtotal}s \pm {\runtotalstd}s$ & ${\runfile}s \pm {\runfilestd}s$
   \end{tabular}
   \caption{Overview evaluation on essential constraints}
 \end{table}
+\samuel{Expand summary}
 
 \paragraph{Dependencies}
 In order for the algorithm to run efficiently it is crucial to use dependencies and find constraint incrementally whenever possible.
 This avoids some of the explosion of combinations for constraints that have many arguments.
 For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to below 1 second.
 Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys that are present in the data.
-\sergey{Add summary table of results}
 
 \section{Applications}
+In this section we will illustrate how various motivating applications could be realized using our system.
+
+\subsection{Autocompletion}
+Autocompletion can be seen as using knowledge derived from data at time~$t_0$ and new input data at time~$t_1 > t_0$ to predict data that the user has not yet written.
+Therefore, constraints are learned at time~$t_0$ and combined with data from a new row~$i$ (column~$j$) that the user has added to a table~$T$ by time~$t_1$.
+Constraints that do not conflict with the added data are considered viable.
+Viable constraints that have enough input data to compute the result for a blank cell~$T[i,j]$ in the new row (column) are \textit{active}, which means they can be used to predict the outcome for that cell.
+Active constraints can be used to autocomplete blank cells such that the user does not have to fill in the values manually.
+Once the user has stopped editing the new row~$i$ (column~$j$), the table~$T$ is updated to include~$i$ ($j$) and constraints are learned once again.
+
+\subsection{}
 \sergey{We should explain Figure \ref{fig:fbi}, e.g. if we aggregate by the crime now, the missing value would not get into statistics, which seems faulty, since we can directly compute it.}
 
 \begin{figure*}[thb]
@@ -751,8 +761,6 @@ Unfortunately, this assumption is sometimes too strong, when users are intereste
   \caption{Real world tabular constraint reconstruction: FBI crime statistics}
   \label{fig:fbi}
 \end{figure*}
-
-\samuel{application autocomplete}
 
 \samuel{FBI: work out error detection algorithm}
 
