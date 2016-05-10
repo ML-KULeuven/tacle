@@ -1,4 +1,6 @@
-\documentclass{ecai}
+\documentclass{sig-alternate-05-2015}
+
+
 \usepackage{times}
 \usepackage{graphicx}
 \usepackage{latexsym}
@@ -79,10 +81,10 @@
 
 \renewcommand{\arraystretch}{1.5}
 
-\usepackage{amsthm}
-
-\theoremstyle{definition}
-\newtheorem{definition}{Definition}
+%\usepackage{amsthm} % incompatible with ACM
+%\theoremstyle{definition}
+%\newtheorem{definition}{Definition}
+\newdef{definition}{Definition} % ACM specific
 
 
 %%\ecaisubmission   % inserts page numbers. Use only for submission of paper.
@@ -91,8 +93,9 @@
 \begin{document}
 
 \title{Tabular Constraint Learning}
+% see http://www.acm.org/binaries/content/assets/publications/article-templates/sig-alternate-sample.tex
 
-\author{Name1 Surname1 \and Name2 Surname2 \and Name3 Surname3 \institute{----------------------} }
+%\author{Name1 Surname1 \and Name2 Surname2 \and Name3 Surname3 \institute{----------------------} }
 
 \maketitle
 
