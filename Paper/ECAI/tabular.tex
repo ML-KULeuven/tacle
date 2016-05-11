@@ -569,6 +569,36 @@ These constraints have been selected based on the most-used Excel functions as w
 
 Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?}
 
+\section{Examples}
+\subsection{Group generation CSP}
+variables from syntax, domain from input groups, filtered using type
+
+Group generation CSP (Sum Product)\\
+variables: $R, O_1, O_2$\\
+domains: $D(R) = \{ G | G \in {\cal G} \land \numeric(G)\}$, $D(O_1) = \{ G | G \in {\cal G} \land \numeric(G)\}$, $D(O_2) = \{ G | G \in {\cal G} \land \numeric(G)\}$\\
+constraints: $\plength(O_1) = \plength(O_2) \geq 2, \pcols(R) = 1, \prows(R) = 1$ % excluded not partial because we don't focus on it much
+
+Translation:
+\begin{description}
+  \item[Type] Require group that has supertype (e.g. integer => require numeric group, because subgroup might be integer)
+  \item[Length] Require group to have exact length (subgroups have the same length)
+  \item[Vectors / columns / rows] Require group to have at least the amount of vectors, columns, rows required
+  \item[Dependency] Fix dependent variables, for every assignment construct CSP that attempts to find values for the other variables
+  \item[Same length / table / orientation] Require groups to gave the same length table ...
+\end{description}
+
+\subsection{Subgroup generation}
+Sum Product
+
+Implementation: finds subgroups based on assignments\\
+Method $Test(G_R, G_{O_1}, G_{O_2})$\\
+$If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\\
+$If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$
+\\\\
+Method $FindSubgroups(Assignments)$\\
+$Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$
+
+Register implementation with the system for constraint X
 
 % \subsection{Workflow}
 % \begin{algorithm}[thb]
