@@ -101,28 +101,44 @@
 
 \begin{abstract}
 %Spreadsheets, comma separated value files and other tabular data representations are in wide use today. However, the correct use and maintenance of functions in and between the tabular data can be error-prone and overwhelming. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. Our method takes inspiration form inductive logic programming and constraint satisfiability. We represent common spreadsheet functions as predicates with arguments that must satisfy number of constraints over the arguments. This allows generic constraint satisfaction techniques to be used to find all such satisfying predicates/functions within the rows, columns and submatrices of the tables. We show the effectiveness and accuracy of this approach on a number of spreadsheets from varying sources.
-Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today. However, modeling, maintaining and discovering formulas in tabular data and between spreadsheets can be time consuming and error-prone. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking. Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction. Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints. Constraint satisfaction techniques are used to identify predicates (constraints) that hold between the rows, columns and submatrices of the tables. Therefore, new types of constraints can be easily added to the system by specifying them using declarative methods such as Minizinc or ASP. We show that our approach is able to accurately discover constraints in a number of spreadsheets from varying sources.
+Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today. However, modeling, maintaining and discovering formulas in tabular data and between spreadsheets can be time consuming and error-prone. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking. Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction. Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints. Constraint learning techniques are used to identify predicates (constraints) that hold between the rows, columns and submatrices of the tables. New types of constraints can be easily added to the system by specifying them using in a declarative language. We show that our approach is able to accurately discover constraints in a number of spreadsheets from varying sources.
 \end{abstract}
 
 \section{Introduction}
-Millions of people across the world use spreadsheets everyday. The tabular representation of the data is often intuitive, and the programming of functions in individual cells is quickly learned. However, large sheets (possible with multiple tables) and relations between different tables and sheets can be tedious and error-prone to handle. As a result, many people lack a complete understanding of the structures and existing dependencies in the data.
+Millions of people across the world use spreadsheets every day. The tabular representation of the data is often intuitive, and the programming of functions in individual cells is quickly learned. However, large and complex sheets (possibly with multiple tables and relations between different them) can be hard to handle. Many end-users lack the understanding of the underlying structures and dependencies in such sheets and the data they contain. Especially when spreadsheets have been exported from
+other software such as ERP packages, it is hard to understand the data as in this case,
+often a comma-separated values (CSV) format is used, meaning that all formula's are lost, including inter-sheet formulas and relations.
+%This limited understanding is especially the case with spreadsheets exported from other software such as ERP packages. In this case,
 
-This limited understanding is especially the case with spreadsheets exported from other software such as ERP packages. In this case, often a comma-separated values (CSV) format is used, meaning that all formula's are lost, including inter-sheet formulas and relations.
-
-In this work, we investigate in how far machine learning techniques can be used to infer constraints (formula's and other relations) from raw spreadsheet data. However, this is an unconventional machine learning problem. 
+In this paper,  we investigate whether machine learning techniques can be used to infer constraints (formula's and other relations) from raw spreadsheet data.
+This is a new and unconventional machine learning problem.
 Consider the example in Figure~\ref{fig:main_example}, where the header's names already suggest the usage of spreadsheet operations such as \textit{average} or \textit{sum}.
 Looking at the first row in Table~2 and the data in Table~1, it is clear that the values in this row were computed by summing the values in the corresponding column of Table~1.
 Examining Table~1 also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by taking the row-wise sum of the previous four columns.
-This already provides a flavor of how this problem is different from standard data mining settings, when the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple table with relationships between them. And on the other hand the data is mixed textual and numeric, since people tend to use spreadsheets for financial and accounting computations. One can see that understanding and learning constraints in tabular data is hence a new and challenging problem setting.
-%Furthermore, it is not only challenging for a machine but for a human as well.
-
-Relatedly, the field of Inductive Logic Programming has long... \tias{TODO for Sergey or Luc}. Additionally, the field of Constraint Programming has recently started investigating ways in which Constraint Satisfaction Problems can automatically be inferred from known solutions. Here, methods ranging from generate-and-test~\cite{todo:modelseeker}, concept learning~\cite{todo:conacq} and Inductive Logic Programming~\cite{todo:lallouet} have been used with encouraging results.
-
-Another line of work from which we draw inspiration is that of \tias{TODO for ?, flashfill et al}. We will consider the case where all data is given at once. However, as in the use case of flashfill, one could also use this technique to derive formula's interactively while a user is entering values in a cell \tias{TODO SAMUEL: proofread/refine last statement}.
-
-The question that we hence try to answer in this work is: can we discover or reconstruct structural constraints (relations, functions) in flat tabular spreadsheet data? Moreover, we investigate general-purpose ways for doing so, that do not require hard coding a number of constraints. Rather, we use techniques from constraint solving to derive whether and which constraints are satisfied. This approach can be extended to any constraint in a principled way.
+This already provides a flavor of how this problem is different from standard data mining settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple table with relationships between them. And on the other hand, the data is mixed textual and numeric, since people tend to use spreadsheets for financial and accounting computations. One can see that understanding and learning constraints in tabular data is hence a new and challenging problem for machine learning. Furthermore, it is not only challenging for a machine but for humans as well.
 
 
+The approach that we will introduce will borrow techniques from logical and relational learning \cite{LucBook}, where
+\cite{Claudien,todo:lallouet} have studied the discovery of clausal constraints in an inductive logic programming setting, from constraint learning,  where \cite{Quacq,Conacq,Modelseeker} have developed several approaches to learn conjunctive constraints in a constraint programming setting,
+and from mining in databases,  where e.g. \cite{Savlik} has applied inductive techniques to discover constraints (such as functional and multi-valued dependencies) in relational databases.  It also builds on work on program synthesis, in particular, on Flashfill \cite{}, where the definition of function is learned in spreadsheet data from
+very few examples.  Our approach contrasts with all of the mentioned approaches (except Modelseeker) in that it focusses
+on learning both column- and row-constraints, it contrasts with Flashfill in learning constraints rather than functions.
+A more detailed discussion on related work is contained in Section \luc{TODO}.
+
+
+%the field of Inductive Logic Programming has long... \tias{TODO for Sergey or Luc}. Additionally, the field of Constraint Programming has recently started investigating ways in which Constraint Satisfaction Problems can automatically be inferred from known solutions. Here, methods ranging from generate-and-test~\cite{todo:modelseeker}, concept learning~\cite{todo:conacq} and Inductive Logic Programming~\cite{todo:lallouet} have been used with encouraging results.
+
+%Another line of work from which we draw inspiration is that of \tias{TODO for ?, flashfill et al}. We will consider the case where all data is given at once. However, as in the use case of flashfill, one could also use this technique to derive formula's interactively while a user is entering values in a cell \tias{TODO SAMUEL: proofread/refine last statement}.
+
+
+
+The question that we answer in this paper is: whether it is possible to discover or reconstruct structural constraints (relations, functions) in flat tabular spreadsheet data?
+To answer this question we contribute a general-purpose algorithm and system for discovering such constraints. Furthermore, the algorithm accepts declarative specifications of the constraints and predicates of interest (the "bias") and covers both textual and numeric fields. It works in an unsupervised setting, as only the tabular data is provided and no examples need to be specified, and discovers column- and row-wise constraints.
+We demonstrate the utility of our approach in an experimental evaluation and we also sketch several application scenario's.
+\luc{todo:mention these here too}
+
+
+This paper is organised as follows: \luc{todo}
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
@@ -155,10 +171,10 @@ The question that we hence try to answer in this work is: can we discover or rec
 }
 
 \section{Formalization}
-In this work we focus on spreadsheet data. We will first introduce the general concepts of cells, group and constraint templates, using the (multi-table) sheet in Figure~\ref{fig:main_example} as running example.
+As we focus on spreadsheet data, we first introduce the general concepts of cells, group and constraint templates, using the (multi-table) sheet in Figure~\ref{fig:main_example} as running example.
 
 \subsection{Cells, vectors and groups}
-A spreadsheet is physically one big table, but conceptually may consist of multiple tables, such as in Figure~\ref{fig:main_example}. We will describe a method of extracting tables from a big spreadsheet in Section~\ref{todo}, however this is not the core of our learning method. Our formalization reasons over tables directly.
+A spreadsheet may conceptually consist of multiple tables, such as in Figure~\ref{fig:main_example}. We will describe a method of extracting tables from a big spreadsheet in Section~\ref{todo}, however this is not the core of our learning method. Our formalization reasons over tables directly.
 
 Formally, a table is an $n \times m$ matrix. Each entry is called a \textit{cell}.
 A cell has a {\em type}, which can be numeric or textual. We further distinguish numeric types in subtypes integer and float. We also consider \textit{None} as a special type when a cell is empty; \textit{None} is a subtype of all other types.
@@ -183,7 +199,7 @@ We consider various sets of cells with the following notation:
   %The \textit{length} of a row (column) group $G$, written as \textit{length(G)}, is the number of its columns (rows); We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
 
   \item
-  A \textbf{subgroup} $G'$ of $G$ is simply a projection of $G$ onto a consecutive subset its vectors. % is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$. %It defines what it means for a constraint to be well-formed
+  A \textbf{subgroup} $G'$ of a group $G$ is simply a projection of $G$ onto a consecutive subset its vectors. % is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$. %It defines what it means for a constraint to be well-formed
 %We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must contain only one vector, we write $g \in G$.
 % A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
 \end{itemize}
@@ -192,7 +208,7 @@ We consider various sets of cells with the following notation:
 %When we do not want to distinguish between cells, columns, rows, vectors or groups, we shall talk about a {\em set of cells}.
 
 \paragraph{Example}
-Consider Table~1 in the Figure~\ref{fig:main_example}, its rows are not type consistent (i.e. they contain both numeric and textual data).
+Consider Table~1 in Figure~\ref{fig:main_example}, its rows are not type consistent (i.e. they contain both numeric and textual data).
 Ignoring the (all-textual) header, Table~1 can be divided into the following five column-oriented groups:
 {\small
 \begin{align*}
@@ -217,10 +233,10 @@ with $n$ arguments $A_i$. Thus a constraint $c$ is viewed as a relation or predi
 % the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
 
 \item the \textit{\CSignature} defines the properties that the arguments of the predicate must satisfy. That is, the required types of the arguments, together
-with possible further restrictions such as on their length. For example, the signature can restrict the types of the arguments to be groups integers and require that the length of all arguments be equal. \\
-In terms of logical and relational learning, such a \CSignature is known as the {\em bias} of the learner, it specifies when the constraint is well-formed.
+with possible further restrictions, e.g., on their length. For example, the signature can restrict the types of the arguments to be groups of integers and require that the length of all arguments be equal. \\
+In terms of logical and relational learning \cite{bookLuc}, such a \CSignature is known as the {\em bias} of the learner, it specifies when the constraint is well-formed.
 
-\item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments to all its arguments, it can verify whether the constraint is satisfied or not. %holds, in practice this will be a function that can be called when
+\item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments to its arguments, it can be used to verify whether the constraint is satisfied or not. %holds, in practice this will be a function that can be called when
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
 In logical and relational learning this is known as the background knowledge, which provides the definition of the predicate.
 \end{itemize}
@@ -238,12 +254,15 @@ When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to se
 From a FOL perspective, the name of the constraint ($RANK$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
 This also holds in our setting: when we write
       $\ecrank{\range{T}{\rangeall}{8}}{\range{T}{\rangeall}{7}}$,
-we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table \tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...},
-or we can interpret the argument as the value it takes in a particular table $T$ such as $T_1$ in Figure 1, that is, $[1,2,3,4]$.
-This also means that we can talk about constraints being satisfied. Basically, a constraint $c(A_1, ..., A_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only
+we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table $T$ of the right dimensions.
+So, $T$ is viewed as table variable here, with the effect that  ${\range{T}{\rangeall}{8}}$ is a group variable.
+
+\tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...},
+Alternatively, and perhaps more naturally, we can interpret the argument as the value it takes in a particular table $T$ such as $T_1$ in Figure 1, that is,
+${\range{T_1}{\rangeall}{8}} =  [1,2,3,4]$.
+Then we can also talk about constraints being satisfied. Basically, a constraint $c(A_1, ..., A_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only
 if the constraint holds on the values that the $A_i$ take in the set of tables ${\cal T}$. \tias{I find this confusing: a group as we defined it is defined on one table, not on multiple tables. we should separate the table variable from the 'range' variables then...}
 %Figure 3 provides a list of constraints that are satisfied by the tables in Figure 1.
-
 
 
 %\sergey{moved from the formalization BEGIN}
@@ -254,11 +273,11 @@ The problem of learning constraints from tabular data can be seen as an inverse 
 task is to find assignments of values to the variables in the CSP so that all constraints are satisfied.
 In the context of spreadsheets where variables could represent cells in tables, solving a corresponding CSP problem would mean completing the tables so that all constraints of the spreadsheet are satisfied.
 
-The inverse problem is, given an assignment to all cells, to find the constraints that are present in the spreadsheet.
+The inverse problem is, given an assignment to all cells, to find the constraints that are satisfied in the spreadsheet.
 We define the {\bf Tabular Constraint Learning Problem} as follows:
 %
 \begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}\\
-  Given ${\cal G}$ a set of groups over fully instantiated tables ${\cal T}$ (all cells have values) and a set of {\template}s ${\cal S}$: find all constraints $c_s(G'_1, ..., G'_n)$ that match the syntax of a \template~$s \in {\cal S}$ and where all subgroups $G'_i \subseteq G_i$ with $G_i \in {\cal G}$, satisfy both the signature and the definition of that \template.
+{\bf   Given} ${\cal G}$ a set of groups over fully instantiated tables ${\cal T}$ (all cells have values) and a set of {\template}s ${\cal S}$: {\bf find } all constraints $c_s(G'_1, ..., G'_n)$ that match the syntax of a \template~$s \in {\cal S}$ and where all subgroups $G'_i \subseteq G_i$ with $G_i \in {\cal G}$, satisfy both the signature and the definition of that \template.
 \end{definition}
 % Let us now define what it means for a constraint from \template to hold in general. Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $t^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
 % \sergey{moved from formalization END}
@@ -273,19 +292,35 @@ We define the {\bf Tabular Constraint Learning Problem} as follows:
 An example solution for the type-consistent groups of the tables in Figure~\ref{fig:main_example} and {\template}'s in Table~\ref{table:constraints} is shown in Figure~\ref{fig:sol_example}.
 
 
-Depending on the application, a solution to the tabular constraint learning problem can be considered to contain \textit{redundant} constraints. This is because constraints may be logically equivalent and constraints may also be implied by other constraints.
+Depending on the application, a solution to the tabular constraint learning problem may contain \textit{redundant} constraints, cf. \cite{bookLuc}. This is because constraints may be logically equivalent or may be implied by other constraints.
 
-A constraint $c_1(G'_1, ... G'_n)$ \textit{implies} another constraint~$c_2(G''_1, ..., G''_m)$ where the second one ranges over a subsets of the arguments of the first, iff whenever the first constraint is true, the second must also be true. More formally, $\forall G'_1, ..., G'_n$ s.t. $\{G''_1, ..., G''_m\} \subseteq \{G'_1, ..., G'_n\},\, c_1(G'_1, ... G'_n) \rightarrow c_2(G''_1, ..., G''_m)$. We say that the first constraint is more specific than the second. \tias{Some reference?}
+More formally, a constraint $c_1(G_1, ... G_n)$ \textit{implies} another constraint~$c_2(G'_1, ..., G'_m)$ whenever
+the statement $\forall G_i, G'_j : c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m)$ holds. To simplify testing,
+we shall only consider {\em range-restricted} implications, that is, we shall require that $\{G'_1, ..., G'_m\} \subseteq \{G_1, ..., G_n\}$.
+To simplify notation, and in line with logic programming, we shall often make the quantification implicit and simply write this as rules $ c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m)$.  We say that the first constraint is more specific than the second, and the second is more general.
+
+
+% where the second one ranges over a subsets of the arguments of the first, iff whenever the first constraint is true, the second must also be true. More formally, $\forall G'_1, ..., G'_n$ s.t. $\{G''_1, ..., G''_m\} \subseteq \{G'_1, ..., G'_n\},\, c_1(G'_1, ... G'_n) \rightarrow c_2(G''_1, ..., G''_m)$ll.
 
 \paragraph{Example}
-A first example is $permutation(G') \rightarrow alldifferent(G')$ (it can be seen in Table~\ref{table:constraints} that both constraints only hold if $G'$ is a vector). In this case the arguments are the same in both constraints. For most applications, it will be sufficient to output only the most specific one.
-A more involved example is that a look-up constraint implies a foreign-key constraint. The syntax of the look-up constraint is $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$, where the values in the vector $G'_2$ are determined by looking up the corresponding value of vector $G'_1$ in vector $H'_1$ and returning the corresponding value in vector $H'_2$. In Figure~\ref{fig:main_example} we have $\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}$. This implies a foreign-key constraint $\ecfkey{G'_1}{H'_1}$ where each of the values in vector $G'_1$ must appear in $H'_1$ for the look-up to work. 
+Consider the following implication:
+$$PERMUTATION(G) \rightarrow ALLDIFFERENT(G)$$
+(it can be seen in Table~\ref{table:constraints} that both constraints only hold if $G$ is a vector).
+In this case the arguments are identical in both constraints.
+Given that the problem is to find the set of {\em all} constraints, and that the more general constraint is entailed
+by the more specific one, the $ALLDDIFFERENT(G)$ constraint will be {\em redundant}.
+So, for most applications, it will be sufficient to output only the most specific one.
 
-Another form of redundancy is because of \textit{equivalent} constraints.
-Two constraints are equivalent if they imply each other. More formally, $\forall G'_1, ..., G'_n$ s.t. $\{G''_1, ..., G''_n\} = \{G'_1, ..., G'_n\},\, c_1(G'_1, ... G'_n)$ $\leftrightarrow c_2(G''_1, ..., G''_n)$.
+A more involved example is
+$$\eclookup{G'_2}{G'_1}{H'_1}{H'_2} \rightarrow \ecfkey{G'_1}{H'_1}$$
+which states
+that a look-up constraint implies a foreign-key constraint. In the look-up constraint $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ the values in the vector $G'_2$ are determined by looking up the corresponding value in vector $G'_1$ in vector $H'_1$ and returning the corresponding value in vector $H'_2$. In Figure~\ref{fig:main_example} we have $\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}$. This implies a foreign-key constraint $\ecfkey{G'_1}{H'_1}$ where each of the values in vector $G'_1$ must appear in $H'_1$ for the look-up to work.
+
+Two constraints are \textit{equivalent} if they imply one another. %More formally, $\forall G'_1, ..., G'_n$ s.t. $\{G''_1, ..., G''_n\} = \{G'_1, ..., G'_n\},\, c_1(G'_1, ... G'_n) \leftrightarrow c_2(G''_1, ..., G''_n)$.
 An example within the same \template is for the sum over vectors constraint: $G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. A related example over multiple constraints is $G_1 = +(G_2, G_3) \leftrightarrow G_1 = SUM(H)$ with $size(H) = 2$ and $G_2 \subset H, G_3 \subset H$.
+\luc{Do we really need this, or can we write it in a real equivalence --- conjunctive formula?}
 
-A good way to deal with equivalent constraints is to identify in a generic way a \textit{canonical} constraint among the equivalent ones. For example, for equivalent constraints of the same \template, the constraint where the groups are ordered by table, orientation and row/column identifier. For equivalent constraints of different templates one could define heuristics such as that some templates are preferred over others, e.g. binary sum over n-ary sum, sum over difference, etc.
+A good way to deal with equivalent constraints is to work with a \textit{canonical} constraint among the equivalent ones. For example, for equivalent constraints of the same \template, this could be the constraint where the groups are ordered by table, orientation and row/column identifier. For equivalent constraints of different templates one could define heuristics such as that some templates are preferred over others, e.g. binary sum over n-ary sum, sum over difference, etc.
 
 Because dealing with redundancy is often application-dependent, we explain in the next section our generic method for finding all constraints.
 
