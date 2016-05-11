@@ -44,7 +44,7 @@
 
 \newcommand{\eccalc}[2]{\ensuremath{#1 = #2}}
 \newcommand{\ecrank}[2]{\eccalc{#1}{\mathit{RANK}(#2)}}
-\newcommand{\ecfkey}[2]{\ensuremath{FOREIGNKEY(#1,#2)}}
+\newcommand{\ecfkey}[2]{\ensuremath{\mathit{FOREIGNKEY}(#1,#2)}}
 \newcommand{\ecalldiff}[1]{\ensuremath{\mathit{ALLDIFFERENT}(#1)}}
 \newcommand{\eclookupf}[4]{\ensuremath{\mathit{LOOKUP}_{\mathit{#4}}(#1, #2, #3)}}
 \newcommand{\eclookup}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{}}}
@@ -295,8 +295,9 @@ An example solution for the type-consistent groups of the tables in Figure~\ref{
 Depending on the application, a solution to the tabular constraint learning problem may contain \textit{redundant} constraints, cf. \cite{bookLuc}. This is because constraints may be logically equivalent or may be implied by other constraints.
 
 More formally, a constraint $c_1(G_1, ... G_n)$ \textit{implies} another constraint~$c_2(G'_1, ..., G'_m)$ whenever
-the statement $\forall G_i, G'_j : c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m)$ holds. To simplify testing,
-we shall only consider {\em range-restricted} implications, that is, we shall require that $\{G'_1, ..., G'_m\} \subseteq \{G_1, ..., G_n\}$.
+the  following statement holds: $$\forall G_i, G'_j : c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m).$$
+
+We shall only consider {\em range-restricted} implications, that is, we shall require that $\{G'_1, ..., G'_m\} \subseteq \{G_1, ..., G_n\}$.
 To simplify notation, and in line with logic programming, we shall often make the quantification implicit and simply write this as rules $ c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m)$.  We say that the first constraint is more specific than the second, and the second is more general.
 
 
@@ -304,7 +305,7 @@ To simplify notation, and in line with logic programming, we shall often make th
 
 \paragraph{Example}
 Consider the following implication:
-$$PERMUTATION(G) \rightarrow ALLDIFFERENT(G)$$
+$$\ecperm{G} \rightarrow \ecalldiff{G}$$
 (it can be seen in Table~\ref{table:constraints} that both constraints only hold if $G$ is a vector).
 In this case the arguments are identical in both constraints.
 Given that the problem is to find the set of {\em all} constraints, and that the more general constraint is entailed
@@ -317,7 +318,7 @@ which states
 that a look-up constraint implies a foreign-key constraint. In the look-up constraint $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ the values in the vector $G'_2$ are determined by looking up the corresponding value in vector $G'_1$ in vector $H'_1$ and returning the corresponding value in vector $H'_2$. In Figure~\ref{fig:main_example} we have $\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}$. This implies a foreign-key constraint $\ecfkey{G'_1}{H'_1}$ where each of the values in vector $G'_1$ must appear in $H'_1$ for the look-up to work.
 
 Two constraints are \textit{equivalent} if they imply one another. %More formally, $\forall G'_1, ..., G'_n$ s.t. $\{G''_1, ..., G''_n\} = \{G'_1, ..., G'_n\},\, c_1(G'_1, ... G'_n) \leftrightarrow c_2(G''_1, ..., G''_n)$.
-An example within the same \template is for the sum over vectors constraint: $G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. A related example over multiple constraints is $G_1 = +(G_2, G_3) \leftrightarrow G_1 = SUM(H)$ with $size(H) = 2$ and $G_2 \subset H, G_3 \subset H$.
+An example within the same \template is for the sum over vectors constraint: $G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. A related example over multiple constraints is $G_1 = +(G_2, G_3) \leftrightarrow G_1 = \textit{SUM}(H)$ with $\textit{size}(H) = 2$ and $G_2 \subset H, G_3 \subset H$.
 \luc{Do we really need this, or can we write it in a real equivalence --- conjunctive formula?}
 
 A good way to deal with equivalent constraints is to work with a \textit{canonical} constraint among the equivalent ones. For example, for equivalent constraints of the same \template, this could be the constraint where the groups are ordered by table, orientation and row/column identifier. For equivalent constraints of different templates one could define heuristics such as that some templates are preferred over others, e.g. binary sum over n-ary sum, sum over difference, etc.
@@ -730,7 +731,7 @@ Many of the remaining constraints are duplications stemming from the overlapping
 Accidental constraints are limited to the 5 rank constraints that were discussed in the case study.
 
 Redundant constraints can be reduced in different ways.
-Duplications should be detected in a post-processing step that uses entailment or heursitics to filter constraints.
+Duplications should be detected in a post-processing step that uses entailment or heuristics to filter constraints.
 Accidental constraints may be detected through heuristics, however, they can be also be removed by adding additional data.
 
 \subsubsection*{Q3. How fast is the algorithm?}
