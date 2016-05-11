@@ -353,42 +353,27 @@ Because dealing with redundancy is often application-dependent, we explain in th
 \newcommand{\tcl}{Tabular Constraint Learning}
 %\newcommand{\ctl}{Condensed Tabular Constraint Learning}
 \section{Approach to Tabular Constraint Learning}
-This section describes our approach to \tcl.
+This section describes our approach to \tcl. The main method takes \textit{groups} and {\template}s as input, and is described in Section~\ref{sec:algo}. We first explain how tables and groups can be extracted from raw spreadsheet data.
 
-\tias{Make general intro of subsections}
+\subsection{Table and group detection} \label{sec:make_groups}
+%A spreadsheet may contain multiple tables, and a table in turn will contain multiple (type-consistent) groups.
+Many spreadsheets contain headers that provide hints at where the table(s) in the sheet are and what the meaning of the rows and columns is. However, detecting tables and headers is a complex problem on its own~\cite{header}. Furthermore, headers may be missing and their use often requires incorporating language-specific vocabulary, e.g. in English.
 
-Our algorithm reasons on the level of groups and vectors on the data and assumes that these are provided.
-Often, however, this not the case and a possible approach is to extract the groups from the CSV file directly.
-This requires discovering \textit{tables} and \textit{groups}.
-Our implementation offers automated procedures for both steps.
+%\tias{0. preprocess: currencies and precentual to numeric, 1. tables from spreadsheets, 2. groups from tables. Ext: could be done interactively.}
+Fully automatic table and header detection is not the core of our work. We hence built a visual tool that uses a simple method to detect tables in the data and allows a user to correct these.
 
+The way the table detection in the tool works is as follows:
+First, we preprocess the spreadsheets so that currency values are transformed into their integer or float value and percentual data is transformed into the corresponding floating point representation (e.g. $85\%$ as $0.85$).
+Next, every row in the spreadsheet is partitioned into blocks of columns that are separate by at least one $None$ value. Then, the blocks in each row are greedily merged to obtain rectangles. Finally headers are removed by checking whether the first row or column is all textual while the next row or column is not; in that case the assumed header is removed.
 
+It should be clear this simple method only works if all tables are clearly separated by $None$ values and that headers of fully textual tables are not detected, among other things. Hence, in the visual tool the user can correct the detected tables if needed. \tias{I think it would be good if we could show a screenshot of this tool...}
 
-\subsection{Table and group detection}
-\tias{0. preprocess: currencies and precentual to numeric, 1. tables from spreadsheets, 2. groups from tables. Ext: could be done interactively.}
-\tias{Mention spreadsheet-specific hacks in the exps, not here}
-\samuel{Is an example needed? I find no because it is not our main concern but open for discussion}
-We chose to implement a naive approach to extract tables as the detection of tables and headers from data is a complex task on its own (\cite{header}) and a sophisticated implementation goes beyond the scope of this paper.
-Our approach first detects rectangular collections of data.
-It then attempts to identify the header by looking at the type of the first row.
-If this row consists only of textual entries, the row is expected to be the header and is removed, if not, the same procedure is applied on the first column.
-We suggest to provide tables in general, for well formated data, however, the user will not have to specify tables manually.
-\tias{Samuel, what does this mean?}
+From each table, row-oriented and column-oriented groups are then extracted by partitioning the rows (columns) into type-consistent parts. This step can also be verified by a user in the visual tool.
 
-Our approach for detecting groups works by partitioning the data of a table into consecutive, type consistent groups, essentially separating textual and numerical data.
-The assumption is that often numerical and textual data are not mixed and this approach works well in practice as often groups do not have to be specified manually\footnote{\samuel{Check on benchmark}}.
-Unless an explicit orientation (rows or columns) is provided for the table, this approach will attempt to create both row- and column-groups.
-
-So far we have considered textual and numerical (floating point or integer) data.
-Our implementation also supports some extensions such as currencies and percentual data, which is considered to be numerical data.
-Moreover, percentual data is corrected to the floating point representation (i.e. divided by 100).
-
-A more elaborate implementation could allow group (and table) detection to be done interactively / visually such that a user can select the groups in a spreadsheet or correct automatically generated groups.
 From here on we will assume that groups and tables are given.
 
 \newcommand{\temps}{\ensuremath{S}}
-
-\subsection{Algorithm}
+\subsection{Algorithm} \label{sec:algo}
 \tias{1) all templates, order so only once; 2) generate groups that satisfy signature; 3) generate subgroups that satisfy definition}
 Our algorithm is illustrated in Algorithm~\ref{algo:tcl} and contains three key steps.
 First, constraint templates are ordered such that they can be treated sequentially and each only once.
@@ -468,6 +453,7 @@ For some constraints (e.g. sum, max, count) that share the same \CSignature the 
 \subsubsection{Satisfying subgroups}
 \tias{not set of assignment but single assignment $a$?}
 \tias{requires checking for which of the subgroups of the groups the constraint is satisfied. many subgroups of the groups will not satisfy signature, hence no generate-and-test. Instead, we use again satisfiability to both search for the subgroups and verify satisfiab of the sign and definition.} 
+\tias{can implement any way}
 $\findassignment(t,a,C_{solutions})$ finds, for all assignments~$a = (G_1, ..., G_n)$ in $A$, the subgroups $G_i' \subseteq G_i$ such that the corresponding constraint $t(G_1', ..., G_n')$ is satisfied (i.e. the \CSignature and \CFunction of~$t$ are satisfied).
 For every \template~$t$ an implementation (declarative or imperative) needs to be provided that, given an assignment, finds valid subgroups.
 
