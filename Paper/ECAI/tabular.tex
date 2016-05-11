@@ -381,7 +381,7 @@ To answer this challenge we separate checking the signature of a constraint temp
 
 The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}; it consists of three key components: 1) templates can depend on each other, so they are ordered to avoid having to verify the same template multiple times; 2) we generate all combinations of groups that can satisfy the signature using constraint satisfaction techniques; 3) from this, all satisfying subgroups are generated.
 
-\begin{algorithm}[thb]
+\begin{algorithm}[t]
   \begin{algorithmic}
     \footnotesize
     \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- \template's, \dependencies -- dependency graph
@@ -428,35 +428,58 @@ Constraint templates that have no dependencies are omitted.
 The $\constrainttorder(\constraints,\dependencies)$ module in our method takes a set of {\template}s and a DAG as input and produces a linear ordering of the templates such that the more general, implied constraint templates (the requirements) are ordered before the templates that depend on them.
 
 \paragraph{Example}
-As mentioned before, $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ implies $\ecfkey{G'_1}{H'_1}$ and hence $LOOKUP$ depends on $FOREIGNKEY$ in Figure~\ref{fig:learning_order} and will be earlier in the ordering.
+As mentioned before, $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ implies $\ecfkey{G'_1}{H'_1}$ and hence the $LOOKUP$ constraint template depends on $FOREIGNKEY$ in Figure~\ref{fig:learning_order} and will be earlier in the ordering.
 
 % not helpful:
 %The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties, groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
 
 \subsubsection{Candidate group generation}
-\tias{find groups, each $n$ groups and $m$ arguments than m-choose-n candidates. instead of generate-and-test we will search for all valid groups. To do so, CSP with signature in logical constraints and properties of each group as data. Example should use constraint syntax}
-$\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups (group-assignments~$A$) that may contains subgroups satisfying the constraint.
-The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
+%The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
+Given a constraint template and the set of all groups ${\cal G}$, the goal is to find all combinations of groups that satisfy the constraint signature. Let there be $n$ groups and let the constraint have $k$ arguments, then a simple generate-and-test method would have to test $\tbinom{n+k-1}{k}$ combinations (given that groups can be repeated), which grows very rapidly with $n$.
 
-Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of~$t$.
-For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that a group~$G \in \groups$ is selected if there is at least one subgroup~$G' \subseteq G$ that satisfies the \CSignature.
+However, the properties defined in the signature, such as related to type or size, can be used to avoid considering certain groups for certain arguments. Furthermore, the choice of one argument can influence the possible candidates for the arguments, for example if they must have the same length. Instead of writing specialized code for each of these cases, we make use of the built-in reasoning mechanisms of constraint satisfaction solvers.
 
-\samuel{TODO: correct code integer groups}\\
-Consider the \ecrank{v_r}{v_x} constraint template, then both arguments must be of the same length.
-Therefore, assignments containing groups of different length do not have to be considered.
-Constraints of the \CSignature cannot always be enforced directly on a group but have to consider whether subgroups could satisfy them.
-For example, the \CSignature requires $v_r$ to be integer.
-If a numeric group is assigned to $v_r$ then some subgroups may have type float while other may be of type integer, therefore, this this group cannot be discarded.
+%Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of~$t$.
+%For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that a group~$G \in \groups$ is selected if there is at least one subgroup~$G' \subseteq G$ that satisfies the \CSignature.
 
-For some constraints (e.g. sum, max, count) that share the same \CSignature the same set of assignments~$A$ will be found. \tias{so?}
+A Constraint Satisfaction Problem (CSP) is a triple $(V,D,C)$ where $V$ is a set of \textit{variables}, $D$ the domain of possible values each variable can take and $C$ the set of constraints over $V$ that must be satisfied. In our case, we define one variable $V_i$ for each argument of the constraint. Each variable can be assigned to each of the groups in ${\cal G}$, so the domain consists of $|\{\cal G\}|$ identifiers.
+
+To reason over the groups, we automatically add to the constraint program a set of background facts that contain the properties of each group, namely its type, size and length. We also add all previously found constraints of constraint templates that are implied by this template. The actual constraints then express the properties defined in the signature, such as whether arguments are of a certain type, have certain dependencies or have to be equal length or orientation, etc.
+\tias{More detailed description of the properties commented out, feel free to put in}
+%Translation:
+%\begin{description}
+%  \item[Type] Require group that has supertype (e.g. integer => require numeric group, because subgroup might be integer)
+%  \item[Length] Require group to have exact length (subgroups have the same length)
+%  \item[Vectors / columns / rows] Require group to have at least the amount of vectors, columns, rows required
+%  \item[Dependency] Fix dependent variables, for every assignment construct CSP that attempts to find values for the other variables
+%  \item[Same length / table / orientation] Require groups to gave the same length table ...
+%\end{description}
+
+% TODO: old text, rephrase a bit
+Constraints derived from the signature can usually but not always be enforced exactly on a group, as we have to consider whether subgroups could satisfy them.
+For example, the \CSignature of ?? requires $v_r$ to be integer.
+If a numeric group is assigned to $v_r$ then some subgroups may have type float while other may be of type integer, therefore, this group cannot be discarded.
+
 
 \paragraph{Example}
-\ecrank{v_r}{v_x} will require groups assigned to $v_r$ to be $\integer$, groups assigned to $v_x$ to be $\discrete$ (i.e. $\integer$ or $\textual$) and only allows assignments in which groups assigned to both arguments have the same length.
+We show this construction of a CSP for the constraint template $\ecsumprod{G'}{H'}{I'}$ in Table~\ref{table:constraints}. It defines that $G'$ is a cell whose values is the result of the sum of products of rows in $H'$ and columns in $I'$.
+%
+There are three \textit{variables} $X, Y, Z$ corresponding to group $G'$, $H'$ and $I'$ respectively. The domains are $D(X) = D(Y) = D(Z) = \{1, \ldots, |{\cal G}|\}$. Finally, the constraints are:
+\begin{align*}
+&numeric(X) \land numeric(Y) \land numeric(Z) \\
+&\pcols(X) = 1 \land \prows(X) = 1 \\
+&\plength(Y) = \plength(Z) \land \plength(Y) \geq 2
+\end{align*}
+\tias{Sumproduct is a rather peculiar constraint for spreadsheets... perhaps switch to one with a dependency, e.g. look-up?}
+\\\\
+
+
+The $\generategroups(\textit{t,{\cal G},C})$ method will construct this CSP and query a solver for all satisfying solutions. This is the required result set.
 
 \subsubsection{Constraints over satisfying subgroups}
-\tias{not set of assignment but single assignment $a$?}
-\tias{requires checking for which of the subgroups of the groups the constraint is satisfied. many subgroups of the groups will not satisfy signature, hence no generate-and-test. Instead, we use again satisfiability to both search for the subgroups and verify satisfiab of the sign and definition.} 
-\tias{can implement any way}
+\tias{I have not yet reworked this part}
+
+\tias{can implement in any way, CSP or imperative (we: imperative)}
 $\findassignment(t,a,C_{solutions})$ finds, for all assignments~$a = (G_1, ..., G_n)$ in $A$, the subgroups $G_i' \subseteq G_i$ such that the corresponding constraint $t(G_1', ..., G_n')$ is satisfied (i.e. the \CSignature and \CFunction of~$t$ are satisfied).
 For every \template~$t$ an implementation (declarative or imperative) needs to be provided that, given an assignment, finds valid subgroups.
 
@@ -470,6 +493,19 @@ For some constraint templates (most notably aggregates) there may be multiple (o
 \tias{like min/max? should mention this example in implied constraints. Not sure we should mention this here, how do we remove overlapping, in post-processing? if so, move to later...}
 In this case we choose to omit those subgroups that are fully contained within a larger subgroup since this can lead to over-fitting.
 If the returned subsets are too large and accidentally include unrelated vectors the user can split such a group.
+
+\paragraph{Example 2}
+Sum Product
+
+Implementation: finds subgroups based on assignments\\
+Method $Test(G_R, G_{O_1}, G_{O_2})$\\
+$If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\\
+$If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$
+\\\\
+Method $FindSubgroups(Assignments)$\\
+$Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$
+
+Register implementation with the system for constraint X
 
 \subsection{Implementation note}
 
@@ -577,36 +613,7 @@ These constraints have been selected based on the most-used Excel functions as w
 
 Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?} \tias{Yes, either explain in detail or cut}
 
-\section{Examples}
-\subsection{Group generation CSP}
-variables from syntax, domain from input groups, filtered using type
 
-Group generation CSP (Sum Product)\\
-variables: $R, O_1, O_2$\\
-domains: $D(R) = \{ G | G \in {\cal G} \land \numeric(G)\}$, $D(O_1) = \{ G | G \in {\cal G} \land \numeric(G)\}$, $D(O_2) = \{ G | G \in {\cal G} \land \numeric(G)\}$\\
-constraints: $\plength(O_1) = \plength(O_2) \geq 2, \pcols(R) = 1, \prows(R) = 1$ % excluded not partial because we don't focus on it much
-
-Translation:
-\begin{description}
-  \item[Type] Require group that has supertype (e.g. integer => require numeric group, because subgroup might be integer)
-  \item[Length] Require group to have exact length (subgroups have the same length)
-  \item[Vectors / columns / rows] Require group to have at least the amount of vectors, columns, rows required
-  \item[Dependency] Fix dependent variables, for every assignment construct CSP that attempts to find values for the other variables
-  \item[Same length / table / orientation] Require groups to gave the same length table ...
-\end{description}
-
-\subsection{Subgroup generation}
-Sum Product
-
-Implementation: finds subgroups based on assignments\\
-Method $Test(G_R, G_{O_1}, G_{O_2})$\\
-$If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\\
-$If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$
-\\\\
-Method $FindSubgroups(Assignments)$\\
-$Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$
-
-Register implementation with the system for constraint X
 
 % \subsection{Workflow}
 % \begin{algorithm}[thb]
