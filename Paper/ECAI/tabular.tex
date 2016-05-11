@@ -786,20 +786,6 @@ Viable constraints that have enough input data to compute the result for a blank
 \textit{Active} constraints can be used to autocomplete blank cells such that the user does not have to fill in the values manually.
 Once the user has stopped editing the new row~$i$ (column~$j$), the table~$T$ is updated to include~$i$ ($j$) and constraints are learned once again.
 
-\subsection{Error detection}
-We consider two cases of error detection.
-The first setting is the \textit{online} detection of errors which is similar to the autocompletion setting.
-However, instead of considering viable constraints, we look at \textit{conflict} constraints, i.e. constraints that were learned at time~$t_0$ but do not agree with the newly added data.
-Such conflict constraints can indicate an error in the input, however, they could also be accidental constraints that are invalidated by the new data.
-
-The second type of error detection is \textit{offline} and attempts to detect errors in a spreadsheet.
-Consider, for example, a use case concerning crime statistics provided by the FBI.
-An extract of the spreadsheet is depicted in Figure~\ref{fig:fbi}.
-When run on this sheet, our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
-
-
-\sergey{We should explain Figure \ref{fig:fbi}, e.g. if we aggregate by the crime now, the missing value would not get into statistics, which seems faulty, since we can directly compute it.}
-
 \begin{figure*}[thb]
   \begin{center}
     \includegraphics[width=0.85\textwidth]{figures/fbi_figure_highlighted.png}
@@ -807,6 +793,28 @@ When run on this sheet, our system is able to detect the second sum constraint, 
   \caption{Real world tabular constraint reconstruction: FBI crime statistics}
   \label{fig:fbi}
 \end{figure*}
+
+\subsection{Error detection}
+We consider two cases of error detection.
+The first setting is the \textit{online} detection of errors which is similar to the autocompletion setting.
+However, instead of considering viable constraints, we look at \textit{conflict} constraints, i.e. constraints that were learned at time~$t_0$ but do not agree with the newly added data at time~$t_1$.
+Such conflict constraints can indicate errors in the input.
+Since conflict constraints could also be accidental constraints that are correctly invalidated by the new data, the size of the data at timet~$t_0$ should be large enough.
+
+The second type of error detection is \textit{offline} and attempts to detect errors in a spreadsheet.
+Consider, for example, a use case concerning crime statistics provided by the FBI.
+An extract of the spreadsheet is depicted in Figure~\ref{fig:fbi}.
+When run on this sheet, our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
+A possible approach to detect such missing or wrong values is to look at a sample of the table that excludes the erroneous row and compare the constraints learned on this sample with the constraints learned by adding the row containing the mistake.
+The sample needs to large enough such that we have enough confidence that the constraints are correct.
+If we define the sample to be our data at time~$t_0$ and the added row to be the additional input at~$t_1$, this task can be formulated as online error detection and dealt with in the same way.
+Of course, generating large enough samples and rows (columns) to be added can be done in multiple ways.
+In the limited case of detecting single errors one can leave out every row (column), consider the remaining data to be the sample and
+and the left out row (column) to be new input.
+\samuel{Should this be more specific?}
+
+Error detection could be integrated more closely with the algorithm, reducing the computational complexity by looking for errors during the constraint learning phase.
+This would, however, make the modeling constraints (considerably) more difficult.
 
 \samuel{FBI: work out error detection algorithm}
 
@@ -881,10 +889,10 @@ Moreover, the amount of redundant constraints found by the algorithm is limited 
 \paragraph{Future work}
 We see multiple directions for future work on this topic.
 The system we presented would become more useful in an interactive setting where users can easily receive and provide feedback.
-Moreover, the system could be adapted to produce less redundant constraints through the use of heuristic filtering.
+Moreover, the system could be adapted to deal with additional types and produce less redundant constraints through the use of (heuristic) filtering or post-processing.
 
 Currently, the system only learns single constraints, however, extending this approach to nested constraints would allow more expressive concepts to be learned.
-This shift would bring the approach more in line with programming by example.
+This shift would bring the approach closer towards programming by example.
 
 Aside from finding errors, the system could be extended to deal with noise and the ability to also learn soft constraints.
 Soft constraints are (potentially weighted) constraints that hold only on some of the data.
