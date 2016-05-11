@@ -143,23 +143,24 @@ This paper is organised as follows: \luc{todo}
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
-{\it
-\textbf{Motivation}:
-\begin{itemize}
-  \item USED -- File generated from model, model got lost, need to reconstruct
-  \item Constraint programming is hard - is Excel hard?
-  \item Avoid manual analysis, provide selection of constraints
-  \item SOMEWHAT USED --Error checking
-  \item Completion, gain speed and insights (Complicated constraints, also complicated to verify, too much output)
-\end{itemize}
+% {\it
+% \textbf{Motivation}:
+% \begin{itemize}
+%   \item USED -- File generated from model, model got lost, need to reconstruct
+%   \item Constraint programming is hard - is Excel hard?
+%   \item Avoid manual analysis, provide selection of constraints
+%   \item SOMEWHAT USED --Error checking
+%   \item Completion, gain speed and insights (Complicated constraints, also complicated to verify, too much output)
+% \end{itemize}
 
-\textbf{Novelty:}
-\begin{itemize}
-  \item USED -- Unsupervised setting (contrary to flashfill, etc)
-  \item Numeric, different constraints (contrary to single textual function solution in flashfill, etc)
-  \item USED -- Data format (2D) -- data is no longer in rows like a classic ML or DM settings
-  \item USED -- Declarative, general / modular, stacking of constraint problems
-\end{itemize}
+% \textbf{Novelty:}
+% \begin{itemize}
+%   \item USED -- Unsupervised setting (contrary to flashfill, etc)
+%   \item Numeric, different constraints (contrary to single textual function solution in flashfill, etc)
+%   \item USED -- Data format (2D) -- data is no longer in rows like a classic ML or DM settings
+%   \item USED -- Declarative, general / modular, stacking of constraint problems
+% \end{itemize}
+%}
 
 \begin{figure*}[tbh]
   \begin{center}
@@ -169,7 +170,6 @@ This paper is organised as follows: \luc{todo}
   \caption{Example spreadsheet (black words and numbers only). Blue and green elements are added by us to clarify the relations.}
   \label{fig:main_example}
 \end{figure*}
-}
 
 \section{Formalization}
 As we focus on spreadsheet data, we first introduce the general concepts of cells, group and constraint templates, using the (multi-table) sheet in Figure~\ref{fig:main_example} as running example.
@@ -879,7 +879,7 @@ Aside from finding errors, the system can be extended to deal with noise and the
 Soft constraints are the (potentially weighted) constraints that hold only on some of the data.
 This would extend the approach to new application domains as well as provide more native error detection.
 
-%\bibliographystyle{ecai}
+\bibliographystyle{plain}
 \bibliography{references}
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
