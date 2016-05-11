@@ -22,11 +22,11 @@
 
 \newcommand{\constraints}{\ensuremath{\mathcal{T}}\xspace}
 \newcommand{\format}[1]{\textit{#1}\xspace}
-\newcommand{\generategroups}{\format{generateAssignments}}
+\newcommand{\generategroups}{\format{generateGroups}}
 \newcommand{\extractgroups}{\format{extractGroups}}
 \newcommand{\extracttables}{\format{extractTables}}
 \newcommand{\learnconstraints}{\format{learnConstraints}}
-\newcommand{\findassignment}{\format{findSolutions}}
+\newcommand{\findassignment}{\format{findConstraints}}
 \newcommand{\postprocess}{\format{pruneRedundant}}
 \newcommand{\constrainttorder}{\format{templateOrder}}
 \newcommand{\template}{\format{constraint template}}
@@ -374,23 +374,23 @@ From here on we will assume that groups and tables are given.
 
 \newcommand{\temps}{\ensuremath{S}}
 \subsection{Algorithm} \label{sec:algo}
-\tias{1) all templates, order so only once; 2) generate groups that satisfy signature; 3) generate subgroups that satisfy definition}
-Our algorithm is illustrated in Algorithm~\ref{algo:tcl} and contains three key steps.
-First, constraint templates are ordered such that they can be treated sequentially and each only once.
-Then, for each constraint template~$s \in \temps$ we generate a set~$A$ of \textit{group-assignments} that satisfy the \CSignature of~$s$.
-Every group assignment assigns a group~$G \in \groups$ to every argument of the template.
-In the third step, for every assignments $(G_1, ..., G_n) \in A$ we find all constraints $s(G_1', ... G_n')$ that hold on the data (satisfy the \CFunction), such that every subgroup $G_i' \subseteq G_i$.
+Our method solves the \tcl problem by checking for each template what combination of groups can satisfy the signature, and which specific subgroups satisfy the definition.
+
+The main challenge is to avoid having to check each possible combination of group and subgroup on each constraint template, as well as developing an \textit{extensible} method in which new constraint templates can be plugged in with relative ease. %We will use constraint satisfaction technology to partly answer this challenge.
+To answer this challenge we separate checking the signature of a constraint template from checking the definition of a constraint template. Furthermore, we use constraint satisfaction technology to jointly search for and test the signature over all group combinations.
+
+The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}; it consists of three key components: 1) templates can depend on each other, so they are ordered to avoid having to verify the same template multiple times; 2) we generate all combinations of groups that can satisfy the signature using constraint satisfaction techniques; 3) from this, all satisfying subgroups are generated.
 
 \begin{algorithm}[thb]
   \begin{algorithmic}
     \footnotesize
     \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- \template's, \dependencies -- dependency graph
     \State \textbf{Output:} $C$ -- learned constraints
-    \State $C \gets \emptyset$ \Comment{The set of constraints}
-  \For{$t \in \constrainttorder(\constraints,\dependencies)$}
-  \State $v_1, ..., v_n =$ variables of $T$ \tias{variables not defined, only nr of groups important?}
-    \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(t, \groups, C, \dependencies)$}
-      \State $C \gets C \cup \findassignment(t, v_1{:}~G_1, \dots, v_n{:}~G_n, C, \dependencies)$
+    \State $C \gets \emptyset$ %\Comment{The set of constraints}
+  \ForAll{$t \in \constrainttorder(\constraints,\dependencies)$}
+  \State $n \gets$ number of arguments of constraint $c_t$
+    \ForAll{$(G_1, \dots, G_n) \in \generategroups(t, \groups, C)$}
+      \State $C \gets C \cup \findassignment(t, (G_1, \dots, G_n))$
     \EndFor
   \EndFor\\
 \Return $C$
@@ -399,36 +399,39 @@ In the third step, for every assignments $(G_1, ..., G_n) \in A$ we find all con
 \label{algo:tcl}
 \end{algorithm}
 
+%First, constraint templates are ordered such that they can be treated sequentially and each only once.
+%Then, for each constraint template~$s \in \temps$ we generate a set~$A$ of \textit{group-assignments} that satisfy the \CSignature of~$s$.
+%Every group assignment assigns a group~$G \in \groups$ to every argument of the template.
+%In the third step, for every assignments $(G_1, ..., G_n) \in A$ we find all constraints $s(G_1', ... G_n')$ that hold on the data (satisfy the \CFunction), such that every subgroup $G_i' \subseteq G_i$.
 
-Our Algorithm \ref{algo:tcl} is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}, however, we apply the approach on two levels, generating and testing groups according to their properties and generating and testing subgroups on the actual data.
-We will explain and illustrate the three key steps in detail.
+%Our Algorithm \ref{algo:tcl} is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}, however, we apply the approach on two levels, generating and testing groups according to their properties and generating and testing subgroups on the actual data.
+%We will explain and illustrate the three key steps in detail.
 
-We now describe each of the three steps in more detail.
+We now describe each of the three components in more detail.
 
 \subsubsection{Template ordering}
-Looking at the template signatures in Table~\ref{table:constraints} one can see that some signatures depend on other constraints. This dependency also translates into the template implying the other templace. In Inductive Logic Programming, one often exploits implications between constraints to structure the search space \cite{luc_book}. Similarly, we can use these implications to define an ordering over the templates, such that the more general constraints (the requirements) are verified before the more specific constraints. Figure~\ref{fig:learning_order} shows the dependency graph extracted from the signature definitions in Table~\ref{table:constraints}. 
-Constraint templates that have no dependencies are omitted. Because there are no equivalences or loops in the signatures, the resulting graph is a directed acyclic graph (DAG).
+As discussed before, a constraint may imply another constraint. This is apparent when looking at the template signatures in Table~\ref{table:constraints}, where one can see that some signatures depend on other constraints, such as $LOOKUP$ depending on $FOREIGNKEY$.
 
-\begin{figure}[tbh]
+In Inductive Logic Programming, one often exploits implications between constraints to structure the search space \cite{luc_book}.
+In our method, we use these dependencies/implications to define a dependency graph between the templates. We assume the signatures do not contain equivalences or loops, and hence the resulting graph is a directed acyclic graph (DAG).
+Figure~\ref{fig:learning_order} shows the dependency graph extracted from the signature definitions in Table~\ref{table:constraints}. 
+Constraint templates that have no dependencies are omitted. 
+
+\begin{figure}[t]
   \centering
-  \includegraphics[width=0.9\linewidth]{figures/constraint_dependency.png}
-  \caption{Constraint Learning Order.
-  An arrow from~$s_1$ to~$s_2$ indicates that the \CSignature of~$s_2$ requires some arguments of~$s_2$ to fulfill~$s_1$.
-  Therefore, constraints for the more general \template~$s_1$ are learned before constraints for the more specific \template~$s_2$.
+  \includegraphics[width=0.8\linewidth]{figures/constraint_dependency.png}
+  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_1$ is implied by $s_2$ because the \CSignature of~$s_2$ depends on $s_1$ to hold on a specific subset of $s_2$ its groups.
   }
   \label{fig:learning_order}
 \end{figure}
 
-$\constrainttorder(\constraints,\dependencies)$ uses such a DAG over a subset of the constraint templates to derive a topological order of~\dependencies.
+The $\constrainttorder(\constraints,\dependencies)$ module in our method takes a set of {\template}s and a DAG as input and produces a linear ordering of the templates such that the more general, implied constraint templates (the requirements) are ordered before the templates that depend on them.
 
 \paragraph{Example}
-As mentioned earlier, \textit{foreign-key} is more specific than \textit{all-different} as $\ecfkey{v_{fk}}{v_{pk}} \implies \ecalldiff{v_{pk}}$.
-Therefore, we can first generate all subgroups $G_i'$ for which \ecalldiff{G_i'} is satisfied and use these subgroups as candidates for $v_{pk}$ in \ecfkey{v_{fk}}{v_{pk}}.
+As mentioned before, $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ implies $\ecfkey{G'_1}{H'_1}$ and hence $LOOKUP$ depends on $FOREIGNKEY$ in Figure~\ref{fig:learning_order} and will be earlier in the ordering.
 
-The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties, groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
-\\\\
-Constraint templates have to be treated respecting the order, i.e. learning the most general ones first.
-The generality ordering thus imposes a partial ordering according to which constraint templates must be learned.
+% not helpful:
+%The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties, groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
 
 \subsubsection{Candidate group generation}
 \tias{find groups, each $n$ groups and $m$ arguments than m-choose-n candidates. instead of generate-and-test we will search for all valid groups. To do so, CSP with signature in logical constraints and properties of each group as data. Example should use constraint syntax}
@@ -450,7 +453,7 @@ For some constraints (e.g. sum, max, count) that share the same \CSignature the 
 \paragraph{Example}
 \ecrank{v_r}{v_x} will require groups assigned to $v_r$ to be $\integer$, groups assigned to $v_x$ to be $\discrete$ (i.e. $\integer$ or $\textual$) and only allows assignments in which groups assigned to both arguments have the same length.
 
-\subsubsection{Satisfying subgroups}
+\subsubsection{Constraints over satisfying subgroups}
 \tias{not set of assignment but single assignment $a$?}
 \tias{requires checking for which of the subgroups of the groups the constraint is satisfied. many subgroups of the groups will not satisfy signature, hence no generate-and-test. Instead, we use again satisfiability to both search for the subgroups and verify satisfiab of the sign and definition.} 
 \tias{can implement any way}
