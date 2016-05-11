@@ -30,6 +30,7 @@
 \newcommand{\postprocess}{\format{pruneRedundant}}
 \newcommand{\constrainttorder}{\format{templateOrder}}
 \newcommand{\template}{\format{constraint template}}
+\newcommand{\sname}{\format{TaCKLe}}
 
 
 \newcommand{\CName}{Syntax\xspace}
@@ -862,23 +863,23 @@ claudien \cite{claudien} \sergey{Samuel, Luc, you would need to help with this o
 \section{Conclusions}
 
 % points: 1) can be a base for an actual plugin or a function in excel 2) novel problem and challenge for systems and constraint solvers 3) can be part of the complicated pipeline togehter with the header detection
-Our goal was to automatically identify constraints that hold in a spreadsheet.
-We presented and evaluated an approach that is able to learn a large set of constraints from CSV data.
-Moreover, the amount of redundant constraints found by the algorithm is limited despite the lack of more sophisticated post-processing steps.
+Our goal is to automatically identify constraints in a spreadsheet.
+We have presented and evaluated our approach, implemented as the system \sname, that is able to learn a large set of constraints from CSV data.
+Moreover, the amount of redundant constraints found by the system is limited despite the lack of more sophisticated post-processing steps.
 
 \paragraph{Future work}
-We see multiple directions for future work on this topic.
+There are multiple directions for future work on this topic.
 The system we presented would become more useful in an interactive setting where users can easily receive and provide feedback.
-Moreover, the system could be adapted to produce less redundant constraints through the use of heuristic filtering.
+Moreover, the system can be adapted to produce less redundant constraints through the use of heuristic filtering.
 
 Currently, the system only learns single constraints, however, extending this approach to nested constraints would allow more expressive concepts to be learned.
-This shift would bring the approach more in line with programming by example.
+This shift would bring the approach in line with programming by example.
 
-Aside from finding errors, the system could be extended to deal with noise and the ability to also learn soft constraints.
-Soft constraints are (potentially weighted) constraints that hold only on some of the data.
-This could extend the approach to new application domains as well as provide more native error detection.
+Aside from finding errors, the system can be extended to deal with noise and the ability to learn soft constraints.
+Soft constraints are the (potentially weighted) constraints that hold only on some of the data.
+This would extend the approach to new application domains as well as provide more native error detection.
 
-\bibliographystyle{ecai}
+%\bibliographystyle{ecai}
 \bibliography{references}
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
