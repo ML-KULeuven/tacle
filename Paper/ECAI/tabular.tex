@@ -614,6 +614,13 @@ These constraints have been selected based on the most-used Excel functions as w
 
 Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?} \tias{Yes, either explain in detail or cut}
 
+\paragraph{Application specific system extension}
+\sergey{Explain here, how the system can be extended with a new constraints like vr = floor(v), float(v), int(vr), len(v)=len(vr), v,vr are single vectors}
+
+\begin{equation}
+  \forall i{:}~ v_r[i] \leq v[i] < v_r[i] + 0.5
+  \label{eq:floor_extension}
+\end{equation}
 
 
 % \subsection{Workflow}
