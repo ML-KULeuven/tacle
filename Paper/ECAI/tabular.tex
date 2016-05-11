@@ -782,13 +782,21 @@ In this section we will illustrate how various motivating applications could be 
 \subsection{Autocompletion}
 Autocompletion can be seen as using knowledge derived from data at time~$t_0$ and new input data at time~$t_1 > t_0$ to predict data that the user has not yet written.
 Therefore, constraints are learned at time~$t_0$ and combined with data from a new row~$i$ (column~$j$) that the user has added to a table~$T$ by time~$t_1$.
-Constraints that do not conflict with the added data are considered viable.
+Constraints that do not conflict with the added data are considered \textit{viable}.
 Viable constraints that have enough input data to compute the result for a blank cell~$T[i,j]$ in the new row (column) are \textit{active}, which means they can be used to predict the outcome for that cell.
-Active constraints can be used to autocomplete blank cells such that the user does not have to fill in the values manually.
+\textit{Active} constraints can be used to autocomplete blank cells such that the user does not have to fill in the values manually.
 Once the user has stopped editing the new row~$i$ (column~$j$), the table~$T$ is updated to include~$i$ ($j$) and constraints are learned once again.
 
 \subsection{Error detection}
-For this application we consider a use case concerning crime statistics provided by the FBI.
+We consider two cases of error detection.
+The first setting is the \textit{online} detection of errors which is similar to the autocompletion setting.
+However, instead of considering viable constraints, we look at \textit{conflict} constraints, i.e. constraints that were learned at time~$t_0$ but do not agree with the newly added data.
+Such conflict constraints can indicate an error in the input, however, they could also be accidental constraints that are invalidated by the new data.
+
+The second type of error detection is \textit{offline} and attempts to detect errors in a spreadsheet.
+Consider, for example, a use case concerning crime statistics provided by the FBI.
+An extract of the spreadsheet is depicted in Figure~\ref{fig:fbi}.
+When run on this sheet, our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
 
 
 \sergey{We should explain Figure \ref{fig:fbi}, e.g. if we aggregate by the crime now, the missing value would not get into statistics, which seems faulty, since we can directly compute it.}
