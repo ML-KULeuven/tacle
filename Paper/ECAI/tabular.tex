@@ -22,11 +22,11 @@
 
 \newcommand{\constraints}{\ensuremath{\mathcal{T}}\xspace}
 \newcommand{\format}[1]{\textit{#1}\xspace}
-\newcommand{\generategroups}{\format{generateAssignments}}
+\newcommand{\generategroups}{\format{generateGroups}}
 \newcommand{\extractgroups}{\format{extractGroups}}
 \newcommand{\extracttables}{\format{extractTables}}
 \newcommand{\learnconstraints}{\format{learnConstraints}}
-\newcommand{\findassignment}{\format{findSolutions}}
+\newcommand{\findassignment}{\format{findConstraints}}
 \newcommand{\postprocess}{\format{pruneRedundant}}
 \newcommand{\constrainttorder}{\format{templateOrder}}
 \newcommand{\template}{\format{constraint template}}
@@ -353,53 +353,44 @@ Because dealing with redundancy is often application-dependent, we explain in th
 \newcommand{\tcl}{Tabular Constraint Learning}
 %\newcommand{\ctl}{Condensed Tabular Constraint Learning}
 \section{Approach to Tabular Constraint Learning}
-This section describes our approach to \tcl.
+This section describes our approach to \tcl. The main method takes \textit{groups} and {\template}s as input, and is described in Section~\ref{sec:algo}. We first explain how tables and groups can be extracted from raw spreadsheet data.
 
-Our algorithm reasons on the level of groups and vectors on the data and assumes that these are provided.
-Often, however, this not the case and a possible approach is to extract the groups from the CSV file directly.
-This requires discovering \textit{tables} and \textit{groups}.
-Our implementation offers automated procedures for both steps.
+\subsection{Table and group detection} \label{sec:make_groups}
+%A spreadsheet may contain multiple tables, and a table in turn will contain multiple (type-consistent) groups.
+Many spreadsheets contain headers that provide hints at where the table(s) in the sheet are and what the meaning of the rows and columns is. However, detecting tables and headers is a complex problem on its own~\cite{header}. Furthermore, headers may be missing and their use often requires incorporating language-specific vocabulary, e.g. in English.
 
+%\tias{0. preprocess: currencies and precentual to numeric, 1. tables from spreadsheets, 2. groups from tables. Ext: could be done interactively.}
+Fully automatic table and header detection is not the core of our work. We hence built a visual tool that uses a simple method to detect tables in the data and allows a user to correct these.
 
+The way the table detection in the tool works is as follows:
+First, we preprocess the spreadsheets so that currency values are transformed into their integer or float value and percentual data is transformed into the corresponding floating point representation (e.g. $85\%$ as $0.85$).
+Next, every row in the spreadsheet is partitioned into blocks of columns that are separate by at least one $None$ value. Then, the blocks in each row are greedily merged to obtain rectangles. Finally headers are removed by checking whether the first row or column is all textual while the next row or column is not; in that case the assumed header is removed.
 
-\subsection{Table and group detection}
-\samuel{Is an example needed? I find no because it is not our main concern but open for discussion}
-We chose to implement a naive approach to extract tables as the detection of tables and headers from data is a complex task on its own (\cite{header}) and a sophisticated implementation goes beyond the scope of this paper.
-Our approach first detects rectangular collections of data.
-It then attempts to identify the header by looking at the type of the first row.
-If this row consists only of textual entries, the row is expected to be the header and is removed, if not, the same procedure is applied on the first column.
-We suggest to provide tables in general, for well formated data, however, the user will not have to specify tables manually.
+It should be clear this simple method only works if all tables are clearly separated by $None$ values and that headers of fully textual tables are not detected, among other things. Hence, in the visual tool the user can correct the detected tables if needed. \tias{I think it would be good if we could show a screenshot of this tool...}
 
-Our approach for detecting groups works by partitioning the data of a table into consecutive, type consistent groups, essentially separating textual and numerical data.
-The assumption is that often numerical and textual data are not mixed and this approach works well in practice as often groups do not have to be specified manually\footnote{\samuel{Check on benchmark}}.
-Unless an explicit orientation (rows or columns) is provided for the table, this approach will attempt to create both row- and column-groups.
+From each table, row-oriented and column-oriented groups are then extracted by partitioning the rows (columns) into type-consistent parts. This step can also be verified by a user in the visual tool.
 
-So far we have considered textual and numerical (floating point or integer) data.
-Our implementation also supports some extensions such as currencies and percentual data, which is considered to be numerical data.
-Moreover, percentual data is corrected to the floating point representation (i.e. divided by 100).
-
-A more elaborate implementation could allow group (and table) detection to be done interactively / visually such that a user can select the groups in a spreadsheet or correct automatically generated groups.
 From here on we will assume that groups and tables are given.
 
 \newcommand{\temps}{\ensuremath{S}}
+\subsection{Algorithm} \label{sec:algo}
+Our method solves the \tcl problem by checking for each template what combination of groups can satisfy the signature, and which specific subgroups satisfy the definition.
 
-\subsection{Algorithm}
-Our algorithm is illustrated in Algorithm~\ref{algo:tcl} and contains three key steps.
-First, constraint templates are ordered such that they can be treated sequentially and each only once.
-Then, for each constraint template~$s \in \temps$ we generate a set~$A$ of \textit{group-assignments} that satisfy the \CSignature of~$s$.
-Every group assignment assigns a group~$G \in \groups$ to every argument of the template.
-In the third step, for every assignments $(G_1, ..., G_n) \in A$ we find all constraints $s(G_1', ... G_n')$ that hold on the data (satisfy the \CFunction), such that every subgroup $G_i' \subseteq G_i$.
+The main challenge is to avoid having to check each possible combination of group and subgroup on each constraint template, as well as developing an \textit{extensible} method in which new constraint templates can be plugged in with relative ease. %We will use constraint satisfaction technology to partly answer this challenge.
+To answer this challenge we separate checking the signature of a constraint template from checking the definition of a constraint template. Furthermore, we use constraint satisfaction technology to jointly search for and test the signature over all group combinations.
 
-\begin{algorithm}[thb]
+The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}; it consists of three key components: 1) templates can depend on each other, so they are ordered to avoid having to verify the same template multiple times; 2) we generate all combinations of groups that can satisfy the signature using constraint satisfaction techniques; 3) from this, all satisfying subgroups are generated.
+
+\begin{algorithm}[t]
   \begin{algorithmic}
     \footnotesize
     \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- \template's, \dependencies -- dependency graph
     \State \textbf{Output:} $C$ -- learned constraints
-    \State $C \gets \emptyset$ \Comment{The set of constraints}
-  \For{$t \in \constrainttorder(\constraints,\dependencies)$}
-  \State $v_1, ..., v_n =$ variables of $T$
-    \For{$v_1{:}~G_1, \dots, v_n{:}~G_n \in \generategroups(t, \groups, C, \dependencies)$}
-      \State $C \gets C \cup \findassignment(t, v_1{:}~G_1, \dots, v_n{:}~G_n, C, \dependencies)$
+    \State $C \gets \emptyset$ %\Comment{The set of constraints}
+  \ForAll{$t \in \constrainttorder(\constraints,\dependencies)$}
+  \State $n \gets$ number of arguments of constraint $c_t$
+    \ForAll{$(G_1, \dots, G_n) \in \generategroups(t, \groups, C)$}
+      \State $C \gets C \cup \findassignment(t, (G_1, \dots, G_n))$
     \EndFor
   \EndFor\\
 \Return $C$
@@ -408,59 +399,90 @@ In the third step, for every assignments $(G_1, ..., G_n) \in A$ we find all con
 \label{algo:tcl}
 \end{algorithm}
 
+%First, constraint templates are ordered such that they can be treated sequentially and each only once.
+%Then, for each constraint template~$s \in \temps$ we generate a set~$A$ of \textit{group-assignments} that satisfy the \CSignature of~$s$.
+%Every group assignment assigns a group~$G \in \groups$ to every argument of the template.
+%In the third step, for every assignments $(G_1, ..., G_n) \in A$ we find all constraints $s(G_1', ... G_n')$ that hold on the data (satisfy the \CFunction), such that every subgroup $G_i' \subseteq G_i$.
 
-Our Algorithm \ref{algo:tcl} is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}, however, we apply the approach on two levels, generating and testing groups according to their properties and generating and testing subgroups on the actual data.
-We will explain and illustrate the three key steps in detail.
+%Our Algorithm \ref{algo:tcl} is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}, however, we apply the approach on two levels, generating and testing groups according to their properties and generating and testing subgroups on the actual data.
+%We will explain and illustrate the three key steps in detail.
+
+We now describe each of the three components in more detail.
 
 \subsubsection{Template ordering}
-Looking at the template signatures in Table~\ref{table:constraints} one can see that some signatures depend on other constraints. This dependency also translates into the template implying the other templace. In Inductive Logic Programming, one often exploits implications between constraints to structure the search space \cite{luc_book}. Similarly, we can use these implications to define an ordering over the templates, such that the more general constraints (the requirements) are verified before the more specific constraints. Figure~\ref{fig:learning_order} shows the dependency graph extracted from the signature definitions in Table~\ref{table:constraints}. 
-Constraint templates that have no dependencies are omitted. Because there are no equivalences or loops in the signatures, the resulting graph is a directed acyclic graph (DAG).
+As discussed before, a constraint may imply another constraint. This is apparent when looking at the template signatures in Table~\ref{table:constraints}, where one can see that some signatures depend on other constraints, such as $LOOKUP$ depending on $FOREIGNKEY$.
 
-\begin{figure}[tbh]
+In Inductive Logic Programming, one often exploits implications between constraints to structure the search space \cite{luc_book}.
+In our method, we use these dependencies/implications to define a dependency graph between the templates. We assume the signatures do not contain equivalences or loops, and hence the resulting graph is a directed acyclic graph (DAG).
+Figure~\ref{fig:learning_order} shows the dependency graph extracted from the signature definitions in Table~\ref{table:constraints}. 
+Constraint templates that have no dependencies are omitted. 
+
+\begin{figure}[t]
   \centering
-  \includegraphics[width=0.9\linewidth]{figures/constraint_dependency.png}
-  \caption{Constraint Learning Order.
-  An arrow from~$s_1$ to~$s_2$ indicates that the \CSignature of~$s_2$ requires some arguments of~$s_2$ to fulfill~$s_1$.
-  Therefore, constraints for the more general \template~$s_1$ are learned before constraints for the more specific \template~$s_2$.
+  \includegraphics[width=0.8\linewidth]{figures/constraint_dependency.png}
+  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_1$ is implied by $s_2$ because the \CSignature of~$s_2$ depends on $s_1$ to hold on a specific subset of $s_2$ its groups.
   }
   \label{fig:learning_order}
 \end{figure}
 
-$\constrainttorder(\constraints,\dependencies)$ uses such a DAG over a subset of the constraint templates to derive a topological order of~\dependencies.
+The $\constrainttorder(\constraints,\dependencies)$ module in our method takes a set of {\template}s and a DAG as input and produces a linear ordering of the templates such that the more general, implied constraint templates (the requirements) are ordered before the templates that depend on them.
 
 \paragraph{Example}
-As mentioned earlier, \textit{foreign-key} is more specific than \textit{all-different} as $\ecfkey{v_{fk}}{v_{pk}} \implies \ecalldiff{v_{pk}}$.
-Therefore, we can first generate all subgroups $G_i'$ for which \ecalldiff{G_i'} is satisfied and use these subgroups as candidates for $v_{pk}$ in \ecfkey{v_{fk}}{v_{pk}}.
+As mentioned before, $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ implies $\ecfkey{G'_1}{H'_1}$ and hence the $LOOKUP$ constraint template depends on $FOREIGNKEY$ in Figure~\ref{fig:learning_order} and will be earlier in the ordering.
 
-The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties, groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
-\\\\
-Most parts of the algorithm could be easily parallelized.
-Every connected component in \dependencies can be learned independently.
-Within every component, constraint templates have to be treated respecting the order, i.e. learning the most general ones first.
-The generality ordering thus imposes a partial ordering according to which constraint templates must be learned.
+% not helpful:
+%The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties, groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
 
 \subsubsection{Candidate group generation}
-$\generategroups(\textit{Constraint,GroupSet,Solutions})$ is the function generating tuples of groups (group-assignments~$A$) that may contains subgroups satisfying the constraint.
-The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
+%The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
+Given a constraint template and the set of all groups ${\cal G}$, the goal is to find all combinations of groups that satisfy the constraint signature. Let there be $n$ groups and let the constraint have $k$ arguments, then a simple generate-and-test method would have to test $\tbinom{n+k-1}{k}$ combinations (given that groups can be repeated), which grows very rapidly with $n$.
 
-Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of~$t$.
-For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that a group~$G \in \groups$ is selected if there is at least one subgroup~$G' \subseteq G$ that satisfies the \CSignature.
+However, the properties defined in the signature, such as related to type or size, can be used to avoid considering certain groups for certain arguments. Furthermore, the choice of one argument can influence the possible candidates for the arguments, for example if they must have the same length. Instead of writing specialized code for each of these cases, we make use of the built-in reasoning mechanisms of constraint satisfaction solvers.
 
-\samuel{TODO: correct code integer groups}\\
-Consider the \ecrank{v_r}{v_x} constraint template, then both arguments must be of the same length.
-Therefore, assignments containing groups of different length do not have to be considered.
-Constraints of the \CSignature cannot always be enforced directly on a group but have to consider whether subgroups could satisfy them.
-For example, the \CSignature requires $v_r$ to be integer.
-If a numeric group is assigned to $v_r$ then some subgroups may have type float while other may be of type integer, therefore, this this group cannot be discarted.
+%Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of~$t$.
+%For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that a group~$G \in \groups$ is selected if there is at least one subgroup~$G' \subseteq G$ that satisfies the \CSignature.
 
-For some constraints (e.g. sum, max, count) that share the same \CSignature the same set of assignments~$A$ will be found.
+A Constraint Satisfaction Problem (CSP) is a triple $(V,D,C)$ where $V$ is a set of \textit{variables}, $D$ the domain of possible values each variable can take and $C$ the set of constraints over $V$ that must be satisfied. In our case, we define one variable $V_i$ for each argument of the constraint. Each variable can be assigned to each of the groups in ${\cal G}$, so the domain consists of $|\{\cal G\}|$ identifiers.
+
+To reason over the groups, we automatically add to the constraint program a set of background facts that contain the properties of each group, namely its type, size and length. We also add all previously found constraints of constraint templates that are implied by this template. The actual constraints then express the properties defined in the signature, such as whether arguments are of a certain type, have certain dependencies or have to be equal length or orientation, etc.
+\tias{More detailed description of the properties commented out, feel free to put in}
+%Translation:
+%\begin{description}
+%  \item[Type] Require group that has supertype (e.g. integer => require numeric group, because subgroup might be integer)
+%  \item[Length] Require group to have exact length (subgroups have the same length)
+%  \item[Vectors / columns / rows] Require group to have at least the amount of vectors, columns, rows required
+%  \item[Dependency] Fix dependent variables, for every assignment construct CSP that attempts to find values for the other variables
+%  \item[Same length / table / orientation] Require groups to gave the same length table ...
+%\end{description}
+
+% TODO: old text, rephrase a bit
+Constraints derived from the signature can usually but not always be enforced exactly on a group, as we have to consider whether subgroups could satisfy them.
+For example, the \CSignature of ?? requires $v_r$ to be integer.
+If a numeric group is assigned to $v_r$ then some subgroups may have type float while other may be of type integer, therefore, this group cannot be discarded.
+
 
 \paragraph{Example}
-\ecrank{v_r}{v_x} will require groups assigned to $v_r$ to be $\integer$, groups assigned to $v_x$ to be $\discrete$ (i.e. $\integer$ or $\textual$) and only allows assignments in which groups assigned to both arguments have the same length.
+We show this construction of a CSP for the constraint template $\ecsumprod{G'}{H'}{I'}$ in Table~\ref{table:constraints}. It defines that $G'$ is a cell whose values is the result of the sum of products of rows in $H'$ and columns in $I'$.
+%
+There are three \textit{variables} $X, Y, Z$ corresponding to group $G'$, $H'$ and $I'$ respectively. The domains are $D(X) = D(Y) = D(Z) = \{1, \ldots, |{\cal G}|\}$. Finally, the constraints are:
+\begin{align*}
+&numeric(X) \land numeric(Y) \land numeric(Z) \\
+&\pcols(X) = 1 \land \prows(X) = 1 \\
+&\plength(Y) = \plength(Z) \land \plength(Y) \geq 2
+\end{align*}
+\tias{Sumproduct is a rather peculiar constraint for spreadsheets... perhaps switch to one with a dependency, e.g. look-up?}
+\\\\
 
-\subsubsection{Subgroup satisfaction search}
-$\findassignment(t,A,C_{solutions})$ finds, for all assignments~$a = (G_1, ..., G_n)$ in $A$, the subgroups $G_i' \subseteq G_i$ such that the corresponding constraint $t(G_1', ..., G_n')$ is satisfied (i.e. the \CSignature and \CFunction of~$t$ are satisfied).
+
+The $\generategroups(\textit{t,{\cal G},C})$ method will construct this CSP and query a solver for all satisfying solutions. This is the required result set.
+
+\subsubsection{Constraints over satisfying subgroups}
+\tias{I have not yet reworked this part}
+
+\tias{can implement in any way, CSP or imperative (we: imperative)}
+$\findassignment(t,a,C_{solutions})$ finds, for all assignments~$a = (G_1, ..., G_n)$ in $A$, the subgroups $G_i' \subseteq G_i$ such that the corresponding constraint $t(G_1', ..., G_n')$ is satisfied (i.e. the \CSignature and \CFunction of~$t$ are satisfied).
 For every \template~$t$ an implementation (declarative or imperative) needs to be provided that, given an assignment, finds valid subgroups.
+
 
 \paragraph{Example}
 Consider a group assignment $G_x, G_y$ associated with the arguments $v_x,v_y$ of \ecrank{v_y}{v_x}, then \findassignment selects single vectors $V_y \in G_y, V_x \in G_x$ such that \ecrank{V_y}{V_x} is true.
@@ -468,21 +490,42 @@ For example, in Figure~\ref{fig:main_example} the group $G = \range{T_1}{\rangea
 Then \findassignment could select $V_x$ to be $\range{T_1}{\rangeall}{7}$ and $V_y$ to be $\range{T_1}{\rangeall}{8}$ since \ecrank{\range{T_1}{\rangeall}{7}}{\range{T_1}{\rangeall}{8}} is satisfied in the data.
 \\\\
 For some constraint templates (most notably aggregates) there may be multiple (overlapping) subgroups of a given group~$G$ for which the template satisfied.
+\tias{like min/max? should mention this example in implied constraints. Not sure we should mention this here, how do we remove overlapping, in post-processing? if so, move to later...}
 In this case we choose to omit those subgroups that are fully contained within a larger subgroup since this can lead to over-fitting.
 If the returned subsets are too large and accidentally include unrelated vectors the user can split such a group.
 
+\paragraph{Example 2}
+Sum Product
+
+Implementation: finds subgroups based on assignments\\
+Method $Test(G_R, G_{O_1}, G_{O_2})$\\
+$If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\\
+$If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$
+\\\\
+Method $FindSubgroups(Assignments)$\\
+$Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$
+
+Register implementation with the system for constraint X
+
 \subsection{Implementation note}
+
+\paragraph{Constraint solvers}
+\tias{stand-alone (with text-based modeling language) versus embedded.}
 For each \template, both \generategroups and \findassignment are can be seen as separate constraint satisfaction problems.
-Hence, it is natural to solve them using declarative solvers.
-Even though each of these problems differ from each other, they are variations that can be modeled using similar techniques.
-This also makes it easy to extend the implementation as templates can be easily added (or removed).
 Furthermore, declarative languages such as, for example, ASP \cite{whaisasp} and Minizinc \cite{minizinc} provide primitives that make modeling transparent and generic.
 
 Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc (Gecode-backend 2.0.2 \cite{minizinc}) and uses a native Python CSP solver \cite{python_constraint} for \generategroups.
 All the constraints mentioned in the paper can be run purely using the internal Python engine without any external software.
 Future versions of the system will provide user interfaces to some of these constraint languages (e.g. ASP and Minizinc) to allow users to specify solving procedures for new constraint templates in a declarative way.
 
-\subsection{Constraints}
+\paragraph{Parallelization}
+\tias{Do we do this? If not, cut...}
+The two for loops in the algorithm can be easily parallelized. Each generated assignment can be checked independently. Templates may not be independent as expressed by the DAG \dependencies. However, each independent component of the DAG (including one component per template not in the DAG) can be verified independently. 
+
+\paragraph{Redundancy}
+Mention 'largest overlapping subgroup' here?
+
+\paragraph{Constraints}
 
 \begin{table*}
 \tias{Notation inconsistent (no $G'$? also the 'bold' notation not explained. Also, in many places missing that must be vector... switched $\rightarrow$ to FOREIGNKEY to avoid confusion with implied constraints.}
@@ -568,38 +611,9 @@ Table~\ref{table:constraints} shows all constraint templates currently supported
 Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
 These constraints have been selected based on the most-used Excel functions as well as their occurrence in various example spreadsheets we observed.
 
-Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?}
+Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?} \tias{Yes, either explain in detail or cut}
 
-\section{Examples}
-\subsection{Group generation CSP}
-variables from syntax, domain from input groups, filtered using type
 
-Group generation CSP (Sum Product)\\
-variables: $R, O_1, O_2$\\
-domains: $D(R) = \{ G | G \in {\cal G} \land \numeric(G)\}$, $D(O_1) = \{ G | G \in {\cal G} \land \numeric(G)\}$, $D(O_2) = \{ G | G \in {\cal G} \land \numeric(G)\}$\\
-constraints: $\plength(O_1) = \plength(O_2) \geq 2, \pcols(R) = 1, \prows(R) = 1$ % excluded not partial because we don't focus on it much
-
-Translation:
-\begin{description}
-  \item[Type] Require group that has supertype (e.g. integer => require numeric group, because subgroup might be integer)
-  \item[Length] Require group to have exact length (subgroups have the same length)
-  \item[Vectors / columns / rows] Require group to have at least the amount of vectors, columns, rows required
-  \item[Dependency] Fix dependent variables, for every assignment construct CSP that attempts to find values for the other variables
-  \item[Same length / table / orientation] Require groups to gave the same length table ...
-\end{description}
-
-\subsection{Subgroup generation}
-Sum Product
-
-Implementation: finds subgroups based on assignments\\
-Method $Test(G_R, G_{O_1}, G_{O_2})$\\
-$If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\\
-$If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$
-\\\\
-Method $FindSubgroups(Assignments)$\\
-$Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$
-
-Register implementation with the system for constraint X
 
 % \subsection{Workflow}
 % \begin{algorithm}[thb]
