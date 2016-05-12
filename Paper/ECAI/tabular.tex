@@ -521,10 +521,6 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 All the constraints mentioned in the paper can be run purely using the internal Python engine without any external software.
 Future versions of the system will provide user interfaces to some of these constraint languages (e.g. ASP and Minizinc) to allow users to specify solving procedures for new constraint templates in a declarative way.
 
-\paragraph{Parallelization}
-\tias{Do we do this? If not, cut...}
-The two for loops in the algorithm can be easily parallelized. Each generated assignment can be checked independently. Templates may not be independent as expressed by the DAG \dependencies. However, each independent component of the DAG (including one component per template not in the DAG) can be verified independently. 
-
 \paragraph{Redundancy}
 Mention 'largest overlapping subgroup' here?
 
