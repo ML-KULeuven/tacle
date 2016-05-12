@@ -424,6 +424,7 @@ Constraint templates that have no dependencies are omitted.
   \centering
   \includegraphics[width=0.8\linewidth]{figures/constraint_dependency.png}
   \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_1$ is implied by $s_2$ because the \CSignature of~$s_2$ depends on $s_1$ to hold on a specific subset of $s_2$ its groups.
+    The graph is extracted from the Signature column in Table \ref{table:constraints}.
   }
   \label{fig:learning_order}
 \end{figure}
@@ -474,6 +475,7 @@ There are three \textit{variables} $X, Y, Z$ corresponding to group $G'$, $H'$ a
 &\plength(Y) = \plength(Z) \land \plength(Y) \geq 2
 \end{align*}
 \tias{Sumproduct is a rather peculiar constraint for spreadsheets... perhaps switch to one with a dependency, e.g. look-up?}
+\sergey{ok, we need to see if look-up would fit here}
 \\\\
 
 
@@ -522,6 +524,7 @@ All the constraints mentioned in the paper can be run purely using the internal 
 Future versions of the system will provide user interfaces to some of these constraint languages (e.g. ASP and Minizinc) to allow users to specify solving procedures for new constraint templates in a declarative way.
 
 \paragraph{Redundancy}
+\sergey{Samuel, probably it is better if you look here}
 Mention 'largest overlapping subgroup' here?
 
 \paragraph{Constraints}
@@ -725,7 +728,7 @@ This ratio is, as we will show, rather high compared to other spreadsheets.
 However, this example contains many short vectors which increases the chance for constraints to be true by accident.
 
 \subsection{Benchmark}
-There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel at an affiliated University, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{\samuel{link to links.txt}}.
+There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel at an affiliated University, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{(attached to to the submitted paperthe submitted paper)}.
 The case study is also included.
 
 All spreadsheets have been converted to CSV with no manual intervention unless noted.
