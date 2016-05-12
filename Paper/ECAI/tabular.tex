@@ -137,8 +137,8 @@ To answer this question we contribute a general-purpose algorithm and system for
 We demonstrate the utility of our approach in an experimental evaluation.
 Moreover, we sketch several application scenario's, such as autocompletion and error detection.
 \\\\
-This paper is organised as follows:
-Section~2 introduces concepts relevant to our approach, Section~3 presents our problem statement, Section~4 describes our approach, the approach is evaluated in Section~5, in Section~6 we show how our system can be used for autocompletion and error detection, and we conclude in Section~7.
+This paper is organized as follows.
+Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:problem_statement} presents our problem statement. Section \ref{sec:approach} describes our approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for autocompletion and error detection. Section \ref{sec:related_work} present an overview of the related work. And Section \ref{sec:conclusions} provides conclusions.
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
@@ -170,7 +170,7 @@ Section~2 introduces concepts relevant to our approach, Section~3 presents our p
   \label{fig:main_example}
 \end{figure*}
 
-\section{Formalization}
+\section{Formalization}\label{sec:formalization}
 As we focus on spreadsheet data, we first introduce the general concepts of cells, group and constraint templates, using the (multi-table) sheet in Figure~\ref{fig:main_example} as running example.
 
 \subsection{Cells, vectors and groups}
@@ -268,7 +268,7 @@ if the constraint holds on the values that the $A_i$ take in the set of tables $
 %\sergey{moved from the formalization BEGIN}
 %l 1) a set of cells, and 2) a set of constraints over those cells.  Notice that the constraints specify the types (or the domains) that one encounters in traditional CSPs.  Notice also, that as in traditional CSPs, the CSP problem defines the variables (the cells) of the problem as well as the constraint that should hold amongst them. The task of CSP-solvers is then to find an assignment to the variables that satisfies all the constraints.  The distinction between variables (cells) and their assignments (their values) is important here.  So, when we speak about cells, vectors and groups, we refer to the variables; when we talk about values, assignments or instances, we refer to the values these cells take in a particular "instantiated" table.
 
-\section{Problem Statement}
+\section{Problem Statement}\label{sec:problem_statement}
 The problem of learning constraints from tabular data can be seen as an inverse {\em constraint satisfaction problem} (CSP). A CSP consists of a set of constraints and the
 task is to find assignments of values to the variables in the CSP so that all constraints are satisfied.
 In the context of spreadsheets where variables could represent cells in tables, solving a corresponding CSP problem would mean completing the tables so that all constraints of the spreadsheet are satisfied.
@@ -352,7 +352,7 @@ Because dealing with redundancy is often application-dependent, we explain in th
 
 \newcommand{\tcl}{Tabular Constraint Learning}
 %\newcommand{\ctl}{Condensed Tabular Constraint Learning}
-\section{Approach to Tabular Constraint Learning}
+\section{Approach to Tabular Constraint Learning}\label{sec:approach}
 This section describes our approach to \tcl. The main method takes \textit{groups} and {\template}s as input, and is described in Section~\ref{sec:algo}. We first explain how tables and groups can be extracted from raw spreadsheet data.
 
 \subsection{Table and group detection} \label{sec:make_groups}
@@ -657,7 +657,7 @@ Generally \CSignature and / or the \CFunction can be relaxed to capture more con
 \newcommand{\runfile}{0.50}
 \newcommand{\runfilestd}{0.02}
 
-\section{Evaluation}
+\section{Evaluation}\label{sec:evaluation}
 \sergey{we need to add a summary of the dataset, avg number of constraints, cells, rows, columns}
 In this section we experimentally validate our approach.
 We studied various questions, most notably with what accuracy our algorithm can find essential constraints.
@@ -782,7 +782,7 @@ This avoids some of the explosion of combinations for constraints that have many
 For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to below 1 second.
 Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys that are present in the data.
 
-\section{Applications}
+\section{Applications}\label{sec:applications}
 In this section we will illustrate how various motivating applications could be realized using our system.
 
 \subsection{Autocompletion}
@@ -882,7 +882,7 @@ modelseeker \cite{modelseeker} \sergey{Samuel, Luc, probably you would need elab
 
 claudien \cite{claudien} \sergey{Samuel, Luc, you would need to help with this one}
 
-\section{Conclusions}
+\section{Conclusions}\label{sec:conclusions}
 
 % points: 1) can be a base for an actual plugin or a function in excel 2) novel problem and challenge for systems and constraint solvers 3) can be part of the complicated pipeline togehter with the header detection
 Our goal is to automatically identify constraints in a spreadsheet.
