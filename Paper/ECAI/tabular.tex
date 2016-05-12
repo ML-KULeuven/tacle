@@ -54,6 +54,7 @@
 \newcommand{\ecperm}[1]{\ensuremath{\mathit{PERMUTATION}(#1)}}
 \newcommand{\ecseries}[1]{\ensuremath{\mathit{SERIES}(#1)}}
 \newcommand{\ecprod}[3]{\eccalc{#1}{#2 \times #3}}
+\newcommand{\ecdiff}[3]{\eccalc{#1}{#2 - #3}}
 \newcommand{\ectotal}[3]{\eccalc{#1}{\mathit{PREV}(#1) + #2 - #3}}
 \newcommand{\ecproj}[2]{\eccalc{#1}{\mathit{PROJECT}(#2)}}
 \newcommand{\ecaggc}[3]{\eccalc{#2}{\mathit{#1}(#3, col)}}
@@ -75,6 +76,8 @@
 \newcommand{\prows}{\format{rows}}
 \newcommand{\pcols}{\format{columns}}
 \newcommand{\nat}{\mathcal{N}}
+
+\newcommand{\sg}{G'}
 
 
 \newcommand{\luc}[1]{{\textcolor{red}{#1}}}
@@ -528,81 +531,87 @@ Mention 'largest overlapping subgroup' here?
 \paragraph{Constraints}
 
 \begin{table*}
-\tias{Notation inconsistent (no $G'$? also the 'bold' notation not explained. Also, in many places missing that must be vector... switched $\rightarrow$ to FOREIGNKEY to avoid confusion with implied constraints.}
-  \centering
+\medskip
+Constraint templates marked with $*$ are \textit{structural}, they are discovered by our algorithm, however, they cannot be readily used in spreadsheet software.
+The templates marked with $\dagger$ are aggregate constraint templates, the table shows the version for sum but the implementation also supports max, min, average, product and count.
+Only bold subgroups may contain more than one vector.
+\medskip
+
+  {\centering
   \begin{tabularx}{\textwidth}{l X X}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ \hline \hline
-    $\ecalldiff{v_x}^*$
-      & $\discrete(v_x)$
-      & All values in $v_x$ are different: $v_x[i] \neq v_x[j]$ if $i \neq j$
+    $\ecalldiff{\sg_x}^*$
+      & $\discrete(\sg_x)$
+      & All values in $\sg_x$ are different: $\sg_x[i] \neq \sg_x[j]$ if $i \neq j$
       \\ \hline
     %X = Y & & \\
-    $\ecperm{v_x}^*$
-      & $\numeric(v_{x})$, $\ecalldiff{v_{x}}$
-      & The values in $v_{x}$ are a permutation of the numbers $1$ through $\plength(v_{x})$.
+    $\ecperm{\sg_x}^*$
+      & $\numeric(\sg_{x})$, $\ecalldiff{\sg_{x}}$
+      & The values in $\sg_{x}$ are a permutation of the numbers $1$ through $\plength(\sg_{x})$.
       \\ \hline
-    \ecseries{v_x}
-      & $\numeric(v_{x})$ and $\ecperm{v_{x}}$
-      & $v_{x}[1] = 1$ and $v_{x}[i] = v_{x}[i - 1] + 1$.
+    \ecseries{\sg_x}
+      & $\numeric(\sg_{x})$ and $\ecperm{\sg_{x}}$
+      & $\sg_{x}[1] = 1$ and $\sg_{x}[i] = \sg_{x}[i - 1] + 1$.
       \\ \hline
-    \ecfkey{v_{fk}}{v_{pk}} & $v_{fk}$ and~$v_{pk}$ are both $\discrete$; $\ptype(v_{fk}) = \ptype(v_{pk})$; $\ptable(v_{fk}) \neq \ptable(v_{pk})$; and $\ecalldiff{v_{pk}}$ & Every value in~$v_{fk}$ also exist in~$v_{pk}$ \\ \hline
+    \ecfkey{\sg_{fk}}{\sg_{pk}} & $\sg_{fk}$ and~$\sg_{pk}$ are both $\discrete$; $\ptype(\sg_{fk}) = \ptype(\sg_{pk})$; $\ptable(\sg_{fk}) \neq \ptable(\sg_{pk})$; and $\ecalldiff{\sg_{pk}}$ & Every value in~$\sg_{fk}$ also exist in~$\sg_{pk}$ \\ \hline
     % TODO check out
-    \eclookup{v_r}{v_{fk}}{v_{pk}}{v_{val}}
-      & $v_{fk}$ and $v_{pk}$ are both $\discrete$; arguments $\{v_{fk}, v_{r}\}$ and $\{v_{pk}, v_{val}\}$ within the same set have the same \plength, \ptable and \por; $v_{r}$ and~$v_{val}$ have the same type; and \ecfkey{v_{fk}}{v_{pk}}.
-      & $v_r[i]$ is the same value as looking up~$v_{fk}[i]$ in~$v_{pk}$  and returning the corresponding value in~$v_{val}$.
+    \eclookup{\sg_r}{\sg_{fk}}{\sg_{pk}}{\sg_{val}}
+      & $\sg_{fk}$ and $\sg_{pk}$ are both $\discrete$; arguments $\{\sg_{fk}, \sg_{r}\}$ and $\{\sg_{pk}, \sg_{val}\}$ within the same set have the same \plength, \ptable and \por; $\sg_{r}$ and~$\sg_{val}$ have the same type; and \ecfkey{\sg_{fk}}{\sg_{pk}}.
+      & $\sg_r[i]$ is the same value as looking up~$\sg_{fk}[i]$ in~$\sg_{pk}$  and returning the corresponding value in~$\sg_{val}$.
       \\ \hline
-    \eclookupfuzzy{v_r}{v_{fk}}{v_{pk}}{v_{val}}
+    \eclookupfuzzy{\sg_r}{\sg_{fk}}{\sg_{pk}}{\sg_{val}}
       & \textit{Same as lookup}
-      & $v_r[i]$ is the same value as looking up the last item in~$v_{pk}$ smaller than~$v_{fk}[i]$ and returning the corresponding value in~$v_{val}$.
+      & $\sg_r[i]$ is the same value as looking up the last item in~$\sg_{pk}$ smaller than~$\sg_{fk}[i]$ and returning the corresponding value in~$\sg_{val}$.
       \\ \hline
-    \eclookupprod{v_r}{v_1}{v_{fk}}{v_{pk}}{v_{val}}
-      & Arguments $\{v_{r}, v_{1}, v_{fk}\}$ are $\numeric$, arguments $\{v_{pk}, v_{val}\}$ are $\discrete$ and within both sets all arguments have the same \plength, \ptable and \por; also \ecfkey{v_{fk}}{v_{pk}}.
-      & $v_{r}[i]$ is the obtained by multiplying $v_{1}[i]$ with $\eclookupf{v_{fk}}{v_{pk}}{v_{val}}{}[i]$.
+    \eclookupprod{\sg_r}{\sg_1}{\sg_{fk}}{\sg_{pk}}{\sg_{val}}
+      & Arguments $\{\sg_{r}, \sg_{1}, \sg_{fk}\}$ are $\numeric$, arguments $\{\sg_{pk}, \sg_{val}\}$ are $\discrete$ and within both sets all arguments have the same \plength, \ptable and \por; also \ecfkey{\sg_{fk}}{\sg_{pk}}.
+      & $\sg_{r}[i]$ is the obtained by multiplying $\sg_{1}[i]$ with $\eclookupf{\sg_{fk}}{\sg_{pk}}{\sg_{val}}{}[i]$.
       \\ \hline
-    \ecprod{v_r}{v_1}{v_2}
-      & Arguments $\{v_{r}, v_{1}, v_{2}\}$ are all $\numeric$ and have the same $\plength$
-      & $v_{r}[i] = v_{1}[i] \times v_{2}[i]$.
+    \ecprod{\sg_r}{\sg_1}{\sg_2}
+      & Arguments $\{\sg_{r}, \sg_{1}, \sg_{2}\}$ are all $\numeric$ and have the same $\plength$
+      & $\sg_{r}[i] = \sg_{1}[i] \times \sg_{2}[i]$.
       \\ \hline
-    \ecproj{v_r}{\mathbf{v_x}}
-      & Arguments $\{v_{r}, \mathbf{v_x}\}$ all have the same $\plength$, $\por$, $\ptable$ and $\ptype$; $\mathbf{v_x}$ contains at least~2 vectors; and $v_r = \mathit{SUM}(\mathbf{v_x}, \por(\mathbf{v_x}))$
-      & At every position~$i$ in $1$ through $\plength(v_{r})$ there is exactly one vector~$v$ in $\mathbf{v_x}$ such that $v[i]$ is a non-blank value, then $v[i] = v_{r}[i]$.
+    \ecdiff{\sg_r}{\sg_1}{\sg_2}
+      & Arguments $\{\sg_{r}, \sg_{1}, \sg_{2}\}$ are all $\numeric$ and have the same $\plength$ and $ \por$
+      & $\sg_{r}[i] = \sg_{1}[i] - \sg_{2}[i]$.
       \\ \hline
-    \ecrank{v_r}{v_x}
-      & $\integer(v_{r})$; $\numeric(v_{x})$; and $\plength(v_{r}) = \plength(v_{x})$
-      & The values in $v_{r}$ represent the rank (from largest to smallest) of the values in $v_{x}$ (including ties)
+    \ecproj{\sg_r}{\mathbf{\sg_x}}
+      & Arguments $\{\sg_{r}, \mathbf{\sg_x}\}$ all have the same $\plength$, $\por$, $\ptable$ and $\ptype$; $\mathbf{\sg_x}$ contains at least~2 vectors; and $\sg_r = \mathit{SUM}(\mathbf{\sg_x}, \por(\mathbf{\sg_x}))$
+      & At every position~$i$ in $1$ through $\plength(\sg_{r})$ there is exactly one vector~$v$ in $\mathbf{\sg_x}$ such that $v[i]$ is a non-blank value, then $v[i] = \sg_{r}[i]$.
       \\ \hline
-    \ectotal{v_r}{v_{pos}}{v_{neg}}
-      & Arguments $\{v_{r}, v_{pos}, v_{neg}\}$ are all $\numeric$ and all have the same $\plength$, which is at least $2$
-      & The values in $v_{r}$ are a running total, each value $v_{r}[i] = v_{r}[i - 1] + v_{pos}[i] - v_{neg}[i]$.
+    \ecrank{\sg_r}{\sg_x}
+      & $\integer(\sg_{r})$; $\numeric(\sg_{x})$; and $\plength(\sg_{r}) = \plength(\sg_{x})$
+      & The values in $\sg_{r}$ represent the rank (from largest to smallest) of the values in $\sg_{x}$ (including ties)
       \\ \hline
-    $\ecsumc{v_r}{\mathbf{v_x}}^\dagger$
-      & $v_r$ and $\mathbf{v_x}$ are $\numeric$; $\prows(\mathbf{v_x}) \geq 2$; and $\pcols(\mathbf{v_x}) = \plength(v_r)$
-      & Each value in $v_{r}$ is obtained by summing over the corresponding column in $\mathbf{v_x}$.
+    \ectotal{\sg_r}{\sg_{pos}}{\sg_{neg}}
+      & Arguments $\{\sg_{r}, \sg_{pos}, \sg_{neg}\}$ are all $\numeric$ and all have the same $\plength$, which is at least $2$
+      & The values in $\sg_{r}$ are a running total, each value $\sg_{r}[i] = \sg_{r}[i - 1] + \sg_{pos}[i] - \sg_{neg}[i]$.
       \\ \hline
-    $\ecsumr{v_r}{\mathbf{v_x}}^\dagger$
-      & $v_r$ and $\mathbf{v_x}$ are $\numeric$; $\pcols(\mathbf{v_x}) \geq 2$; and $\prows(\mathbf{v_x}) = \plength(v_r)$
-      & Each value in $v_{r}$ is obtained by summing over the corresponding row in $\mathbf{v_x}$.
+    $\ecsumc{\sg_r}{\mathbf{\sg_x}}^\dagger$
+      & $\sg_r$ and $\mathbf{\sg_x}$ are $\numeric$; $\prows(\mathbf{\sg_x}) \geq 2$; and $\pcols(\mathbf{\sg_x}) = \plength(\sg_r)$
+      & Each value in $\sg_{r}$ is obtained by summing over the corresponding column in $\mathbf{\sg_x}$.
       \\ \hline
-    $\ecsumif{v_r}{v_{fk}}{v_{pk}}{v_{val}}^\dagger$
-      & $v_{fk}, v_{pk}$ are $\discrete$; $v_{r}, v_{val}$ are $\numeric$; within the sets $\{v_{val}, v_{fk}\}$ and $\{v_{pk}, v_{r}\}$ arguments have the same $\plength$ and $\por$; $v_{fk}$ and $v_{val}$ have the same $\ptable$; $v_{fk}$ and $v_{pk}$ must have different $\ptable$s but the same $\ptype$; and \ecalldiff{v_{pk}}
-      & The value for $v_{r}[i]$ is obtained by summing all values $v_{val}[j]$ where $v_{fk}[j] = v_{pk}[i]$
+    $\ecsumr{\sg_r}{\mathbf{\sg_x}}^\dagger$
+      & $\sg_r$ and $\mathbf{\sg_x}$ are $\numeric$; $\pcols(\mathbf{\sg_x}) \geq 2$; and $\prows(\mathbf{\sg_x}) = \plength(\sg_r)$
+      & Each value in $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$.
       \\ \hline
-    \ecsumprod{v_r}{v_1}{v_2}
-      & Arguments $\{v_r, v_1, v_2\}$ are all $\numeric$; $\plength(v_{1}) = \plength(v_{2}) \geq 2$; and $\prows(v_{r}) = \pcols(v_{r}) = 1$
-      & $v_{r}[i] = \sum_{i = 1}^{\plength(v_{1})} v_{1}[i] \times v_{2}[i]$.
+    $\ecsumif{\sg_r}{\sg_{fk}}{\sg_{pk}}{\sg_{val}}^\dagger$
+      & $\sg_{fk}, \sg_{pk}$ are $\discrete$; $\sg_{r}, \sg_{val}$ are $\numeric$; within the sets $\{\sg_{val}, \sg_{fk}\}$ and $\{\sg_{pk}, \sg_{r}\}$ arguments have the same $\plength$ and $\por$; $\sg_{fk}$ and $\sg_{val}$ have the same $\ptable$; $\sg_{fk}$ and $\sg_{pk}$ must have different $\ptable$s but the same $\ptype$; and \ecalldiff{\sg_{pk}}
+      & The value for $\sg_{r}[i]$ is obtained by summing all values $\sg_{val}[j]$ where $\sg_{fk}[j] = \sg_{pk}[i]$
+      \\ \hline
+    \ecsumprod{\sg_r}{\sg_1}{\sg_2}
+      & Arguments $\{\sg_r, \sg_1, \sg_2\}$ are all $\numeric$; $\plength(\sg_{1}) = \plength(\sg_{2}) \geq 2$; and $\prows(\sg_{r}) = \pcols(\sg_{r}) = 1$
+      & $\sg_{r}[i] = \sum_{i = 1}^{\plength(\sg_{1})} \sg_{1}[i] \times \sg_{2}[i]$.
       \\
 
 
-  \end{tabularx}
+  \end{tabularx}}
   \caption{
 An overview of the different constraint templates that we have implemented.
 Most of the constraint correspond directly to spreadsheet functions and have been selected based on the most popular constraints in Excel and their occurence in spreadsheets that we have collected.
-The constraints marked with $*$ are \textit{structural}, they are discovered by our algorithm, however, they cannot be readily used in spreadsheet software.
-The constraints marked with $\dagger$ are aggregate constraints, the table shows the constraints for sum but the implementation also supports versions for max, min, average, product and count.
   \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display - diff not present - pruning relation?} 
   }
-
-  % \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display} \sergey{1) should be readable alone without lookin in the text of the paper 2) that's the constraints we found popular according the spreadsheets in the web 3) that's what is actually implemented in the system 4) corresponds to the actual Excel functions}}
+    % \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display} \sergey{1) should be readable alone without lookin in the text of the paper 2) that's the constraints we found popular according the spreadsheets in the web 3) that's what is actually implemented in the system 4) corresponds to the actual Excel functions}}
 
   \label{table:constraints}
 \end{table*}
