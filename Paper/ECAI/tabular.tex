@@ -19,6 +19,7 @@
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
 \newcommand{\samuel}[1]{\textcolor{green}{{\sc Samuel:} #1}\xspace}
 \newcommand{\tias}[1]{\textcolor{blue}{{\sc Tias:} #1}\xspace}
+\newcommand{\luc}[1]{\textcolor{red}{{\sc Luc:} #1}\xspace}
 
 \newcommand{\constraints}{\ensuremath{\mathcal{T}}\xspace}
 \newcommand{\format}[1]{\textit{#1}\xspace}
@@ -30,7 +31,7 @@
 \newcommand{\postprocess}{\format{pruneRedundant}}
 \newcommand{\constrainttorder}{\format{templateOrder}}
 \newcommand{\template}{\format{constraint template}}
-\newcommand{\sname}{\format{TaCKLe}}
+\newcommand{\sname}{\format{TaCLe}}
 
 
 \newcommand{\CName}{Syntax\xspace}
@@ -77,7 +78,6 @@
 \newcommand{\nat}{\mathcal{N}}
 
 
-\newcommand{\luc}[1]{{\textcolor{red}{#1}}}
 
 
 \renewcommand{\arraystretch}{1.5}
@@ -121,7 +121,7 @@ This already provides a flavor of how this problem is different from standard da
 
 The approach that we will introduce will borrow techniques from logical and relational learning \cite{luc_book}, where
 the discovery of clausal constraints has been studied in an inductive logic programming setting \cite{claudien,lallouet}; and from constraint learning,  where several approaches to conjunctive constraint learning have been developed in a constraint programming setting \cite{Quacq,Conacq,modelseeker}; 
-and from mining in databases, where inductive techniques have been applied to discover constraints (such as functional and multi-valued dependencies) in relational databases \cite{Shavlik}.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of function is learned in spreadsheet data from
+and from mining in databases, where inductive techniques have been applied to discover constraints (such as functional and multi-valued dependencies) in relational databases \cite{savnik}.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of function is learned in spreadsheet data from
 very few examples.  Our approach contrasts with all of the mentioned approaches (except Modelseeker) in that it focusses
 on learning both column- and row-constraints, it contrasts with Flashfill in learning constraints rather than functions.
 A more detailed discussion on related work is contained in Section~\ref{sec:related_work}.
