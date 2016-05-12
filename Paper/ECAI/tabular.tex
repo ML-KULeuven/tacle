@@ -806,40 +806,18 @@ We consider two cases of error detection.
 The first setting is the \textit{online} detection of errors which is similar to the autocompletion setting.
 However, instead of considering viable constraints, we look at \textit{conflict} constraints, i.e. constraints that were learned at time~$t_0$ but do not agree with the newly added data at time~$t_1$.
 Such conflict constraints can indicate errors in the input.
-Since conflict constraints could also be accidental constraints that are correctly invalidated by the new data, the size of the data at timet~$t_0$ should be large enough.
+Since conflict constraints could also be accidental constraints that are correctly invalidated by the new data, the size of the data at time ~$t_0$ should be large enough.
 
 The second type of error detection is \textit{offline} and attempts to detect errors in a spreadsheet.
 Consider, for example, a use case concerning crime statistics provided by the FBI.
 An extract of the spreadsheet is depicted in Figure~\ref{fig:fbi}.
 When run on this sheet, our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
 A possible approach to detect such missing or wrong values is to look at a sample of the table that excludes the erroneous row and compare the constraints learned on this sample with the constraints learned by adding the row containing the mistake.
-The sample needs to large enough such that we have enough confidence that the constraints are correct.
+The sample needs to large enough such that we have enough confidence that the constraints are correct. For example, in Figure \ref{fig:fbi} all but one row satisfy the constraint, which is a strong indication that there is a constraint violation.
 If we define the sample to be our data at time~$t_0$ and the added row to be the additional input at~$t_1$, this task can be formulated as online error detection and dealt with in the same way.
-Of course, generating large enough samples and rows (columns) to be added can be done in multiple ways.
-In the limited case of detecting single errors one can leave out every row (column), consider the remaining data to be the sample and
-and the left out row (column) to be new input.
-\samuel{Should this be more specific?}
-
-Error detection could be integrated more closely with the algorithm, reducing the computational complexity by looking for errors during the constraint learning phase.
-This would, however, make the modeling constraints (considerably) more difficult.
-
-\samuel{FBI: work out error detection algorithm}
-
-(\sergey{I think there should be three things: key example evaluated, benchmark of 30 spreadsheets and maybe the FBI example, how we can detect interesting dependencies and correct potential mistakes})
-
-\samuel{discussion: what would be a language to extend the system, what would be the user interface? can it be used by community?  can it be complitely automated? interaction with user and highlighing?
-}
-
-{\bfseries
-  Experimental questions
-}
-
-\begin{itemize}
-  \item  How accurate are we? (Accuracy / recall)
-  \item  How fast are we and which factors affect the runtime (how)?
-  \item  How general is our approach, what limitations are there?
-\end{itemize}
-
+%Of course, generating large enough samples and rows (columns) to be added can be done in multiple ways.
+%In the limited case of detecting single errors one can leave out every row (column), consider the remaining data to be the sample and
+%and the left out row (column) to be new input.
 
 \section{Related Work}\label{sec:related_work}
 \sergey{key bullet points for Luc and possibly Samuel and me to make related work section}
