@@ -124,8 +124,7 @@ The approach that we will introduce will borrow techniques from logical and rela
 and from mining in databases,  where e.g. \cite{Shavlik} has applied inductive techniques to discover constraints (such as functional and multi-valued dependencies) in relational databases.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of function is learned in spreadsheet data from
 very few examples.  Our approach contrasts with all of the mentioned approaches (except Modelseeker) in that it focusses
 on learning both column- and row-constraints, it contrasts with Flashfill in learning constraints rather than functions.
-A more detailed discussion on related work is contained in Section \ref{sec:related_work}.
-
+A more detailed discussion on related work is contained in Section~\ref{sec:related_work}.
 
 %the field of Inductive Logic Programming has long... \tias{TODO for Sergey or Luc}. Additionally, the field of Constraint Programming has recently started investigating ways in which Constraint Satisfaction Problems can automatically be inferred from known solutions. Here, methods ranging from generate-and-test~\cite{todo:modelseeker}, concept learning~\cite{todo:conacq} and Inductive Logic Programming~\cite{todo:lallouet} have been used with encouraging results.
 
@@ -135,11 +134,11 @@ A more detailed discussion on related work is contained in Section \ref{sec:rela
 
 The question that we answer in this paper is: whether it is possible to discover or reconstruct structural constraints (relations, functions) in flat tabular spreadsheet data?
 To answer this question we contribute a general-purpose algorithm and system for discovering such constraints. Furthermore, the algorithm accepts declarative specifications of the constraints and predicates of interest (the "bias") and covers both textual and numeric fields. It works in an unsupervised setting, as only the tabular data is provided and no examples need to be specified, and discovers column- and row-wise constraints.
-We demonstrate the utility of our approach in an experimental evaluation and we also sketch several application scenario's.
-\luc{todo:mention these here too}
-
-
-This paper is organised as follows: \luc{todo}
+We demonstrate the utility of our approach in an experimental evaluation.
+Moreover, we sketch several application scenario's, such as autocompletion and error detection.
+\\\\
+This paper is organised as follows:
+Section~2 introduces concepts relevant to our approach, Section~3 presents our problem statement, Section~4 describes our approach, the approach is evaluated in Section~5, in Section~6 we show how our system can be used for autocompletion and error detection, and we conclude in Section~7.
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
