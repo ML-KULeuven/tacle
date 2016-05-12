@@ -111,7 +111,7 @@ other software such as ERP packages, it is hard to understand the data as in thi
 often a comma-separated values (CSV) format is used, meaning that all formula's are lost, including inter-sheet formulas and relations.
 %This limited understanding is especially the case with spreadsheets exported from other software such as ERP packages. In this case,
 
-In this paper,  we investigate whether machine learning techniques can be used to infer constraints (formula's and other relations) from raw spreadsheet data.
+In this paper,  we investigate whether learning techniques can be used to infer constraints (formula's and other relations) from raw spreadsheet data.
 This is a new and unconventional machine learning problem.
 Consider the example in Figure~\ref{fig:main_example}, where the header's names already suggest the usage of spreadsheet operations such as \textit{average} or \textit{sum}.
 Looking at the first row in Table~2 and the data in Table~1, it is clear that the values in this row were computed by summing the values in the corresponding column of Table~1.
@@ -120,8 +120,8 @@ This already provides a flavor of how this problem is different from standard da
 
 
 The approach that we will introduce will borrow techniques from logical and relational learning \cite{luc_book}, where
-\cite{claudien,lallouet} have studied the discovery of clausal constraints in an inductive logic programming setting, from constraint learning,  where \cite{Quacq,Conacq,modelseeker} have developed several approaches to learn conjunctive constraints in a constraint programming setting,
-and from mining in databases,  where e.g. \cite{Shavlik} has applied inductive techniques to discover constraints (such as functional and multi-valued dependencies) in relational databases.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of function is learned in spreadsheet data from
+the discovery of clausal constraints has been studied in an inductive logic programming setting \cite{claudien,lallouet}; and from constraint learning,  where several approaches to conjunctive constraint learning have been developed in a constraint programming setting \cite{Quacq,Conacq,modelseeker}; 
+and from mining in databases, where inductive techniques have been applied to discover constraints (such as functional and multi-valued dependencies) in relational databases \cite{Shavlik}.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of function is learned in spreadsheet data from
 very few examples.  Our approach contrasts with all of the mentioned approaches (except Modelseeker) in that it focusses
 on learning both column- and row-constraints, it contrasts with Flashfill in learning constraints rather than functions.
 A more detailed discussion on related work is contained in Section~\ref{sec:related_work}.
