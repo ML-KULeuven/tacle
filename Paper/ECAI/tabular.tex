@@ -105,7 +105,7 @@
 
 \begin{abstract}
 %Spreadsheets, comma separated value files and other tabular data representations are in wide use today. However, the correct use and maintenance of functions in and between the tabular data can be error-prone and overwhelming. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. Our method takes inspiration form inductive logic programming and constraint satisfiability. We represent common spreadsheet functions as predicates with arguments that must satisfy number of constraints over the arguments. This allows generic constraint satisfaction techniques to be used to find all such satisfying predicates/functions within the rows, columns and submatrices of the tables. We show the effectiveness and accuracy of this approach on a number of spreadsheets from varying sources.
-Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today. However, modeling, maintaining and discovering formulas in tabular data and between spreadsheets can be time consuming and error-prone. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking. Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction. Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints. Constraint learning techniques are used to identify predicates (constraints) that hold between the rows, columns and submatrices of the tables. New types of constraints can be easily added to the system by specifying them using in a declarative language. We show that our approach is able to accurately discover constraints in a number of spreadsheets from varying sources.
+Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today. However, modeling, maintaining and discovering formulas in tabular data and between spreadsheets can be time consuming and error-prone. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking. Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction. Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints. Constraint learning techniques are used to identify predicates (constraints) that hold between the rows, columns and submatrices of the tables. New types of constraints can be easily added to the system by specifying them in a declarative language. We show that our approach is able to accurately discover constraints in a number of spreadsheets from varying sources.
 \end{abstract}
 
 \section{Introduction}
@@ -119,7 +119,7 @@ This is a new and unconventional machine learning problem.
 Consider the example in Figure~\ref{fig:main_example}, where the header's names already suggest the usage of spreadsheet operations such as \textit{average} or \textit{sum}.
 Looking at the first row in Table~2 and the data in Table~1, it is clear that the values in this row were computed by summing the values in the corresponding column of Table~1.
 Examining Table~1 also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by taking the row-wise sum of the previous four columns.
-This already provides a flavor of how this problem is different from standard data mining settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple table with relationships between them. And on the other hand, the data is mixed textual and numeric, since people tend to use spreadsheets for financial and accounting computations. One can see that understanding and learning constraints in tabular data is hence a new and challenging problem for machine learning. Furthermore, it is not only challenging for a machine but for humans as well.
+This already provides a flavor of how this problem is different from standard data mining settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple table with relationships between them. And on the other hand, the data is mixed textual and numeric, since people tend to use spreadsheets for financial and accounting computations. One can see that understanding and learning constraints in tabular data is hence a new and challenging problem for machine learning. Furthermore, it is not only challenging for a machine but for humans as well, e.g. the influential Reinhart-Rogoff economical paper ``Growth in a Time of Debt'' turned to be bogus due an excel formula mistake \cite{flaw_excel}.
 
 
 The approach that we will introduce will borrow techniques from logical and relational learning \cite{luc_book}, where
@@ -135,13 +135,13 @@ A more detailed discussion on related work is contained in Section~\ref{sec:rela
 
 
 
-The question that we answer in this paper is: whether it is possible to discover or reconstruct structural constraints (relations, functions) in flat tabular spreadsheet data?
-To answer this question we contribute a general-purpose algorithm and system for discovering such constraints. Furthermore, the algorithm accepts declarative specifications of the constraints and predicates of interest (the "bias") and covers both textual and numeric fields. It works in an unsupervised setting, as only the tabular data is provided and no examples need to be specified, and discovers column- and row-wise constraints.
+The question that we answer in this paper is: is it possible to discover or reconstruct structural constraints (relations, functions) in flat tabular spreadsheet data?
+To answer this question we contribute a general-purpose algorithm and the system, named \sname (pronounced as the word ``tackle''), for discovering such constraints. Furthermore, the algorithm accepts declarative specifications of the constraints and predicates of interest (the "bias") and covers both textual and numeric fields. It works in an unsupervised setting, as only the tabular data is provided and no examples need to be specified, and discovers column- and row-wise constraints.
 We demonstrate the utility of our approach in an experimental evaluation.
-Moreover, we sketch several application scenario's, such as autocompletion and error detection.
+Moreover, we sketch several application scenario's such as autocompletion and error detection.
 \\\\
 This paper is organized as follows.
-Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:problem_statement} presents the problem statement. Section \ref{sec:approach} describes the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications such as autocompletion and error detection. Section \ref{sec:related_work} present an overview of the related work. And Section \ref{sec:conclusions} provides conclusions.
+Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:problem_statement} presents the problem statement. Section \ref{sec:approach} describes the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents an overview of the related work. Section \ref{sec:conclusions} provides conclusions.
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
@@ -177,11 +177,11 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 As we focus on spreadsheet data, we first introduce the general concepts of cells, group and constraint templates, using the (multi-table) sheet in Figure~\ref{fig:main_example} as running example.
 
 \subsection{Cells, vectors and groups}
-A spreadsheet may conceptually consist of multiple tables, such as in Figure~\ref{fig:main_example}. We will describe a method of extracting tables from a big spreadsheet in Section~\ref{todo}, however this is not the core of our learning method. Our formalization reasons over tables directly.
+A spreadsheet may conceptually consist of multiple tables, such as in Figure~\ref{fig:main_example}. We will describe a method of extracting tables from a big spreadsheet in Section~\ref{sec:approach}, however this is not the core of our learning method. Our formalization reasons over tables directly.
 
 Formally, a table is an $n \times m$ matrix. Each entry is called a \textit{cell}.
-A cell has a {\em type}, which can be numeric or textual. We further distinguish numeric types in subtypes integer and float. We also consider \textit{None} as a special type when a cell is empty; \textit{None} is a subtype of all other types.
-A set of cells is called \textit{type-consistent} iff all cells in the set are of the same type.
+A cell has a {\em type}, which can be numeric or textual. We further distinguish numeric types in subtypes: integer and float. We also consider \textit{None} as a special type when a cell is empty; \textit{None} is a subtype of all other types.
+A set of cells is called \textit{type-consistent} iff all cells in the set are of the same type (\textit{None} is consistent with everything).
 %Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric subtype by requiring its arguments to be integers.
 
 We consider various sets of cells with the following notation:
@@ -236,8 +236,7 @@ with $n$ arguments $A_i$. Thus a constraint $c$ is viewed as a relation or predi
 % the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
 
 \item the \textit{\CSignature} defines the properties that the arguments of the predicate must satisfy. That is, the required types of the arguments, together
-with possible further restrictions, e.g., on their length. For example, the signature can restrict the types of the arguments to be groups of integers and require that the length of all arguments be equal. \\
-In terms of logical and relational learning \cite{luc_book}, such a \CSignature is known as the {\em bias} of the learner, it specifies when the constraint is well-formed.
+with possible further restrictions, e.g., on their length. For example, the signature can restrict the types of the arguments to be groups of integers and require that the length of all arguments be equal. In terms of logical and relational learning \cite{luc_book}, such a \CSignature is known as the {\em bias} of the learner, it specifies when the constraint is well-formed.
 
 \item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments to its arguments, it can be used to verify whether the constraint is satisfied or not. %holds, in practice this will be a function that can be called when
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
@@ -247,14 +246,14 @@ In logical and relational learning this is known as the background knowledge, wh
 \paragraph{Example}
 Several example constraints are illustrated in Table 1.  For example, the constraint template \textit{rank} has
 \begin{itemize}
-\item \CName: \textit{$B$ = RANK($A$)}, where $B$ and $A$ are the arguments;
-\item \CSignature: the two arguments $B$ and $A$ must be numeric groups and of size 1; furthermore, the group $B$ must be integer (the rank) and the length of groups $A$ and $B$ must be identical, i.e., $length(B) = length(A)$;
-\item \CFunction: \textit{$B$ = RANK($A$)} whenever each value of $B$ is the rank of the corresponding value in $A$.
+  \item \CName: \ecrank{G_r}{G_x}, where $G_r$ and $G_x$ are the arguments;
+\item \CSignature: the two arguments $G_r$ and $G_x$ must be numeric groups and of size one; furthermore, the group $G_r$ must be integer (the rank) and the length of groups $G_x$ and $G_r$ must be identical, i.e., $length(G_r) = length(G_x)$;
+\item \CFunction: \ecrank{G_r}{G_x}, whenever each value of $G_r$ is the rank of the corresponding value in $G_x$.
 % is satisfied in the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ satisfies the constraint iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
 \end{itemize}
 
-When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
-From a FOL perspective, the name of the constraint ($RANK$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
+When looking into constraints like \ecrank{G_r}{G_x}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
+From a FOL perspective, the name of the constraint (\textit{RANK}) is just the predicate, and the arguments $G_r$ and $G_x$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
 This also holds in our setting: when we write
       $\ecrank{\range{T}{\rangeall}{8}}{\range{T}{\rangeall}{7}}$,
 we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table $T$ of the right dimensions.
@@ -263,7 +262,7 @@ So, $T$ is viewed as table variable here, with the effect that  ${\range{T}{\ran
 \tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...},
 Alternatively, and perhaps more naturally, we can interpret the argument as the value it takes in a particular table $T$ such as $T_1$ in Figure 1, that is,
 ${\range{T_1}{\rangeall}{8}} =  [1,2,3,4]$.
-Then we can also talk about constraints being satisfied. Basically, a constraint $c(A_1, ..., A_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only
+Then we can also talk about constraints being satisfied. Basically, a constraint $c(G_1, ..., G_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only
 if the constraint holds on the values that the $A_i$ take in the set of tables ${\cal T}$. \tias{I find this confusing: a group as we defined it is defined on one table, not on multiple tables. we should separate the table variable from the 'range' variables then...}
 %Figure 3 provides a list of constraints that are satisfied by the tables in Figure 1.
 
@@ -622,6 +621,7 @@ These constraints have been selected based on the most-used Excel functions as w
 Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?} \tias{Yes, either explain in detail or cut}
 
 \paragraph{Application specific system extension}
+\sergey{under question now, might worth deleting} \\
 \sergey{Explain here, how the system can be extended with a new constraints like vr = floor(v), float(v), int(vr), len(v)=len(vr), v,vr are single vectors}
 
 \begin{equation}
