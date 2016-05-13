@@ -47,26 +47,26 @@
 \newcommand{\rangeall}{:}
 
 \newcommand{\eccalc}[2]{\ensuremath{#1 = #2}}
-\newcommand{\ecrank}[2]{\eccalc{#1}{\mathit{RANK}(#2)}}
-\newcommand{\ecfkey}[2]{\ensuremath{\mathit{FOREIGNKEY}(#1,#2)}}
-\newcommand{\ecalldiff}[1]{\ensuremath{\mathit{ALLDIFFERENT}(#1)}}
-\newcommand{\eclookupf}[4]{\ensuremath{\mathit{LOOKUP}_{\mathit{#4}}(#1, #2, #3)}}
+\newcommand{\ecrank}[2]{\eccalc{#1}{\textit{RANK}(#2)}}
+\newcommand{\ecfkey}[2]{\ensuremath{\textit{FOREIGNKEY}(#1,#2)}}
+\newcommand{\ecalldiff}[1]{\ensuremath{\textit{ALLDIFFERENT}(#1)}}
+\newcommand{\eclookupf}[4]{\ensuremath{\textit{LOOKUP}_{\textit{#4}}(#1, #2, #3)}}
 \newcommand{\eclookup}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{}}}
 \newcommand{\eclookupprod}[5]{\eccalc{#1}{#2 \times \eclookupf{#3}{#4}{#5}{}}}
 \newcommand{\eclookupfuzzy}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{fuzzy}}}
-\newcommand{\ecperm}[1]{\ensuremath{\mathit{PERMUTATION}(#1)}}
-\newcommand{\ecseries}[1]{\ensuremath{\mathit{SERIES}(#1)}}
+\newcommand{\ecperm}[1]{\ensuremath{\textit{PERMUTATION}(#1)}}
+\newcommand{\ecseries}[1]{\ensuremath{\textit{SERIES}(#1)}}
 \newcommand{\ecprod}[3]{\eccalc{#1}{#2 \times #3}}
 \newcommand{\ecdiff}[3]{\eccalc{#1}{#2 - #3}}
-\newcommand{\ectotal}[3]{\eccalc{#1}{\mathit{PREV}(#1) + #2 - #3}}
-\newcommand{\ecproj}[2]{\eccalc{#1}{\mathit{PROJECT}(#2)}}
-\newcommand{\ecaggc}[3]{\eccalc{#2}{\mathit{#1}(#3, col)}}
-\newcommand{\ecaggr}[3]{\eccalc{#2}{\mathit{#1}(#3, row)}}
-\newcommand{\ecsumc}[2]{\eccalc{#1}{\mathit{SUM}(#2, col)}}
-\newcommand{\ecsumr}[2]{\eccalc{#1}{\mathit{SUM}(#2, row)}}
-\newcommand{\ecaggif}[5]{\eccalc{#2}{\mathit{#1IF}(#3, #4, #5)}}
-\newcommand{\ecsumif}[4]{\eccalc{#1}{\mathit{SUMIF}(#2, #3, #4)}}
-\newcommand{\ecsumprod}[3]{\eccalc{#1}{\mathit{SUMPRODUCT}(#2, #3)}}
+\newcommand{\ectotal}[3]{\eccalc{#1}{\textit{PREV}(#1) + #2 - #3}}
+\newcommand{\ecproj}[2]{\eccalc{#1}{\textit{PROJECT}(#2)}}
+\newcommand{\ecaggc}[3]{\eccalc{#2}{\textit{#1}(#3, col)}}
+\newcommand{\ecaggr}[3]{\eccalc{#2}{\textit{#1}(#3, row)}}
+\newcommand{\ecsumc}[2]{\eccalc{#1}{\textit{SUM}(#2, col)}}
+\newcommand{\ecsumr}[2]{\eccalc{#1}{\textit{SUM}(#2, row)}}
+\newcommand{\ecaggif}[5]{\eccalc{#2}{\textit{#1IF}(#3, #4, #5)}}
+\newcommand{\ecsumif}[4]{\eccalc{#1}{\textit{SUMIF}(#2, #3, #4)}}
+\newcommand{\ecsumprod}[3]{\eccalc{#1}{\textit{SUMPRODUCT}(#2, #3)}}
 
 \newcommand{\numeric}{\format{numeric}}
 \newcommand{\textual}{\format{textual}}
@@ -191,15 +191,15 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 %
       &~\ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
 %
-      &~\ecaggc{AVERAGE}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+      &~\ecaggc{\textit{AVERAGE}}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
-      &~\ecaggc{MAX}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+      &~\ecaggc{\textit{MAX}}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
-      &~\ecaggc{MIN}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+      &~\ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
-      &~\ecaggif{SUM}{\range{T_{1}}{\rangeall}{10}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
+      &~\ecaggif{\textit{SUM}}{\range{T_{1}}{\rangeall}{10}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
 %
-      &~\ecaggif{MAX}{\range{T_{1}}{\rangeall}{11}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
+      &~\ecaggif{\textit{MAX}}{\range{T_{1}}{\rangeall}{11}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
 %
       &~\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}} \\
 %
