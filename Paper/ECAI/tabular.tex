@@ -143,6 +143,7 @@ Moreover, we sketch several application scenario's, such as autocompletion and e
 This paper is organized as follows.
 Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:problem_statement} presents the problem statement. Section \ref{sec:approach} describes the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications such as autocompletion and error detection. Section \ref{sec:related_work} present an overview of the related work. And Section \ref{sec:conclusions} provides conclusions.
 
+\tias{Check that it is clear enough throughout the paper that: our method does not reason at the level of individual cells, but rather about \textit{vectors} of cells, as is common in spreadsheets.}
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
 % {\it
@@ -482,35 +483,50 @@ There are three \textit{variables} $X, Y, Z$ corresponding to group $G'$, $H'$ a
 The $\generategroups(\textit{t,{\cal G},C})$ method will construct this CSP and query a solver for all satisfying solutions. This is the required result set.
 
 \subsubsection{Constraints over satisfying subgroups}
-\tias{I have not yet reworked this part}
-
-\tias{can implement in any way, CSP or imperative (we: imperative)}
-$\findassignment(t,a,C_{solutions})$ finds, for all assignments~$a = (G_1, ..., G_n)$ in $A$, the subgroups $G_i' \subseteq G_i$ such that the corresponding constraint $t(G_1', ..., G_n')$ is satisfied (i.e. the \CSignature and \CFunction of~$t$ are satisfied).
-For every \template~$t$ an implementation (declarative or imperative) needs to be provided that, given an assignment, finds valid subgroups.
-
+In the previous step, $\generategroups(\textit{t,{\cal G},C})$ generates tuples of candidate groups $(G_1, ..., G_n)$ for the constraint template $t$ with $n$ arguments. In this step, $\findassignment(t, (G_1, \dots, G_n))$, the goal is to enumerate the subgroups $(G'_1, ..., G'_n), \forall i, G'_i \subseteq G_i$ that satisfy both the signature and the definition of the constraint template $t$. The main difference with the previous step is that the group generation reasons about the \textit{properties} of the groups (type, size, length, ...), while this step reasons about the actual \textit{content} of the vectors in the groups, that is, the data.
 
 \paragraph{Example}
-Consider a group assignment $G_x, G_y$ associated with the arguments $v_x,v_y$ of \ecrank{v_y}{v_x}, then \findassignment selects single vectors $V_y \in G_y, V_x \in G_x$ such that \ecrank{V_y}{V_x} is true.
-For example, in Figure~\ref{fig:main_example} the group $G = \range{T_1}{\rangeall}{\rangeto{3}{8}}$ can serve as both $G_x$ and $G_y$.
-Then \findassignment could select $V_x$ to be $\range{T_1}{\rangeall}{7}$ and $V_y$ to be $\range{T_1}{\rangeall}{8}$ since \ecrank{\range{T_1}{\rangeall}{7}}{\range{T_1}{\rangeall}{8}} is satisfied in the data.
+Consider the sum-over-rows constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$. In the group generation, all numeric groups where the length of $\sg_r$ vector is equal to the number of rows in $\mathbf{\sg_x}$ has been enumerated. An example from Table~\ref{table:constraints} is $(\sg_r, \mathbf{\sg_x}) = (T_1[:,3:8],T_1[:,3:8])$. Note that this does not match the signature exactly yet: $\sg_r$ contains more than one vector. We can now generate all vectors in $T_1[:,3:8]$ for $\sg_r$ and all subgroups of $T_1[:,3:8]$ for $\mathbf{\sg_x}$ and test whether $\forall i, \sg_r[0][i] = \sum_j \mathbf{\sg_x}[j][i]$ where $G[j][i]$ indicates the $i$the value of the $j$th vector in $G$. An example solution is $(T_1[:7], T_1[:,3:6])$.
 \\\\
-For some constraint templates (most notably aggregates) there may be multiple (overlapping) subgroups of a given group~$G$ for which the template satisfied.
-\tias{like min/max? should mention this example in implied constraints. Not sure we should mention this here, how do we remove overlapping, in post-processing? if so, move to later...}
-In this case we choose to omit those subgroups that are fully contained within a larger subgroup since this can lead to over-fitting.
-If the returned subsets are too large and accidentally include unrelated vectors the user can split such a group.
 
-\paragraph{Example 2}
+One can formulate this as a constraint satisfaction problem, similar to what we did in the previous section, or use a simple generate-and-test approach. In contrast to the previous step, the number of subgroups to generate here are typically manageable: $O(n*m^2)$ with $m$ the number of vectors in the largest group; we only consider continuous ranges in subgroups, so a subgroup of size $m$ has $m*(m+1)/2$ possible subgroups to consider. Furthermore, few constraint solvers support floating point numbers, which are prevalent in spreadsheet.
+
+For this reason, our current implementation uses a simple generate-and-test method that takes the required size/length of the groups into account, and sequentially verifies whether the elements of the vectors satisfy the definition. The pseudo-code for this approach is shown in ...\tias{Add pseudocode!!}
+
+\begin{verbatim}
+VERY PSEUDOcode:
+something recursive that handles vectors/subgroups differently like this?
+check(Groups, X, Test):
+  if |Groups| == 0:
+    forall i in ?: vector elements...
+      if not Test(X):
+        return []
+    return X
+  // else
+  all = []
+  Group = Groups.pop(0)
+  if vector(Group):
+    forall Vec in Group:
+      all += check(Groups, X + Vec, Test)
+  else:
+    forall Subgroup in Group:
+      all += check(Groups, X + Subgroup, Test)
+  return all
+\end{verbatim}
+
+Note that for some constraint definitions, there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example $G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. \tias{How are they stopped in the code? should be part of the pseud-code because not part of $Test(X)$?}
+
+\paragraph{Example 2, not used (should be replaced by pseudo-code above?)}
 Sum Product
 
 Implementation: finds subgroups based on assignments\\
 Method $Test(G_R, G_{O_1}, G_{O_2})$\\
-$If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\\
-$If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$
+$If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\tias{ill-defined, $G_{O_1}$ is a group and $<$ not defined on it (on vector identifiers rather than content?)}\\
+$If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$ \tias{does not show that reasons over content of vectors}
 \\\\
 Method $FindSubgroups(Assignments)$\\
-$Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$
+$Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$ \tias{does not enforce size of subgroups (e.g. vectors)?}
 
-Register implementation with the system for constraint X
 
 \subsection{Implementation note}
 
@@ -526,6 +542,13 @@ Future versions of the system will provide user interfaces to some of these cons
 \paragraph{Redundancy}
 \sergey{Samuel, probably it is better if you look here}
 Mention 'largest overlapping subgroup' here?
+
+ Also, there may be overlapping subgroups that satisfy the definition, such as \tias{There is no example in the example figure? I was thinking of max/min, but it is over the entire vector always...}.
+In this case we choose to omit those subgroups that are fully contained within a larger subgroup since this can lead to over-fitting.
+If the returned subsets are too large and accidentally include unrelated vectors the user can split such a group.
+
+For every \template~$t$ an implementation (declarative or imperative) needs to be provided that, given an assignment, finds valid subgroups.
+
 
 \paragraph{Constraints}
 
