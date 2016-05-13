@@ -14,6 +14,8 @@
 \usepackage{framed}
 \usepackage{amsmath}
 \usepackage{tabularx}
+\usepackage{subcaption}
+
 
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
@@ -45,26 +47,26 @@
 \newcommand{\rangeall}{:}
 
 \newcommand{\eccalc}[2]{\ensuremath{#1 = #2}}
-\newcommand{\ecrank}[2]{\eccalc{#1}{\mathit{RANK}(#2)}}
-\newcommand{\ecfkey}[2]{\ensuremath{\mathit{FOREIGNKEY}(#1,#2)}}
-\newcommand{\ecalldiff}[1]{\ensuremath{\mathit{ALLDIFFERENT}(#1)}}
-\newcommand{\eclookupf}[4]{\ensuremath{\mathit{LOOKUP}_{\mathit{#4}}(#1, #2, #3)}}
+\newcommand{\ecrank}[2]{\eccalc{#1}{\textit{RANK}(#2)}}
+\newcommand{\ecfkey}[2]{\ensuremath{\textit{FOREIGNKEY}(#1,#2)}}
+\newcommand{\ecalldiff}[1]{\ensuremath{\textit{ALLDIFFERENT}(#1)}}
+\newcommand{\eclookupf}[4]{\ensuremath{\textit{LOOKUP}_{\textit{#4}}(#1, #2, #3)}}
 \newcommand{\eclookup}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{}}}
 \newcommand{\eclookupprod}[5]{\eccalc{#1}{#2 \times \eclookupf{#3}{#4}{#5}{}}}
 \newcommand{\eclookupfuzzy}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{fuzzy}}}
-\newcommand{\ecperm}[1]{\ensuremath{\mathit{PERMUTATION}(#1)}}
-\newcommand{\ecseries}[1]{\ensuremath{\mathit{SERIES}(#1)}}
+\newcommand{\ecperm}[1]{\ensuremath{\textit{PERMUTATION}(#1)}}
+\newcommand{\ecseries}[1]{\ensuremath{\textit{SERIES}(#1)}}
 \newcommand{\ecprod}[3]{\eccalc{#1}{#2 \times #3}}
 \newcommand{\ecdiff}[3]{\eccalc{#1}{#2 - #3}}
-\newcommand{\ectotal}[3]{\eccalc{#1}{\mathit{PREV}(#1) + #2 - #3}}
-\newcommand{\ecproj}[2]{\eccalc{#1}{\mathit{PROJECT}(#2)}}
-\newcommand{\ecaggc}[3]{\eccalc{#2}{\mathit{#1}(#3, col)}}
-\newcommand{\ecaggr}[3]{\eccalc{#2}{\mathit{#1}(#3, row)}}
-\newcommand{\ecsumc}[2]{\eccalc{#1}{\mathit{SUM}(#2, col)}}
-\newcommand{\ecsumr}[2]{\eccalc{#1}{\mathit{SUM}(#2, row)}}
-\newcommand{\ecaggif}[5]{\eccalc{#2}{\mathit{#1IF}(#3, #4, #5)}}
-\newcommand{\ecsumif}[4]{\eccalc{#1}{\mathit{SUMIF}(#2, #3, #4)}}
-\newcommand{\ecsumprod}[3]{\eccalc{#1}{\mathit{SUMPRODUCT}(#2, #3)}}
+\newcommand{\ectotal}[3]{\eccalc{#1}{\textit{PREV}(#1) + #2 - #3}}
+\newcommand{\ecproj}[2]{\eccalc{#1}{\textit{PROJECT}(#2)}}
+\newcommand{\ecaggc}[3]{\eccalc{#2}{\textit{#1}(#3, col)}}
+\newcommand{\ecaggr}[3]{\eccalc{#2}{\textit{#1}(#3, row)}}
+\newcommand{\ecsumc}[2]{\eccalc{#1}{\textit{SUM}(#2, col)}}
+\newcommand{\ecsumr}[2]{\eccalc{#1}{\textit{SUM}(#2, row)}}
+\newcommand{\ecaggif}[5]{\eccalc{#2}{\textit{#1IF}(#3, #4, #5)}}
+\newcommand{\ecsumif}[4]{\eccalc{#1}{\textit{SUMIF}(#2, #3, #4)}}
+\newcommand{\ecsumprod}[3]{\eccalc{#1}{\textit{SUMPRODUCT}(#2, #3)}}
 
 \newcommand{\numeric}{\format{numeric}}
 \newcommand{\textual}{\format{textual}}
@@ -105,7 +107,7 @@
 
 \begin{abstract}
 %Spreadsheets, comma separated value files and other tabular data representations are in wide use today. However, the correct use and maintenance of functions in and between the tabular data can be error-prone and overwhelming. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. Our method takes inspiration form inductive logic programming and constraint satisfiability. We represent common spreadsheet functions as predicates with arguments that must satisfy number of constraints over the arguments. This allows generic constraint satisfaction techniques to be used to find all such satisfying predicates/functions within the rows, columns and submatrices of the tables. We show the effectiveness and accuracy of this approach on a number of spreadsheets from varying sources.
-Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today. However, modeling, maintaining and discovering formulas in tabular data and between spreadsheets can be time consuming and error-prone. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking. Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction. Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints. Constraint learning techniques are used to identify predicates (constraints) that hold between the rows, columns and submatrices of the tables. New types of constraints can be easily added to the system by specifying them using in a declarative language. We show that our approach is able to accurately discover constraints in a number of spreadsheets from varying sources.
+Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today. However, modeling, maintaining and discovering formulas in tabular data and between spreadsheets can be time consuming and error-prone. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking. Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction. Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints. Constraint learning techniques are used to identify predicates (constraints) that hold between the rows, columns and submatrices of the tables. New types of constraints can be easily added to the system by specifying them in a declarative language. We show that our approach is able to accurately discover constraints in a number of spreadsheets from varying sources.
 \end{abstract}
 
 \section{Introduction}
@@ -119,7 +121,7 @@ This is a new and unconventional machine learning problem.
 Consider the example in Figure~\ref{fig:main_example}, where the header's names already suggest the usage of spreadsheet operations such as \textit{average} or \textit{sum}.
 Looking at the first row in Table~2 and the data in Table~1, it is clear that the values in this row were computed by summing the values in the corresponding column of Table~1.
 Examining Table~1 also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by taking the row-wise sum of the previous four columns.
-This already provides a flavor of how this problem is different from standard data mining settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple table with relationships between them. And on the other hand, the data is mixed textual and numeric, since people tend to use spreadsheets for financial and accounting computations. One can see that understanding and learning constraints in tabular data is hence a new and challenging problem for machine learning. Furthermore, it is not only challenging for a machine but for humans as well.
+This already provides a flavor of how this problem is different from standard data mining settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple table with relationships between them. And on the other hand, the data is mixed textual and numeric, since people tend to use spreadsheets for financial and accounting computations. One can see that understanding and learning constraints in tabular data is hence a new and challenging problem for machine learning. Furthermore, it is not only challenging for a machine but for humans as well, e.g. the influential Reinhart-Rogoff economical paper ``Growth in a Time of Debt'' turned to be bogus due an excel formula mistake \cite{flaw_excel}.
 
 
 The approach that we will introduce will borrow techniques from logical and relational learning \cite{luc_book}, where
@@ -135,14 +137,15 @@ A more detailed discussion on related work is contained in Section~\ref{sec:rela
 
 
 
-The question that we answer in this paper is: whether it is possible to discover or reconstruct structural constraints (relations, functions) in flat tabular spreadsheet data?
-To answer this question we contribute a general-purpose algorithm and system for discovering such constraints. Furthermore, the algorithm accepts declarative specifications of the constraints and predicates of interest (the "bias") and covers both textual and numeric fields. It works in an unsupervised setting, as only the tabular data is provided and no examples need to be specified, and discovers column- and row-wise constraints.
+The question that we answer in this paper is: is it possible to discover or reconstruct structural constraints (relations, functions) in flat tabular spreadsheet data?
+To answer this question we contribute a general-purpose algorithm and the system, named \sname (pronounced as the word ``tackle''), for discovering such constraints. Furthermore, the algorithm accepts declarative specifications of the constraints and predicates of interest (the "bias") and covers both textual and numeric fields. It works in an unsupervised setting, as only the tabular data is provided and no examples need to be specified, and discovers column- and row-wise constraints.
 We demonstrate the utility of our approach in an experimental evaluation.
-Moreover, we sketch several application scenario's, such as autocompletion and error detection.
+Moreover, we sketch several application scenario's such as autocompletion and error detection.
 \\\\
 This paper is organized as follows.
-Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:problem_statement} presents the problem statement. Section \ref{sec:approach} describes the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications such as autocompletion and error detection. Section \ref{sec:related_work} present an overview of the related work. And Section \ref{sec:conclusions} provides conclusions.
+Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:problem_statement} presents the problem statement. Section \ref{sec:approach} describes the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents an overview of the related work. Section \ref{sec:conclusions} provides conclusions.
 
+\tias{Check that it is clear enough throughout the paper that: our method does not reason at the level of individual cells, but rather about \textit{vectors} of cells, as is common in spreadsheets.}
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
 % {\it
@@ -164,24 +167,62 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 % \end{itemize}
 %}
 
-\begin{figure*}[tbh]
+\begin{figure*}[thb]
+
+  \begin{subfigure}{.70\textwidth}
   \begin{center}
-    \includegraphics[width=0.75\textwidth]{figures/Demo.png}
+    \includegraphics[width=1\textwidth]{figures/Demo.png}
   \end{center}
   \vspace{-10pt}
   \caption{Example spreadsheet (black words and numbers only). Blue and green elements are added by us to clarify the relations.}
   \label{fig:main_example}
+\end{subfigure}
+\hfill
+\begin{subfigure}{.30\textwidth}
+  {\small
+    \begin{align*}
+      &~\ecseries{\range{T_{1}}{\rangeall}{1}} \\
+%
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}} \\
+%
+      &~\ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      &~\ecsumc{\range{T_{6}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+%
+      &~\ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+%
+      &~\ecaggc{\textit{AVERAGE}}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      &~\ecaggc{\textit{MAX}}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      &~\ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      &~\ecaggif{\textit{SUM}}{\range{T_{1}}{\rangeall}{10}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
+%
+      &~\ecaggif{\textit{MAX}}{\range{T_{1}}{\rangeall}{11}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
+%
+      &~\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}} \\
+%
+      &~\range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
+    \end{align*}}
+  \vspace{-10pt}
+  \caption{Constraints that are satisfied in the case study (Figure on the left) and expected to be found by our implementation. Functional constraint are omitted.}
+  \label{fig:sol_example}
+\end{subfigure}
 \end{figure*}
+
 
 \section{Formalization}\label{sec:formalization}
 As we focus on spreadsheet data, we first introduce the general concepts of cells, group and constraint templates, using the (multi-table) sheet in Figure~\ref{fig:main_example} as running example.
 
 \subsection{Cells, vectors and groups}
-A spreadsheet may conceptually consist of multiple tables, such as in Figure~\ref{fig:main_example}. We will describe a method of extracting tables from a big spreadsheet in Section~\ref{todo}, however this is not the core of our learning method. Our formalization reasons over tables directly.
+\tias{perhaps we should not introduce cells, we reason at the level of vectors!}
+A spreadsheet may conceptually consist of multiple tables, such as in Figure~\ref{fig:main_example}. We will describe a method of extracting tables from a big spreadsheet in Section~\ref{sec:approach}, however this is not the core of our learning method. Our formalization reasons over tables directly.
+
 
 Formally, a table is an $n \times m$ matrix. Each entry is called a \textit{cell}.
-A cell has a {\em type}, which can be numeric or textual. We further distinguish numeric types in subtypes integer and float. We also consider \textit{None} as a special type when a cell is empty; \textit{None} is a subtype of all other types.
-A set of cells is called \textit{type-consistent} iff all cells in the set are of the same type.
+A cell has a {\em type}, which can be numeric or textual. We further distinguish numeric types in subtypes: integer and float. We also consider \textit{None} as a special type when a cell is empty; \textit{None} is a subtype of all other types.
+A set of cells is called \textit{type-consistent} iff all cells in the set are of the same type (\textit{None} is consistent with everything).
 %Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric subtype by requiring its arguments to be integers.
 
 We consider various sets of cells with the following notation:
@@ -231,39 +272,50 @@ A \template is a triple \textit{(\CName, \CSignature, \CFunction)}:
 %Let us elaborate on this:
 \begin{itemize}
 \item
-\textit{\CName}  specifies the syntactic form of the constraint $c(A_1, ...,A_n)$, that is, the name of the constraint $c$ together
-with $n$ arguments $A_i$. Thus a constraint $c$ is viewed as a relation or predicate of arity $n$ in first order logic. Note that a function $B=f(A_1,...,A_n)$ can be represented with the $n+1$-ary predicate $cf(B,A_1,...,A_n)$.
+\textit{\CName}  specifies the syntactic form of the constraint $c(G_1, ...,G_n)$, that is, the name of the constraint $c$ together
+with $n$ arguments $G_i$. Thus a constraint $c$ is viewed as a relation or predicate of arity $n$ in first order logic. Note that a function $G_r=f(G_1,...,G_n)$ can be represented with the $n+1$-ary predicate $cf(G_r,G_1,...,G_n)$.
 % the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
 
 \item the \textit{\CSignature} defines the properties that the arguments of the predicate must satisfy. That is, the required types of the arguments, together
-with possible further restrictions, e.g., on their length. For example, the signature can restrict the types of the arguments to be groups of integers and require that the length of all arguments be equal. \\
-In terms of logical and relational learning \cite{luc_book}, such a \CSignature is known as the {\em bias} of the learner, it specifies when the constraint is well-formed.
+with possible further restrictions, e.g., on their length. For example, the signature can restrict the types of the arguments to be groups of integers and require that the length of all arguments be equal. In terms of logical and relational learning \cite{luc_book}, such a \CSignature is known as the {\em bias} of the learner, it specifies when the constraint is well-formed.
 
 \item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments to its arguments, it can be used to verify whether the constraint is satisfied or not. %holds, in practice this will be a function that can be called when
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
 In logical and relational learning this is known as the background knowledge, which provides the definition of the predicate.
 \end{itemize}
+\tias{Requested by Luc: formulate signature and definition as formula?}
 
 \paragraph{Example}
-Several example constraints are illustrated in Table 1.  For example, the constraint template \textit{rank} has
+Several example constraints are illustrated in Table \ref{table:constraints}.  For example, the constraint template \textit{rank} has
 \begin{itemize}
-\item \CName: \textit{$B$ = RANK($A$)}, where $B$ and $A$ are the arguments;
-\item \CSignature: the two arguments $B$ and $A$ must be numeric groups and of size 1; furthermore, the group $B$ must be integer (the rank) and the length of groups $A$ and $B$ must be identical, i.e., $length(B) = length(A)$;
-\item \CFunction: \textit{$B$ = RANK($A$)} whenever each value of $B$ is the rank of the corresponding value in $A$.
+  \item \CName: \ecrank{G_r}{G_x}, where $G_r$ and $G_x$ are the arguments;
+\item \CSignature: the two arguments $G_r$ and $G_x$ must be numeric groups and of size one; furthermore, the group $G_r$ must be integer (the rank) and the length of groups $G_x$ and $G_r$ must be identical, i.e., $\plength(G_r) = \plength(G_x)$;
+\item \CFunction: \ecrank{G_r}{G_x}, whenever each value of $G_r$ is the rank of the corresponding value in $G_x$.
 % is satisfied in the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ satisfies the constraint iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
 \end{itemize}
+When looking into constraints like $\ecrank{G_r}{G_x}$, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
+From a FOL perspective, the name of the constraint (\textit{RANK}) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as concrete values.
 
-When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
-From a FOL perspective, the name of the constraint ($\mathit{RANK}$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
-This also holds in our setting: when we write
-      $\ecrank{\range{T}{\rangeall}{8}}{\range{T}{\rangeall}{7}}$,
-we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table $T$ (provided~$T$ has an 8th column).
-So, $T$ is viewed as table variable here, with the effect that  ${\range{T}{\rangeall}{8}}$ is a group variable.
+This also holds in our setting, where an instantiation of a variable corresponds to a concrete set of vectors (a subgroup). For example for $\ecrank{G_r}{G_x}$ and the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $G_r$ is the $8$th vector in $T_1$: $G_r = \range{T_1}{\rangeall}{8} = \{[2,1,3,4]\}$ and the value of $G_x$ is the $7$th vector: $G_x = \range{T_1}{\rangeall}{7} = \{[1514, 1551, 691, 392]\}$.
+\tias{not OK to use set because of column-wise sum? we must properly define it then...}
 
-\samuel{\tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...} True, I changed the wording a bit but personally I would leave it at this now, you can always say you look at $T[:,i:j]$ iff $cols(T) >= max(i,j)$}.
-Alternatively, and perhaps more naturally, we can interpret the argument as the value it takes in a particular table $T$ such as $T_1$ in Figure 1, that is,
-${\range{T_1}{\rangeall}{8}} =  [2,1,3,4]$.
-Then we can also talk about constraints being satisfied. Basically, a constraint $c(A_1, ..., A_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only if the constraint holds on the values that the $A_i$ take in the set of tables ${\cal T}$. \samuel{\tias{I find this confusing: a group as we defined it is defined on one table, not on multiple tables. we should separate the table variable from the 'range' variables then...} waiting for Luc's opinion here}
+%When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
+%From a FOL perspective, the name of the constraint ($\mathit{RANK}$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
+%This also holds in our setting: when we write
+%      $\ecrank{\range{T}{\rangeall}{8}}{\range{T}{\rangeall}{7}}$,
+%we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table $T$ (provided~$T$ has an 8th column).
+%So, $T$ is viewed as table variable here, with the effect that  ${\range{T}{\rangeall}{8}}$ is a group variable.
+
+\newcommand{\sigc}{\ensuremath{\format{Sig}_c}}
+\newcommand{\defc}{\ensuremath{\format{Def}_c}}
+
+With this interpretation, we can speak about the signature and definition of a constraint template being satisfied. We say that a signature (definition) of a constraint template with $n$ arguments is satisfied by an assignment $(G_1, ..., G_n)$ if $\sigc(G_1, ..., G_n)$ (respectively $\defc(G_1, ..., G_n)$) is satisfied. Likewise, an assignment $(G_1, ..., G_n)$ satisfies a constraint template $s$ iff $|(G_1, ..., G_n)| = n_s \wedge \sigc(G_1, ..., G_n) \wedge \defc(G_1, ..., G_n)$.
+
+\tias{Luc will probably prefer: $c(A_1, ..., A_n) :- Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$ where '$c$' is abused to be both the constraint name and the template}.
+%\samuel{\tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...} True, I changed the wording a bit but personally I would leave it at this now, you can always say you look at $T[:,i:j]$ iff $cols(T) >= max(i,j)$}.
+%Alternatively, and perhaps more naturally, we can interpret the argument as the value it takes in a particular table $T$ such as $T_1$ in Figure 1, that is,
+%${\range{T_1}{\rangeall}{8}} =  [2,1,3,4]$.
+%Then we can also talk about constraints being satisfied. Basically, a constraint $c(A_1, ..., A_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only if the constraint holds on the values that the $A_i$ take in the set of tables ${\cal T}$. \samuel{\tias{I find this confusing: a group as we defined it is defined on one table, not on multiple tables. we should separate the table variable from the 'range' variables then...} waiting for Luc's opinion here}
 %Figure 3 provides a list of constraints that are satisfied by the tables in Figure 1.
 
 
@@ -294,7 +346,7 @@ We define the {\bf Tabular Constraint Learning Problem} as follows:
 An example solution for the type-consistent groups of the tables in Figure~\ref{fig:main_example} and {\template}'s in Table~\ref{table:constraints} is shown in Figure~\ref{fig:sol_example}.
 
 
-Depending on the application, a solution to the tabular constraint learning problem may contain \textit{redundant} constraints, cf. \cite{luc_book}. This is because constraints may be logically equivalent or may be implied by other constraints.
+Depending on the application, a solution to the tabular constraint learning problem may contain \textit{redundant} constraints, for details we refer to relational learning literature \cite{luc_book}. This is because constraints may be logically equivalent or may be implied by other constraints.
 
 More formally, a constraint $c_1(G_1, ... G_n)$ \textit{implies} another constraint~$c_2(G'_1, ..., G'_m)$ whenever
 the  following statement holds: $$\forall G_i, G'_j : c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m).$$
@@ -311,7 +363,7 @@ $$\ecperm{G} \rightarrow \ecalldiff{G}$$
 (it can be seen in Table~\ref{table:constraints} that both constraints only hold if $G$ is a vector).
 In this case the arguments are identical in both constraints.
 Given that the problem is to find the set of {\em all} constraints, and that the more general constraint is entailed
-by the more specific one, the $ALLDDIFFERENT(G)$ constraint will be {\em redundant}.
+by the more specific one, the $\ecdiff{G}$ constraint will be {\em redundant}.
 So, for most applications, it will be sufficient to output only the most specific one.
 
 A more involved example is
@@ -481,70 +533,88 @@ There are three \textit{variables} $X, Y, Z$ corresponding to group $G'$, $H'$ a
 
 The $\generategroups(\textit{t,{\cal G},C})$ method will construct this CSP and query a solver for all satisfying solutions. This is the required result set.
 
-\subsubsection{Constraints over satisfying subgroups}
-\tias{I have not yet reworked this part}
-
-\tias{can implement in any way, CSP or imperative (we: imperative)}
-$\findassignment(t,a,C_{solutions})$ finds, for all assignments~$a = (G_1, ..., G_n)$ in $A$, the subgroups $G_i' \subseteq G_i$ such that the corresponding constraint $t(G_1', ..., G_n')$ is satisfied (i.e. the \CSignature and \CFunction of~$t$ are satisfied).
-For every \template~$t$ an implementation (declarative or imperative) needs to be provided that, given an assignment, finds valid subgroups.
-
+\subsubsection{Constraints over satisfying subgroups} \label{sec:algo:subgr}
+In the previous step, $\generategroups(\textit{t,{\cal G},C})$ generates tuples of candidate groups $(G_1, ..., G_n)$ for the constraint template $t$ with $n$ arguments. In this step, $\findassignment(t, (G_1, \dots, G_n))$, the goal is to enumerate the subgroups $(G'_1, ..., G'_n), \forall i, G'_i \subseteq G_i$ that satisfy both the signature and the definition of the constraint template $t$. The main difference with the previous step is that the group generation reasons about the \textit{properties} of the groups (type, size, length, ...), while this step reasons about the actual \textit{content} of the vectors in the groups, that is, the data.
 
 \paragraph{Example}
-Consider a group assignment $G_x, G_y$ associated with the arguments $v_x,v_y$ of \ecrank{v_y}{v_x}, then \findassignment selects single vectors $V_y \in G_y, V_x \in G_x$ such that \ecrank{V_y}{V_x} is true.
-For example, in Figure~\ref{fig:main_example} the group $G = \range{T_1}{\rangeall}{\rangeto{3}{8}}$ can serve as both $G_x$ and $G_y$.
-Then \findassignment could select $V_x$ to be $\range{T_1}{\rangeall}{7}$ and $V_y$ to be $\range{T_1}{\rangeall}{8}$ since \ecrank{\range{T_1}{\rangeall}{7}}{\range{T_1}{\rangeall}{8}} is satisfied in the data.
+Consider the sum-over-rows constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$. In the group generation, all numeric groups where the length of $\sg_r$ vector is equal to the number of rows in $\mathbf{\sg_x}$ has been enumerated. An example from Table~\ref{table:constraints} is $(\sg_r, \mathbf{\sg_x}) = (T_1[:,3:8],T_1[:,3:8])$. Note that this does not match the signature exactly yet: $\sg_r$ contains more than one vector. We can now generate all vectors in $T_1[:,3:8]$ for $\sg_r$ and all subgroups of $T_1[:,3:8]$ for $\mathbf{\sg_x}$ and test whether $\forall i, \sg_r[0][i] = \sum_j \mathbf{\sg_x}[j][i]$ where $G[j][i]$ indicates the $i$the value of the $j$th vector in $G$. An example solution is $(T_1[:7], T_1[:,3:6])$.
 \\\\
-For some constraint templates (most notably aggregates) there may be multiple (overlapping) subgroups of a given group~$G$ for which the template satisfied.
-\tias{like min/max? should mention this example in implied constraints. Not sure we should mention this here, how do we remove overlapping, in post-processing? if so, move to later...}
-In this case we choose to omit those subgroups that are fully contained within a larger subgroup since this can lead to over-fitting.
-If the returned subsets are too large and accidentally include unrelated vectors the user can split such a group.
 
-\paragraph{Example 2}
+One can formulate this as a constraint satisfaction problem, similar to what we did in the previous section, or use a simple generate-and-test approach. In contrast to the previous step, the number of subgroups to generate here are typically manageable: $O(n*m^2)$ with $m$ the number of vectors in the largest group; we only consider continuous ranges in subgroups, so a subgroup of size $m$ has $m*(m+1)/2$ possible subgroups to consider. Furthermore, few constraint solvers support floating point numbers, which are prevalent in spreadsheet.
+
+For this reason, our current implementation uses a simple generate-and-test method that takes the required size/length of the groups into account, and sequentially verifies whether the elements of the vectors satisfy the definition. The pseudo-code for this approach is shown in ...\tias{Add pseudocode!!}
+
+\begin{verbatim}
+VERY PSEUDOcode:
+something recursive that handles vectors/subgroups differently like this?
+check(Groups, X, Test):
+  if |Groups| == 0:
+    forall i in ?: vector elements...
+      if not Test(X):
+        return []
+    return X
+  // else
+  all = []
+  Group = Groups.pop(0)
+  if vector(Group):
+    forall Vec in Group:
+      all += check(Groups, X + Vec, Test)
+  else:
+    forall Subgroup in Group:
+      all += check(Groups, X + Subgroup, Test)
+  return all
+\end{verbatim}
+
+Note that for some constraint definitions, there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example $G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. \tias{How are they stopped in the code? should be part of the pseud-code because not part of $Test(X)$?}
+
+\paragraph{Example 2, not used (should be replaced by pseudo-code above?)}
 Sum Product
 
 Implementation: finds subgroups based on assignments\\
 Method $Test(G_R, G_{O_1}, G_{O_2})$\\
-$If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\\
-$If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$
+$If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\tias{ill-defined, $G_{O_1}$ is a group and $<$ not defined on it (on vector identifiers rather than content?)}\\
+$If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$ \tias{does not show that reasons over content of vectors}
 \\\\
 Method $FindSubgroups(Assignments)$\\
-$Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$
+$Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$ \tias{does not enforce size of subgroups (e.g. vectors)?}
 
-Register implementation with the system for constraint X
 
-\subsection{Implementation note}
+\subsection{Implementation}
+We provide some more details of our implementation of the above algorithmic approach, to ease reproducibility.
 
 \paragraph{Constraint solvers}
-\tias{stand-alone (with text-based modeling language) versus embedded.}
-For each \template, both \generategroups and \findassignment are can be seen as separate constraint satisfaction problems.
-Furthermore, declarative languages such as, for example, ASP \cite{whaisasp} and Minizinc \cite{minizinc} provide primitives that make modeling transparent and generic.
+Generic constraint solving technology can be used for the candidate group generation as well as for enumerating the satisfying subgroups. Constraint solvers can be categorized as being stand-alone solvers, meaning that they have a text-based modeling language in which the CSP must be formulated, and \textit{embedded}, meaning that they have a programmatic API to formulate the CSP.
 
-Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc (Gecode-backend 2.0.2 \cite{minizinc}) and uses a native Python CSP solver \cite{python_constraint} for \generategroups.
-All the constraints mentioned in the paper can be run purely using the internal Python engine without any external software.
-Future versions of the system will provide user interfaces to some of these constraint languages (e.g. ASP and Minizinc) to allow users to specify solving procedures for new constraint templates in a declarative way.
+Our implementation supports the ASP \cite{whaisasp} formalism, using the stand-alone Clingo 4.5.4 \cite{clingo} solver, the stand-alone Constraint Programming language MiniZinc \cite{minizinc} with the Gecode 4.4.0 solver which supports floats, as well as an embedded Python-based CP solver \cite{python_constraint}. The constraint signature that must be satisfied to generate the groups can be specified in each of the tree formalisms, to ease prototyping and extendability towards new constraints. The embedded solver is fastest as it does not have the overhead of file-writing and calling an external program, and is used in the experiments below.
 
 \paragraph{Redundancy}
-\sergey{Samuel, probably it is better if you look here}
-Mention 'largest overlapping subgroup' here?
+There are only types of redundancy that we eliminate during search. The first is the removal of symmetric attribute assignments as explained in Section~\ref{sec:algo:subgr}.
+
+The second is that there be \textit{overlapping} subgroups that satisfy the definition, such as \tias{There is no example in the example figure? I was thinking of max/min, but it is over the entire vector always...}.
+In this case we chose to omit those subgroups that are fully contained within a larger subgroup since this can lead to over-fitting.
 
 \paragraph{Constraints}
+The constraints that are currently supported in our system are shown in Table~\ref{table:constraints}. All these constraints are available in popular spreadsheet software, except the first two constraints (alldifferent and permutation). These two constraints are \textit{structural} constraints, which we added so they can be used in the signature of other constraint templates; they are also popular constraints in constraint satisfaction~\cite{modelseeker}.
+
+%Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
+%These constraints have been selected based on the most-used Excel functions as well as their occurrence in various example spreadsheets we observed.
+
+Note that \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display - diff not present - pruning relation?}
+
+\tias{Not used, should be cut!?:}
+Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?} \tias{Yes, either explain in detail or cut}
 
 \begin{table*}
-\medskip
-Constraint templates marked with $*$ are \textit{structural}, they are discovered by our algorithm, however, they cannot be readily used in spreadsheet software.
-The templates marked with $\dagger$ are aggregate constraint templates, the table shows the version for sum but the implementation also supports max, min, average, product and count.
-Only bold subgroups may contain more than one vector.
-\medskip
-
+\caption{Overview of constraint templates implemented in our system, which covers the most popular spreadsheet constraints we encountered. The templates marked with $\dagger$ are aggregate constraint templates, the table shows the version for sum but the implementation also supports max, min, average, product and count. Subgroups in normal font have to be vectors, while subgroups in bold may contain more than one vector.\label{table:constraints}}
   {\centering
   \begin{tabularx}{\textwidth}{l X X}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ \hline \hline
-    $\ecalldiff{\sg_x}^*$
+    $\ecalldiff{\sg_x}$
       & $\discrete(\sg_x)$
       & All values in $\sg_x$ are different: $\sg_x[i] \neq \sg_x[j]$ if $i \neq j$
       \\ \hline
     %X = Y & & \\
-    $\ecperm{\sg_x}^*$
+    $\ecperm{\sg_x}$
       & $\numeric(\sg_{x})$, $\ecalldiff{\sg_{x}}$
       & The values in $\sg_{x}$ are a permutation of the numbers $1$ through $\plength(\sg_{x})$.
       \\ \hline
@@ -605,24 +675,12 @@ Only bold subgroups may contain more than one vector.
 
 
   \end{tabularx}}
-  \caption{
-An overview of the different constraint templates that we have implemented.
-Most of the constraint correspond directly to spreadsheet functions and have been selected based on the most popular constraints in Excel and their occurence in spreadsheets that we have collected.
-  \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display - diff not present - pruning relation?} 
-  }
-    % \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display} \sergey{1) should be readable alone without lookin in the text of the paper 2) that's the constraints we found popular according the spreadsheets in the web 3) that's what is actually implemented in the system 4) corresponds to the actual Excel functions}}
-
-  \label{table:constraints}
 \end{table*}
 
-Table~\ref{table:constraints} shows all constraint templates currently supported by our implementation.
-Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
-These constraints have been selected based on the most-used Excel functions as well as their occurrence in various example spreadsheets we observed.
+Extending the system with a new constraint template amounts to \tias{TODO: samuel, explain how to define syntax; signature-for-groupgen; signature-for-def; definition}
 
-Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?} \tias{Yes, either explain in detail or cut}
-
-\paragraph{Application specific system extension}
-\sergey{Explain here, how the system can be extended with a new constraints like vr = floor(v), float(v), int(vr), len(v)=len(vr), v,vr are single vectors}
+\sergey{under question now, might worth deleting} \\
+\sergey{example new template: vr = floor(v), float(v), int(vr), len(v)=len(vr), v,vr are single vectors?}
 
 \begin{equation}
   \forall i{:}~ v_r[i] \leq v[i] < v_r[i] + 0.5
@@ -682,38 +740,6 @@ All experiments were run on a Macbook Pro, Intel Core i7 2.3 GHz with 16GB RAM.
 Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
 This example combines several smaller examples that were used in an exercise session to teach Excel into one spreadsheet.
 Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
-
-\begin{figure}
-  {\small
-    \begin{align*}
-      & SERIES(\range{T_{1}}{\rangeall}{1}) \\
-%
-      & \ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}} \\
-%
-      & \ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
-%
-      & \ecsumc{\range{T_{6}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
-%
-      & \ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
-%
-      & \ecaggc{AVERAGE}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
-%
-      & \ecaggc{MAX}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
-%
-      & \ecaggc{MIN}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
-%
-      & \ecaggif{SUM}{\range{T_{1}}{\rangeall}{10}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
-%
-      & \ecaggif{MAX}{\range{T_{1}}{\rangeall}{11}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
-%
-      & \eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}} \\
-%
-      & \range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
-    \end{align*}
-  }
-  \caption{Constraints that are satisfied in the case study (Figure~\ref{fig:main_example}) and expected to be found by our implementation. Functional constraint are omitted.}
-  \label{fig:sol_example}
-\end{figure}
 
 \subsubsection{Results}
 Our current implementation takes a few seconds to find 18 constraints, including all of the 12 solutions described in Figure~\ref{fig:sol_example}.
@@ -783,6 +809,7 @@ For conditional aggregates the number of candidate primary keys (all-different) 
   \caption{Overview evaluation on essential constraints of the collected Spreadsheet dataset}
 \end{table}
 \samuel{Expand summary}
+\sergey{would it make sense to specify the size of a spreadsheet in the number of non-zero cells?}
 
 \paragraph{Dependencies}
 In order for the algorithm to run efficiently it is crucial to use dependencies and find constraint incrementally whenever possible.
