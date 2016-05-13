@@ -178,6 +178,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 As we focus on spreadsheet data, we first introduce the general concepts of cells, group and constraint templates, using the (multi-table) sheet in Figure~\ref{fig:main_example} as running example.
 
 \subsection{Cells, vectors and groups}
+\tias{perhaps we should not introduce cells, we reason at the level of vectors!}
 A spreadsheet may conceptually consist of multiple tables, such as in Figure~\ref{fig:main_example}. We will describe a method of extracting tables from a big spreadsheet in Section~\ref{todo}, however this is not the core of our learning method. Our formalization reasons over tables directly.
 
 Formally, a table is an $n \times m$ matrix. Each entry is called a \textit{cell}.
@@ -244,6 +245,7 @@ In terms of logical and relational learning \cite{luc_book}, such a \CSignature 
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
 In logical and relational learning this is known as the background knowledge, which provides the definition of the predicate.
 \end{itemize}
+\tias{Requested by Luc: formulate signature and definition as formula?}
 
 \paragraph{Example}
 Several example constraints are illustrated in Table 1.  For example, the constraint template \textit{rank} has
@@ -254,19 +256,15 @@ Several example constraints are illustrated in Table 1.  For example, the constr
 % is satisfied in the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ satisfies the constraint iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
 \end{itemize}
 
-When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
-From a FOL perspective, the name of the constraint ($RANK$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
-This also holds in our setting: when we write
-      $\ecrank{\range{T}{\rangeall}{8}}{\range{T}{\rangeall}{7}}$,
-we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table $T$ of the right dimensions.
-So, $T$ is viewed as table variable here, with the effect that  ${\range{T}{\rangeall}{8}}$ is a group variable.
+When looking into constraints like $\ecrank{B}{A}$, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
+From a FOL perspective, the name of the constraint ($RANK$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as concrete values.
 
-\tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...},
-Alternatively, and perhaps more naturally, we can interpret the argument as the value it takes in a particular table $T$ such as $T_1$ in Figure 1, that is,
-${\range{T_1}{\rangeall}{8}} =  [1,2,3,4]$.
-Then we can also talk about constraints being satisfied. Basically, a constraint $c(A_1, ..., A_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only
-if the constraint holds on the values that the $A_i$ take in the set of tables ${\cal T}$. \tias{I find this confusing: a group as we defined it is defined on one table, not on multiple tables. we should separate the table variable from the 'range' variables then...}
-%Figure 3 provides a list of constraints that are satisfied by the tables in Figure 1.
+This also holds in our setting, where an instantiation of a variable corresponds to a concrete set of vectors (a subgroup). For example for $\ecrank{B}{A}$ and the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $B$ is the $8$th vector in $T_1$: $B = \range{T_1}{\rangeall}{8} = \{[2,1,3,4]\}$ and the value of $A$ is the $7$th vector: $A = \range{T_1}{\rangeall}{7} = \{[1514, 1551, 691, 392]\}$.
+\tias{not OK to use set because of column-wise sum? we must properly define it then...}
+
+With this interpretation, we can speak about the signature and definition of a constraint template being satisfied. We say that a signature (definition) of a constraint template with $n$ arguments is satisfied by an assignment $(A_1, ..., A_n)$ if $Sig_c(A_1, ..., A_n)$ (respectively $Def_c(A_1, ..., A_n)$) is satisfied. Likewise, an assignment $(A_1, ..., A_n)$ satisfies a constraint template $s$ iff $|(A_1, ..., A_n)| = n_s \wedge Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$.
+
+\tias{Luc will probably prefer: $c(A_1, ..., A_n) :- Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$ where '$c$' is abused to be both the constraint name and the template}.
 
 
 %\sergey{moved from the formalization BEGIN}
