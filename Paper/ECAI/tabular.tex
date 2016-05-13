@@ -808,6 +808,15 @@ Unfortunately, this assumption is sometimes too strong, when users are intereste
 In this section, we illustrate how various motivating applications could be realized using our system.
 
 \subsection{Autocompletion}
+\begin{figure}[thb]
+  \begin{center}
+    \includegraphics[width=0.33\textwidth]{figures/autocompletion_example.png}
+  \end{center}
+  \caption{\sergey{Samuel, Tias have a look at it, should be corrected and extended, like with groups indications and formulas?}}
+  \label{fig:autocompletion_example}
+\end{figure}
+
+
 Autocompletion can be seen as using knowledge derived from data at time~$t_0$ and new input data at time~$t_1 > t_0$ to predict data that the user has not yet written.
 Therefore, constraints are learned at time~$t_0$ and combined with data from a new row~$i$ (column~$j$) that the user has added to a table~$T$ by time~$t_1$.
 Constraints that do not conflict with the added data are considered \textit{viable}.
@@ -815,6 +824,10 @@ Viable constraints that have enough input data to compute the result for a blank
 \textit{Active} constraints can be used to autocomplete blank cells such that the user does not have to fill in the values manually.
 Once the user has stopped editing the new row~$i$ (column~$j$), the table~$T$ is updated to include~$i$ ($j$) and constraints are learned once again.
 
+Let us illustrate this on one of the spreadsheets from the gathered dataset. In Figure \ref{fig:autocompletion_example}, \sergey{to be finished}
+
+
+\subsection{Error detection}
 \begin{figure*}[thb]
   \begin{center}
     \includegraphics[width=0.85\textwidth]{figures/fbi_figure_highlighted.png}
@@ -823,7 +836,7 @@ Once the user has stopped editing the new row~$i$ (column~$j$), the table~$T$ is
   \label{fig:fbi}
 \end{figure*}
 
-\subsection{Error detection}
+
 We consider two cases of error detection.
 The first setting is the \textit{online} detection of errors which is similar to the autocompletion setting.
 However, instead of considering viable constraints, we look at \textit{conflict} constraints, i.e. constraints that were learned at time~$t_0$ but do not agree with the newly added data at time~$t_1$.
