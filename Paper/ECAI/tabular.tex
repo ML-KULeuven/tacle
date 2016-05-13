@@ -14,6 +14,8 @@
 \usepackage{framed}
 \usepackage{amsmath}
 \usepackage{tabularx}
+\usepackage{subcaption}
+
 
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
@@ -165,14 +167,50 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 % \end{itemize}
 %}
 
-\begin{figure*}[tbh]
+\begin{figure*}[thb]
+
+  \begin{subfigure}{.70\textwidth}
   \begin{center}
-    \includegraphics[width=0.75\textwidth]{figures/Demo.png}
+    \includegraphics[width=1\textwidth]{figures/Demo.png}
   \end{center}
   \vspace{-10pt}
   \caption{Example spreadsheet (black words and numbers only). Blue and green elements are added by us to clarify the relations.}
   \label{fig:main_example}
+\end{subfigure}
+\hfill
+\begin{subfigure}{.30\textwidth}
+  {\small
+    \begin{align*}
+      &~\ecseries{\range{T_{1}}{\rangeall}{1}} \\
+%
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}} \\
+%
+      &~\ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      &~\ecsumc{\range{T_{6}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+%
+      &~\ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+%
+      &~\ecaggc{AVERAGE}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      &~\ecaggc{MAX}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      &~\ecaggc{MIN}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      &~\ecaggif{SUM}{\range{T_{1}}{\rangeall}{10}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
+%
+      &~\ecaggif{MAX}{\range{T_{1}}{\rangeall}{11}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
+%
+      &~\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}} \\
+%
+      &~\range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
+    \end{align*}}
+  \vspace{-10pt}
+  \caption{Constraints that are satisfied in the case study (Figure on the left) and expected to be found by our implementation. Functional constraint are omitted.}
+  \label{fig:sol_example}
+\end{subfigure}
 \end{figure*}
+
 
 \section{Formalization}\label{sec:formalization}
 As we focus on spreadsheet data, we first introduce the general concepts of cells, group and constraint templates, using the (multi-table) sheet in Figure~\ref{fig:main_example} as running example.
@@ -296,7 +334,7 @@ We define the {\bf Tabular Constraint Learning Problem} as follows:
 An example solution for the type-consistent groups of the tables in Figure~\ref{fig:main_example} and {\template}'s in Table~\ref{table:constraints} is shown in Figure~\ref{fig:sol_example}.
 
 
-Depending on the application, a solution to the tabular constraint learning problem may contain \textit{redundant} constraints, cf. \cite{luc_book}. This is because constraints may be logically equivalent or may be implied by other constraints.
+Depending on the application, a solution to the tabular constraint learning problem may contain \textit{redundant} constraints, for details we refer to relational learning literature \cite{luc_book}. This is because constraints may be logically equivalent or may be implied by other constraints.
 
 More formally, a constraint $c_1(G_1, ... G_n)$ \textit{implies} another constraint~$c_2(G'_1, ..., G'_m)$ whenever
 the  following statement holds: $$\forall G_i, G'_j : c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m).$$
@@ -313,7 +351,7 @@ $$\ecperm{G} \rightarrow \ecalldiff{G}$$
 (it can be seen in Table~\ref{table:constraints} that both constraints only hold if $G$ is a vector).
 In this case the arguments are identical in both constraints.
 Given that the problem is to find the set of {\em all} constraints, and that the more general constraint is entailed
-by the more specific one, the $ALLDDIFFERENT(G)$ constraint will be {\em redundant}.
+by the more specific one, the $\ecdiff{G}$ constraint will be {\em redundant}.
 So, for most applications, it will be sufficient to output only the most specific one.
 
 A more involved example is
@@ -689,38 +727,6 @@ All experiments were run on a Macbook Pro, Intel Core i7 2.3 GHz with 16GB RAM.
 Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
 This example combines several smaller examples that were used in an exercise session to teach Excel into one spreadsheet.
 Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
-
-\begin{figure}
-  {\small
-    \begin{align*}
-      & SERIES(\range{T_{1}}{\rangeall}{1}) \\
-%
-      & \ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}} \\
-%
-      & \ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
-%
-      & \ecsumc{\range{T_{6}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
-%
-      & \ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
-%
-      & \ecaggc{AVERAGE}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
-%
-      & \ecaggc{MAX}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
-%
-      & \ecaggc{MIN}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
-%
-      & \ecaggif{SUM}{\range{T_{1}}{\rangeall}{10}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
-%
-      & \ecaggif{MAX}{\range{T_{1}}{\rangeall}{11}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
-%
-      & \eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}} \\
-%
-      & \range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
-    \end{align*}
-  }
-  \caption{Constraints that are satisfied in the case study (Figure~\ref{fig:main_example}) and expected to be found by our implementation. Functional constraint are omitted.}
-  \label{fig:sol_example}
-\end{figure}
 
 \subsubsection{Results}
 Our current implementation takes a few seconds to find 18 constraints, including all of the 12 solutions described in Figure~\ref{fig:sol_example}.
