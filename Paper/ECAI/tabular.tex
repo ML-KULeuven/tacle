@@ -417,11 +417,21 @@ Many spreadsheets contain headers that provide hints at where the table(s) in th
 %\tias{0. preprocess: currencies and precentual to numeric, 1. tables from spreadsheets, 2. groups from tables. Ext: could be done interactively.}
 Fully automatic table and header detection is not the core of our work. We hence built a visual tool that uses a simple method to detect tables in the data and allows a user to correct these.
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=1\linewidth]{figures/tabletool.png}
+  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_1$ is implied by $s_2$ because the \CSignature of~$s_2$ depends on $s_1$ to hold on a specific subset of $s_2$ its groups.
+    The graph is extracted from the Signature column in Table \ref{table:constraints}.
+  }
+  \label{fig:learning_order}
+\end{figure}
+
+\samuel{This does not fully correspond with the real tool, the real tool does not allow detected tables to be corrected: Either use detection tool or use visual tool to input tables manually}
 The way the table detection in the tool works is as follows:
 First, we preprocess the spreadsheets so that currency values are transformed into their integer or float value and percentual data is transformed into the corresponding floating point representation (e.g. $85\%$ as $0.85$).
 Next, every row in the spreadsheet is partitioned into blocks of columns that are separate by at least one $None$ value. Then, the blocks in each row are greedily merged to obtain rectangles. Finally headers are removed by checking whether the first row or column is all textual while the next row or column is not; in that case the assumed header is removed.
 
-It should be clear this simple method only works if all tables are clearly separated by $None$ values and that headers of fully textual tables are not detected, among other things. Hence, in the visual tool the user can correct the detected tables if needed. \tias{I think it would be good if we could show a screenshot of this tool...}
+It should be clear this simple method only works if all tables are clearly separated by $None$ values and that headers of fully textual tables are not detected, among other things. Hence, in the visual tool the user can correct the detected tables if needed. \samuel{\tias{I think it would be good if we could show a screenshot of this tool...} Added screenshot, needs to be referred to}
 
 Row-oriented and column-oriented groups are then extracted from each table by partitioning the rows (columns) into type-consistent parts.
 
