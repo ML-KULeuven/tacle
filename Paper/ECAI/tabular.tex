@@ -424,6 +424,7 @@ Constraint templates that have no dependencies are omitted.
   \centering
   \includegraphics[width=0.8\linewidth]{figures/constraint_dependency.png}
   \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_1$ is implied by $s_2$ because the \CSignature of~$s_2$ depends on $s_1$ to hold on a specific subset of $s_2$ its groups.
+    The graph is extracted from the Signature column in Table \ref{table:constraints}.
   }
   \label{fig:learning_order}
 \end{figure}
@@ -474,6 +475,7 @@ There are three \textit{variables} $X, Y, Z$ corresponding to group $G'$, $H'$ a
 &\plength(Y) = \plength(Z) \land \plength(Y) \geq 2
 \end{align*}
 \tias{Sumproduct is a rather peculiar constraint for spreadsheets... perhaps switch to one with a dependency, e.g. look-up?}
+\sergey{ok, we need to see if look-up would fit here}
 \\\\
 
 
@@ -521,11 +523,8 @@ Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc 
 All the constraints mentioned in the paper can be run purely using the internal Python engine without any external software.
 Future versions of the system will provide user interfaces to some of these constraint languages (e.g. ASP and Minizinc) to allow users to specify solving procedures for new constraint templates in a declarative way.
 
-\paragraph{Parallelization}
-\tias{Do we do this? If not, cut...}
-The two for loops in the algorithm can be easily parallelized. Each generated assignment can be checked independently. Templates may not be independent as expressed by the DAG \dependencies. However, each independent component of the DAG (including one component per template not in the DAG) can be verified independently. 
-
 \paragraph{Redundancy}
+\sergey{Samuel, probably it is better if you look here}
 Mention 'largest overlapping subgroup' here?
 
 \paragraph{Constraints}
@@ -729,7 +728,7 @@ This ratio is, as we will show, rather high compared to other spreadsheets.
 However, this example contains many short vectors which increases the chance for constraints to be true by accident.
 
 \subsection{Benchmark}
-There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel at an affiliated University, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{\samuel{link to links.txt}}.
+There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel at an affiliated University, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{(attached to to the submitted paperthe submitted paper)}.
 The case study is also included.
 
 All spreadsheets have been converted to CSV with no manual intervention unless noted.
@@ -781,7 +780,7 @@ For conditional aggregates the number of candidate primary keys (all-different) 
     \textbf{Redundant} & $23.14\%~(28)$ & $8.33\%~(0.88)$ \\
     \textbf{Speed (s)} & ${\runtotal}s \pm {\runtotalstd}s$ & ${\runfile}s \pm {\runfilestd}s$
   \end{tabular}
-  \caption{Overview evaluation on essential constraints}
+  \caption{Overview evaluation on essential constraints of the collected Spreadsheet dataset}
 \end{table}
 \samuel{Expand summary}
 
@@ -792,7 +791,7 @@ For example, using foreign keys as a base constraint to find conditional aggrega
 Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys that are present in the data.
 
 \section{Applications}\label{sec:applications}
-In this section we will illustrate how various motivating applications could be realized using our system.
+In this section, we illustrate how various motivating applications could be realized using our system.
 
 \subsection{Autocompletion}
 Autocompletion can be seen as using knowledge derived from data at time~$t_0$ and new input data at time~$t_1 > t_0$ to predict data that the user has not yet written.
@@ -815,40 +814,18 @@ We consider two cases of error detection.
 The first setting is the \textit{online} detection of errors which is similar to the autocompletion setting.
 However, instead of considering viable constraints, we look at \textit{conflict} constraints, i.e. constraints that were learned at time~$t_0$ but do not agree with the newly added data at time~$t_1$.
 Such conflict constraints can indicate errors in the input.
-Since conflict constraints could also be accidental constraints that are correctly invalidated by the new data, the size of the data at timet~$t_0$ should be large enough.
+Since conflict constraints could also be accidental constraints that are correctly invalidated by the new data, the size of the data at time ~$t_0$ should be large enough.
 
 The second type of error detection is \textit{offline} and attempts to detect errors in a spreadsheet.
 Consider, for example, a use case concerning crime statistics provided by the FBI.
 An extract of the spreadsheet is depicted in Figure~\ref{fig:fbi}.
 When run on this sheet, our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
 A possible approach to detect such missing or wrong values is to look at a sample of the table that excludes the erroneous row and compare the constraints learned on this sample with the constraints learned by adding the row containing the mistake.
-The sample needs to large enough such that we have enough confidence that the constraints are correct.
+The sample needs to large enough such that we have enough confidence that the constraints are correct. For example, in Figure \ref{fig:fbi} all but one row satisfy the constraint, which is a strong indication that there is a constraint violation.
 If we define the sample to be our data at time~$t_0$ and the added row to be the additional input at~$t_1$, this task can be formulated as online error detection and dealt with in the same way.
-Of course, generating large enough samples and rows (columns) to be added can be done in multiple ways.
-In the limited case of detecting single errors one can leave out every row (column), consider the remaining data to be the sample and
-and the left out row (column) to be new input.
-\samuel{Should this be more specific?}
-
-Error detection could be integrated more closely with the algorithm, reducing the computational complexity by looking for errors during the constraint learning phase.
-This would, however, make the modeling constraints (considerably) more difficult.
-
-\samuel{FBI: work out error detection algorithm}
-
-(\sergey{I think there should be three things: key example evaluated, benchmark of 30 spreadsheets and maybe the FBI example, how we can detect interesting dependencies and correct potential mistakes})
-
-\samuel{discussion: what would be a language to extend the system, what would be the user interface? can it be used by community?  can it be complitely automated? interaction with user and highlighing?
-}
-
-{\bfseries
-  Experimental questions
-}
-
-\begin{itemize}
-  \item  How accurate are we? (Accuracy / recall)
-  \item  How fast are we and which factors affect the runtime (how)?
-  \item  How general is our approach, what limitations are there?
-\end{itemize}
-
+%Of course, generating large enough samples and rows (columns) to be added can be done in multiple ways.
+%In the limited case of detecting single errors one can leave out every row (column), consider the remaining data to be the sample and
+%and the left out row (column) to be new input.
 
 \section{Related Work}\label{sec:related_work}
 \sergey{key bullet points for Luc and possibly Samuel and me to make related work section}
