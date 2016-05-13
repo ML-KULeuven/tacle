@@ -202,7 +202,7 @@ We consider various sets of cells with the following notation:
   %The \textit{length} of a row (column) group $G$, written as \textit{length(G)}, is the number of its columns (rows); We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
 
   \item
-  A \textbf{subgroup} $G'$ of a group $G$ is simply a projection of $G$ onto a consecutive subset its vectors. % is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$. %It defines what it means for a constraint to be well-formed
+  A \textbf{subgroup} $G'$ of a group $G$ is simply a projection of $G$ onto a consecutive subset of its vectors. % is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$. %It defines what it means for a constraint to be well-formed
 %We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must contain only one vector, we write $g \in G$.
 % A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
 \end{itemize}
@@ -254,17 +254,16 @@ Several example constraints are illustrated in Table 1.  For example, the constr
 \end{itemize}
 
 When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
-From a FOL perspective, the name of the constraint ($RANK$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
+From a FOL perspective, the name of the constraint ($\mathit{RANK}$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
 This also holds in our setting: when we write
       $\ecrank{\range{T}{\rangeall}{8}}{\range{T}{\rangeall}{7}}$,
-we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table $T$ of the right dimensions.
+we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table $T$ (provided~$T$ has an 8th column).
 So, $T$ is viewed as table variable here, with the effect that  ${\range{T}{\rangeall}{8}}$ is a group variable.
 
-\tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...},
+\samuel{\tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...} True, I changed the wording a bit but personally I would leave it at this now, you can always say you look at $T[:,i:j]$ iff $cols(T) >= max(i,j)$}.
 Alternatively, and perhaps more naturally, we can interpret the argument as the value it takes in a particular table $T$ such as $T_1$ in Figure 1, that is,
-${\range{T_1}{\rangeall}{8}} =  [1,2,3,4]$.
-Then we can also talk about constraints being satisfied. Basically, a constraint $c(A_1, ..., A_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only
-if the constraint holds on the values that the $A_i$ take in the set of tables ${\cal T}$. \tias{I find this confusing: a group as we defined it is defined on one table, not on multiple tables. we should separate the table variable from the 'range' variables then...}
+${\range{T_1}{\rangeall}{8}} =  [2,1,3,4]$.
+Then we can also talk about constraints being satisfied. Basically, a constraint $c(A_1, ..., A_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only if the constraint holds on the values that the $A_i$ take in the set of tables ${\cal T}$. \samuel{\tias{I find this confusing: a group as we defined it is defined on one table, not on multiple tables. we should separate the table variable from the 'range' variables then...} waiting for Luc's opinion here}
 %Figure 3 provides a list of constraints that are satisfied by the tables in Figure 1.
 
 
@@ -323,13 +322,14 @@ that a look-up constraint implies a foreign-key constraint. In the look-up const
 Two constraints are \textit{equivalent} if they imply one another. %More formally, $\forall G'_1, ..., G'_n$ s.t. $\{G''_1, ..., G''_n\} = \{G'_1, ..., G'_n\},\, c_1(G'_1, ... G'_n) \leftrightarrow c_2(G''_1, ..., G''_n)$.
 An example within the same \template is for the sum over vectors constraint: $G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. A related example over multiple constraints is $G_1 = +(G_2, G_3) \leftrightarrow G_1 = \textit{SUM}(H)$ with $\textit{size}(H) = 2$ and $G_2 \subset H, G_3 \subset H$.
 \luc{Do we really need this, or can we write it in a real equivalence --- conjunctive formula?}
+\samuel{Tias, Sergey what do you think? Also I find this notation confusing: +(G2, G3), why not just use G1 = G2 + G3?}
 
 A good way to deal with equivalent constraints is to work with a \textit{canonical} constraint among the equivalent ones. For example, for equivalent constraints of the same \template, this could be the constraint where the groups are ordered by table, orientation and row/column identifier. For equivalent constraints of different templates one could define heuristics such as that some templates are preferred over others, e.g. binary sum over n-ary sum, sum over difference, etc.
 
 Because dealing with redundancy is often application-dependent, we explain in the next section our generic method for finding all constraints.
 
-\tias{I am not defining a new problem for 'most specific canonical tabular constraint learning' because we loosely showed how implications and equivalences would be expressed, but not how to express canonicity and we did not claim that most specific is always best.}
-\tias{Note also that our method finds ALL constraints; it uses specificity to faster traverse the search space, but the resulting set of constraints found would be the same, whether or not using the specificity (see 4.2.1).}
+%\tias{I am not defining a new problem for 'most specific canonical tabular constraint learning' because we loosely showed how implications and equivalences would be expressed, but not how to express canonicity and we did not claim that most specific is always best.}
+%\tias{Note also that our method finds ALL constraints; it uses specificity to faster traverse the search space, but the resulting set of constraints found would be the same, whether or not using the specificity (see 4.2.1).}
 
 %Let us introduce the version of tabular constraint learning by modifying Definition \ref{def:problem_statement} that takes into account the specificity relation between constraint templates.
 %
@@ -371,7 +371,7 @@ Next, every row in the spreadsheet is partitioned into blocks of columns that ar
 
 It should be clear this simple method only works if all tables are clearly separated by $None$ values and that headers of fully textual tables are not detected, among other things. Hence, in the visual tool the user can correct the detected tables if needed. \tias{I think it would be good if we could show a screenshot of this tool...}
 
-From each table, row-oriented and column-oriented groups are then extracted by partitioning the rows (columns) into type-consistent parts. This step can also be verified by a user in the visual tool.
+Row-oriented and column-oriented groups are then extracted from each table by partitioning the rows (columns) into type-consistent parts.
 
 From here on we will assume that groups and tables are given.
 
