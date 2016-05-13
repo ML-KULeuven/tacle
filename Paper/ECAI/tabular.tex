@@ -452,10 +452,10 @@ The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}; it cons
     \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- \template's, \dependencies -- dependency graph
     \State \textbf{Output:} $C$ -- learned constraints
     \State $C \gets \emptyset$ %\Comment{The set of constraints}
-  \ForAll{$t \in \constrainttorder(\constraints,\dependencies)$}
-  \State $n \gets$ number of arguments of constraint $c_t$
-    \ForAll{$(G_1, \dots, G_n) \in \generategroups(t, \groups, C)$}
-      \State $C \gets C \cup \findassignment(t, (G_1, \dots, G_n))$
+  \ForAll{$s \in \constrainttorder(\constraints,\dependencies)$}
+  \State $n \gets$ number of arguments of template $s$
+    \ForAll{$(G_1, \dots, G_n) \in \generategroups(s, \groups, C)$}
+      \State $C \gets C \cup \findassignment(s, (G_1, \dots, G_n))$
     \EndFor
   \EndFor\\
 \Return $C$
