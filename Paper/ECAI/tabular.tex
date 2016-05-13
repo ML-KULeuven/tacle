@@ -482,7 +482,7 @@ There are three \textit{variables} $X, Y, Z$ corresponding to group $G'$, $H'$ a
 
 The $\generategroups(\textit{t,{\cal G},C})$ method will construct this CSP and query a solver for all satisfying solutions. This is the required result set.
 
-\subsubsection{Constraints over satisfying subgroups}
+\subsubsection{Constraints over satisfying subgroups} \label{sec:algo:subgr}
 In the previous step, $\generategroups(\textit{t,{\cal G},C})$ generates tuples of candidate groups $(G_1, ..., G_n)$ for the constraint template $t$ with $n$ arguments. In this step, $\findassignment(t, (G_1, \dots, G_n))$, the goal is to enumerate the subgroups $(G'_1, ..., G'_n), \forall i, G'_i \subseteq G_i$ that satisfy both the signature and the definition of the constraint template $t$. The main difference with the previous step is that the group generation reasons about the \textit{properties} of the groups (type, size, length, ...), while this step reasons about the actual \textit{content} of the vectors in the groups, that is, the data.
 
 \paragraph{Example}
@@ -528,46 +528,42 @@ Method $FindSubgroups(Assignments)$\\
 $Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$ \tias{does not enforce size of subgroups (e.g. vectors)?}
 
 
-\subsection{Implementation note}
+\subsection{Implementation}
+We provide some more details of our implementation of the above algorithmic approach, to ease reproducibility.
 
 \paragraph{Constraint solvers}
-\tias{stand-alone (with text-based modeling language) versus embedded.}
-For each \template, both \generategroups and \findassignment are can be seen as separate constraint satisfaction problems.
-Furthermore, declarative languages such as, for example, ASP \cite{whaisasp} and Minizinc \cite{minizinc} provide primitives that make modeling transparent and generic.
+Generic constraint solving technology can be used for the candidate group generation as well as for enumerating the satisfying subgroups. Constraint solvers can be categorized as being stand-alone solvers, meaning that they have a text-based modeling language in which the CSP must be formulated, and \textit{embedded}, meaning that they have a programmatic API to formulate the CSP.
 
-Our system internally supports ASP (using Clingo 4.5.4 \cite{clingo}), Minizinc (Gecode-backend 2.0.2 \cite{minizinc}) and uses a native Python CSP solver \cite{python_constraint} for \generategroups.
-All the constraints mentioned in the paper can be run purely using the internal Python engine without any external software.
-Future versions of the system will provide user interfaces to some of these constraint languages (e.g. ASP and Minizinc) to allow users to specify solving procedures for new constraint templates in a declarative way.
+Our implementation supports the ASP \cite{whaisasp} formalism, using the stand-alone Clingo 4.5.4 \cite{clingo} solver, the stand-alone Constraint Programming language MiniZinc \cite{minizinc} with the Gecode 4.4.0 solver which supports floats, as well as an embedded Python-based CP solver \cite{python_constraint}. The constraint signature that must be satisfied to generate the groups can be specified in each of the tree formalisms, to ease prototyping and extendability towards new constraints. The embedded solver is fastest as it does not have the overhead of file-writing and calling an external program, and is used in the experiments below.
 
 \paragraph{Redundancy}
-\sergey{Samuel, probably it is better if you look here}
-Mention 'largest overlapping subgroup' here?
+There are only types of redundancy that we eliminate during search. The first is the removal of symmetric attribute assignments as explained in Section~\ref{sec:algo:subgr}.
 
- Also, there may be overlapping subgroups that satisfy the definition, such as \tias{There is no example in the example figure? I was thinking of max/min, but it is over the entire vector always...}.
-In this case we choose to omit those subgroups that are fully contained within a larger subgroup since this can lead to over-fitting.
-If the returned subsets are too large and accidentally include unrelated vectors the user can split such a group.
-
-For every \template~$t$ an implementation (declarative or imperative) needs to be provided that, given an assignment, finds valid subgroups.
-
+The second is that there be \textit{overlapping} subgroups that satisfy the definition, such as \tias{There is no example in the example figure? I was thinking of max/min, but it is over the entire vector always...}.
+In this case we chose to omit those subgroups that are fully contained within a larger subgroup since this can lead to over-fitting.
 
 \paragraph{Constraints}
+The constraints that are currently supported in our system are shown in Table~\ref{table:constraints}. All these constraints are available in popular spreadsheet software, except the first two constraints (alldifferent and permutation). These two constraints are \textit{structural} constraints, which we added so they can be used in the signature of other constraint templates; they are also popular constraints in constraint satisfaction~\cite{modelseeker}.
+
+%Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
+%These constraints have been selected based on the most-used Excel functions as well as their occurrence in various example spreadsheets we observed.
+
+Note that \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display - diff not present - pruning relation?} 
+
+\tias{Not used, should be cut!?:}
+Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?} \tias{Yes, either explain in detail or cut}
 
 \begin{table*}
-\medskip
-Constraint templates marked with $*$ are \textit{structural}, they are discovered by our algorithm, however, they cannot be readily used in spreadsheet software.
-The templates marked with $\dagger$ are aggregate constraint templates, the table shows the version for sum but the implementation also supports max, min, average, product and count.
-Only bold subgroups may contain more than one vector.
-\medskip
-
+\caption{Overview of constraint templates implemented in our system, which covers the most popular spreadsheet constraints we encountered. The templates marked with $\dagger$ are aggregate constraint templates, the table shows the version for sum but the implementation also supports max, min, average, product and count. Subgroups in normal font have to be vectors, while subgroups in bold may contain more than one vector.\label{table:constraints}}
   {\centering
   \begin{tabularx}{\textwidth}{l X X}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ \hline \hline
-    $\ecalldiff{\sg_x}^*$
+    $\ecalldiff{\sg_x}$
       & $\discrete(\sg_x)$
       & All values in $\sg_x$ are different: $\sg_x[i] \neq \sg_x[j]$ if $i \neq j$
       \\ \hline
     %X = Y & & \\
-    $\ecperm{\sg_x}^*$
+    $\ecperm{\sg_x}$
       & $\numeric(\sg_{x})$, $\ecalldiff{\sg_{x}}$
       & The values in $\sg_{x}$ are a permutation of the numbers $1$ through $\plength(\sg_{x})$.
       \\ \hline
@@ -628,24 +624,11 @@ Only bold subgroups may contain more than one vector.
 
 
   \end{tabularx}}
-  \caption{
-An overview of the different constraint templates that we have implemented.
-Most of the constraint correspond directly to spreadsheet functions and have been selected based on the most popular constraints in Excel and their occurence in spreadsheets that we have collected.
-  \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display - diff not present - pruning relation?} 
-  }
-    % \sergey{Here a detailed explanation on what is going on, what is essential, what is not? etc should be self-explanatory}\samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display} \sergey{1) should be readable alone without lookin in the text of the paper 2) that's the constraints we found popular according the spreadsheets in the web 3) that's what is actually implemented in the system 4) corresponds to the actual Excel functions}}
-
-  \label{table:constraints}
 \end{table*}
 
-Table~\ref{table:constraints} shows all constraint templates currently supported by our implementation.
-Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
-These constraints have been selected based on the most-used Excel functions as well as their occurrence in various example spreadsheets we observed.
+Extending the system with a new constraint template amounts to \tias{TODO: samuel, explain how to define syntax; signature-for-groupgen; signature-for-def; definition}
 
-Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?} \tias{Yes, either explain in detail or cut}
-
-\paragraph{Application specific system extension}
-\sergey{Explain here, how the system can be extended with a new constraints like vr = floor(v), float(v), int(vr), len(v)=len(vr), v,vr are single vectors}
+\sergey{example new template: vr = floor(v), float(v), int(vr), len(v)=len(vr), v,vr are single vectors?}
 
 \begin{equation}
   \forall i{:}~ v_r[i] \leq v[i] < v_r[i] + 0.5
