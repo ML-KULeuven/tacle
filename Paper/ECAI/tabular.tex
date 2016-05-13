@@ -491,7 +491,7 @@ Constraint templates that have no dependencies are omitted.
   \label{fig:learning_order}
 \end{figure}
 
-The $\constrainttorder(\constraints,\dependencies)$ module in our method takes a set of {\template}s and a DAG as input and produces a linear ordering of the templates such that the more general, implied constraint templates (the requirements) are ordered before the templates that depend on them.
+The $\constrainttorder(\constraints,\dependencies)$ module in our method takes a set of {\template}s~(\constraints) and a DAG~(\dependencies) as input and produces a linear ordering of the templates such that the more general, implied constraint templates (the requirements) are ordered before the templates that depend on them.
 
 \paragraph{Example}
 As mentioned before, $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ implies $\ecfkey{G'_1}{H'_1}$ and hence the $LOOKUP$ constraint template depends on $FOREIGNKEY$ in Figure~\ref{fig:learning_order} and will be earlier in the ordering.
