@@ -51,6 +51,8 @@ class Source:
     def _complete(self, assignments, groups, filters):
         result = []
 
+        # TODO type as constraint
+
         def try_assignment():
             problem = Problem()
 
