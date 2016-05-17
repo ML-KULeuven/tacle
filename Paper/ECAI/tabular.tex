@@ -417,7 +417,13 @@ Our proposed methodology contains the following steps:
 
 The core of our method is step 3. In principle, one could use a generate-and-test approach by generating all possible blocks from the superblock and testing each combination of blocks for each of the arguments of the constraints. However, this ... \textit{blows up} ...
 
-Hence, we divide this step into two parts: in the first part, we will reason over entire superblocks by generating all possible combinations of superblocks that...
+Hence, we divide this step into two parts: in the first part, we will not reason over individual blocks, but rather over all possible combinations of superblocks as candidates for the arguments.
+\tias{Example To develop in more detail and clarity:}
+Consider the sum constraints, the row-blocks of T1 are ... and column-blocks are ... instead of considering all possible blocks in each super-block, we reason at level of superblocks, for example block (with ID) can not be in a row-sum and neither can (block with Items sold total, Max items sold) because its size (1 and 2) is smaller than length of blocks (4). The only possible combination of superblocks is (1st Quarter .. Rank) for both arguments.
+
+In the second part, we start from such a superblock combination and generate and test all possible block assignments to arguments. As we only have to consider the blocks contained in each superblock, this is typically much easier. For the above example, \tias{to develop with more clarity} each of the vectors in the block will be considered as candidate for the left-hand side, and one could enumerate all subblocks for the right-hand side and verify for each of the rows in the vector. In practice, this can be optimized further.
+\\\\
+We now describe in more detail how the headerless tables are extracted and how the superblocks are generated from them (step 1 and 2, Section 4.1), how the candidate superassignments are generated (step 3a, Section 4.2) and how the actual assignments are extracted from that (step 3b, Section 4.3). We then describe a number of optimizations that we perform to speed up step 3 and 4 (Section 4.4).
 
 \paragraph{Rest old text}
 
