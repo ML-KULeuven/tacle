@@ -401,6 +401,26 @@ Because dealing with redundancy is often application-dependent, we explain in th
 \newcommand{\tcl}{Tabular Constraint Learning}
 %\newcommand{\ctl}{Condensed Tabular Constraint Learning}
 \section{Approach to Tabular Constraint Learning}\label{sec:approach}
+The aim of our method is to detect constraints between rows and columns of tabular data. Recall that a valid argument assignment for a constraint is an assignment of each argument of the constraint to a block, such that the constraint, that is, its signature and definition, is satisfied.
+\tias{I here use constraint and constraint template interchangeably}
+
+Our proposed methodology contains the following steps:
+\begin{enumerate}
+\item Extract headerless tables from tabular data
+\item Partition the tables into type-consistent contiguous \textit{superblocks}
+\item Generate for each constraint all valid argument assignments:
+\begin{enumerate}
+\item For each constraint, generate all candidate \textit{super-assignments} by selecting compatible superblocks for each argument
+\item For each candidate super-assignment, generate all valid argument assignments from the superblocks.
+\end{enumerate}
+\end{enumerate}
+
+The core of our method is step 3. In principle, one could use a generate-and-test approach by generating all possible blocks from the superblock and testing each combination of blocks for each of the arguments of the constraints. However, this ... \textit{blows up} ...
+
+Hence, we divide this step into two parts: in the first part, we will reason over entire superblocks by generating all possible combinations of superblocks that...
+
+\paragraph{Rest old text}
+
 This section describes our approach to \tcl. The main method takes \textit{groups} and {\template}s as input, and is described in Section~\ref{sec:algo}. We first explain how tables and groups can be extracted from raw spreadsheet data.
 
 \subsection{Table and group detection} \label{sec:make_groups}
