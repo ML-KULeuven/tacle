@@ -176,7 +176,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
     \includegraphics[width=1\textwidth]{figures/Demo.png}
   \end{center}
   \vspace{-10pt}
-  \caption{Example spreadsheet (black words and numbers only). Blue and green elements are added by us to clarify the relations. \tias{TODO: headers not in green boxes}}
+  \caption{Example spreadsheet (black words and numbers only). Green borders indicate headerless tables; the blue elements are added to clarify some constraints and relations. \tias{TODO: headers not in green boxes} \sergey{show blocks? orientation only over blocks, not over tables?}\tias{Use specific constraint names, e.g. 'SUM-row' above Total in T1}}
   \label{fig:main_example}
 \end{subfigure}
 \hfill
@@ -208,64 +208,54 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
       &~\range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
     \end{align*}}
   \vspace{-10pt}
-  \caption{Constraints that are satisfied in the case study (Figure on the left) and expected to be found by our implementation. Functional constraint are omitted.}
+  \caption{Constraints that are satisfied in the case study (Figure on the left) and expected to be found by our implementation. Non-functional constraint are omitted \tias{Add them too}.}
   \label{fig:sol_example}
 \end{subfigure}
 \end{figure*}
 
 
 \section{Formalization}\label{sec:formalization}
-As we focus on spreadsheet data, we first introduce the general concepts of cells, group and constraint templates, using the (multi-table) sheet in Figure~\ref{fig:main_example} as running example.
+Our goal is to automatically discover constraints (functions and relations) between the rows and the columns of tables in a spreadsheet. This is applicable not just to data from spreadsheets, but any data in tabular form, hence the name.
 
-\subsection{Cells, vectors and groups}
-\tias{perhaps we should not introduce cells, we reason at the level of vectors!}
-A spreadsheet may conceptually consist of multiple tables, such as in Figure~\ref{fig:main_example}. We will describe a method of extracting tables from a big spreadsheet in Section~\ref{sec:approach}, however this is not the core of our learning method. Our formalization reasons over tables directly.
+%An example spreadsheet with tables is given in Figure~\ref{fig:main_example}, we will use this as running example throughout the paper.
 
 
-Formally, a table is an $n \times m$ matrix. Each entry is called a \textit{cell}.
-A cell has a {\em type}, which can be numeric or textual. We further distinguish numeric types in subtypes: integer and float. We also consider \textit{None} as a special type when a cell is empty; \textit{None} is a subtype of all other types.
-A set of cells is called \textit{type-consistent} iff all cells in the set are of the same type (\textit{None} is consistent with everything).
-%Certain constraints, such as \textit{rank} or \textit{series}, make use of the numeric subtype by requiring its arguments to be integers.
+\subsection{Terminology}
+Spreadsheets and tabular data may conceptually consist of multiple tables, such as in Figure~\ref{fig:main_example}. Note that a table can contain a header; however, we wish to reason over entire rows and columns of data, and hence we will consider \textbf{headerless tables} only.
 
-We consider various sets of cells with the following notation:
-\begin{itemize}
-  \item {\bf Cell}: We use the notation $T[a,b]$ to refer to a particular cell in the table~$T$ at the row with index~$a$ and the column with index~$b$.
+Formally, a (headerless) table is an $n \times m$ matrix. Each entry is called a \textit{cell}.
+A cell has a {\bf type}, which can be numeric or textual. We further distinguish numeric types in subtypes: integer and float. We also consider \textit{None} as a special type when a cell is empty; \textit{None} is a subtype of all other types.
 
-  \item {\bf Columns and rows}: For a table $T$, we use notation $T[a,{:}]$ to refer to the $a$-th row, and similarly $T[{:},a]$ for the $a$-th column. % to refer to a subrange from $a$ to $b$ we use $T[a{:}b,]$ ($T[,a{:}b]$).
+A row or columns is \textbf{type-consistent} if all cells in that row or column are of the same base type, that is, numeric or textual. We will use notation $T[a,{:}]$ to refer to the $a$-th row of table $T$, and similarly $T[{:},a]$ for the $a$-th column. For example in Figure~\ref{fig:main_example}, $T_1[1,:] = [1,2,3,4]$ and $T_5[:,1] = ['$Diana Coolen$', 5]$. The latter is not type-consistent while the former is.
+We will write \textbf{vector} to refer to a single row or column when its orientation does not matter.
 
-  \item
-  A \textbf{vector} is a type-consistent row or column.
-  If a vector is a row (column), we say that it has a \textit{row} (\textit{column}) orientation. The \textit{length} of a vector is the number of cells in that vector.
+The most important concept is that of a \textbf{block}. A block has three properties: 1) contains only entire rows or entire columns of a single headerless table 2) it is contiguous and 3) it is type-consistent.
+If it contains only rows we say it has \textit{row-orientation}, if only columns, \textit{column-orientation}. The rows or columns have to be contiguous in the original table meaning that they must visually form a block in the table; and each of the rows/columns has to be of the same type.
 
-  \item
-  A \textbf{group} is a projection of a matrix onto a set of consecutive rows or columns. %In this work we only consider consecutive rows and columns.
-  We use the following notation to refer to a row-oriented group with rows ranging from $a$ to $b$: $G = T[a{:}b,:]$, where $a,b$ are natural numbers. Similarly, we have $G = T[{:},a{:}b]$ for a column-oriented group.
-  The vectors in a group have to be type-consistent, consecutive in the original table and of equal length.
-  The \textit{size} of a group is the number of vectors in the group, while the \textit{length} of a group is the length of its vectors. 
-  %The \textit{length} of a row (column) group $G$, written as \textit{length(G)}, is the number of its columns (rows); We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
+Because of these properties, we can use the following notation to refer to blocks: $B = T[\rangeto{a}{b},:]$ for a row-oriented block containing rows $a$ to $b$ in table $T$; and similarly $B = T[{:},\rangeto{a}{b}]$ for a column-oriented block.
+%
+The \textit{size} of a block is the number of vectors in the block, e.g. $b-a+1$. The \textit{length} of a block is the length of its vectors; as all vectors are from the same table, they always have the same length. %We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
 
-  \item
-  A \textbf{subgroup} $G'$ of a group $G$ is simply a projection of $G$ onto a consecutive subset of its vectors. % is a subrange of vectors belonging to a group $G$. If the subgroup $g$ must contain only one vector, we write $g \in G$. %It defines what it means for a constraint to be well-formed
-%We refer to a subgroup of a group $G$ in \groups as $g$. A \textit{subgroup} $g$ is a subrange of vectors in a group $G$. If a subgroup $g$ must contain only one vector, we write $g \in G$.
-% A \textit{subgroup} $G'$ is a subrange of vectors belonging to a group $G$. If the subgroup $\{v\}$ must contain only one vector, we write $v \in G$.
-\end{itemize}
 %For notational convenience, we will refer to vectors in {\rm roman} and to groups in {\bf bold}. {\bf CHECK}
 
-%When we do not want to distinguish between cells, columns, rows, vectors or groups, we shall talk about a {\em set of cells}.
-
 \paragraph{Example}
-Consider Table~1 in Figure~\ref{fig:main_example}, its rows are not type consistent (i.e. they contain both numeric and textual data).
-Ignoring the (all-textual) header, Table~1 can be divided into the following five column-oriented groups:
+Consider headerless Table~1 in Figure~\ref{fig:main_example}, its rows are not type consistent (i.e. they contain both numeric and textual data). The table can be partitioned into the following five column-oriented blocks:
 {\small
 \begin{align*}
-&G_1 = \range{T_1}{\rangeall}{1},
-&G_2 = \range{T_1}{\rangeall}{2},\\
-&G_3 = \range{T_1}{\rangeall}{\rangeto{3}{8}},
-&G_4 = \range{T_1}{\rangeall}{9},\\
-&G_5 = \range{T_1}{\rangeall}{\rangeto{10}{11}}.
+&B_1 = \range{T_1}{\rangeall}{1},
+&B_2 = \range{T_1}{\rangeall}{2},\\
+&B_3 = \range{T_1}{\rangeall}{\rangeto{3}{8}},
+&B_4 = \range{T_1}{\rangeall}{9},\\
+&B_5 = \range{T_1}{\rangeall}{\rangeto{10}{11}}.
 \end{align*}
+\tias{Indicate in figure? see also Sergey's comment in figure}
 }
-An example subgroup is $\range{T_1}{\rangeall}{\rangeto{3}{6}} \subset G_3$, which contains the sales numbers of all employees for the four quarters.
+
+We write that a block $B'$ is \textbf{contained} in a block $B$, $B' \sqsubseteq B$ iff both are valid blocks (single orientation, contiguous, type consistent) and each of the vectors in $B'$ is also in $B$. For row-oriented blocks: $B' \sqsubseteq B \Leftrightarrow B=T[\rangeto{a}{b},:] \wedge B'=T[\rangeto{a'}{b'},:] \wedge a \leq a' \wedge b' \leq b$ and similarly for column-oriented blocks. We will sometimes write that $B'$ is a \textit{subblock} of $B$ or that $B$ is a \textit{superblock} of $B'$.
+
+An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, which contains the sales numbers of all employees for the four quarters.
+
+\tias{TODO: update everything to speak about blocks instead of groups}
 
 \subsection{Constraint templates}
 Our method will extract the applicable constraints (including functions) in a set of tables, based on \textit{constraint templates}.
@@ -285,7 +275,7 @@ with possible further restrictions, e.g., on their length. For example, the sign
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
 In logical and relational learning this is known as the background knowledge, which provides the definition of the predicate.
 \end{itemize}
-\tias{Requested by Luc: formulate signature and definition as formula?}
+
 
 \paragraph{Example}
 Several example constraints are illustrated in Table \ref{table:constraints}.  For example, the constraint template \textit{rank} has
@@ -294,12 +284,14 @@ Several example constraints are illustrated in Table \ref{table:constraints}.  F
 \item \CSignature: the two arguments $G_r$ and $G_x$ must be numeric groups and of size one; furthermore, the group $G_r$ must be integer (the rank) and the length of groups $G_x$ and $G_r$ must be identical, i.e., $\plength(G_r) = \plength(G_x)$;
 \item \CFunction: \ecrank{G_r}{G_x}, whenever each value of $G_r$ is the rank of the corresponding value in $G_x$.
 % is satisfied in the mapping $\{ v_x \mapsto g_x, v_y \mapsto g_y \}$ satisfies the constraint iff $g_x \in G_x, g_y \in G_y$ ($G_x \in \groups, G_y \in \groups$) and each value in $g_y$ is the rank of the corresponding value in $g_x$ (possibly with ties).
+
+\tias{Maybe better row-sum so that actual 'blocks' is clear instead of just vectors? (and then use same row-sum for all subsequent examples}
 \end{itemize}
+
 When looking into constraints like $\ecrank{G_r}{G_x}$, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
 From a FOL perspective, the name of the constraint (\textit{RANK}) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as concrete values.
 
-This also holds in our setting, where an instantiation of a variable corresponds to a concrete set of vectors (a subgroup). For example for $\ecrank{G_r}{G_x}$ and the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $G_r$ is the $8$th vector in $T_1$: $G_r = \range{T_1}{\rangeall}{8} = \{[2,1,3,4]\}$ and the value of $G_x$ is the $7$th vector: $G_x = \range{T_1}{\rangeall}{7} = \{[1514, 1551, 691, 392]\}$.
-\tias{not OK to use set because of column-wise sum? we must properly define it then...}
+This also holds in our setting, where an instantiation of a variable corresponds to a concrete set of vectors (a subgroup). For example for $\ecrank{G_r}{G_x}$ and the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $G_r$ is the $8$th vector in $T_1$: $G_r = \range{T_1}{\rangeall}{8} = [2,1,3,4]$ and the value of $G_x$ is the $7$th vector: $G_x = \range{T_1}{\rangeall}{7} = [1514, 1551, 691, 392]$.
 
 %When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
 %From a FOL perspective, the name of the constraint ($\mathit{RANK}$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
@@ -310,10 +302,9 @@ This also holds in our setting, where an instantiation of a variable corresponds
 
 \newcommand{\sigc}{\ensuremath{\format{Sig}_c}}
 \newcommand{\defc}{\ensuremath{\format{Def}_c}}
-
+\tias{TODO: conceptually $c(A_1, ..., A_n) :- Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$ where '$c$' is here both the constraint name and the template}.
 With this interpretation, we can speak about the signature and definition of a constraint template being satisfied. We say that a signature (definition) of a constraint template with $n$ arguments is satisfied by an assignment $(G_1, ..., G_n)$ if $\sigc(G_1, ..., G_n)$ (respectively $\defc(G_1, ..., G_n)$) is satisfied. Likewise, an assignment $(G_1, ..., G_n)$ satisfies a constraint template $s$ iff $|(G_1, ..., G_n)| = n_s \wedge \sigc(G_1, ..., G_n) \wedge \defc(G_1, ..., G_n)$.
 
-\tias{Luc will probably prefer: $c(A_1, ..., A_n) :- Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$ where '$c$' is abused to be both the constraint name and the template}.
 %\samuel{\tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...} True, I changed the wording a bit but personally I would leave it at this now, you can always say you look at $T[:,i:j]$ iff $cols(T) >= max(i,j)$}.
 %Alternatively, and perhaps more naturally, we can interpret the argument as the value it takes in a particular table $T$ such as $T_1$ in Figure 1, that is,
 %${\range{T_1}{\rangeall}{8}} =  [2,1,3,4]$.
