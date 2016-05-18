@@ -216,8 +216,6 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 
 \section{Formalization}\label{sec:formalization}
 Our goal is to automatically discover constraints (functions and relations) between the rows and the columns of tables in a spreadsheet. This is applicable not just to data from spreadsheets, but any data in tabular form, hence the name.
-\samuel{Make explicit that we consider vectors as minimal unit (maybe in intro already?)}
-As we focus on spreadsheet data, we first introduce the general concepts of cells, group and constraint templates, using the (multi-table) sheet in Figure~\ref{fig:main_example} as running example.
 
 %An example spreadsheet with tables is given in Figure~\ref{fig:main_example}, we will use this as running example throughout the paper.
 
@@ -236,7 +234,7 @@ If it contains only rows we say it has \textit{row-orientation}, if only columns
 
 Because of these properties, we can use the following notation to refer to blocks: $B = T[\rangeto{a}{b},:]$ for a row-oriented block containing rows $a$ to $b$ in table $T$; and similarly $B = T[{:},\rangeto{a}{b}]$ for a column-oriented block.
 %
-The \textit{size} of a block is the number of vectors in the block, e.g. $b-a+1$. The \textit{length} of a block is the length of its vectors; as all vectors are from the same table, they always have the same length. %We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
+The \textit{size} of a block is the number of vectors in the block, e.g. $b-a+1$, the number of rows or columns. The \textit{length} of a block is the length of its vectors; as all vectors are from the same table, they always have the same length. %We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
 
 %For notational convenience, we will refer to vectors in {\rm roman} and to groups in {\bf bold}. {\bf CHECK}
 
@@ -419,7 +417,13 @@ Our proposed methodology contains the following steps:
 
 The core of our method is step 3. In principle, one could use a generate-and-test approach by generating all possible blocks from the superblock and testing each combination of blocks for each of the arguments of the constraints. However, this ... \textit{blows up} ...
 
-Hence, we divide this step into two parts: in the first part, we will reason over entire superblocks by generating all possible combinations of superblocks that...
+Hence, we divide this step into two parts: in the first part, we will not reason over individual blocks, but rather over all possible combinations of superblocks as candidates for the arguments.
+\tias{Example To develop in more detail and clarity:}
+Consider the sum constraints, the row-blocks of T1 are ... and column-blocks are ... instead of considering all possible blocks in each super-block, we reason at level of superblocks, for example block (with ID) can not be in a row-sum and neither can (block with Items sold total, Max items sold) because its size (1 and 2) is smaller than length of blocks (4). The only possible combination of superblocks is (1st Quarter .. Rank) for both arguments.
+
+In the second part, we start from such a superblock combination and generate and test all possible block assignments to arguments. As we only have to consider the blocks contained in each superblock, this is typically much easier. For the above example, \tias{to develop with more clarity} each of the vectors in the block will be considered as candidate for the left-hand side, and one could enumerate all subblocks for the right-hand side and verify for each of the rows in the vector. In practice, this can be optimized further.
+\\\\
+We now describe in more detail how the headerless tables are extracted and how the superblocks are generated from them (step 1 and 2, Section 4.1), how the candidate superassignments are generated (step 3a, Section 4.2) and how the actual assignments are extracted from that (step 3b, Section 4.3). We then describe a number of optimizations that we perform to speed up step 3 and 4 (Section 4.4).
 
 \paragraph{Rest old text}
 
