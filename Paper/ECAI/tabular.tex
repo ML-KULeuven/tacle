@@ -1,6 +1,5 @@
 \documentclass{IEEEtran}
 
-
 \usepackage{times}
 \usepackage{graphicx}
 \usepackage{latexsym}
@@ -15,7 +14,7 @@
 \usepackage{amsmath}
 \usepackage{tabularx}
 \usepackage{subcaption}
-
+\usepackage[inline]{enumitem}
 
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
@@ -511,6 +510,7 @@ Because dealing with redundancy is often application-dependent, we explain in th
 %\newcommand{\ctl}{Condensed Tabular Constraint Learning}
 \section{Approach to Tabular Constraint Learning}\label{sec:approach}
 The aim of our method is to detect constraints between rows and columns of tabular data. Recall that a valid argument assignment for a constraint is an assignment of each argument of the constraint to a block, such that the constraint, that is, its signature and definition, is satisfied.
+\samuel{In general: should it not be: assign blocks to arguments instead of arguments to blocks?}
 \tias{I here use constraint and constraint template interchangeably}
 
 Our proposed methodology contains the following steps:
@@ -538,32 +538,59 @@ We now describe in more detail how the headerless tables are extracted and how t
 
 This section describes our approach to \tcl. The main method takes \textit{groups} and {\template}s as input, and is described in Section~\ref{sec:algo}. We first explain how tables and groups can be extracted from raw spreadsheet data.
 
-\subsection{Table and group detection} \label{sec:make_groups}
-%A spreadsheet may contain multiple tables, and a table in turn will contain multiple (type-consistent) groups.
+\subsection{Table extraction}
+\label{sec:table_extraction}
 Many spreadsheets contain headers that provide hints at where the table(s) in the sheet are and what the meaning of the rows and columns is. However, detecting tables and headers is a complex problem on its own~\cite{header}. Furthermore, headers may be missing and their use often requires incorporating language-specific vocabulary, e.g. in English.
-
-%\tias{0. preprocess: currencies and precentual to numeric, 1. tables from spreadsheets, 2. groups from tables. Ext: could be done interactively.}
-Fully automatic table and header detection is not the core of our work. We hence built a visual tool that uses a simple method to detect tables in the data and allows a user to correct these.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{figures/tabletool.png}
-  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_1$ is implied by $s_2$ because the \CSignature of~$s_2$ depends on $s_1$ to hold on a specific subset of $s_2$ its groups.
-    The graph is extracted from the Signature column in Table \ref{table:constraints}.
-  }
-  \label{fig:learning_order}
+  \caption{This figure shows our table selection tool. A user selects rectangular ranges of cells that correspond to (headerless) tables. If the data has an unambiguous orientation, this information can be provided as well.}
+  \label{fig:visual_tool}
 \end{figure}
 
-\samuel{This does not fully correspond with the real tool, the real tool does not allow detected tables to be corrected: Either use detection tool or use visual tool to input tables manually}
-The way the table detection in the tool works is as follows:
-First, we preprocess the spreadsheets so that currency values are transformed into their integer or float value and percentual data is transformed into the corresponding floating point representation (e.g. $85\%$ as $0.85$).
-Next, every row in the spreadsheet is partitioned into blocks of columns that are separate by at least one $None$ value. Then, the blocks in each row are greedily merged to obtain rectangles. Finally headers are removed by checking whether the first row or column is all textual while the next row or column is not; in that case the assumed header is removed.
+Our algorithm requires tables to be specified, this can, however, be done in various ways.
+Tables are specified in a JSON configuration file which contains the table names, their coordinates within a CSV file and optionally the orientation of certain tables.
+The orientation can be used to indicate that a table should be interpreted as only rows or only columns.
 
-It should be clear this simple method only works if all tables are clearly separated by $None$ values and that headers of fully textual tables are not detected, among other things. Hence, in the visual tool the user can correct the detected tables if needed. \samuel{\tias{I think it would be good if we could show a screenshot of this tool...} Added screenshot, needs to be referred to}
+The generation of this JSON file can be done in many ways, ranging from manually specifying the tables to automatically detecting tables.
+Requiring the user to manually generate these files decreases the usability of our tool in a standalone setting, therefore, we offer two proof of concept approaches that aim to facilitate the specification of tables within a CSV.
 
-Row-oriented and column-oriented groups are then extracted from each table by partitioning the rows (columns) into type-consistent parts.
+\paragraph{Automatic detection}
+As mentioned above, automatic detection of headers and tables is a complex task.
+Therefore, we define a restricted setting in which the task becomes easy enough to be automated.
+We assume that 1) tables are rectangular blocks of data not containing any empty cells; and 2) tables are separated by at least one empty cell from other tables.
+Additionally, if the first row contains only textual values it treated as a header, otherwise, if the first column consists of only textual data is will be the header.
+If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
 
-From here on we will assume that groups and tables are given.
+The tool will now detect ranges of non-empty cells in every row and greedily merge these ranges across columns to obtain rectangular tables.
+If the first row of a table contains 
+This tool removes the need for human intervention, however, it is rather limited and can only be used in simple settings.
+
+\paragraph{Visual}
+Since the specification of tables is usually easy for humans, we propose a second approach which aims to decrease the complexity of specifying tables by allowing users to indicate tables using a visual tool (Figure~\ref{fig:visual_tool}).
+Users select tables excluding the header and optionally specify an orientation.
+The tool then generates the table definitions automatically.
+\\\\
+Aside from extending the automatic detection to be more applicable, one could combine the visual and automatic detection to let the user approve or correct detected table.
+
+\subsection{Block detection} \label{sec:make_groups}
+%A spreadsheet may contain multiple tables, and a table in turn will contain multiple (type-consistent) blocks.
+The goal of the block detection step is to partition tables into type-consistent (all-numeric or all-textual) blocks.
+We generate blocks automatically, partitioning tables into maximal type-consistent blocks.
+First, the spreadsheet data is preprocessed so that currency values and percentual values are transformed into their corresponding numeric (i.e. integer or floating point) representation (e.g. $2.75 \$$ as $2.75$ or $85\%$ as~$0.85$).
+Afterwards, tables are partitioned into maximal type-consistent blocks.
+If a table has no fixed orientation, the algorithm will attempt to construct both row-blocks and column-blocks.
+In order to find row-blocks (column-blocks), the type of each row (column) is determined, i.e. whether it is numeric or textual.
+All adjacent rows (columns) that have the same type are merged to form a block. 
+If any row (column) of the table contains both numeric and textual values, it is type inconsistent and the algorithm will not produce any row-blocks (column-blocks) for that table.
+For tables that have a fixed orientation only blocks of that orientation are built.
+
+While this step can be done algorithmically, there are cases where specifying finer-grained blocks manually may be beneficial.
+Firstly, blocks may group data from different contexts.
+For example, consider the type consistent block $B_3=\range{T_1}{\rangeall}{\rangeto{3}{8}}$ from the example in Figure~\ref{fig:main_example}: $\range{T_1}{\rangeall}{8}$ is contextually different from $\range{T_1}{\rangeall}{\rangeto{3}{7}}$, therefore, we could split~$B_3$ into two blocks.
+\samuel{Secondly, accidental blocks}
+Finer grained groups can reduce the amount of redundant constraints that are found.
 
 \newcommand{\temps}{\ensuremath{S}}
 \subsection{Algorithm} \label{sec:algo}
