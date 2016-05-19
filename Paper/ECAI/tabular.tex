@@ -544,10 +544,6 @@ In the second part, we start from such a superblock combination and generate and
 \\\\
 We now describe in more detail how the headerless tables are extracted and how the superblocks are generated from them (step 1 and 2, Section 4.1), how the candidate superassignments are generated (step 3a, Section 4.2) and how the actual assignments are extracted from that (step 3b, Section 4.3). We then describe a number of optimizations that we perform to speed up step 3 and 4 (Section 4.4).
 
-\paragraph{Rest old text}
-
-This section describes our approach to \tcl. The main method takes \textit{groups} and {\template}s as input, and is described in Section~\ref{sec:algo}. We first explain how tables and groups can be extracted from raw spreadsheet data.
-
 \subsection{Table extraction}
 \label{sec:table_extraction}
 Many spreadsheets contain headers that provide hints at where the table(s) in the sheet are and what the meaning of the rows and columns is. However, detecting tables and headers is a complex problem on its own~\cite{header}. Furthermore, headers may be missing and their use often requires incorporating language-specific vocabulary, e.g. in English.
