@@ -491,11 +491,11 @@ The aim of our method is to detect constraints between rows and columns of tabul
 Our proposed methodology contains the following steps:
 \begin{enumerate}
 \item Extract headerless tables from tabular data
-\item Partition the tables into type-consistent contiguous \textit{superblocks}
+\item Partition the tables into maximally contiguous, type-consistent \textit{superblocks}
 \item Generate for each constraint all valid argument assignments:
 \begin{enumerate}
-\item For each constraint, generate all candidate \textit{super-assignments} by selecting compatible superblocks for each argument
-\item For each candidate super-assignment, generate all valid argument assignments from the superblocks.
+\item For each constraint $c$, generate all atoms $c(B_1, \ldots ,B_n)$ where each $B_i$ is a maximal \textit{superblock} and the $B_i$ are compatible with the signature.
+\item For each generated atom $c(B_1, \ldots ,B_n)$, find all valid $c(B'_1, \ldots, B'_n)$ such that $\forall i, B'_i \sqsubseteq B_i$ and the signature and definition of $c(B'_1, \ldots, B'_n)$ is satisfied.
 \end{enumerate}
 \end{enumerate}
 
