@@ -60,10 +60,10 @@
 \newcommand{\ecdiff}[3]{\eccalc{#1}{#2 - #3}}
 \newcommand{\ectotal}[3]{\eccalc{#1}{\textit{PREV}(#1) + #2 - #3}}
 \newcommand{\ecproj}[2]{\eccalc{#1}{\textit{PROJECT}(#2)}}
-\newcommand{\ecaggc}[3]{\eccalc{#2}{\textit{#1}(#3, col)}}
-\newcommand{\ecaggr}[3]{\eccalc{#2}{\textit{#1}(#3, row)}}
-\newcommand{\ecsumc}[2]{\eccalc{#1}{\textit{SUM}(#2, col)}}
-\newcommand{\ecsumr}[2]{\eccalc{#1}{\textit{SUM}(#2, row)}}
+\newcommand{\ecaggc}[3]{\eccalc{#2}{\textit{#1\textsubscript{col}}(#3)}}
+\newcommand{\ecaggr}[3]{\eccalc{#2}{\textit{#1\textsubscript{row}}(#3)}}
+\newcommand{\ecsumc}[2]{\eccalc{#1}{\textit{SUM\textsubscript{col}}(#2)}}
+\newcommand{\ecsumr}[2]{\eccalc{#1}{\textit{SUM\textsubscript{row}}(#2)}}
 \newcommand{\ecaggif}[5]{\eccalc{#2}{\textit{#1IF}(#3, #4, #5)}}
 \newcommand{\ecsumif}[4]{\eccalc{#1}{\textit{SUMIF}(#2, #3, #4)}}
 \newcommand{\ecsumprod}[3]{\eccalc{#1}{\textit{SUMPRODUCT}(#2, #3)}}
@@ -142,7 +142,9 @@ A more detailed discussion on related work is contained in Section~\ref{sec:rela
 
 
 The question that we answer in this paper is: is it possible to discover or reconstruct structural constraints (relations, functions) in flat tabular spreadsheet data?
-To answer this question we contribute a general-purpose method and system, named \sname (pronounced as the word ``tackle''), for discovering row-wise and column-wise constraints. Furthermore, the algorithm accepts declarative specifications of the constraints and predicates of interest (the "bias"). \tias{revise declarative claim?} It operates directly on the tables of a spreadsheet in an unsupervised setting, as it reasons on that raw tabular data directly with no example constraint instantiations given. %, and discovers column- and row-wise constraints.
+To answer this question we contribute a general-purpose method and system, named \sname (pronounced as the word ``tackle''), for discovering row-wise and column-wise constraints.
+%Furthermore, the algorithm accepts declarative specifications of the constraints and predicates of interest (the "bias"). \tias{revise declarative claim?}
+It operates directly on (headerless) tables of a spreadsheet in an unsupervised setting, as it reasons on that raw tabular data directly with no example constraint instantiations given. %, and discovers column- and row-wise constraints.
 We demonstrate the utility of our approach in an experimental evaluation.
 Moreover, we sketch additional application scenario's such as autocompletion and error detection.
 \\\\
@@ -220,7 +222,7 @@ Our goal is to automatically discover constraints (functions and relations) betw
 
 %An example spreadsheet with tables is given in Figure~\ref{fig:main_example}, we will use this as running example throughout the paper.
 
-\tias{section description (add prob def here?)}
+We first introduce some terminology and the concept of \template, after which we define the problem and make some additional considerations.
 
 \subsection{Terminology}
 Spreadsheets and tabular data may conceptually consist of multiple tables, such as in Figure~\ref{fig:main_example}. Note that a table can contain a header; however, we wish to reason over entire rows and columns of data, and hence we will consider \textbf{headerless tables} only.
@@ -231,28 +233,34 @@ A cell has a {\bf type}, which can be numeric or textual. We further distinguish
 A row or columns is \textbf{type-consistent} if all cells in that row or column are of the same base type, that is, numeric or textual. We will use notation $T[a,{:}]$ to refer to the $a$-th row of table $T$, and similarly $T[{:},a]$ for the $a$-th column. For example in Figure~\ref{fig:main_example}, $T_1[1,:] = [1,2,3,4]$ and $T_5[:,1] = ['$Diana Coolen$', 5]$. The latter is not type-consistent while the former is.
 %We will write \textbf{vector} to refer to a single row or column when its orientation does not matter.
 
-The most important concept is that of a \textbf{block}. A block has to satisfy three conditions: 1) it contains only entire rows or entire columns of a single headerless table 2) it is contiguous and 3) it is type-consistent.
-If it contains only rows we say it has \textit{row-orientation}, if only columns, \textit{column-orientation}. The rows or columns have to be contiguous in the original table meaning that they must visually form a block in the table; and each of the rows/columns has to be of the same type. We will refer to the \textit{vectors} of a block when we wish to refer to its rows/columns independent of their orientation.
+The most important concept is that of a \textbf{block}. 
+\begin{definition}
+A \textbf{block} has to satisfy three conditions: 1) it contains only entire rows or entire columns of a single headerless table 2) it is contiguous and 3) it is type-consistent.
+The rows or columns have to be contiguous in the original table meaning that they must visually form a block in the table; and each of the rows/columns has to be of the same type. 
+If it contains only rows we say it has \textit{row-orientation}, if only columns, \textit{column-orientation}. 
+\end{definition}
 
-Because of these properties, we can use the following notation to refer to blocks: $B = T[\rangeto{a}{b},:]$ for a row-oriented block containing rows $a$ to $b$ in table $T$; and similarly $B = T[{:},\rangeto{a}{b}]$ for a column-oriented block.
+In line with this definition, we can use the following notation to refer to blocks: $B = T[\rangeto{a}{b},:]$ for a row-oriented block containing rows $a$ to $b$ in table $T$; and similarly $B = T[{:},\rangeto{a}{b}]$ for a column-oriented block.
+We will refer to the \textit{vectors} of a block when we wish to refer to its rows/columns independent of their orientation.
+
 
 A block has the following properties:
 \begin{itemize}
-\item \textit{type}: a block has to be type-consistent, so it has a single type
+\item \textit{type}: a block is type-consistent, so it has a type
 \item \textit{table}: the table that this block belongs to
 \item \textit{orientation}: either row-oriented or column-oriented
-\item \textit{size}: the size of a block is the number of vectors in it, e.g. $b-a+1$, the number of rows or columns.
+\item \textit{size}: the size of a block is the number of vectors in it, that is, the number of rows or columns.
 \item \textit{length}: the length of its vectors; as all vectors are from the same table, they always have the same length.
 \item \textit{rows}: this is orientation specific, for row-based blocks this is the size, for column-based blocks the length
 \item \textit{columns}: also orientation specific, for row-based blocks this is the length, for column-based blocks the size
-\item \tias{What is missing is 'discrete'}
+\item \tias{What is missing is 'discrete', not needed?}
 \end{itemize}
 
 %We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
 
 %For notational convenience, we will refer to vectors in {\rm roman} and to groups in {\bf bold}. {\bf CHECK}
 
-\paragraph{Example}
+\begin{example}
 Consider headerless Table~1 in Figure~\ref{fig:main_example}, its rows are not type consistent (i.e. they contain both numeric and textual data). The table can be partitioned into the following five column-oriented blocks:
 {\small
 \begin{align*}
@@ -264,9 +272,14 @@ Consider headerless Table~1 in Figure~\ref{fig:main_example}, its rows are not t
 \end{align*}
 \tias{Indicate in figure? see also Sergey's comment in figure}
 }
+\end{example}
 
-We write that a block $B'$ is \textbf{contained} in a block $B$, $B' \sqsubseteq B$ iff both are valid blocks (single orientation, contiguous, type consistent) and each of the vectors in $B'$ is also in $B$. For row-oriented blocks: $B' \sqsubseteq B \Leftrightarrow B=T[\rangeto{a}{b},:] \wedge B'=T[\rangeto{a'}{b'},:] \wedge a \leq a' \wedge b' \leq b$ and similarly for column-oriented blocks. We will sometimes write that $B'$ is a \textit{subblock} of $B$ or that $B$ is a \textit{superblock} of $B'$.
-
+\begin{definition}
+\textbf{Block containement $\sqsubseteq$.} 
+A block $B'$ is contained in a block $B$, $B' \sqsubseteq B$, iff both are valid blocks (single orientation, contiguous, type consistent) and each of the vectors in $B'$ is also in $B$. For row-oriented blocks: $B' \sqsubseteq B \Leftrightarrow B=T[\rangeto{a}{b},:] \wedge B'=T[\rangeto{a'}{b'},:] \wedge a \leq a' \wedge b' \leq b$ and similarly for column-oriented blocks.
+\end{definition}
+We will sometimes write that $B'$ is a \textit{subblock} of $B$ or that $B$ is a \textit{superblock} of $B'$.
+%
 An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, which contains the sales numbers of all employees for the four quarters.
 
 
@@ -277,13 +290,13 @@ A \template $s$ is a triple $s=\textit{(\CName, \CSignature, \CFunction)}$:
 %Let us elaborate on this:
 \begin{itemize}
 \item
-\textit{\CName}  specifies the syntactic form of the constraint $c(G_1, ...,G_n)$, that is, the name of the constraint $c$ together
-with $n$ abstract arguments $G_i$. Thus a constraint $c$ is viewed as a relation or predicate of arity $n$ in first order logic. Note that a function $G_r=f(G_1,...,G_n)$ can be represented with the $(n{+}1)$-ary predicate $c_f(G_r,G_1,...,G_n)$. Each argument will have to be instantiated with a block.
+\textit{\CName}  specifies the syntactic form of the constraint $c(B_1, ...,B_n)$, that is, the name of the constraint $c$ together
+with $n$ abstract arguments $B_i$. Thus a constraint $c$ is viewed as a relation or predicate of arity $n$ in first order logic. Note that a function $B_r=f(B_1,...,B_n)$ can be represented with the $(n{+}1)$-ary predicate $c_f(B_r,B_1,...,B_n)$. Each argument will have to be instantiated with a block.
 % the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
 
-\item the \textit{\CSignature} defines the properties that the arguments of the predicate must satisfy, that is, the blocks. This can be any property of individual blocks, such as type, length, size and orientation, as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table, or have equal type or length. In terms of logical and relational learning \cite{luc_book}, such a \CSignature is known as the {\em bias} of the learner, it specifies when the constraint its arguments are well-formed.
+\item the \textit{\CSignature} defines the properties that the arguments of the predicate must satisfy. This can be any property of individual blocks, such as type, length, size and orientation, as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table, or have equal type or length. In terms of logical and relational learning \cite{luc_book}, such a \CSignature is known as the {\em bias} of the learner, it specifies when the constraint its arguments are well-formed.
 
-\item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments of blocks to its arguments, it can be used to verify whether the constraint is satisfied or not. %holds, in practice this will be a function that can be called when
+\item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments of blocks to its arguments, it can be used to verify whether the constraint is satisfied or not by the actual data present in the blocks. %holds, in practice this will be a function that can be called when
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
 In logical and relational learning this is known as the background knowledge. %, which provides the definition of the predicate.
 \end{itemize}
@@ -301,10 +314,9 @@ Several example constraint templates are illustrated in Table \ref{table:constra
 \end{example}
 
 
-When looking into constraints like $\ecrank{G_r}{G_x}$, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
-From a FOL perspective, the name of the constraint (\textit{RANK}) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as concrete values.
-
-This also holds in our setting, where an instantiation of a variable corresponds to a concrete set of vectors (a subgroup). For example for $\ecrank{G_r}{G_x}$ and the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $G_r$ is the $8$th vector in $T_1$: $G_r = \range{T_1}{\rangeall}{8} = [2,1,3,4]$ and the value of $G_x$ is the $7$th vector: $G_x = \range{T_1}{\rangeall}{7} = [1514, 1551, 691, 392]$.
+It is helpful to see the analogy of constraint templates with first order logic (FOL) and constraint satisfaction.
+From a FOL perspective, the name of the constraint (e.g. \textit{SUM}) is just the predicate name, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as concrete values.
+This also holds in our setting, where an instantiation of a variable corresponds to a concrete block. For example for $\ecrank{B_r}{B_x}$ and the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $B_r$ is the $8$th vector in $T_1$: $B_r = \range{T_1}{\rangeall}{8} = [2,1,3,4]$ and the value of $B_x$ is the $7$th vector: $B_x = \range{T_1}{\rangeall}{7} = [1514, 1551, 691, 392]$.
 
 %When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
 %From a FOL perspective, the name of the constraint ($\mathit{RANK}$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
@@ -315,8 +327,12 @@ This also holds in our setting, where an instantiation of a variable corresponds
 
 \newcommand{\sigc}{\ensuremath{\format{Sig}_c}}
 \newcommand{\defc}{\ensuremath{\format{Def}_c}}
-\tias{TODO: conceptually $c(A_1, ..., A_n) :- Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$ where '$c$' is here both the constraint name and the template}.
-With this interpretation, we can speak about the signature and definition of a constraint template being satisfied. We say that a signature (definition) of a constraint template with $n$ arguments is satisfied by an assignment $(G_1, ..., G_n)$ if $\sigc(G_1, ..., G_n)$ (respectively $\defc(G_1, ..., G_n)$) is satisfied. Likewise, an assignment $(G_1, ..., G_n)$ satisfies a constraint template $s$ iff $|(G_1, ..., G_n)| = n_s \wedge \sigc(G_1, ..., G_n) \wedge \defc(G_1, ..., G_n)$.
+%\tias{TODO: conceptually $c(A_1, ..., A_n) :- Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$ where '$c$' is here both the constraint name and the template}.
+With this interpretation, we can speak about the signature and definition of a constraint template being \textit{satisfied}. We say that a signature (definition) of a constraint template with $n$ arguments is satisfied by the blocks $(B_1, ..., B_n)$ if $\sigc(B_1, ..., B_n)$ (respectively $\defc(B_1, ..., B_n)$) is satisfied. Likewise, the template is satisfied is both the signature and definition is satisfed; in first order logic, we would write: $c(B_1, ..., B_n) :-\sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$. Under this interpretation, the term constraint and constraint template can be used interchangeably.
+
+\begin{definition}
+A \textbf{valid argument assignment} of a constraint $c$ is a tuple $(B_1, ..., B_n)$ such that $c(B_1, ..., B_n)$ is satisfied, that is, both the signature and the definition of the corresponding constraint template are satisfied by the assignment of $(B_1, ..., B_n)$ to the arguments.
+\end{definition}
 
 %\samuel{\tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...} True, I changed the wording a bit but personally I would leave it at this now, you can always say you look at $T[:,i:j]$ iff $cols(T) >= max(i,j)$}.
 %Alternatively, and perhaps more naturally, we can interpret the argument as the value it takes in a particular table $T$ such as $T_1$ in Figure 1, that is,
@@ -399,16 +415,15 @@ With this interpretation, we can speak about the signature and definition of a c
 \end{table*}
 
 
-\section{Problem Statement}\label{sec:problem_statement}
-The problem of learning constraints from tabular data can be seen as an inverse {\em constraint satisfaction problem} (CSP). A CSP consists of a set of constraints and the
-task is to find assignments of values to the variables in the CSP so that all constraints are satisfied.
-In the context of spreadsheets where variables could represent cells in tables, solving a corresponding CSP problem would mean completing the tables so that all constraints of the spreadsheet are satisfied.
+\subsection{Problem Definition}\label{sec:problem_statement}
+The problem of learning constraints from tabular data can be seen as an inverse {\em constraint satisfaction problem} (CSP).
+In a CSP one is given a set of constraints over variables that must all be satisfied, and the goal is to find an instantiation of all the variables that satisfies these constraints. In the context of spreadsheets, the variables would be (blocks of) cells, and one would be given the actual constraints and functions with the goal of finding the values in the cells.
+The inverse problem is, given only an instantiation of the cells, find the constraints that are satisfied in the spreadsheet.
 
-The inverse problem is, given an assignment to all cells, to find the constraints that are satisfied in the spreadsheet.
 We define the {\bf Tabular Constraint Learning Problem} as follows:
 %
 \begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}\\
-{\bf   Given} ${\cal G}$ a set of groups over fully instantiated tables ${\cal T}$ (all cells have values) and a set of {\template}s ${\cal S}$: {\bf find } all constraints $c_s(G'_1, ..., G'_n)$ that match the syntax of a \template~$s \in {\cal S}$ and where all subgroups $G'_i \subseteq G_i$ with $G_i \in {\cal G}$, satisfy both the signature and the definition of that \template.
+{\bf   Given} a set of instantiated blocks ${\cal B}$ and a set of {\template}s ${\cal S}$: {\bf Find} all constraints $c(B'_1, ..., B'_n)$ where $c$ is a constraint with a corresponding template in ${\cal S}$ and $(B'_1, ..., B'_n)$ is a valid argument assignment of the constraint $c$.
 \end{definition}
 % Let us now define what it means for a constraint from \template to hold in general. Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $t^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
 % \sergey{moved from formalization END}
@@ -420,42 +435,52 @@ We define the {\bf Tabular Constraint Learning Problem} as follows:
 %     \textbf{Find:}&  all constraints $C$ over \groups for each template $t$ in \constraints \\
 %   \end{tabular}
 
-An example solution for the type-consistent groups of the tables in Figure~\ref{fig:main_example} and {\template}'s in Table~\ref{table:constraints} is shown in Figure~\ref{fig:sol_example}.
+Figure~\ref{fig:sol_example} shows the solution to the tabular constraint learning problem when applied on the blocks of Figure~\ref{fig:main_example} and constraint templates listed in Table~\ref{table:constraints}.
 
+\subsection{Other considerations}
 
-Depending on the application, a solution to the tabular constraint learning problem may contain \textit{redundant} constraints, for details we refer to relational learning literature \cite{luc_book}. This is because constraints may be logically equivalent or may be implied by other constraints.
+\paragraph{Dependencies}
+In Table~\ref{table:constraints} one can see that for some constraints we used the predicate of another constraint in its signature, e.g. for \textit{PERMUTATION}. This expresses a dependency of the constraint on that other constraint. This can be interpreted as follows: the signature of the constraint consists of its own signature plus the signature of the depending constraint, and its definition of its own definition plus the definition of the depending constraint.
+In FOL, we can see that one constraint entails the other, for example $\ecperm{\sg_x} \models \ecalldiff{\sg_{x}}$.
 
-More formally, a constraint $c_1(G_1, ... G_n)$ \textit{implies} another constraint~$c_2(G'_1, ..., G'_m)$ whenever
-the  following statement holds: $$\forall G_i, G'_j : c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m).$$
+Apart from easing the specification of the signature and definition, in Section~\tias{TODO} we will see how such dependencies can be used to speed up the search for constraints.
 
-We shall only consider {\em range-restricted} implications, that is, we shall require that $\{G'_1, ..., G'_m\} \subseteq \{G_1, ..., G_n\}$.
-To simplify notation, and in line with logic programming, we shall often make the quantification implicit and simply write this as rules $ c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m)$.  We say that the first constraint is more specific than the second, and the second is more general.
+\paragraph{Redundancies}
+Depending on the application, some constraints in the solution to the tabular constraint learning problem may be considered \textit{redundant}. This is because constraints may be logically equivalent or may be implied by other constraints.
 
+\tias{This should contain examples that recur later in the text}
 
-% where the second one ranges over a subsets of the arguments of the first, iff whenever the first constraint is true, the second must also be true. More formally, $\forall G'_1, ..., G'_n$ s.t. $\{G''_1, ..., G''_m\} \subseteq \{G'_1, ..., G'_n\},\, c_1(G'_1, ... G'_n) \rightarrow c_2(G''_1, ..., G''_m)$ll.
+For example, for some constraints, the order of some of the arguments may not matter. For example for the product constraint, $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecprod{\sg_r}{\sg_2}{\sg_1}$ so one can be considered redundant to the other.
 
-\paragraph{Example}
-Consider the following implication:
-$$\ecperm{G} \rightarrow \ecalldiff{G}$$
-(it can be seen in Table~\ref{table:constraints} that both constraints only hold if $G$ is a vector).
-In this case the arguments are identical in both constraints.
-Given that the problem is to find the set of {\em all} constraints, and that the more general constraint is entailed
-by the more specific one, the $\ecdiff{G}$ constraint will be {\em redundant}.
-So, for most applications, it will be sufficient to output only the most specific one.
-
-A more involved example is
-$$\eclookup{G'_2}{G'_1}{H'_1}{H'_2} \rightarrow \ecfkey{G'_1}{H'_1}$$
-which states
-that a look-up constraint implies a foreign-key constraint. In the look-up constraint $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ the values in the vector $G'_2$ are determined by looking up the corresponding value in vector $G'_1$ in vector $H'_1$ and returning the corresponding value in vector $H'_2$. In Figure~\ref{fig:main_example} we have $\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}$. This implies a foreign-key constraint $\ecfkey{G'_1}{H'_1}$ where each of the values in vector $G'_1$ must appear in $H'_1$ for the look-up to work.
-
-Two constraints are \textit{equivalent} if they imply one another. %More formally, $\forall G'_1, ..., G'_n$ s.t. $\{G''_1, ..., G''_n\} = \{G'_1, ..., G'_n\},\, c_1(G'_1, ... G'_n) \leftrightarrow c_2(G''_1, ..., G''_n)$.
-An example within the same \template is for the sum over vectors constraint: $G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. A related example over multiple constraints is $G_1 = +(G_2, G_3) \leftrightarrow G_1 = \textit{SUM}(H)$ with $\textit{size}(H) = 2$ and $G_2 \subset H, G_3 \subset H$.
-\luc{Do we really need this, or can we write it in a real equivalence --- conjunctive formula?}
-\samuel{Tias, Sergey what do you think? Also I find this notation confusing: +(G2, G3), why not just use G1 = G2 + G3?}
-
-A good way to deal with equivalent constraints is to work with a \textit{canonical} constraint among the equivalent ones. For example, for equivalent constraints of the same \template, this could be the constraint where the groups are ordered by table, orientation and row/column identifier. For equivalent constraints of different templates one could define heuristics such as that some templates are preferred over others, e.g. binary sum over n-ary sum, sum over difference, etc.
+One way to deal with such equivalences is to identify a \textit{canonical} constraint among the equivalent ones. For example, for the product constraint above, we could define a lexicographic ordering over the blocks and only consider the constraint with the smallest ordering.
 
 Because dealing with redundancy is often application-dependent, we explain in the next section our generic method for finding all constraints.
+
+
+%
+%More formally, a constraint $c_1(G_1, ... G_n)$ \textit{implies} another constraint~$c_2(G'_1, ..., G'_m)$ whenever
+%the  following statement holds: $$\forall G_i, G'_j : c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m).$$
+%
+%We shall only consider {\em range-restricted} implications, that is, we shall require that $\{G'_1, ..., G'_m\} \subseteq \{G_1, ..., G_n\}$.
+%To simplify notation, and in line with logic programming, we shall often make the quantification implicit and simply write this as rules $ c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m)$.  We say that the first constraint is more specific than the second, and the second is more general.
+%
+%
+%% where the second one ranges over a subsets of the arguments of the first, iff whenever the first constraint is true, the second must also be true. More formally, $\forall G'_1, ..., G'_n$ s.t. $\{G''_1, ..., G''_m\} \subseteq \{G'_1, ..., G'_n\},\, c_1(G'_1, ... G'_n) \rightarrow c_2(G''_1, ..., G''_m)$ll.
+%
+%\paragraph{Example}
+%Consider the following implication:
+%$$\ecperm{G} \rightarrow \ecalldiff{G}$$
+%(it can be seen in Table~\ref{table:constraints} that both constraints only hold if $G$ is a vector).
+%In this case the arguments are identical in both constraints.
+%Given that the problem is to find the set of {\em all} constraints, and that the more general constraint is entailed
+%by the more specific one, the $\ecdiff{G}$ constraint will be {\em redundant}.
+%So, for most applications, it will be sufficient to output only the most specific one.
+%
+%A more involved example is
+%$$\eclookup{G'_2}{G'_1}{H'_1}{H'_2} \rightarrow \ecfkey{G'_1}{H'_1}$$
+%which states
+%that a look-up constraint implies a foreign-key constraint. In the look-up constraint $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ the values in the vector $G'_2$ are determined by looking up the corresponding value in vector $G'_1$ in vector $H'_1$ and returning the corresponding value in vector $H'_2$. In Figure~\ref{fig:main_example} we have $\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}$. This implies a foreign-key constraint $\ecfkey{G'_1}{H'_1}$ where each of the values in vector $G'_1$ must appear in $H'_1$ for the look-up to work.
+
 
 %\tias{I am not defining a new problem for 'most specific canonical tabular constraint learning' because we loosely showed how implications and equivalences would be expressed, but not how to express canonicity and we did not claim that most specific is always best.}
 %\tias{Note also that our method finds ALL constraints; it uses specificity to faster traverse the search space, but the resulting set of constraints found would be the same, whether or not using the specificity (see 4.2.1).}
