@@ -533,7 +533,7 @@ Our proposed methodology contains the following steps:
 \item Generate for each constraint all valid argument assignments:
 \begin{enumerate}
 \item For each constraint $c$, generate all atoms $c(B_1, \ldots ,B_n)$ where each $B_i$ is a maximal \textit{superblock} and the $B_i$ are compatible with the signature.
-\item For each generated atom $c(B_1, \ldots ,B_n)$, find all valid $c(B'_1, \ldots, B'_n)$ such that $\forall i, B'_i \sqsubseteq B_i$ and the signature and definition of $c(B'_1, \ldots, B'_n)$ is satisfied.
+\item For each generated atom $c(B_1, \ldots ,B_n)$, find all valid $c(B'_1, \ldots, B'_n)$ such that for all $i$ holds $B'_i \sqsubseteq B_i$ and the signature and definition of $c(B'_1, \ldots, B'_n)$ are satisfied.
 \end{enumerate}
 \end{enumerate}
 
@@ -621,7 +621,7 @@ Furthermore, we use constraint satisfaction technology to jointly search for and
     \State $n \gets$ number of arguments of template $s$
     \State $A \gets \generategroups(s, \groups)$
     \ForAll{$(B_1, \dots, B_n) \in A$}
-      \ForAll{$(B_1', \dots, B_n') \in \findassignment(s, (B_1, \dots, B_n))$}
+    \ForAll{${(B_1',\dots,B_n')\in}~\findassignment(s, (B_1,\dots,B_n))$}
         \State $C \gets C \cup \{ s(B_1', \dots, B_n') \}$
       \EndFor
     \EndFor
@@ -690,7 +690,7 @@ There are three \textit{variables} $X, Y, Z$ corresponding to group $G'$, $H'$ a
 The $\generategroups(\textit{t,{\cal G},C})$ method will construct this CSP and query a solver for all satisfying solutions. This is the required result set.
 
 \subsubsection{Constraints over satisfying subgroups} \label{sec:algo:subgr}
-In the previous step, $\generategroups(\textit{t,{\cal G},C})$ generates tuples of candidate groups $(G_1, ..., G_n)$ for the constraint template $t$ with $n$ arguments. In this step, $\findassignment(t, (G_1, \dots, G_n))$, the goal is to enumerate the subgroups $(G'_1, ..., G'_n), \forall i, G'_i \subseteq G_i$ that satisfy both the signature and the definition of the constraint template $t$. The main difference with the previous step is that the group generation reasons about the \textit{properties} of the groups (type, size, length, ...), while this step reasons about the actual \textit{content} of the vectors in the groups, that is, the data.
+In the previous step, $\generategroups(\textit{t,{\cal G},C})$ generates tuples of candidate groups $(G_1, ..., G_n)$ for the constraint template $t$ with $n$ arguments. In this step, $\findassignment(t, (G_1, \dots, G_n))$, the goal is to enumerate the subgroups $(G'_1, ..., G'_n)$ (for all $i$, $G'_i \subseteq G_i$) that satisfy both the signature and the definition of the constraint template $t$. The main difference with the previous step is that the group generation reasons about the \textit{properties} of the groups (type, size, length, ...), while this step reasons about the actual \textit{content} of the vectors in the groups, that is, the data.
 
 \paragraph{Example}
 Consider the sum-over-rows constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$. In the group generation, all numeric groups where the length of $\sg_r$ vector is equal to the number of rows in $\mathbf{\sg_x}$ has been enumerated. An example from Table~\ref{table:constraints} is $(\sg_r, \mathbf{\sg_x}) = (T_1[:,3:8],T_1[:,3:8])$. Note that this does not match the signature exactly yet: $\sg_r$ contains more than one vector. We can now generate all vectors in $T_1[:,3:8]$ for $\sg_r$ and all subgroups of $T_1[:,3:8]$ for $\mathbf{\sg_x}$ and test whether $\forall i, \sg_r[0][i] = \sum_j \mathbf{\sg_x}[j][i]$ where $G[j][i]$ indicates the $i$the value of the $j$th vector in $G$. An example solution is $(T_1[:7], T_1[:,3:6])$.
@@ -952,6 +952,8 @@ Once the user has stopped editing the new row~$i$ (column~$j$), the table~$T$ is
 
 Let us illustrate this on one of the spreadsheets from the gathered dataset. In Figure \ref{fig:autocompletion_example}, we see two tables the upper one is completed and in the lower one values in the last raw are not yet filled, then the system finds a satisfying constraint (\textit{SUMIF}) and based on it proposes filling values.
 
+\sergey{there should be a discussion on what to do if multiple constraints satisfy the data and propose predictions, just a sketch here for now}
+If multiple constraints satisfy the data and allow autocompletion, then there is a number of ways to handle it. Firstly, autocompletion can be disabled. Secondly, the most specific constrain can be applied. If they are not compatible in the generality sense, one needs to introduce an autocompletion order, which would resolve the problem by picking only one constraint to suggest the values.
 
 \subsection{Error detection}
 \begin{figure*}[thb]
