@@ -80,7 +80,7 @@
 \newcommand{\pcols}{\format{columns}}
 \newcommand{\nat}{\mathcal{N}}
 
-\newcommand{\sg}{G'}
+\newcommand{\sg}{B}
 
 
 
@@ -149,7 +149,7 @@ We demonstrate the utility of our approach in an experimental evaluation.
 Moreover, we sketch additional application scenario's such as autocompletion and error detection.
 \\\\
 This paper is organized as follows.
-Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:problem_statement} presents the problem statement. Section \ref{sec:approach} describes the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents an overview of the related work. Section \ref{sec:conclusions} provides conclusions.
+Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:problem_statement} presents the problem statement and the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents an overview of the related work. Section \ref{sec:conclusions} provides conclusions.
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
@@ -240,7 +240,7 @@ Spreadsheets and tabular data may conceptually consist of multiple tables, such 
 Formally, a (headerless) table is an $n \times m$ matrix. Each entry is called a \textit{cell}.
 A cell has a {\bf type}, which can be numeric or textual. We further distinguish numeric types in subtypes: integer and float. We also consider \textit{None} as a special type when a cell is empty; \textit{None} is a subtype of all other types.
 
-A row or columns is \textbf{type-consistent} if all cells in that row or column are of the same base type, that is, numeric or textual. We will use notation $T[a,{:}]$ to refer to the $a$-th row of table $T$, and similarly $T[{:},a]$ for the $a$-th column. For example in Figure~\ref{fig:main_example}, $T_1[1,:] = [1,2,3,4]$ and $T_5[:,1] = ['$Diana Coolen$', 5]$. The latter is not type-consistent while the former is.
+A row or a column is \textbf{type-consistent} if all cells in that row or column are of the same base type, that is, numeric or textual. We will use notation $T[a,{:}]$ to refer to the $a$-th row of table $T$, and similarly $T[{:},a]$ for the $a$-th column. For example in Figure~\ref{fig:main_example}, $T_1[1,:] = [1,2,3,4]$ and $T_5[:,1] = ['$Diana Coolen$', 5]$. The latter is not type-consistent while the former is.
 %We will write \textbf{vector} to refer to a single row or column when its orientation does not matter.
 
 The most important concept is that of a \textbf{block}. 
@@ -288,6 +288,7 @@ Consider headerless Table~1 in Figure~\ref{fig:main_example}, its rows are not t
 \textbf{Block containement $\sqsubseteq$.} 
 A block $B'$ is contained in a block $B$, $B' \sqsubseteq B$, iff both are valid blocks (single orientation, contiguous, type consistent) and each of the vectors in $B'$ is also in $B$. For row-oriented blocks: $B' \sqsubseteq B \Leftrightarrow B=T[\rangeto{a}{b},:] \wedge B'=T[\rangeto{a'}{b'},:] \wedge a \leq a' \wedge b' \leq b$ and similarly for column-oriented blocks.
 \end{definition}
+\sergey{do we need to mention explicitly that blocks have the same orientation and are in the same table?}
 We will sometimes write that $B'$ is a \textit{subblock} of $B$ or that $B$ is a \textit{superblock} of $B'$.
 %
 An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, which contains the sales numbers of all employees for the four quarters.
@@ -304,7 +305,7 @@ A \template $s$ is a triple $s=\textit{(\CName, \CSignature, \CFunction)}$:
 with $n$ abstract arguments $B_i$. Thus a constraint $c$ is viewed as a relation or predicate of arity $n$ in first order logic. Note that a function $B_r=f(B_1,...,B_n)$ can be represented with the $(n{+}1)$-ary predicate $c_f(B_r,B_1,...,B_n)$. Each argument will have to be instantiated with a block.
 % the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
 
-\item the \textit{\CSignature} defines the properties that the arguments of the predicate must satisfy. This can be any property of individual blocks, such as type, length, size and orientation, as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table, or have equal type or length. In terms of logical and relational learning \cite{luc_book}, such a \CSignature is known as the {\em bias} of the learner, it specifies when the constraint its arguments are well-formed.
+\item the \textit{\CSignature} defines the properties that the arguments of the predicate must satisfy. This can be any property of individual blocks, such as type, length, size and orientation, as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table, or have equal type or length. In terms of logical and relational learning \cite{luc_book}, the \CSignature is known as the {\em bias} of the learner, it specifies when the constraint its arguments are well-formed.
 
 \item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments of blocks to its arguments, it can be used to verify whether the constraint is satisfied or not by the actual data present in the blocks. %holds, in practice this will be a function that can be called when
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
@@ -312,12 +313,12 @@ In logical and relational learning this is known as the background knowledge. %,
 \end{itemize}
 
 \begin{example}
-Several example constraint templates are illustrated in Table \ref{table:constraints}. An non-trivial example is the constraint template for the row-based sum:
+Several constraint templates are illustrated in Table \ref{table:constraints}. A non-trivial example is the constraint template for the row-based sum:
 
 \begin{itemize}
   \item \CName: $\ecsumr{\sg_r}{\mathbf{\sg_x}}$, where $\sg_r$ and $\mathbf{\sg_x}$ are the arguments;
   
-  \item \CSignature: $\sg_r$ has to be a single vector ($size=1$) while $\mathbf{\sg_x}$ can be a block ($size>=1$), which can be derived from the use of a normal or \textbf{bold} font. The two blocks have to be numeric. This constraint is orientation-specific, so it requires that the number of rows in $\mathbf{\sg_x}$ equals the length of $\sg_r$. While not strictly needed, we also add to the bias of this template that the number of columns to sum over is larger than $2$ as a block with two columns will also be captured by the $\eccalc{\sg_r}{\sg_1 + \sg_2}$ constraint;
+  \item \CSignature: $\sg_r$ has to be a single vector ($\textit{size}=1$) while $\mathbf{\sg_x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font. The two blocks have to be numeric. This constraint is orientation-specific, so it requires that the number of rows in $\mathbf{\sg_x}$ equals the length of $\sg_r$. While not strictly needed, we also add to the bias of this template that the number of columns to sum over is larger than $2$ as a block with two columns will also be captured by the $\eccalc{\sg_r}{\sg_1 + \sg_2}$ constraint;
   
   \item \CFunction: each value in the vector $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$.
 \end{itemize}
@@ -325,7 +326,7 @@ Several example constraint templates are illustrated in Table \ref{table:constra
 
 
 It is helpful to see the analogy of constraint templates with first order logic (FOL) and constraint satisfaction.
-From a FOL perspective, the name of the constraint (e.g. \textit{SUM}) is just the predicate name, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as concrete values.
+From a FOL perspective, the name of the constraint (e.g. \textit{SUM}) is just the predicate name, and the arguments $B_r$ and $B_x$ are the terms, which can be seen as either uninstantiated variables or as concrete values.
 This also holds in our setting, where an instantiation of a variable corresponds to a concrete block. For example for $\ecrank{B_r}{B_x}$ and the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $B_r$ is the $8$th vector in $T_1$: $B_r = \range{T_1}{\rangeall}{8} = [2,1,3,4]$ and the value of $B_x$ is the $7$th vector: $B_x = \range{T_1}{\rangeall}{7} = [1514, 1551, 691, 392]$.
 
 %When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
@@ -338,7 +339,7 @@ This also holds in our setting, where an instantiation of a variable corresponds
 \newcommand{\sigc}{\ensuremath{\format{Sig}_c}}
 \newcommand{\defc}{\ensuremath{\format{Def}_c}}
 %\tias{TODO: conceptually $c(A_1, ..., A_n) :- Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$ where '$c$' is here both the constraint name and the template}.
-With this interpretation, we can speak about the signature and definition of a constraint template being \textit{satisfied}. We say that a signature (definition) of a constraint template with $n$ arguments is satisfied by the blocks $(B_1, ..., B_n)$ if $\sigc(B_1, ..., B_n)$ (respectively $\defc(B_1, ..., B_n)$) is satisfied. Likewise, the template is satisfied is both the signature and definition is satisfed; in first order logic, we would write: $c(B_1, ..., B_n) :-\sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$. Under this interpretation, the term constraint and constraint template can be used interchangeably.
+With this interpretation, we can speak about the signature and definition of a constraint template being \textit{satisfied}. We say that a signature (definition) of a constraint template with $n$ arguments is satisfied by the blocks $(B_1, ..., B_n)$ if $\sigc(B_1, ..., B_n)$ (respectively $\defc(B_1, ..., B_n)$) is satisfied. Likewise, the template is satisfied if both the signature and definition are satisfied; in logic programming, we would write a Prolog-like clause: $c(B_1, ..., B_n) \leftarrow \sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$. Under this interpretation, the term constraint and constraint template can be used interchangeably.
 
 \begin{definition}
 A \textbf{valid argument assignment} of a constraint $c$ is a tuple $(B_1, ..., B_n)$ such that $c(B_1, ..., B_n)$ is satisfied, that is, both the signature and the definition of the corresponding constraint template are satisfied by the assignment of $(B_1, ..., B_n)$ to the arguments.
@@ -433,7 +434,7 @@ The inverse problem is, given only an instantiation of the cells, find the const
 We define the {\bf Tabular Constraint Learning Problem} as follows:
 %
 \begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}\\
-{\bf   Given} a set of instantiated blocks ${\cal B}$ and a set of {\template}s ${\cal S}$: {\bf Find} all constraints $c(B'_1, ..., B'_n)$ where $c$ is a constraint with a corresponding template in ${\cal S}$ and $(B'_1, ..., B'_n)$ is a valid argument assignment of the constraint $c$.
+{\bf Given} a set of instantiated blocks ${\cal B}$ and a set of {\template}s ${\cal S}$: {\bf find} all constraints $c(B'_1, ..., B'_n)$ where $c$ is a constraint with a corresponding template in ${\cal S}$ and $(B'_1, ..., B'_n)$ is a valid argument assignment of the constraint $c$.
 \end{definition}
 % Let us now define what it means for a constraint from \template to hold in general. Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $t^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
 % \sergey{moved from formalization END}
@@ -450,10 +451,11 @@ Figure~\ref{fig:sol_example} shows the solution to the tabular constraint learni
 \subsection{Other considerations}
 
 \paragraph{Dependencies}
+\sergey{question: the guidlines say caption for tables above the tables, but dsaa papers from 2015 (I have checked two) put it below, that's confusing...}
 In Table~\ref{table:constraints} one can see that for some constraints we used the predicate of another constraint in its signature, e.g. for \textit{PERMUTATION}. This expresses a dependency of the constraint on that other constraint. This can be interpreted as follows: the signature of the constraint consists of its own signature plus the signature of the depending constraint, and its definition of its own definition plus the definition of the depending constraint.
-In FOL, we can see that one constraint entails the other, for example $\ecperm{\sg_x} \models \ecalldiff{\sg_{x}}$.
+In FOL, we can see that one constraint entails the other, for example if $\ecperm{\sg_x}$ holds for a block $\sg_x$, then $\ecalldiff{\sg_{x}}$ also holds.
 
-Apart from easing the specification of the signature and definition, in Section~\tias{TODO} we will see how such dependencies can be used to speed up the search for constraints.
+Apart from easing the specification of the signature and definition, in Section~\ref{sec:approach} we will see how such dependencies can be used to speed up the search for constraints.
 
 \paragraph{Redundancies}
 Depending on the application, some constraints in the solution to the tabular constraint learning problem may be considered \textit{redundant}. This is because constraints may be logically equivalent or may be implied by other constraints.
