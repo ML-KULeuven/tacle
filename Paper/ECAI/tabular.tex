@@ -11,6 +11,7 @@
 \usepackage[noend]{algpseudocode}
 \usepackage[numbers]{natbib}
 \usepackage{notoccite}
+\usepackage{fixltx2e}
 \usepackage{framed}
 \usepackage{amsmath}
 \usepackage{tabularx}
@@ -912,7 +913,7 @@ Viable constraints that have enough input data to compute the result for a blank
 \textit{Active} constraints can be used to autocomplete blank cells such that the user does not have to fill in the values manually.
 Once the user has stopped editing the new row~$i$ (column~$j$), the table~$T$ is updated to include~$i$ ($j$) and constraints are learned once again.
 
-Let us illustrate this on one of the spreadsheets from the gathered dataset. In Figure \ref{fig:autocompletion_example}, \sergey{to be finished}
+Let us illustrate this on one of the spreadsheets from the gathered dataset. In Figure \ref{fig:autocompletion_example}, we see two tables the upper one is completed and in the lower one values in the last raw are not yet filled, then the system finds a satisfying constraint (\textit{SUMIF}) and based on it proposes filling values.
 
 
 \subsection{Error detection}
