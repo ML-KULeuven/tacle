@@ -521,6 +521,10 @@ Because dealing with redundancy is often application-dependent, we explain in th
 
 %This version explicitly takes into account the specificity of the constraints and invalidates some of the solutions that are entailed by the tabular other solutions.
 
+
+
+
+
 \newcommand{\tcl}{Tabular Constraint Learning}
 %\newcommand{\ctl}{Condensed Tabular Constraint Learning}
 \section{Approach to Tabular Constraint Learning}\label{sec:approach}
@@ -549,6 +553,10 @@ In the second part, we start from such a superblock combination and generate and
 \\\\
 We now describe in more detail how the headerless tables are extracted and how the superblocks are generated from them (step 1 and 2, Section 4.1), how the candidate superassignments are generated (step 3a, Section 4.2) and how the actual assignments are extracted from that (step 3b, Section 4.3). We then describe a number of optimizations that we perform to speed up step 3 and 4 (Section 4.4).
 
+
+
+
+
 \subsection{Table extraction}
 \label{sec:table_extraction}
 Many spreadsheets contain headers that provide hints at where the table(s) in the sheet are and what the meaning of the rows and columns is. However, detecting tables and headers is a complex problem on its own~\cite{header}. Furthermore, headers may be missing and their use often requires incorporating language-specific vocabulary, e.g. in English.
@@ -567,6 +575,10 @@ The orientation can be used to indicate that a table should be interpreted as on
 The generation of this JSON file can be done in many ways, ranging from manually specifying the tables to automatically detecting tables.
 Requiring the user to manually generate these files decreases the usability of our tool in a standalone setting, therefore, we offer two proof of concept approaches that aim to facilitate the specification of tables within a CSV.
 
+
+
+
+
 \subsubsection{Automatic detection}
 As mentioned above, automatic detection of headers and tables is a complex task.
 Therefore, we define a restricted setting in which the task becomes easy enough to be automated.
@@ -578,12 +590,20 @@ The tool will now detect ranges of non-empty cells in every row and greedily mer
 If the first row of a table contains 
 This tool removes the need for human intervention, however, it is rather limited and can only be used in simple settings.
 
+
+
+
+
 \subsubsection{Visual}
 Since the specification of tables is usually easy for humans, we propose a second approach which aims to decrease the complexity of specifying tables by allowing users to indicate tables using a visual tool (Figure~\ref{fig:visual_tool}).
 Users select tables excluding the header and optionally specify an orientation.
 The tool then generates the table definitions automatically.
 \\\\
 Aside from extending the automatic detection to be more applicable, one could combine the visual and automatic detection to let the user approve or correct detected table.
+
+
+
+
 
 \subsection{Block detection} \label{sec:make_groups}
 %A spreadsheet may contain multiple tables, and a table in turn will contain multiple (type-consistent) blocks.
@@ -638,9 +658,13 @@ The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}.
 Given a constraint template~$s$, the algorithm first generates all combinations of superblocks (i.e. superblock assignments) that are consistent with the signature.
 In a second step it looks at every superblock assignment and finds subassignments that satisfy the signature and definition of~$s$.
 
+
+
+
+
 \subsubsection{Generating superblock assignments}
 %The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
-Given a constraint template~$s$ and the set of all blocks~\blocks, the goal is to find all combinations of blocks that satisfy the constraint signature. Let there be $n$ blocks and let~$s$ have~$k$ arguments, then a simple generate-and-test method would have to test $n^k$ combinations (given that blocks can be repeated), which can grow very rapidly with $n$, depending on $k$.
+Given a constraint template~$s$ and the set of all blocks~\blocks, the goal is to find all combinations of blocks that satisfy the constraint signature. Let there be $b$ blocks and let~$s$ have~$n$ arguments, then a simple generate-and-test method would have to test $b^n$ combinations (given that blocks can be repeated), which can grow very rapidly with $b$, depending on $n$.
 
 However, the properties defined in the signature, such as those related to the type or size of a block, can be used to avoid considering certain groups for certain arguments.
 Furthermore, the choice of one argument can influence the possible candidates for the other arguments, for example, if they must have the same length.
@@ -716,53 +740,99 @@ These solutions will correspond with the valid superblock assignments for constr
   Every solution is a tuple of values for~$V_x$, $V_y$ and~$V_z$ corresponding directly with a superblock assignment over~\blocks.
 \end{example}
 
-\subsubsection{Constraints over satisfying subgroups} \label{sec:algo:subgr}
-In the previous step, $\generategroups(\textit{t,{\cal G},C})$ generates tuples of candidate groups $(G_1, ..., G_n)$ for the constraint template $t$ with $n$ arguments. In this step, $\findassignment(t, (G_1, \dots, G_n))$, the goal is to enumerate the subgroups $(G'_1, ..., G'_n)$ (for all $i$, $G'_i \subseteq G_i$) that satisfy both the signature and the definition of the constraint template $t$. The main difference with the previous step is that the group generation reasons about the \textit{properties} of the groups (type, size, length, ...), while this step reasons about the actual \textit{content} of the vectors in the groups, that is, the data.
-
-\paragraph{Example}
-Consider the sum-over-rows constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$. In the group generation, all numeric groups where the length of $\sg_r$ vector is equal to the number of rows in $\mathbf{\sg_x}$ has been enumerated. An example from Table~\ref{table:constraints} is $(\sg_r, \mathbf{\sg_x}) = (T_1[:,3:8],T_1[:,3:8])$. Note that this does not match the signature exactly yet: $\sg_r$ contains more than one vector. We can now generate all vectors in $T_1[:,3:8]$ for $\sg_r$ and all subgroups of $T_1[:,3:8]$ for $\mathbf{\sg_x}$ and test whether $\forall i, \sg_r[0][i] = \sum_j \mathbf{\sg_x}[j][i]$ where $G[j][i]$ indicates the $i$the value of the $j$th vector in $G$. An example solution is $(T_1[:7], T_1[:,3:6])$.
-\\\\
-
-One can formulate this as a constraint satisfaction problem, similar to what we did in the previous section, or use a simple generate-and-test approach. In contrast to the previous step, the number of subgroups to generate here are typically manageable: $O(n*m^2)$ with $m$ the number of vectors in the largest group; we only consider continuous ranges in subgroups, so a subgroup of size $m$ has $m*(m+1)/2$ possible subgroups to consider. Furthermore, few constraint solvers support floating point numbers, which are prevalent in spreadsheet.
-
-For this reason, our current implementation uses a simple generate-and-test method that takes the required size/length of the groups into account, and sequentially verifies whether the elements of the vectors satisfy the definition. The pseudo-code for this approach is shown in ...\tias{Add pseudocode!!}
-
-\begin{verbatim}
-VERY PSEUDOcode:
-something recursive that handles vectors/
-subgroups differently like this?
-check(Groups, X, Test):
-  if |Groups| == 0:
-    forall i in ?: vector elements...
-      if not Test(X):
-        return []
-    return X
-  // else
-  all = []
-  Group = Groups.pop(0)
-  if vector(Group):
-    forall Vec in Group:
-      all += check(Groups, X + Vec, Test)
-  else:
-    forall Subgroup in Group:
-      all += check(Groups, X + Subgroup, Test)
-  return all
-\end{verbatim}
-
-Note that for some constraint definitions, there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example $G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. \samuel{\tias{How are they stopped in the code? should be part of the pseud-code because not part of $Test(X)$?} will make it part of pseudo-code}
-
-\paragraph{Example 2, not used (should be replaced by pseudo-code above?)}
-Sum Product
-
-Implementation: finds subgroups based on assignments\\
-Method $Test(G_R, G_{O_1}, G_{O_2})$\\
-$If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\tias{ill-defined, $G_{O_1}$ is a group and $<$ not defined on it (on vector identifiers rather than content?)}\\
-$If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$ \tias{does not show that reasons over content of vectors}
-\\\\
-Method $FindSubgroups(Assignments)$\\
-$Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$ \tias{does not enforce size of subgroups (e.g. vectors)?}
 
 
+
+
+\subsubsection{Constraints over satisfying subgroups}
+\label{sec:algo:subgr}
+In the previous step superblock assignments are generated for a constraint template $s$ with $n$ arguments.
+In this step, given such a superblock assignment $(B_1, \dots, B_n)$, the goal is to discover valid \textit{subassignments}, i.e. assignments of subblocks $(B'_1, \dots, B'_n)$ (for all $i$, $B'_i \subseteq B_i$) that satisfy both the signature and the definition of template~$s$.
+While the previous step reasons about the \textit{properties} of blocks (type, size, length, ...), this step reasons about the actual \textit{content} of the vectors in the blocks, that is, the data.
+
+\begin{example}
+  Consider the sum-over-rows constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$.
+  An example superblock assignment from Figure~\ref{fig:main_example} is $(B_r, \mathbf{\sg_x}) = (\range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{\rangeto{3}{8}})$.
+  Note that this assignment does not satisfy the signature yet, $\sg_r$ contains more than one vector and $\psize(\mathbf{\sg_x}) \neq \plength(B_r)$.
+  This step aims to generate subassignments $(B_r' \sqsubseteq B_r, \mathbf{B_x}' \sqsubseteq \mathbf{B_x})$ that \textit{do} satisfy the signature and test whether they satisfy the definition: $\forall i, \sg_r[0][i] = \sum_j \mathbf{\sg_x}[j][i]$, where $B[i][j]$ indicates the $i$th value of the $j$th vector in $B$.
+  In Figure~\ref{fig:main_example} there is exactly one such satisfying subassignment: $(T_1[:7], T_1[:,3:6])$.
+\end{example}
+
+The search for subassignments is represented as the generic procedure $\findassignment$.
+However, the actual implementation is specified for every constraint template separately, allowing different methods to be used based on the type of template.
+One possible method is to reformulate the problem as a CSP, similar to the approach we employed in the last section.
+Often, however, a simple generate-and-test approach will suffice.
+In contrast to the previous step, the number of subblocks to generate here are typically manageable: $O(n*m^2)$ with $m$ the size of the largest block and $n$ the number of arguments of the template.
+We only consider continuous ranges as subblocks, so for a block of size $m$ there are $m*(m+1)/2$ possible subblocks to consider.
+Furthermore, few constraint solvers support floating point numbers, which are prevalent in spreadsheet.
+
+For this reason, the \sname system uses generate-and-test to implement $\findassignment$ for most constraint templates.
+Given a superblock assignment, all subassignments are generated taking into account the required size, columns or rows.
+The subassignments are sequentially tested using a template-specific procedure \textit{Test} and valid subassignments are returned.
+The \textit{Test} procedure verifies if the definition is satisfied and, if necessary, checks signature constraints that have not yet been enforced (e.g. subtype constraints).
+
+\begin{algorithm}[tbh]
+  \begin{algorithmic}
+    \footnotesize
+    \Procedure{FindSubassignments}{$s$, $(B_1, \dots, B_n)$}
+    \State $n \gets$ number of arguments of template $s$
+    \State $A_{sub} \gets \emptyset$
+    \ForAll{$(B_1', \dots, B_n') \in \{ (B_1', \dots, B_n') | \forall i: B_i' \sqsubseteq B_i \}$}
+      \If{$disjoint(\{B_1', \dots, B_n'\}) \land Test((B_1',\dots,B_n'))$}
+        \State $A_{sub} \gets A_{sub} \cup \{ (B_1', \dots, B_n') \}$
+      \EndIf
+    \EndFor
+\Return $A_{sub}$
+\EndProcedure
+\end{algorithmic}
+\caption{Generate-and-test for $\findassignment$}
+\label{algo:gen-test-subblocks}
+\end{algorithm}
+
+
+
+% \begin{verbatim}
+% VERY PSEUDOcode:
+% something recursive that handles vectors/
+% subgroups differently like this?
+% check(Groups, X, Test):
+%   if |Groups| == 0:
+%     forall i in ?: vector elements...
+%       if not Test(X):
+%         return []
+%     return X
+%   // else
+%   all = []
+%   Group = Groups.pop(0)
+%   if vector(Group):
+%     forall Vec in Group:
+%       all += check(Groups, X + Vec, Test)
+%   else:
+%     forall Subgroup in Group:
+%       all += check(Groups, X + Subgroup, Test)
+%   return all
+% \end{verbatim}
+
+Note that for some constraint definitions, there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example, $\ecprod{B_R'}{B_1'}{B_2'} \Leftrightarrow \ecprod{B_R'}{B_2'}{B_1'}$.
+Such duplicates are avoided by imposing an arbitrary but fixed group ordering on exchangeable blocks and discarding assignments not adhering to the ordering.
+
+ %$G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. \samuel{\tias{How are they stopped in the code? should be part of the pseud-code because not part of $Test(X)$?} will make it part of pseudo-code}
+
+% \paragraph{Example 2, not used (should be replaced by pseudo-code above?)}
+% Sum Product
+
+% Implementation: finds subgroups based on assignments\\
+% Method $Test(G_R, G_{O_1}, G_{O_2})$\\
+% $If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\tias{ill-defined, $G_{O_1}$ is a group and $<$ not defined on it (on vector identifiers rather than content?)}\\
+% $If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$ \tias{does not show that reasons over content of vectors}
+% \\\\
+% Method $FindSubgroups(Assignments)$\\
+% $Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$ \tias{does not enforce size of subgroups (e.g. vectors)?}
+
+
+
+
+\samuel{MARKER-C}
 \subsection{Implementation}
 
 \samuel{Start: Moved template ordering}
