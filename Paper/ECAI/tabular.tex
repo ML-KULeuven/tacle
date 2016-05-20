@@ -39,7 +39,8 @@
 \newcommand{\CSignature}{Signature\xspace}
 \newcommand{\CFunction}{Definition\xspace}
 \newcommand{\dependencies}{\ensuremath{\mathcal{D}}\xspace}
-\newcommand{\groups}{\ensuremath{\mathcal{G}}\xspace}
+\newcommand{\groups}{\ensuremath{\mathcal{B}}\xspace}
+\newcommand{\blocks}{\ensuremath{\mathcal{B}}\xspace}
 
 \newcommand{\range}[3]{\ensuremath{#1[#2,#3]}}
 \newcommand{\rangeto}[2]{#1{:}#2}
@@ -72,6 +73,7 @@
 \newcommand{\integer}{\format{integer}}
 \newcommand{\discrete}{\format{discrete}}
 \newcommand{\plength}{\format{length}}
+\newcommand{\psize}{\format{size}}
 \newcommand{\ptype}{\format{type}}
 \newcommand{\ptable}{\format{table}}
 \newcommand{\por}{\format{orientation}}
@@ -284,7 +286,7 @@ Consider headerless Table~1 in Figure~\ref{fig:main_example}, its rows are not t
 \end{example}
 
 \begin{definition}
-\textbf{Block containement $\sqsubseteq$.} 
+\textbf{Block containment $\sqsubseteq$.} 
 A block $B'$ is contained in a block $B$, $B' \sqsubseteq B$, iff both are valid blocks (single orientation, contiguous, type consistent) and each of the vectors in $B'$ is also in $B$. For row-oriented blocks: $B' \sqsubseteq B \Leftrightarrow B=T[\rangeto{a}{b},:] \wedge B'=T[\rangeto{a'}{b'},:] \wedge a \leq a' \wedge b' \leq b$ and similarly for column-oriented blocks.
 \end{definition}
 We will sometimes write that $B'$ is a \textit{subblock} of $B$ or that $B$ is a \textit{superblock} of $B'$.
@@ -365,7 +367,7 @@ A \textbf{valid argument assignment} of a constraint $c$ is a tuple $(B_1, ..., 
       & The values in $\sg_{x}$ are a permutation of the numbers $1$ through $\plength(\sg_{x})$.
       \\ \hline
     \ecseries{\sg_x}
-      & $\numeric(\sg_{x})$ and $\ecperm{\sg_{x}}$
+      & $\integer(\sg_{x})$ and $\ecperm{\sg_{x}}$
       & $\sg_{x}[1] = 1$ and $\sg_{x}[i] = \sg_{x}[i - 1] + 1$.
       \\ \hline
     \ecfkey{\sg_{fk}}{\sg_{pk}} & $\sg_{fk}$ and~$\sg_{pk}$ are both $\discrete$; $\ptype(\sg_{fk}) = \ptype(\sg_{pk})$; $\ptable(\sg_{fk}) \neq \ptable(\sg_{pk})$; and $\ecalldiff{\sg_{pk}}$ & Every value in~$\sg_{fk}$ also exist in~$\sg_{pk}$ \\ \hline
@@ -633,21 +635,25 @@ The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}.
 Given a constraint template~$s$, the algorithm first generates all combinations of superblocks (i.e. superblock assignments) that are consistent with the signature.
 In a second step it looks at every superblock assignment and finds subassignments that satisfy the signature and definition of~$s$.
 
-\subsubsection{Candidate group generation}
+\subsubsection{Generating superblock assignments}
 %The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
-Given a constraint template and the set of all groups ${\cal G}$, the goal is to find all combinations of groups that satisfy the constraint signature. Let there be $n$ groups and let the constraint have $k$ arguments, then a simple generate-and-test method would have to test $\tbinom{n+k-1}{k}$ combinations (given that groups can be repeated), which grows very rapidly with $n$.
+Given a constraint template~$s$ and the set of all blocks~\blocks, the goal is to find all combinations of blocks that satisfy the constraint signature. Let there be $n$ blocks and let~$s$ have~$k$ arguments, then a simple generate-and-test method would have to test $n^k$ combinations (given that blocks can be repeated), which can grow very rapidly with $n$, depending on $k$.
 
-However, the properties defined in the signature, such as related to type or size, can be used to avoid considering certain groups for certain arguments.
-Furthermore, the choice of one argument can influence the possible candidates for the arguments, for example if they must have the same length.
+However, the properties defined in the signature, such as those related to the type or size of a block, can be used to avoid considering certain groups for certain arguments.
+Furthermore, the choice of one argument can influence the possible candidates for the other arguments, for example, if they must have the same length.
 Instead of writing specialized code for each of these cases, we make use of the built-in reasoning mechanisms of constraint satisfaction solvers.
 
-A Constraint Satisfaction Problem (CSP) is a triple $(V,D,C)$ where $V$ is a set of \textit{variables}, $D$ the domain of possible values each variable can take and $C$ the set of constraints over $V$ that must be satisfied. In our case, we define one variable $V_i$ for each argument of the constraint. Each variable can be assigned to each of the groups in ${\cal G}$, so the domain consists of $|\{\cal G\}|$ identifiers.
+A Constraint Satisfaction Problem (CSP) is a triple $(V,D,C)$ where $V$ is a set of \textit{variables}, $D$ the domain of possible values each variable can take and $C$ the set of constraints over $V$ that must be satisfied.
+In our case, we define one variable $V_i$ for each argument of a constraint template.
+Each variable can be assigned to each of the blocks in \blocks, so the domain consists of $|\{\blocks\}|$ identifiers.
 
 %Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of~$t$.
 %For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that a group~$G \in \groups$ is selected if there is at least one subgroup~$G' \subseteq G$ that satisfies the \CSignature.
 
+To reason over the blocks, we automatically add to the constraint program a set of background facts that contain the properties of each block, namely its type, size, number of columns and rows, length, orientation, and table.
+\samuel{Review: We also add all previously found constraints of constraint templates that are implied by this template.}
+The actual constraints correspond to the requirements defined in the signature, such as whether arguments are of a certain type, have certain dependencies or have to be equal length or orientation, etc.
 
-To reason over the groups, we automatically add to the constraint program a set of background facts that contain the properties of each group, namely its type, size, number of columns and rows, length, orientation, and table. We also add all previously found constraints of constraint templates that are implied by this template. The actual constraints then express the properties defined in the signature, such as whether arguments are of a certain type, have certain dependencies or have to be equal length or orientation, etc.
 % \tias{More detailed description of the properties commented out, feel free to put in}
 %Translation:
 %\begin{description}
@@ -658,33 +664,54 @@ To reason over the groups, we automatically add to the constraint program a set 
 %  \item[Same length / table / orientation] Require groups to gave the same length table ...
 %\end{description}
 
-Constraints derived from the signature can usually but not always be enforced exactly on a group, as we have to consider whether subgroups could satisfy them.
-Requirements on the lengths, orientations and tables of groups can be directly enforced since they stay the same for subgroups.
-Typing requirements need to be relaxed to consider only non-subtypes, since, for example, numeric groups might contain integer subgroups.
+\begin{table}[htb]
+  \caption{Translation of signature requirements to superblock constraints}
+  \label{tbl:translation}
+  \begin{tabularx}{\linewidth}{lX}
+    \textbf{Constraint} & \textbf{Superblock constraint} \\ \hline \hline
+    $\plength(B) = x$ & $\plength(B) = x$ \\ \hline
+    $\por(B) = x$ & $\por(B) = x$ \\\hline
+    $\ptable(B) = x$ & $\ptable(B) = x$ \\ \hline
+    $\ptype(B) = x$ & $\mathit{supertype}(\ptype(B)) = \mathit{supertype}(x)$ \\ \hline
+    $\psize(B) \geq x$ & $\psize(B) \geq x$ \\ \hline
+    $\psize(B) = x$ & $\psize(B) \geq x$ \\ \hline
+    $\pcols(B) = x$ & $\mathit{if}~\por(B) = \mathit{column}: \pcols(B) \geq x$ \\ 
+    & $\mathit{if}~\por(B) = \mathit{row}: \pcols(B) = x$ \\ \hline
+    $\prows(B) = x$ & $\mathit{if}~\por(B) = \mathit{column}: \prows(B) = x$ \\ 
+    & $\mathit{if}~\por(B) = \mathit{row}: \prows(B) \geq x$
+  \end{tabularx}
+\end{table}
+
+In order for our approach to be complete, the signature constraints can not always be enforced directly on a block.
+If a block matches the signature it is a valid candidate, however, if it does not there might exist subblocks that still satisfy the signature.
+\begin{example}
+  Consider, for example, the constraint template \ecseries{x} and a superblock candidate~$B$ for~$x$ containing both integer and floating point values.
+  While the signature of the template requires~$x$ to be integer we cannot discard~$B$ since there might be subblocks~$B' \sqsubseteq B$ that only contain integer values and satisfy the signature.
+\end{example}
+Table~\ref{tbl:translation} shows the how constraints from the signature are converted to constraints on superblocks.
+Requirements on the lengths, orientations and tables of blocks can be directly enforced since they are invariant under block containment($\sqsubseteq$).
+Typing requirements need to be relaxed to check only for supertypes (numeric and textual).
 Minimum sizes can be directly enforced, but exact size requirements are relaxed to minimum sizes, since subgroups might contains fewer vectors.
-Finally, exact restrictions on the number of rows or columns may have to be relaxed depending on the orientation of the group.
+Finally, restrictions on the number of rows or columns behave as length or size constraints based on the orientation of the group they are applied to.
 Subgroups of row-oriented (column-oriented) group will always have the same number of columns (rows), however, the number of rows (columns) might decrease.
-Therefore, we can only require row-oriented (column-oriented) groups to contain \textit{at least} the required amount of rows (columns).
 
-For example, the \CSignature of ?? requires $v_r$ to be integer.
-If a numeric group is assigned to $v_r$ then some subgroups may have type float while other may be of type integer, therefore, this group cannot be discarded.
+The $\generategroups(\textit{s,\blocks})$ method will use these conversion rules to construct a CSP and query a solver for all satisfying solutions.
+These solutions will correspond with the valid superblock assignments for constraint template~$s$.
 
-
-\paragraph{Example}
-We show this construction of a CSP for the constraint template $\ecsumprod{G'}{H'}{I'}$ in Table~\ref{table:constraints}. It defines that $G'$ is a cell whose values is the result of the sum of products of rows in $H'$ and columns in $I'$.
-%
-There are three \textit{variables} $X, Y, Z$ corresponding to group $G'$, $H'$ and $I'$ respectively. The domains are $D(X) = D(Y) = D(Z) = \{1, \ldots, |{\cal G}|\}$. Finally, the constraints are:
-\begin{align*}
-&numeric(X) \land numeric(Y) \land numeric(Z) \\
-&\pcols(X) = 1 \land \prows(X) = 1 \\
-&\plength(Y) = \plength(Z) \land \plength(Y) \geq 2
-\end{align*}
-\tias{Sumproduct is a rather peculiar constraint for spreadsheets... perhaps switch to one with a dependency, e.g. look-up?}
-\sergey{ok, we need to see if look-up would fit here}
-\\\\
-
-
-The $\generategroups(\textit{t,{\cal G},C})$ method will construct this CSP and query a solver for all satisfying solutions. This is the required result set.
+\begin{example}
+  \samuel{Is this still necessary?}
+  Consider the template $\ecsumprod{x}{y}{z}$, then the generated CSP will contain three variables $V_x, V_y, V_z$ corresponding to arguments $x, y$ and $z$ respectively.
+  Given blocks~\blocks, the domain of these variables are $D(V_x) = D(V_y) = D(V_z) = \{ 1, \dots, |\blocks| \}$.
+  Finally, the signature will be translated into constraints:
+  \begin{align*}
+    & \numeric(V_x) \land \numeric(V_y) \land \numeric(V_z) \\
+    & \por(V_x) = \mathit{row} \implies \pcols(V_x) = 1 \\
+    & \por(V_x) = \mathit{row} \implies \prows(V_x) = 1 & \\
+    & \plength(V_y) \geq 2 \land \plength(V_z) \geq 2 \\
+    & \plength(V_y) = \plength(V_z)
+  \end{align*}
+  Every solution is a tuple of values for~$V_x$, $V_y$ and~$V_z$ corresponding directly with a superblock assignment over~\blocks.
+\end{example}
 
 \subsubsection{Constraints over satisfying subgroups} \label{sec:algo:subgr}
 In the previous step, $\generategroups(\textit{t,{\cal G},C})$ generates tuples of candidate groups $(G_1, ..., G_n)$ for the constraint template $t$ with $n$ arguments. In this step, $\findassignment(t, (G_1, \dots, G_n))$, the goal is to enumerate the subgroups $(G'_1, ..., G'_n), \forall i, G'_i \subseteq G_i$ that satisfy both the signature and the definition of the constraint template $t$. The main difference with the previous step is that the group generation reasons about the \textit{properties} of the groups (type, size, length, ...), while this step reasons about the actual \textit{content} of the vectors in the groups, that is, the data.
