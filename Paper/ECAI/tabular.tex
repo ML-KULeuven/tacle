@@ -24,11 +24,11 @@
 
 \newcommand{\constraints}{\ensuremath{\mathcal{T}}\xspace}
 \newcommand{\format}[1]{\textit{#1}\xspace}
-\newcommand{\generategroups}{\format{generateGroups}}
+\newcommand{\generategroups}{\format{SuperblockAssignments}}
 \newcommand{\extractgroups}{\format{extractGroups}}
 \newcommand{\extracttables}{\format{extractTables}}
-\newcommand{\learnconstraints}{\format{learnConstraints}}
-\newcommand{\findassignment}{\format{findConstraints}}
+\newcommand{\learnconstraints}{\format{LearnConstraints}}
+\newcommand{\findassignment}{\format{FindSubassignments}}
 \newcommand{\postprocess}{\format{pruneRedundant}}
 \newcommand{\constrainttorder}{\format{templateOrder}}
 \newcommand{\template}{\format{constraint template}}
@@ -611,49 +611,27 @@ Furthermore, we use constraint satisfaction technology to jointly search for and
 \begin{algorithm}[t]
   \begin{algorithmic}
     \footnotesize
-    \State \textbf{Input:} $\groups$ -- groups, $\constraints$ -- \template's, \dependencies -- dependency graph
+    \State \textbf{Input:} $\groups$ -- groups, $s$ -- constraint template
     \State \textbf{Output:} $C$ -- learned constraints
+    \Procedure{LearnConstraints}{$\groups$, $s$}
     \State $C \gets \emptyset$ %\Comment{The set of constraints}
-  \ForAll{$s \in \constrainttorder(\constraints,\dependencies)$}
-  \State $n \gets$ number of arguments of template $s$
-    \ForAll{$(G_1, \dots, G_n) \in \generategroups(s, \groups, C)$}
-      \State $C \gets C \cup \findassignment(s, (G_1, \dots, G_n))$
+    \State $n \gets$ number of arguments of template $s$
+    \State $A \gets \generategroups(s, \groups)$
+    \ForAll{$(B_1, \dots, B_n) \in A$}
+      \ForAll{$(B_1', \dots, B_n') \in \findassignment(s, (B_1, \dots, B_n))$}
+        \State $C \gets C \cup \{ s(B_1', \dots, B_n') \}$
+      \EndFor
     \EndFor
-  \EndFor\\
 \Return $C$
+\EndProcedure
 \end{algorithmic}
-\caption{Tabular constraint learning}
+\caption{Learn tabular constraints}
 \label{algo:tcl}
 \end{algorithm}
 
-The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}; it consists of three key components: 1) templates can depend on each other, so they are ordered to avoid having to verify the same template multiple times; 2) we generate all combinations of superblocks that can satisfy the signature using constraint satisfaction techniques; 3) from this, all satisfying subblocks are generated.
-We now describe each of the three components in more detail.
-
-\samuel{MARKER-C}
-\subsubsection{Template ordering}
-As discussed before, a constraint may imply another constraint. This is apparent when looking at the template signatures in Table~\ref{table:constraints}, where one can see that some signatures depend on other constraints, such as $LOOKUP$ depending on $FOREIGNKEY$.
-
-In Inductive Logic Programming, one often exploits implications between constraints to structure the search space \cite{luc_book}.
-In our method, we use these dependencies/implications to define a dependency graph between the templates. We assume the signatures do not contain equivalences or loops, and hence the resulting graph is a directed acyclic graph (DAG).
-Figure~\ref{fig:learning_order} shows the dependency graph extracted from the signature definitions in Table~\ref{table:constraints}. 
-Constraint templates that have no dependencies are omitted. 
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.8\linewidth]{figures/constraint_dependency.png}
-  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_1$ is implied by $s_2$ because the \CSignature of~$s_2$ depends on $s_1$ to hold on a specific subset of $s_2$ its groups.
-    The graph is extracted from the Signature column in Table \ref{table:constraints}.
-  }
-  \label{fig:learning_order}
-\end{figure}
-
-The $\constrainttorder(\constraints,\dependencies)$ module in our method takes a set of {\template}s~(\constraints) and a DAG~(\dependencies) as input and produces a linear ordering of the templates such that the more general, implied constraint templates (the requirements) are ordered before the templates that depend on them.
-
-\paragraph{Example}
-As mentioned before, $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ implies $\ecfkey{G'_1}{H'_1}$ and hence the $LOOKUP$ constraint template depends on $FOREIGNKEY$ in Figure~\ref{fig:learning_order} and will be earlier in the ordering.
-
-% not helpful:
-%The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties, groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
+The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}.
+Given a constraint template~$s$, the algorithm first generates all combinations of superblocks (i.e. superblock assignments) that are consistent with the signature.
+In a second step it looks at every superblock assignment and finds subassignments that satisfy the signature and definition of~$s$.
 
 \subsubsection{Candidate group generation}
 %The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
@@ -756,6 +734,35 @@ $Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assi
 
 
 \subsection{Implementation}
+
+\samuel{Start: Moved template ordering}
+\subsubsection{Template ordering}
+As discussed before, a constraint may imply another constraint. This is apparent when looking at the template signatures in Table~\ref{table:constraints}, where one can see that some signatures depend on other constraints, such as \textit{LOOKUP} depending on \textit{FOREIGNKEY}.
+
+In Inductive Logic Programming, one often exploits implications between constraints to structure the search space \cite{luc_book}.
+In our method, we use these dependencies/implications to define a dependency graph between the templates. We assume the signatures do not contain equivalences or loops, and hence the resulting graph is a directed acyclic graph (DAG).
+Figure~\ref{fig:learning_order} shows the dependency graph extracted from the signature definitions in Table~\ref{table:constraints}. 
+Constraint templates that have no dependencies are omitted. 
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/constraint_dependency.png}
+  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_1$ is implied by $s_2$ because the \CSignature of~$s_2$ depends on $s_1$ to hold on a specific subset of $s_2$ its groups.
+    The graph is extracted from the Signature column in Table \ref{table:constraints}.
+  }
+  \label{fig:learning_order}
+\end{figure}
+
+The $\constrainttorder(\constraints,\dependencies)$ module in our method takes a set of {\template}s~(\constraints) and a DAG~(\dependencies) as input and produces a linear ordering of the templates such that the more general, implied constraint templates (the requirements) are ordered before the templates that depend on them.
+
+\paragraph{Example}
+As mentioned before, $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ implies $\ecfkey{G'_1}{H'_1}$ and hence the $LOOKUP$ constraint template depends on $FOREIGNKEY$ in Figure~\ref{fig:learning_order} and will be earlier in the ordering.
+
+% not helpful:
+%The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties, groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
+\samuel{End: Moved template ordering}
+
+
 We provide some more details of our implementation of the above algorithmic approach, to ease reproducibility.
 
 \paragraph{Constraint solvers}
