@@ -149,7 +149,7 @@ We demonstrate the utility of our approach in an experimental evaluation.
 Moreover, we sketch additional application scenario's such as autocompletion and error detection.
 \\\\
 This paper is organized as follows.
-Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:problem_statement} presents the problem statement and the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents an overview of the related work. Section \ref{sec:conclusions} provides conclusions.
+Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:approach} presents the problem statement and the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents an overview of the related work. Section \ref{sec:conclusions} provides conclusions.
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
@@ -530,7 +530,7 @@ Our proposed methodology contains the following steps:
 \begin{enumerate}
 \item Extract headerless tables from tabular data
 \item Partition the tables into maximally contiguous, type-consistent \textit{superblocks}
-\item Generate for each constraint all valid argument assignments:
+\item Generate for each constraint all valid argument assignments in two steps:
 \begin{enumerate}
 \item For each constraint $c$, generate all atoms $c(B_1, \ldots ,B_n)$ where each $B_i$ is a maximal \textit{superblock} and the $B_i$ are compatible with the signature.
 \item For each generated atom $c(B_1, \ldots ,B_n)$, find all valid $c(B'_1, \ldots, B'_n)$ such that for all $i$ holds $B'_i \sqsubseteq B_i$ and the signature and definition of $c(B'_1, \ldots, B'_n)$ are satisfied.
@@ -554,7 +554,7 @@ Many spreadsheets contain headers that provide hints at where the table(s) in th
 \begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{figures/tabletool.png}
-  \caption{This figure shows our table selection tool. A user selects rectangular ranges of cells that correspond to (headerless) tables. If the data has an unambiguous orientation, this information can be provided as well.}
+  \caption{This figure shows the table selection tool of \sname. A user selects rectangular ranges of cells that correspond to (headerless) tables. If the data has an unambiguous orientation, this information can be provided as well.}
   \label{fig:visual_tool}
 \end{figure}
 
@@ -759,7 +759,7 @@ Constraint templates that have no dependencies are omitted.
 The $\constrainttorder(\constraints,\dependencies)$ module in our method takes a set of {\template}s~(\constraints) and a DAG~(\dependencies) as input and produces a linear ordering of the templates such that the more general, implied constraint templates (the requirements) are ordered before the templates that depend on them.
 
 \paragraph{Example}
-As mentioned before, $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ implies $\ecfkey{G'_1}{H'_1}$ and hence the $LOOKUP$ constraint template depends on $FOREIGNKEY$ in Figure~\ref{fig:learning_order} and will be earlier in the ordering.
+As mentioned before, $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ implies $\ecfkey{G'_1}{H'_1}$ and hence the $\textit{LOOKUP}$ constraint template depends on $\textit{FOREIGNKEY}$ in Figure~\ref{fig:learning_order} and will be earlier in the ordering.
 
 % not helpful:
 %The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties, groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
@@ -771,7 +771,7 @@ We provide some more details of our implementation of the above algorithmic appr
 \paragraph{Constraint solvers}
 Generic constraint solving technology can be used for the candidate group generation as well as for enumerating the satisfying subgroups. Constraint solvers can be categorized as being stand-alone solvers, meaning that they have a text-based modeling language in which the CSP must be formulated, and \textit{embedded}, meaning that they have a programmatic API to formulate the CSP.
 
-Our implementation supports the ASP \cite{whaisasp} formalism, using the stand-alone Clingo 4.5.4 \cite{clingo} solver, the stand-alone Constraint Programming language MiniZinc \cite{minizinc} with the Gecode 4.4.0 solver which supports floats, as well as an embedded Python-based CP solver \cite{python_constraint}. The constraint signature that must be satisfied to generate the groups can be specified in each of the tree formalisms, to ease prototyping and extendability towards new constraints. The embedded solver is fastest as it does not have the overhead of file-writing and calling an external program, and is used in the experiments below.
+\sname supports the ASP \cite{whaisasp} formalism, using the stand-alone Clingo 4.5.4 \cite{clingo} solver, the stand-alone Constraint Programming language MiniZinc \cite{minizinc} with the Gecode 4.4.0 solver which supports floats, as well as an embedded Python-based CP solver \cite{python_constraint}. The constraint signature that must be satisfied to generate the groups can be specified in each of the tree formalisms, to ease prototyping and extendability towards new constraints. The embedded solver is fastest as it does not have the overhead of file-writing and calling an external program, and is used in the experiments below.
 
 \paragraph{Redundancy}
 There are only types of redundancy that we eliminate during search. The first is the removal of symmetric attribute assignments as explained in Section~\ref{sec:algo:subgr}.
@@ -790,15 +790,15 @@ Note that \samuel{Motivate why product, not sum (=diff) you only need one, hardc
 \tias{Not used, should be cut!?:}
 Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?} \tias{Yes, either explain in detail or cut}
 
-Extending the system with a new constraint template amounts to \tias{TODO: samuel, explain how to define syntax; signature-for-groupgen; signature-for-def; definition}
+% Extending the system with a new constraint template amounts to \tias{TODO: samuel, explain how to define syntax; signature-for-groupgen; signature-for-def; definition}
 
-\sergey{under question now, might worth deleting} \\
-\sergey{example new template: vr = floor(v), float(v), int(vr), len(v)=len(vr), v,vr are single vectors?}
+% \sergey{under question now, might worth deleting} \\
+% \sergey{example new template: vr = floor(v), float(v), int(vr), len(v)=len(vr), v,vr are single vectors?}
 
-\begin{equation}
-  \forall i{:}~ v_r[i] \leq v[i] < v_r[i] + 0.5
-  \label{eq:floor_extension}
-\end{equation}
+% \begin{equation}
+%   \forall i{:}~ v_r[i] \leq v[i] < v_r[i] + 0.5
+%   \label{eq:floor_extension}
+% \end{equation}
 
 
 % \subsection{Workflow}
@@ -855,7 +855,7 @@ This example combines several smaller examples that were used in an exercise ses
 Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
 
 \subsubsection{Results}
-Our current implementation takes a few seconds to find 18 constraints, including all of the 12 solutions described in Figure~\ref{fig:sol_example}.
+\sname takes a few seconds to find 18 constraints, including all of the 12 solutions described in Figure~\ref{fig:sol_example}.
 Of the 6 remaining (redundant) constraints, 5 are $\mathit{rank}$ constraints that are true by accident, such as: \begin{align*}
   & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}
 \end{align*}
@@ -867,7 +867,7 @@ This ratio is, as we will show, rather high compared to other spreadsheets.
 However, this example contains many short vectors which increases the chance for constraints to be true by accident.
 
 \subsection{Benchmark}
-There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel at an affiliated University, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{(attached to to the submitted paperthe submitted paper)}.
+There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel at an affiliated University, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{(attached to to the submitted paper)}.
 The case study is also included.
 
 All spreadsheets have been converted to CSV with no manual intervention unless noted.
@@ -941,7 +941,7 @@ In this section, we illustrate how various motivating applications could be real
   \caption{\sergey{Samuel, Tias have a look at it, should be corrected and extended, like with groups indications and formulas?}}
   \label{fig:autocompletion_example}
 \end{figure}
-
+\sergey{I think the time discussion is irrelevant, should it be cut out completely?}
 
 Autocompletion can be seen as using knowledge derived from data at time~$t_0$ and new input data at time~$t_1 > t_0$ to predict data that the user has not yet written.
 Therefore, constraints are learned at time~$t_0$ and combined with data from a new row~$i$ (column~$j$) that the user has added to a table~$T$ by time~$t_1$.
@@ -953,7 +953,7 @@ Once the user has stopped editing the new row~$i$ (column~$j$), the table~$T$ is
 Let us illustrate this on one of the spreadsheets from the gathered dataset. In Figure \ref{fig:autocompletion_example}, we see two tables the upper one is completed and in the lower one values in the last raw are not yet filled, then the system finds a satisfying constraint (\textit{SUMIF}) and based on it proposes filling values.
 
 \sergey{there should be a discussion on what to do if multiple constraints satisfy the data and propose predictions, just a sketch here for now}
-If multiple constraints satisfy the data and allow autocompletion, then there is a number of ways to handle it. Firstly, autocompletion can be disabled. Secondly, the most specific constrain can be applied. If they are not compatible in the generality sense, one needs to introduce an autocompletion order, which would resolve the problem by picking only one constraint to suggest the values.
+If multiple constraints satisfy the data and allow autocompletion, then there is a number of ways to handle it. Firstly, autocompletion can be disabled. Secondly, the most specific constrain can be applied. Thirdly, if one is not more specific than the other, one needs to introduce an autocompletion order, which would resolve the problem by picking only one constraint to suggest the values.
 
 \subsection{Error detection}
 \begin{figure*}[thb]
@@ -964,6 +964,8 @@ If multiple constraints satisfy the data and allow autocompletion, then there is
   \label{fig:fbi}
 \end{figure*}
 
+
+\sergey{Either we need to elaborate on the online detection or remove offline-online and simplify the rest, otherwise it is not clear what is going on; again I don't see any point in time here}
 
 We consider two cases of error detection.
 The first setting is the \textit{online} detection of errors which is similar to the autocompletion setting.
@@ -987,7 +989,6 @@ If we define the sample to be our data at time~$t_0$ and the added row to be the
 
 \samuel{Two possible takes here: 1) recent interest in topics such as flashfill, etc -> sparked the idea for this project. This actually relates to constraint learning which has seen an uptick recently and is a subfield of long-established ILP. 2) ILP established field trying to learn structure / .., has been brought to the less traditional context (constraint learning), learning constraints / programs has been picked up by specific approaches such as flashfill etc which inspired this research}
 
-\sergey{ECAI reference style file ignores their guideline and their guideline ignores what is written in the guidelines!}
 flashfill, flashextract, flashmeta \cite{flashfill,flashextract,flashmeta}
 \begin{itemize}
   \item their supervised vs our unsupervised approach
