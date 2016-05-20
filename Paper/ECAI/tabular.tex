@@ -1,6 +1,5 @@
 \documentclass{IEEEtran}
 
-
 \usepackage{times}
 \usepackage{graphicx}
 \usepackage{latexsym}
@@ -16,7 +15,7 @@
 \usepackage{amsmath}
 \usepackage{tabularx}
 \usepackage{subcaption}
-
+\usepackage[inline]{enumitem}
 
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
@@ -185,34 +184,44 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 \end{subfigure}
 \hfill
 \begin{subfigure}{.30\textwidth}
-  {\small
+  {\footnotesize
     \begin{align*}
+      % Table 1
       &~\ecseries{\range{T_{1}}{\rangeall}{1}} \\
 %
-      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}} \\
+      &~\ecperm{\range{T_{1}}{\rangeall}{1}}, \ecperm{\range{T_{1}}{\rangeall}{8}} \\
 %
-      &~\ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
-%
-      &~\ecsumc{\range{T_{6}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{3}}, \ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{4}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}}, \ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{5}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{6}}, \ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{10}} \\
 %
       &~\ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
-%
-      &~\ecaggc{\textit{AVERAGE}}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
-%
-      &~\ecaggc{\textit{MAX}}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
-%
-      &~\ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
       &~\ecaggif{\textit{SUM}}{\range{T_{1}}{\rangeall}{10}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
 %
       &~\ecaggif{\textit{MAX}}{\range{T_{1}}{\rangeall}{11}}{\range{T_{5}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{2}} \\
 %
+	  % Table 2
+      &~\ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      &~\ecaggc{\textit{AVERAGE}}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+      &~\ecaggc{\textit{MAX}}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}},  \\
+%
+      &~\ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%
+	  % Table 4
+      &~\eclookup{\range{T_{4}}{\rangeall}{2}}{\range{T_{4}}{\rangeall}{3}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}} \\
+%
       &~\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}} \\
+%
+	  % Table 6
+      &~\ecsumc{\range{T_{6}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
 %
       &~\range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
     \end{align*}}
   \vspace{-10pt}
-  \caption{Constraints present in the running example (left) \tias{Add ALL, including non-functional and duplicates}.}
+  \caption{Constraints present in the running example (left), except \textit{ALLDIFFERENT} (16) and \textit{FOREIGNKEY} (5).}
   \label{fig:sol_example}
 \end{subfigure}
 \end{figure*}
@@ -512,6 +521,7 @@ Because dealing with redundancy is often application-dependent, we explain in th
 %\newcommand{\ctl}{Condensed Tabular Constraint Learning}
 \section{Approach to Tabular Constraint Learning}\label{sec:approach}
 The aim of our method is to detect constraints between rows and columns of tabular data. Recall that a valid argument assignment for a constraint is an assignment of each argument of the constraint to a block, such that the constraint, that is, its signature and definition, is satisfied.
+\samuel{In general: should it not be: assign blocks to arguments instead of arguments to blocks?}
 \tias{I here use constraint and constraint template interchangeably}
 
 Our proposed methodology contains the following steps:
@@ -535,45 +545,69 @@ In the second part, we start from such a superblock combination and generate and
 \\\\
 We now describe in more detail how the headerless tables are extracted and how the superblocks are generated from them (step 1 and 2, Section 4.1), how the candidate superassignments are generated (step 3a, Section 4.2) and how the actual assignments are extracted from that (step 3b, Section 4.3). We then describe a number of optimizations that we perform to speed up step 3 and 4 (Section 4.4).
 
-\paragraph{Rest old text}
-
-This section describes our approach to \tcl. The main method takes \textit{groups} and {\template}s as input, and is described in Section~\ref{sec:algo}. We first explain how tables and groups can be extracted from raw spreadsheet data.
-
-\subsection{Table and group detection} \label{sec:make_groups}
-%A spreadsheet may contain multiple tables, and a table in turn will contain multiple (type-consistent) groups.
+\subsection{Table extraction}
+\label{sec:table_extraction}
 Many spreadsheets contain headers that provide hints at where the table(s) in the sheet are and what the meaning of the rows and columns is. However, detecting tables and headers is a complex problem on its own~\cite{header}. Furthermore, headers may be missing and their use often requires incorporating language-specific vocabulary, e.g. in English.
-
-%\tias{0. preprocess: currencies and precentual to numeric, 1. tables from spreadsheets, 2. groups from tables. Ext: could be done interactively.}
-Fully automatic table and header detection is not the core of our work. We hence built a visual tool that uses a simple method to detect tables in the data and allows a user to correct these.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{figures/tabletool.png}
-  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_1$ is implied by $s_2$ because the \CSignature of~$s_2$ depends on $s_1$ to hold on a specific subset of $s_2$ its groups.
-    The graph is extracted from the Signature column in Table \ref{table:constraints}.
-  }
-  \label{fig:learning_order}
+  \caption{This figure shows our table selection tool. A user selects rectangular ranges of cells that correspond to (headerless) tables. If the data has an unambiguous orientation, this information can be provided as well.}
+  \label{fig:visual_tool}
 \end{figure}
 
-\samuel{This does not fully correspond with the real tool, the real tool does not allow detected tables to be corrected: Either use detection tool or use visual tool to input tables manually}
-The way the table detection in the tool works is as follows:
-First, we preprocess the spreadsheets so that currency values are transformed into their integer or float value and percentual data is transformed into the corresponding floating point representation (e.g. $85\%$ as $0.85$).
-Next, every row in the spreadsheet is partitioned into blocks of columns that are separate by at least one $None$ value. Then, the blocks in each row are greedily merged to obtain rectangles. Finally headers are removed by checking whether the first row or column is all textual while the next row or column is not; in that case the assumed header is removed.
+Our algorithm requires tables to be specified, this can, however, be done in various ways.
+Tables are specified in a JSON configuration file which contains the table names, their coordinates within a CSV file and optionally the orientation of certain tables.
+The orientation can be used to indicate that a table should be interpreted as only rows or only columns.
 
-It should be clear this simple method only works if all tables are clearly separated by $None$ values and that headers of fully textual tables are not detected, among other things. Hence, in the visual tool the user can correct the detected tables if needed. \samuel{\tias{I think it would be good if we could show a screenshot of this tool...} Added screenshot, needs to be referred to}
+The generation of this JSON file can be done in many ways, ranging from manually specifying the tables to automatically detecting tables.
+Requiring the user to manually generate these files decreases the usability of our tool in a standalone setting, therefore, we offer two proof of concept approaches that aim to facilitate the specification of tables within a CSV.
 
-Row-oriented and column-oriented groups are then extracted from each table by partitioning the rows (columns) into type-consistent parts.
+\subsubsection{Automatic detection}
+As mentioned above, automatic detection of headers and tables is a complex task.
+Therefore, we define a restricted setting in which the task becomes easy enough to be automated.
+We assume that 1) tables are rectangular blocks of data not containing any empty cells; and 2) tables are separated by at least one empty cell from other tables.
+Additionally, if the first row contains only textual values it treated as a header, otherwise, if the first column consists of only textual data is will be the header.
+If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
 
-From here on we will assume that groups and tables are given.
+The tool will now detect ranges of non-empty cells in every row and greedily merge these ranges across columns to obtain rectangular tables.
+If the first row of a table contains 
+This tool removes the need for human intervention, however, it is rather limited and can only be used in simple settings.
+
+\subsubsection{Visual}
+Since the specification of tables is usually easy for humans, we propose a second approach which aims to decrease the complexity of specifying tables by allowing users to indicate tables using a visual tool (Figure~\ref{fig:visual_tool}).
+Users select tables excluding the header and optionally specify an orientation.
+The tool then generates the table definitions automatically.
+\\\\
+Aside from extending the automatic detection to be more applicable, one could combine the visual and automatic detection to let the user approve or correct detected table.
+
+\subsection{Block detection} \label{sec:make_groups}
+%A spreadsheet may contain multiple tables, and a table in turn will contain multiple (type-consistent) blocks.
+The goal of the block detection step is to partition tables into type-consistent (all-numeric or all-textual) blocks.
+We generate blocks automatically, partitioning tables into maximal type-consistent blocks.
+First, the spreadsheet data is preprocessed so that currency values and percentual values are transformed into their corresponding numeric (i.e. integer or floating point) representation (e.g. $2.75 \$$ as $2.75$ or $85\%$ as~$0.85$).
+Afterwards, tables are partitioned into maximal type-consistent blocks.
+If a table has no fixed orientation, the algorithm will attempt to construct both row-blocks and column-blocks.
+In order to find row-blocks (column-blocks), the type of each row (column) is determined, i.e. whether it is numeric or textual.
+All adjacent rows (columns) that have the same type are merged to form a block. 
+If any row (column) of the table contains both numeric and textual values, it is type inconsistent and the algorithm will not produce any row-blocks (column-blocks) for that table.
+For tables that have a fixed orientation only blocks of that orientation are built.
+
+While this step can be done algorithmically, there are cases where specifying finer-grained blocks manually may be beneficial.
+Firstly, blocks may group data from different contexts.
+For example, consider the type consistent block $B_3=\range{T_1}{\rangeall}{\rangeto{3}{8}}$ from the example in Figure~\ref{fig:main_example}: $\range{T_1}{\rangeall}{8}$ is contextually different from $\range{T_1}{\rangeall}{\rangeto{3}{7}}$, therefore, we could split~$B_3$ into two blocks.
+\samuel{Secondly, accidental blocks}
+Finer grained groups can reduce the amount of redundant constraints that are found.
 
 \newcommand{\temps}{\ensuremath{S}}
-\subsection{Algorithm} \label{sec:algo}
-Our method solves the \tcl problem by checking for each template what combination of groups can satisfy the signature, and which specific subgroups satisfy the definition.
 
-The main challenge is to avoid having to check each possible combination of group and subgroup on each constraint template, as well as developing an \textit{extensible} method in which new constraint templates can be plugged in with relative ease. %We will use constraint satisfaction technology to partly answer this challenge.
-To answer this challenge we separate checking the signature of a constraint template from checking the definition of a constraint template. Furthermore, we use constraint satisfaction technology to jointly search for and test the signature over all group combinations.
+\subsection{Algorithm}
+\label{sec:algo}
+Our method assumes that tables and blocks are given and solves the \tcl~problem by checking for each template: what combination of given (super)blocks may satisfy the signature and which specific (sub)blocks satisfy both the signature and the definition.
 
-The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}; it consists of three key components: 1) templates can depend on each other, so they are ordered to avoid having to verify the same template multiple times; 2) we generate all combinations of groups that can satisfy the signature using constraint satisfaction techniques; 3) from this, all satisfying subgroups are generated.
+The main challenge we aim to address with our approach is to avoid having to check each possible combination of blocks for each constraint template as well as developing an \textit{extensible} method in which new constraint templates can be plugged in with relative ease. %We will use constraint satisfaction technology to partly answer this challenge.
+To answer this challenge we separate checking the signature (concerning properties of a block) of a constraint template from checking the definition (concerning the values in a block) of a constraint template.
+Furthermore, we use constraint satisfaction technology to jointly search for and test the signature over all combinations of superblocks.
 
 \begin{algorithm}[t]
   \begin{algorithmic}
@@ -593,16 +627,10 @@ The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}; it cons
 \label{algo:tcl}
 \end{algorithm}
 
-%First, constraint templates are ordered such that they can be treated sequentially and each only once.
-%Then, for each constraint template~$s \in \temps$ we generate a set~$A$ of \textit{group-assignments} that satisfy the \CSignature of~$s$.
-%Every group assignment assigns a group~$G \in \groups$ to every argument of the template.
-%In the third step, for every assignments $(G_1, ..., G_n) \in A$ we find all constraints $s(G_1', ... G_n')$ that hold on the data (satisfy the \CFunction), such that every subgroup $G_i' \subseteq G_i$.
-
-%Our Algorithm \ref{algo:tcl} is in line with the ``generate-and-test'' paradigm that is well-known in AI \cite{whaisasp}, however, we apply the approach on two levels, generating and testing groups according to their properties and generating and testing subgroups on the actual data.
-%We will explain and illustrate the three key steps in detail.
-
+The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}; it consists of three key components: 1) templates can depend on each other, so they are ordered to avoid having to verify the same template multiple times; 2) we generate all combinations of superblocks that can satisfy the signature using constraint satisfaction techniques; 3) from this, all satisfying subblocks are generated.
 We now describe each of the three components in more detail.
 
+\samuel{MARKER-C}
 \subsubsection{Template ordering}
 As discussed before, a constraint may imply another constraint. This is apparent when looking at the template signatures in Table~\ref{table:constraints}, where one can see that some signatures depend on other constraints, such as $LOOKUP$ depending on $FOREIGNKEY$.
 
