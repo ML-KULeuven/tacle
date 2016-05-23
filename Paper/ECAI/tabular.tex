@@ -732,8 +732,8 @@ These solutions will correspond with the valid superblock assignments for constr
   Finally, the signature will be translated into constraints:
   \begin{align*}
     & \numeric(V_x) \land \numeric(V_y) \land \numeric(V_z) \\
-    & \por(V_x) = \mathit{row} \implies \pcols(V_x) = 1 \\
-    & \por(V_x) = \mathit{row} \implies \prows(V_x) = 1 & \\
+    & (\por(V_x) = \mathit{row}) \implies (\pcols(V_x) = 1) \\
+    & (\por(V_x) = \mathit{column}) \implies (\prows(V_x) = 1) & \\
     & \plength(V_y) \geq 2 \land \plength(V_z) \geq 2 \\
     & \plength(V_y) = \plength(V_z)
   \end{align*}
@@ -833,7 +833,9 @@ Such duplicates are avoided by imposing an arbitrary but fixed group ordering on
 
 
 \samuel{MARKER-C}
-\subsection{Implementation}
+\subsection{Optimizations}
+This section discusses various essential design decisions and optimizations.
+The aim is to improve the algorithm in three areas: 1) speed; 2) redundant constraints; and 3) extensibility.
 
 \samuel{Start: Moved template ordering}
 \subsubsection{Template ordering}
@@ -865,18 +867,18 @@ As mentioned before, $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ implies $\ecfkey{G'_1}{
 
 We provide some more details of our implementation of the above algorithmic approach, to ease reproducibility.
 
-\paragraph{Constraint solvers}
+\subsubsection{Constraint solvers}
 Generic constraint solving technology can be used for the candidate group generation as well as for enumerating the satisfying subgroups. Constraint solvers can be categorized as being stand-alone solvers, meaning that they have a text-based modeling language in which the CSP must be formulated, and \textit{embedded}, meaning that they have a programmatic API to formulate the CSP.
 
 \sname supports the ASP \cite{whaisasp} formalism, using the stand-alone Clingo 4.5.4 \cite{clingo} solver, the stand-alone Constraint Programming language MiniZinc \cite{minizinc} with the Gecode 4.4.0 solver which supports floats, as well as an embedded Python-based CP solver \cite{python_constraint}. The constraint signature that must be satisfied to generate the groups can be specified in each of the tree formalisms, to ease prototyping and extendability towards new constraints. The embedded solver is fastest as it does not have the overhead of file-writing and calling an external program, and is used in the experiments below.
 
-\paragraph{Redundancy}
+\subsubsection{Redundancy}
 There are only types of redundancy that we eliminate during search. The first is the removal of symmetric attribute assignments as explained in Section~\ref{sec:algo:subgr}.
 
 The second is that there be \textit{overlapping} subgroups that satisfy the definition, such as \tias{There is no example in the example figure? I was thinking of max/min, but it is over the entire vector always...}.
 In this case we chose to omit those subgroups that are fully contained within a larger subgroup since this can lead to over-fitting.
 
-\paragraph{Constraints}
+\subsubsection{Constraints}
 The constraints that are currently supported in our system are shown in Table~\ref{table:constraints}. All these constraints are available in popular spreadsheet software, except the first two constraints (alldifferent and permutation). These two constraints are \textit{structural} constraints, which we added so they can be used in the signature of other constraint templates; they are also popular constraints in constraint satisfaction~\cite{modelseeker}.
 
 %Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
