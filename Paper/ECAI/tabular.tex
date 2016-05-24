@@ -355,16 +355,19 @@ A \textbf{valid argument assignment} of a constraint $c$ is a tuple $(B_1, ..., 
 
 
 \begin{table*}
-\caption{Overview of constraint templates implemented in our system, which covers the most popular spreadsheet constraints we encountered. The templates marked with $\dagger$ are aggregate constraint templates, the table shows the version for sum but the implementation also supports max, min, average, product and count. Subgroups in normal font have to be vectors, while subgroups in \textbf{bold} may contain more than one vector.\label{table:constraints}}
+\caption{Overview of constraint templates implemented in \sname.
+The templates marked with $\dagger$ are aggregate constraint templates, the table shows the version for sum but the implementation also supports max, min, average, product and count.
+Subgroups in normal font have to be vectors, while subgroups in \textbf{bold} may contain more than one vector.
+Templates marked with $*$ are \textit{structural}, i.e. they are not functional and cannot be implemented in most spreadsheet software.}\label{table:constraints}
   {\centering
   \begin{tabularx}{\textwidth}{l X X}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ \hline \hline
-    $\ecalldiff{\sg_x}$
+    $\ecalldiff{\sg_x}^*$
       & $\discrete(\sg_x)$
       & All values in $\sg_x$ are different: $\sg_x[i] \neq \sg_x[j]$ if $i \neq j$
       \\ \hline
     %X = Y & & \\
-    $\ecperm{\sg_x}$
+    $\ecperm{\sg_x}^*$
       & $\numeric(\sg_{x})$, $\ecalldiff{\sg_{x}}$
       & The values in $\sg_{x}$ are a permutation of the numbers $1$ through $\plength(\sg_{x})$.
       \\ \hline
@@ -372,7 +375,7 @@ A \textbf{valid argument assignment} of a constraint $c$ is a tuple $(B_1, ..., 
       & $\integer(\sg_{x})$ and $\ecperm{\sg_{x}}$
       & $\sg_{x}[1] = 1$ and $\sg_{x}[i] = \sg_{x}[i - 1] + 1$.
       \\ \hline
-    \ecfkey{\sg_{fk}}{\sg_{pk}} & $\sg_{fk}$ and~$\sg_{pk}$ are both $\discrete$; $\ptype(\sg_{fk}) = \ptype(\sg_{pk})$; $\ptable(\sg_{fk}) \neq \ptable(\sg_{pk})$; and $\ecalldiff{\sg_{pk}}$ & Every value in~$\sg_{fk}$ also exist in~$\sg_{pk}$ \\ \hline
+    $\ecfkey{\sg_{fk}}{\sg_{pk}}^*$ & $\sg_{fk}$ and~$\sg_{pk}$ are both $\discrete$; $\ptype(\sg_{fk}) = \ptype(\sg_{pk})$; $\ptable(\sg_{fk}) \neq \ptable(\sg_{pk})$; and $\ecalldiff{\sg_{pk}}$ & Every value in~$\sg_{fk}$ also exist in~$\sg_{pk}$ \\ \hline
     % TODO check out
     \eclookup{\sg_r}{\sg_{fk}}{\sg_{pk}}{\sg_{val}}
       & $\sg_{fk}$ and $\sg_{pk}$ are both $\discrete$; arguments $\{\sg_{fk}, \sg_{r}\}$ and $\{\sg_{pk}, \sg_{val}\}$ within the same set have the same \plength, \ptable and \por; $\sg_{r}$ and~$\sg_{val}$ have the same type; and \ecfkey{\sg_{fk}}{\sg_{pk}}.
