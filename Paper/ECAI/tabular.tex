@@ -1074,13 +1074,6 @@ Unfortunately, this assumption is sometimes too strong, when users are intereste
 In this section, we illustrate how various motivating applications could be realized using our system.
 
 \subsection{Autocompletion}
-\begin{figure}[thb]
-  \begin{center}
-    \includegraphics[width=0.33\textwidth]{figures/autocompletion_example.png}
-  \end{center}
-  \caption{\sergey{Samuel, Tias have a look at it, should be corrected and extended, like with groups indications and formulas?}}
-  \label{fig:autocompletion_example}
-\end{figure}
 \sergey{I think the time discussion is irrelevant, should it be cut out completely?}
 
 Autocompletion can be seen as using knowledge derived from data at time~$t_0$ and new input data at time~$t_1 > t_0$ to predict data that the user has not yet written.
@@ -1097,11 +1090,23 @@ If multiple constraints satisfy the data and allow autocompletion, then there is
 
 \subsection{Error detection}
 \begin{figure*}[thb]
+\begin{subfigure}{.70\textwidth}
   \begin{center}
-    \includegraphics[width=0.85\textwidth]{figures/fbi_figure_highlighted.png}
+    \includegraphics[width=\textwidth]{figures/fbi_figure_highlighted.png}
   \end{center}
   \caption{Real world tabular constraint reconstruction: FBI crime statistics}
   \label{fig:fbi}
+\end{subfigure}
+\hfill
+\begin{subfigure}{.29\textwidth}
+\begin{center}
+    \includegraphics[width=\textwidth]{figures/autocompletion_example.png}
+  \end{center}
+  \caption{\sergey{Samuel, Tias have a look at it, should be corrected and extended, like with groups indications and formulas?}}
+  \label{fig:autocompletion_example}
+
+\end{subfigure}
+
 \end{figure*}
 
 
@@ -1125,28 +1130,28 @@ If we define the sample to be our data at time~$t_0$ and the added row to be the
 %and the left out row (column) to be new input.
 
 \section{Related Work}\label{sec:related_work}
-The system that we have introduced combines ideas from several existing
+\sname combines ideas from several existing
 approaches from multiple different fields of research.
+
+
 First, it borrows techniques from logical and relational learning \cite{luc_book}, as it finds
 constraints in multiple relations (or tables). However, unlike typical logical and relational learning
 approaches, it focuses on data in spreadsheets and on constraints that can be column or row-wise.
-Furthermore, it derives a set of simple “atomic” constraints rather than a set of rules that each consist of multiple literals as in clausal discovery \cite{claudien} or \cite{Llalouet}. Still several ideas from logical and relational learning 
+Furthermore, it derives a set of simple “atomic” constraints rather than a set of rules that each consist of multiple literals as in clausal discovery \cite{claudien,Llalouet}. Still several ideas from logical and relational learning
 proved to be useful, such as the use of a canonical form, a refinement graph, and pruning for redundancy.
 Also related to this line of research is the work on deriving constraints in databases such as functional and multi-valued dependencies \cite{savnik, Mannila-Raiha}
 although this line of research has focused on more specialized techniques for specific types of constraints. Furthermore, the constraints used
 in spreadsheets are often quite different than those in databases.
+
+
 Second, there exist several algorithms in the constraint programming community that induce constraint (programs)
-from one or more examples and questions. Two well-known lines of research include ModelSeeker \cite{modelseeker} and Quacq \cite{Quacq}
-Modelseeker starts from a single example in the form of a vector of values and then exhaustively looks for the most specific constraints
-from a large constraint library that hold in the vector. To this aim, it cleverly enumerates different tables from the vector. For instance, if the initial vector
-was of dimension 1 x 20, it would consider rearrangements of size 2 x 10, 4 x 5, 5 x 4, … and Modelseeker would then look for both column, row  and even diagonal constraints.
-Key differences with our technique are that we assume the tables are given (a reasonable assumption if one starts from a spreadsheet),
-and also that ModelSeeker’s constraints are the typical ones from the constraint programming community, which are aimed at combinatorial optimization
-and scheduling rather than what is typically used in spreadsheets. Quacq \cite{Quacq} and its predecessor Conacq \cite{Conacq} acquire a conjunction of constraints
-using techniques inspired on Mitchell’s version spaces to process examples, some variants also asking informative questions to the user. As the conjunction
-for typical constraint programming problems (such as SUDOKU) can be quite large, a key problem is to cope with redundant constraints.   As Modelseeker,
-these systems focus on the types of constraints in combinatorial optimization but unlike ModelSeeker and our approach, they 
-do not assume the variables are organized in tabular form.  Third, our work borrows from the seminal work of Gulwani et al. \cite{flashfill} on program synthesis for tabular data that is incorporated in Microsoft’s Excel. In FlashFill, the end-user might work on a table containing the surnames (column A) and names (column B) of politicians. The first row might contain the values A1 = Blair and B1 = Tony, and the user might then enter in cell C1 the value T.B. At that point FlashFill would generate a program that produces the output T.B. for the inputs Blair and Tony, would also apply it to automatically generate values for the other politicians (rows) in the table. While it might need an extra example to deal with names such as Van Rompuy, Herman and determine whether it should output H.V.or H.V.R.,FlashFill learns correct programs from very few examples. Flashfill has been extended in e.g. FlashExtract \cite{flashextract} to produce a set of normalized database tables starting from naively filled out spreadsheets. However, unlike our approach, Flashfill requires the user to identify explicitly the desired inputs/outputs from the function as well as to provide explicitly some positive and sometimes also negative examples.  In contrast, our approach is unsupervised, although it would be interesting to study whether it could be improved through user interaction and through user examples.  Another interesting open issue (for all of these techniques with the exception of logical and relational learning) is how to deal with possibly incomplete or noisy data. Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabular}, two recent probabilistic modeling languages that have been specifically designed for dealing with relational data in tabular form and that can, as FlashFill, also automatically fill out missing values in a table.  However, unlike the other mentioned approaches, it is based on an underlying probabilistic graphical model that performs probabilistic inference rather than identify “hard” constraints. 
+from one or more examples and questions. Two well-known lines of research include ModelSeeker \cite{modelseeker} and Quacq \cite{Quacq}.
+The former starts from a single example in the form of a vector of values and then exhaustively looks for the most specific constraints from a large constraint library that hold in the vector. To this aim, it cleverly enumerates different tables from the vector. For instance, if the initial vector was of dimension $1 \times 20$, it would consider rearrangements of size $2 \times 10$, $4 \times 5$, $5 \times 4$, … and Modelseeker would then look for both column, row  and even diagonal constraints. Key differences with our technique are that we assume the tables are given (a reasonable assumption if one starts from a spreadsheet), and also that ModelSeeker’s constraints are the typical ones from the constraint programming community, which are aimed at combinatorial optimization and scheduling rather than what is typically used in spreadsheets. Quacq \cite{Quacq} and its predecessor Conacq \cite{Conacq} acquire a conjunction of constraints using techniques inspired on Mitchell’s version spaces to process examples, some variants also asking informative questions to the user. As the conjunction for typical constraint programming problems (such as Sudoku) can be quite large, a key problem is to cope with redundant constraints.   As Modelseeker, these systems focus on the types of constraints in combinatorial optimization but unlike ModelSeeker and our approach, they do not assume the variables are organized in tabular form.
+
+
+Third, our work borrows from the seminal work of Gulwani et al. \cite{flashfill} on program synthesis for tabular data that is incorporated in Microsoft’s Excel. In FlashFill, the end-user might work on a table containing the surnames (column A) and names (column B) of politicians. The first row might contain the values A1 = ``Blair'' and B1 = ``Tony'', and the user might then enter in cell C1 the value ``T.B.''. At that point FlashFill would generate a program that produces the output ``T.B.'' for the inputs ``Blair'' and ``Tony'', would also apply it to automatically generate values for the other politicians (rows) in the table. While it might need an extra example to deal with names such as ``Van Rompuy, Herman'' and determine whether it should output ``H.V.'' or ``H.V.R.'', FlashFill learns correct programs from very few examples. Flashfill has been extended to e.g. FlashExtract \cite{flashextract} to produce a set of normalized database tables starting from naively filled out spreadsheets. However, unlike our approach, Flashfill requires the user to identify explicitly the desired inputs/outputs from the function as well as to provide explicitly some positive and sometimes also negative examples.  In contrast, our approach is unsupervised, although it would be interesting to study whether it could be improved through user interaction and through user examples.  Another interesting open issue (for all of these techniques with the exception of logical and relational learning) is how to deal with possibly incomplete or noisy data.
+
+Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabular}, two recent probabilistic modeling languages that have been specifically designed for dealing with relational data in tabular form and that can, as FlashFill, also automatically fill out missing values in a table.  However, unlike the other mentioned approaches, it is based on an underlying probabilistic graphical model that performs probabilistic inference rather than identify “hard” constraints.
 
 \section{Conclusions}\label{sec:conclusions}
 
