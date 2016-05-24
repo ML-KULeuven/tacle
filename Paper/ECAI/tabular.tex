@@ -29,7 +29,7 @@
 \newcommand{\extractgroups}{\format{extractGroups}}
 \newcommand{\extracttables}{\format{extractTables}}
 \newcommand{\learnconstraints}{\format{LearnConstraints}}
-\newcommand{\findassignment}{\format{FindSubassignments}}
+\newcommand{\findassignment}{\format{Subassignments}}
 \newcommand{\postprocess}{\format{pruneRedundant}}
 \newcommand{\constrainttorder}{\format{templateOrder}}
 \newcommand{\template}{\format{constraint template}}
@@ -639,26 +639,30 @@ Furthermore, we use constraint satisfaction technology to jointly search for and
 \begin{algorithm}[t]
   \begin{algorithmic}
     \footnotesize
-    \State \textbf{Input:} $\groups$ -- groups, $s$ -- constraint template
+    \State \textbf{Input:} $\blocks$ -- blocks, $\temps$ -- constraint templates
     \State \textbf{Output:} $C$ -- learned constraints
-    \Procedure{LearnConstraints}{$\groups$, $s$}
-    \State $C \gets \emptyset$ %\Comment{The set of constraints}
-    \State $n \gets$ number of arguments of template $s$
-    \State $A \gets \generategroups(s, \groups)$
-    \ForAll{$(B_1, \dots, B_n) \in A$}
-    \ForAll{${(B_1',\dots,B_n')\in}~\findassignment(s, (B_1,\dots,B_n))$}
-        \State $C \gets C \cup \{ s(B_1', \dots, B_n') \}$
+
+    \Procedure{LearnConstraints}{$\blocks$, $\temps$}
+      \State $C \gets \emptyset$ %\Comment{The set of constraints}
+      \ForAll{$s~\mathbf{in}~\temps$}
+        \State $n \gets$ number of arguments of template $s$
+        \State $A \gets \generategroups(s, \blocks)$
+        \ForAll{$(B_1, \dots, B_n) \in A$}
+        \State $A' \gets \findassignment(s, (B_1,\dots,B_n))$
+        \ForAll{$(B_1',\dots,B_n') \in A'$}
+            \State $C \gets C \cup \{ s(B_1', \dots, B_n') \}$
+          \EndFor
+        \EndFor
       \EndFor
-    \EndFor
-\Return $C$
-\EndProcedure
+      \Return $C$
+    \EndProcedure
 \end{algorithmic}
 \caption{Learn tabular constraints}
 \label{algo:tcl}
 \end{algorithm}
 
 The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}.
-Given a constraint template~$s$, the algorithm first generates all combinations of superblocks (i.e. superblock assignments) that are consistent with the signature.
+For every constraint template~$s$, the algorithm first generates all combinations of superblocks (i.e. superblock assignments) that are consistent with the signature.
 In a second step it looks at every superblock assignment and finds subassignments that satisfy the signature and definition of~$s$.
 
 
@@ -681,7 +685,6 @@ Each variable can be assigned to each of the blocks in \blocks, so the domain co
 %For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that a group~$G \in \groups$ is selected if there is at least one subgroup~$G' \subseteq G$ that satisfies the \CSignature.
 
 To reason over the blocks, we automatically add to the constraint program a set of background facts that contain the properties of each block, namely its type, size, number of columns and rows, length, orientation, and table.
-\samuel{Review: We also add all previously found constraints of constraint templates that are implied by this template.}
 The actual constraints correspond to the requirements defined in the signature, such as whether arguments are of a certain type, have certain dependencies or have to be equal length or orientation, etc.
 
 % \tias{More detailed description of the properties commented out, feel free to put in}
@@ -729,7 +732,6 @@ The $\generategroups(\textit{s,\blocks})$ method will use these conversion rules
 These solutions will correspond with the valid superblock assignments for constraint template~$s$.
 
 \begin{example}
-  \samuel{Is this still necessary?}
   Consider the template $\ecsumprod{x}{y}{z}$, then the generated CSP will contain three variables $V_x, V_y, V_z$ corresponding to arguments $x, y$ and $z$ respectively.
   Given blocks~\blocks, the domain of these variables are $D(V_x) = D(V_y) = D(V_z) = \{ 1, \dots, |\blocks| \}$.
   Finally, the signature will be translated into constraints:
@@ -777,7 +779,7 @@ The \textit{Test} procedure verifies if the definition is satisfied and, if nece
 \begin{algorithm}[tbh]
   \begin{algorithmic}
     \footnotesize
-    \Procedure{FindSubassignments}{$s$, $(B_1, \dots, B_n)$}
+    \Procedure{Subassignments}{$s$, $(B_1, \dots, B_n)$}
     \State $n \gets$ number of arguments of template $s$
     \State $A_{sub} \gets \emptyset$
     \ForAll{$(B_1', \dots, B_n') \in \{ (B_1', \dots, B_n') | \forall i: B_i' \sqsubseteq B_i \}$}
@@ -816,9 +818,6 @@ The \textit{Test} procedure verifies if the definition is satisfied and, if nece
 %   return all
 % \end{verbatim}
 
-Note that for some constraint definitions, there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example, $\ecprod{B_R'}{B_1'}{B_2'} \Leftrightarrow \ecprod{B_R'}{B_2'}{B_1'}$.
-Such duplicates are avoided by imposing an arbitrary but fixed group ordering on exchangeable blocks and discarding assignments not adhering to the ordering.
-
  %$G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. \samuel{\tias{How are they stopped in the code? should be part of the pseud-code because not part of $Test(X)$?} will make it part of pseudo-code}
 
 % \paragraph{Example 2, not used (should be replaced by pseudo-code above?)}
@@ -835,62 +834,101 @@ Such duplicates are avoided by imposing an arbitrary but fixed group ordering on
 
 
 
-\samuel{MARKER-C}
-\subsection{Optimizations}
-This section discusses various essential design decisions and optimizations.
-The aim is to improve the algorithm in three areas: 1) speed; 2) redundant constraints; and 3) extensibility.
 
-\samuel{Start: Moved template ordering}
-\subsubsection{Template ordering}
-As discussed before, a constraint may imply another constraint. This is apparent when looking at the template signatures in Table~\ref{table:constraints}, where one can see that some signatures depend on other constraints, such as \textit{LOOKUP} depending on \textit{FOREIGNKEY}.
+\subsection{Optimizations}
+This section discusses various essential design decisions and optimizations aiming to improve the speed and extensibility of our system as well as to find less redundant constraints.
+
+
+
+
+
+\subsubsection{Template dependencies}
+As discussed in Section~\ref{sec:form:dependencies}, some constraints depend on other constraints.
+This is apparent when looking at the template signatures in Table~\ref{table:constraints}, where one can see that some signatures depend on other constraints, such as \textit{LOOKUP} depending on \textit{FOREIGNKEY}.
+If a constraint template~$s_1$ includes template~$s_2$ in its signature, we say that~$s_1$ depends on~$s_2$.
 
 In Inductive Logic Programming, one often exploits implications between constraints to structure the search space \cite{luc_book}.
-In our method, we use these dependencies/implications to define a dependency graph between the templates. We assume the signatures do not contain equivalences or loops, and hence the resulting graph is a directed acyclic graph (DAG).
+Our approach uses the dependencies between templates to define a dependency graph.
+We assume that signatures do not contain equivalences or loops, and hence the resulting graph is a directed acyclic graph (DAG).
 Figure~\ref{fig:learning_order} shows the dependency graph extracted from the signature definitions in Table~\ref{table:constraints}. 
-Constraint templates that have no dependencies are omitted. 
+Constraint templates that have no dependencies are omitted.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/constraint_dependency.png}
-  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_1$ is implied by $s_2$ because the \CSignature of~$s_2$ depends on $s_1$ to hold on a specific subset of $s_2$ its groups.
-    The graph is extracted from the Signature column in Table \ref{table:constraints}.
+  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_2$ depends on~$s_2$ (the \CSignature of~$s_2$ includes $s_1$).
+    The graph is extracted from the Signature column in Table~\ref{table:constraints}.\samuel{Correct aggregates}
   }
   \label{fig:learning_order}
 \end{figure}
 
-The $\constrainttorder(\constraints,\dependencies)$ module in our method takes a set of {\template}s~(\constraints) and a DAG~(\dependencies) as input and produces a linear ordering of the templates such that the more general, implied constraint templates (the requirements) are ordered before the templates that depend on them.
+Using the dependency graph~(\dependencies) we can reorder the templates such that a template occurs after any template it depends on.
+Concretely, the input templates~$\temps$ (see Algorithm~\ref{algo:tcl}) are reordered to agree with the partial ordering imposed by~\dependencies.
 
-\paragraph{Example}
-As mentioned before, $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ implies $\ecfkey{G'_1}{H'_1}$ and hence the $\textit{LOOKUP}$ constraint template depends on $\textit{FOREIGNKEY}$ in Figure~\ref{fig:learning_order} and will be earlier in the ordering.
+The dependency graph represents a partial ordering and is used produce a linear ordering of the given templates such that more general templates occur before templates that depend on them (e.g. \textit{ALLDIFFERENT} before \textit{FOREIGNKEY}).
+Considering Algorithm~\ref{algo:tcl}, this step can be seen as preprocessing the input~\temps.
+Learning in this order allows templates to use constraints they depend on as these will have already been found.
+This is exploited in the \generategroups step to speedup the algorithm by reducing the search space.
+Let us illustrate this step with an example.
 
-% not helpful:
-%The \ecrank{v_y}{v_x} constraint does not have any dependencies, however in a restricted version without ties, groups assigned to $v_y$ would always be a permutation of numbers $1, 2, ..., \textit{length}(v_y)$.
-\samuel{End: Moved template ordering}
+\begin{example}
+  Consider $\ecfkey{B_{fk}}{B_{pk}}$ whose signature includes $\ecalldiff{B_{pk}}$ and assume that~$C$ are the constraints found for \textit{ALLDIFFERENT}.
+  Instead of generating assignments for~$B_{pk}$ using the given blocks~$\blocks$, we will only consider (sub)blocks~$P = \{ B' | \ecalldiff{B'} \in C \}$.
+  $P$~can be seen as a set of partial assignments in which the blocks for certain arguments have been fixed.
+\end{example}
+
+The \generategroups implementation now takes into account previously found constraints to obtain partial assignments~$P$ for a template.
+Instead of generating one CSP to find all assignments, a CSP is generated for every~$p \in P$ which finds all assignments completing~$p$.
+The procedure to generate CSPs remains the same, except that the partial assignment is used to fix the domains of the dependent variables.
+
+This approach has the additional benefit of ensuring that the (sub)blocks assigned to the dependent arguments already satisfy both the signature and definition of the original template.
+Therefore, the implementation of $\findassignment$ does not have to take these blocks into account.
 
 
-We provide some more details of our implementation of the above algorithmic approach, to ease reproducibility.
+
+
 
 \subsubsection{Constraint solvers}
-Generic constraint solving technology can be used for the candidate group generation as well as for enumerating the satisfying subgroups. Constraint solvers can be categorized as being stand-alone solvers, meaning that they have a text-based modeling language in which the CSP must be formulated, and \textit{embedded}, meaning that they have a programmatic API to formulate the CSP.
+\samuel{Tias, Sergey, have a look at his section, I'm torn about rewriting it, feeling it should either be reduced or expanded, especially the second part.}
+Generic constraint solving technology can be used for the candidate group generation as well as for enumerating the satisfying subgroups.
+Constraint solvers can be categorized as being stand-alone solvers, meaning that they have a text-based modeling language in which the CSP must be formulated, and \textit{embedded}, meaning that they have a programmatic API to formulate the CSP.
 
-\sname supports the ASP \cite{whaisasp} formalism, using the stand-alone Clingo 4.5.4 \cite{clingo} solver, the stand-alone Constraint Programming language MiniZinc \cite{minizinc} with the Gecode 4.4.0 solver which supports floats, as well as an embedded Python-based CP solver \cite{python_constraint}. The constraint signature that must be satisfied to generate the groups can be specified in each of the tree formalisms, to ease prototyping and extendability towards new constraints. The embedded solver is fastest as it does not have the overhead of file-writing and calling an external program, and is used in the experiments below.
+\sname supports the ASP \cite{whaisasp} formalism, using the stand-alone Clingo 4.5.4 \cite{clingo} solver, the MiniZinc language \cite{minizinc} with the stand-alone Gecode 4.4.0 solver (which supports floats) and uses an embedded Python-based CP solver \cite{python_constraint}.
+The constraint signature that must be satisfied to generate the groups can be specified in each of the tree formalisms, to ease prototyping and extendability towards new constraints. The embedded solver is fastest as it does not have the overhead of file-writing and calling an external program, and is used in the experiments below.
+
+
+
+
 
 \subsubsection{Redundancy}
-There are only types of redundancy that we eliminate during search. The first is the removal of symmetric attribute assignments as explained in Section~\ref{sec:algo:subgr}.
+We consider two types of redundancy that we aim to eliminate during the search.
+As noted in Section~\ref{sec:form:dependencies}, for some constraint templates there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example, $\ecprod{B_R'}{B_1'}{B_2'} \Leftrightarrow \ecprod{B_R'}{B_2'}{B_1'}$.
+Such duplicates are avoided by defining a \textit{canonical} form for these constraints.
+In practice, we define an arbitrary but fixed block ordering and require those blocks that are interchangeable to adhere to this ordering.
+\samuel{Mention B1*B2 vs PRODUCT?}
 
-The second is that there be \textit{overlapping} subgroups that satisfy the definition, such as \tias{There is no example in the example figure? I was thinking of max/min, but it is over the entire vector always...}.
-In this case we chose to omit those subgroups that are fully contained within a larger subgroup since this can lead to over-fitting.
+The second type of redundancy we aim to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
+For example, consider the constraint \ecsumc{B_r}{B[1:n]} where $B[k:n]$ consists of only zeros, then \ecsumc{B_r}{B[1:j]} will be true for all $k - 1 \leq j \leq n$.
+In \sname we have, therefore, chosen to only consider \textit{maximal} subblocks.
+In some cases the maximal subblock might falsely include irrelevant columns, in this case we suggest to put these irrelevant columns into a separate superblock.
+
+
+
+
 
 \subsubsection{Constraints}
-The constraints that are currently supported in our system are shown in Table~\ref{table:constraints}. All these constraints are available in popular spreadsheet software, except the first two constraints (alldifferent and permutation). These two constraints are \textit{structural} constraints, which we added so they can be used in the signature of other constraint templates; they are also popular constraints in constraint satisfaction~\cite{modelseeker}.
+The constraints that are currently supported in our system are shown in Table~\ref{table:constraints}.
+Their inclusion was based on the analysis of the most popular Excel constraints as well as the spreadsheets we encountered.
+All these constraints are available in popular spreadsheet software, except for the structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUTATION} and \textit{FOREIGNKEY}).
+These constraints added so they can be used in the signature of other constraint templates; they are also popular in constraint satisfaction~\cite{modelseeker}.
+
+Note the the template $\ecdiff{B_r}{B_1}{B_2}$ can be rewritten as $B_1 = B_r + B_2$.
+Our choice to use difference is a hardcoded preference based on the prevalence of this type of constraint in financial spreadsheet data.
 
 %Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
 %These constraints have been selected based on the most-used Excel functions as well as their occurrence in various example spreadsheets we observed.
 
-Note that \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display - diff not present - pruning relation?}
-
-\tias{Not used, should be cut!?:}
-Generally \CSignature and / or the \CFunction can be relaxed to capture more constraints in the data, however, this also comes at a performance penalty. \samuel{More on this / example?} \tias{Yes, either explain in detail or cut}
+%Note that \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display - diff not present - pruning relation?}
 
 % Extending the system with a new constraint template amounts to \tias{TODO: samuel, explain how to define syntax; signature-for-groupgen; signature-for-def; definition}
 
