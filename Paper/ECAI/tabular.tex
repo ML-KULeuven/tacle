@@ -455,8 +455,8 @@ Figure~\ref{fig:sol_example} shows the solution to the tabular constraint learni
 
 \subsection{Other considerations}
 
-\paragraph{Dependencies}
-\sergey{question: the guidlines say caption for tables above the tables, but dsaa papers from 2014 and 2015 (I have checked three) put it below, that's confusing...}
+\subsubsection{Dependencies}
+\label{sec:form:dependencies}
 In Table~\ref{table:constraints} one can see that for some constraints we used the predicate of another constraint in its signature, e.g. for \textit{PERMUTATION}. This expresses a dependency of the constraint on that other constraint. This can be interpreted as follows: the signature of the constraint consists of its own signature plus the signature of the depending constraint, and its definition of its own definition plus the definition of the depending constraint.
 In FOL, we can see that one constraint entails the other, for example if $\ecperm{\sg_x}$ holds for a block $\sg_x$, then $\ecalldiff{\sg_{x}}$ also holds.
 
@@ -469,7 +469,7 @@ Depending on the application, some constraints in the solution to the tabular co
 
 For example, for some constraints, the order of some of the arguments may not matter. For example for the product constraint, $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecprod{\sg_r}{\sg_2}{\sg_1}$ so one can be considered redundant to the other.
 
-One way to deal with such equivalences is to identify a \textit{canonical} constraint among the equivalent ones. For example, for the product constraint above, we could define a lexicographic ordering over the blocks and only consider the constraint with the smallest ordering.
+\samuel{Should this not be part of approach / optimizations / redundancy?}One way to deal with such equivalences is to identify a \textit{canonical} constraint among the equivalent ones. For example, for the product constraint above, we could define a lexicographic ordering over the blocks and only consider the constraint with the smallest ordering.
 
 Because dealing with redundancy is often application-dependent, we explain in the next section our generic method for finding all constraints.
 
