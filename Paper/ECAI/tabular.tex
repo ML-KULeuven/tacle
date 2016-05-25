@@ -178,7 +178,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 
   \begin{subfigure}{.70\textwidth}
   \begin{center}
-    \includegraphics[width=1\textwidth]{figures/Demo.png}
+    \includegraphics[width=1\textwidth]{figures/Demo2.png}
   \end{center}
   \vspace{-10pt}
   \caption{Example spreadsheet (black words and numbers only). Green borders indicate headerless tables; the blue elements are added to clarify some constraints and relations. \tias{TODO: headers not in green boxes} \sergey{show blocks? orientation only over blocks, not over tables?}\tias{Use specific constraint names, e.g. 'SUM-row' above Total in T1}}
@@ -571,12 +571,12 @@ Many spreadsheets contain headers that provide hints at where the table(s) in th
   \label{fig:visual_tool}
 \end{figure}
 
-Our algorithm requires tables to be specified, this can, however, be done in various ways.
-Tables are specified in a JSON configuration file which contains the table names, their coordinates within a CSV file and optionally the orientation of certain tables.
+Our algorithm requires tables to be specified.
+This information is provided to \sname in the form of a configuration file containing the name, coordinates within a spreadsheet and optionally the orientation of every table.
 The orientation can be used to indicate that a table should be interpreted as only rows or only columns.
 
-The generation of this JSON file can be done in many ways, ranging from manually specifying the tables to automatically detecting tables.
-Requiring the user to manually generate these files decreases the usability of our tool in a standalone setting, therefore, we offer two proof of concept approaches that aim to facilitate the specification of tables within a CSV.
+This information can be provided manually or generated automatically.
+We offer two proof of concept approaches that aim to facilitate the specification of tables.
 
 
 
@@ -601,8 +601,6 @@ This tool removes the need for human intervention, however, it is rather limited
 Since the specification of tables is usually easy for humans, we propose a second approach which aims to decrease the complexity of specifying tables by allowing users to indicate tables using a visual tool (Figure~\ref{fig:visual_tool}).
 Users select tables excluding the header and optionally specify an orientation.
 The tool then generates the table definitions automatically.
-\\\\
-Aside from extending the automatic detection to be more applicable, one could combine the visual and automatic detection to let the user approve or correct detected table.
 
 
 
@@ -615,16 +613,10 @@ We generate blocks automatically, partitioning tables into maximal type-consiste
 First, the spreadsheet data is preprocessed so that currency values and percentual values are transformed into their corresponding numeric (i.e. integer or floating point) representation (e.g. $2.75 \$$ as $2.75$ or $85\%$ as~$0.85$).
 Afterwards, tables are partitioned into maximal type-consistent blocks.
 If a table has no fixed orientation, the algorithm will attempt to construct both row-blocks and column-blocks.
-In order to find row-blocks (column-blocks), the type of each row (column) is determined, i.e. whether it is numeric or textual.
-All adjacent rows (columns) that have the same type are merged to form a block. 
+In order to find blocks, the type of each vector is determined, i.e. whether it is numeric or textual.
+All adjacent vectors that have the same type are merged to form a block. 
 If any row (column) of the table contains both numeric and textual values, it is type inconsistent and the algorithm will not produce any row-blocks (column-blocks) for that table.
 For tables that have a fixed orientation only blocks of that orientation are built.
-
-While this step can be done algorithmically, there are cases where specifying finer-grained blocks manually may be beneficial.
-Firstly, blocks may group data from different contexts.
-For example, consider the type consistent block $B_3=\range{T_1}{\rangeall}{\rangeto{3}{8}}$ from the example in Figure~\ref{fig:main_example}: $\range{T_1}{\rangeall}{8}$ is contextually different from $\range{T_1}{\rangeall}{\rangeto{3}{7}}$, therefore, we could split~$B_3$ into two blocks.
-\samuel{Secondly, accidental blocks}
-Finer grained groups can reduce the amount of redundant constraints that are found.
 
 \newcommand{\temps}{\ensuremath{S}}
 
@@ -633,11 +625,13 @@ Finer grained groups can reduce the amount of redundant constraints that are fou
 Our method assumes that tables and blocks are given and solves the \tcl~problem by checking for each template: what combination of given (super)blocks may satisfy the signature and which specific (sub)blocks satisfy both the signature and the definition.
 
 The main challenge we aim to address with our approach is to avoid having to check each possible combination of blocks for each constraint template as well as developing an \textit{extensible} method in which new constraint templates can be plugged in with relative ease. %We will use constraint satisfaction technology to partly answer this challenge.
+\tias{No, separate selection of superblocks from generation of subblocks}
+\samuel{I do not fully agree, the property vs content aspect is still important, it is combined with superblock / subblock but this could be done differently}
 To answer this challenge we separate checking the signature (concerning properties of a block) of a constraint template from checking the definition (concerning the values in a block) of a constraint template.
 Furthermore, we use constraint satisfaction technology to jointly search for and test the signature over all combinations of superblocks.
 
 \begin{algorithm}[t]
-  \begin{algorithmic}
+  \begin{algorithmic}[1]
     \footnotesize
     \State \textbf{Input:} $\blocks$ -- blocks, $\temps$ -- constraint templates
     \State \textbf{Output:} $C$ -- learned constraints
@@ -654,7 +648,7 @@ Furthermore, we use constraint satisfaction technology to jointly search for and
           \EndFor
         \EndFor
       \EndFor
-      \Return $C$
+      \State \Return $C$
     \EndProcedure
 \end{algorithmic}
 \caption{Learn tabular constraints}
@@ -698,15 +692,11 @@ The actual constraints correspond to the requirements defined in the signature, 
 %\end{description}
 
 \begin{table}[htb]
-  \caption{Translation of signature requirements to superblock constraints}
+  \caption{Translation of signature requirements to superblock constraints. The requirements that do not need to be relaxed are: $\plength(B) = x$, $\por(B) = x$, $\ptable(B) = x$ and $\psize(B) \geq x$.}
   \label{tbl:translation}
   \begin{tabularx}{\linewidth}{lX}
-    \textbf{Constraint} & \textbf{Superblock constraint} \\ \hline \hline
-    $\plength(B) = x$ & $\plength(B) = x$ \\ \hline
-    $\por(B) = x$ & $\por(B) = x$ \\\hline
-    $\ptable(B) = x$ & $\ptable(B) = x$ \\ \hline
-    $\ptype(B) = x$ & $\mathit{supertype}(\ptype(B)) = \mathit{supertype}(x)$ \\ \hline
-    $\psize(B) \geq x$ & $\psize(B) \geq x$ \\ \hline
+    \textbf{Requirement} & \textbf{Superblock constraint} \\ \hline \hline
+    $\ptype(B) = x$ & $\mathit{basetype}(\ptype(B)) = \mathit{basetype}(x)$ \\ \hline
     $\psize(B) = x$ & $\psize(B) \geq x$ \\ \hline
     $\pcols(B) = x$ & $\mathit{if}~\por(B) = \mathit{column}: \pcols(B) \geq x$ \\ 
     & $\mathit{if}~\por(B) = \mathit{row}: \pcols(B) = x$ \\ \hline
@@ -732,17 +722,17 @@ The $\generategroups(\textit{s,\blocks})$ method will use these conversion rules
 These solutions will correspond with the valid superblock assignments for constraint template~$s$.
 
 \begin{example}
-  Consider the template $\ecsumprod{x}{y}{z}$, then the generated CSP will contain three variables $V_x, V_y, V_z$ corresponding to arguments $x, y$ and $z$ respectively.
-  Given blocks~\blocks, the domain of these variables are $D(V_x) = D(V_y) = D(V_z) = \{ 1, \dots, |\blocks| \}$.
+Br and Bx are numeric; rows(Bx) ⇤ 2; and columns(Bx ) = length(Br )
+
+  Consider the constraint template $\ecsumc{r}{x}$, then the generated CSP will contain two variables $V_r, V_x$ corresponding to arguments~$r$ and~$x$.
+  Given blocks~\blocks, the domain of these variables are $D(V_r) = D(V_x) = \{ 1, \dots, |\blocks| \}$.
   Finally, the signature will be translated into constraints:
   \begin{align*}
-    & \numeric(V_x) \land \numeric(V_y) \land \numeric(V_z) \\
-    & (\por(V_x) = \mathit{row}) \implies (\pcols(V_x) = 1) \\
-    & (\por(V_x) = \mathit{column}) \implies (\prows(V_x) = 1) & \\
-    & \plength(V_y) \geq 2 \land \plength(V_z) \geq 2 \\
-    & \plength(V_y) = \plength(V_z)
+    & \numeric(V_r) \land \numeric(V_x) \land \prows(V_x) \geq 2 \\
+    & (\por(V_x) = \mathit{row}) \Rightarrow (\pcols(V_x) \geq \plength(V_r)) \\
+    & (\por(V_x) = \mathit{column}) \Rightarrow (\pcols(V_x) = \plength(V_r))
   \end{align*}
-  Every solution is a tuple of values for~$V_x$, $V_y$ and~$V_z$ corresponding directly with a superblock assignment over~\blocks.
+  Every solution is a tuple of values for~$V_r$ and~$V_x$ corresponding directly with a superblock assignment over~\blocks.
 \end{example}
 
 
@@ -910,7 +900,12 @@ In practice, we define an arbitrary but fixed block ordering and require those b
 The second type of redundancy we aim to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
 For example, consider the constraint \ecsumc{B_r}{B[1:n]} where $B[k:n]$ consists of only zeros, then \ecsumc{B_r}{B[1:j]} will be true for all $k - 1 \leq j \leq n$.
 In \sname we have, therefore, chosen to only consider \textit{maximal} subblocks.
-In some cases the maximal subblock might falsely include irrelevant columns, in this case we suggest to put these irrelevant columns into a separate superblock.
+
+In some cases a maximal subblock might falsely include irrelevant columns.
+By manually specifying more fine-grained blocks as input this behavior can often be avoided.
+Consider $B_1 = [[200, 300], [200, 150], [1, 2]]$ and $B_2 = [200, 300]$, then \sname will find the constraint $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$.
+If the target constraint is $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$, the last vector of~$B_1$ can be split off into a separate block.
+Alternatively, the algorithm can output all valid constraints, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$, however, this might produce many redundant constraints and introduce constraints that accidentally cover too little data.
 
 
 
