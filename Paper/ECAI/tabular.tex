@@ -58,6 +58,7 @@
 \newcommand{\ecperm}[1]{\ensuremath{\textit{PERMUTATION}(#1)}}
 \newcommand{\ecseries}[1]{\ensuremath{\textit{SERIES}(#1)}}
 \newcommand{\ecprod}[3]{\eccalc{#1}{#2 \times #3}}
+\newcommand{\ecdiv}[3]{\eccalc{#1}{{#2} / {#3}}}
 \newcommand{\ecdiff}[3]{\eccalc{#1}{#2 - #3}}
 \newcommand{\ectotal}[3]{\eccalc{#1}{\textit{PREV}(#1) + #2 - #3}}
 \newcommand{\ecproj}[2]{\eccalc{#1}{\textit{PROJECT}(#2)}}
@@ -465,13 +466,13 @@ Apart from easing the specification of the signature and definition, in Section~
 \paragraph{Redundancies}
 Depending on the application, some constraints in the solution to the tabular constraint learning problem may be considered \textit{redundant}. This is because constraints may be logically equivalent or may be implied by other constraints.
 
-\tias{This should contain examples that recur later in the text}
+Within the same constraint, there can be equivalent argument assignments if the order of some of the arguments does not matter. For example for the product constraint, $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecprod{\sg_r}{\sg_2}{\sg_1}$ so one can be considered redundant to the other.
 
-For example, for some constraints, the order of some of the arguments may not matter. For example for the product constraint, $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecprod{\sg_r}{\sg_2}{\sg_1}$ so one can be considered redundant to the other.
+Two different constraints may be logically equivalent due to their nature, e.g. for addition/subtraction and product/division: $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecdiv{\sg_1}{\sg_r}{\sg_2}$.
 
-\samuel{Should this not be part of approach / optimizations / redundancy?}One way to deal with such equivalences is to identify a \textit{canonical} constraint among the equivalent ones. For example, for the product constraint above, we could define a lexicographic ordering over the blocks and only consider the constraint with the smallest ordering.
+When the data has rows or columns containing exactly the same data, then any constraint with such a vector in its argument assignment will also have an argument assignment with the other equivalent vectors.
 
-Because dealing with redundancy is often application-dependent, we explain in the next section our generic method for finding all constraints.
+Because dealing with redundancy is often application-dependent, we explain in the next section our generic method for finding all constraints. We describe some optimisations that avoid obvious equivalences in Section~\ref{sec:opts} and will investigate the impact of redundancy in the experiments.
 
 
 %
@@ -826,7 +827,11 @@ The \textit{Test} procedure verifies if the definition is satisfied and, if nece
 
 
 
-\subsection{Optimizations}
+\subsection{Optimizations} \label{sec:opts}
+\samuel{Should this not be part of approach / optimizations / redundancy?}One way to deal with such equivalences is to identify a \textit{canonical} constraint among the equivalent ones. For example, for the product constraint above, we could define a lexicographic ordering over the blocks and only consider the constraint with the smallest ordering.
+
+
+
 This section discusses various essential design decisions and optimizations aiming to improve the speed and extensibility of our system as well as to find less redundant constraints.
 
 
