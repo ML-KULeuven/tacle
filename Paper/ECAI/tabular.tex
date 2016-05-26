@@ -532,30 +532,27 @@ Because dealing with redundancy is often application-dependent, we explain in th
 \newcommand{\tcl}{Tabular Constraint Learning}
 %\newcommand{\ctl}{Condensed Tabular Constraint Learning}
 \section{Approach to Tabular Constraint Learning}\label{sec:approach}
-The aim of our method is to detect constraints between rows and columns of tabular data. Recall that a valid argument assignment for a constraint is an assignment of each argument of the constraint to a block, such that the constraint, that is, its signature and definition, is satisfied.
-\samuel{In general: should it not be: assign blocks to arguments instead of arguments to blocks?}
-\tias{I here use constraint and constraint template interchangeably}
+The aim of our method is to detect constraints between rows and columns of tabular data. Recall that a valid argument assignment for a constraint is an assignment of a block to each of the arguments of the constraint, such that the signature and definition of the constraint template is satisfied.
 
 Our proposed methodology contains the following steps:
 \begin{enumerate}
 \item Extract headerless tables from tabular data
 \item Partition the tables into maximally contiguous, type-consistent \textit{superblocks}
-\item Generate for each constraint all valid argument assignments in two steps:
+\item Generate for each constraint template all valid argument assignments in two steps:
 \begin{enumerate}
 \item For each constraint $c$, generate all atoms $c(B_1, \ldots ,B_n)$ where each $B_i$ is a maximal \textit{superblock} and the $B_i$ are compatible with the signature.
 \item For each generated atom $c(B_1, \ldots ,B_n)$, find all valid $c(B'_1, \ldots, B'_n)$ such that for all $i$ holds $B'_i \sqsubseteq B_i$ and the signature and definition of $c(B'_1, \ldots, B'_n)$ are satisfied.
 \end{enumerate}
 \end{enumerate}
 
-The core of our method is step 3. In principle, one could use a generate-and-test approach by generating all possible blocks from the superblock and testing each combination of blocks for each of the arguments of the constraints. However, this ... \textit{blows up} ...
+The core of our method is step 3. In principle, one could use a generate-and-test approach by generating all possible blocks from the superblock and testing each combination of blocks for each of the arguments of the constraints. However, each superblock of size $m$ has $m*(m+1)/2$ contiguous subblocks, meaning that a constraint with $n$ arguments would have to check $O(n^{m^2})$ combinations of blocks.
 
-Hence, we divide this step into two parts: in the first part, we will not reason over individual blocks, but rather over all possible combinations of superblocks as candidates for the arguments.
-\tias{Example To develop in more detail and clarity:}
-Consider the sum constraints, the row-blocks of T1 are ... and column-blocks are ... instead of considering all possible blocks in each super-block, we reason at level of superblocks, for example block (with ID) can not be in a row-sum and neither can (block with Items sold total, Max items sold) because its size (1 and 2) is smaller than length of blocks (4). The only possible combination of superblocks is (1st Quarter .. Rank) for both arguments.
+Instead, we divide this step into two parts: in the first part, we will not reason over individual (sub)blocks and their data, but rather over the properties of the maximal superblocks. % and what combination of superblocks may lead to a valid argument assignment.\\
+Consider Table 1 and 2 in Figure~\ref{fig:main_example} and the $SUM_{col}$ constraint template. Instead of considering all possible subblocks of T1 and T2, we reason over the properties of the superblocks first, $B2$ and $B4$ are not numeric so can be immediately discarded. Looking at the sizes, $B1$ contains only one column and $B5$ 2, however, the rows in $T2$ have length 4 so we only need to consider superblocks of size at least 4, which only $B3$ satisfies.
 
-In the second part, we start from such a superblock combination and generate and test all possible block assignments to arguments. As we only have to consider the blocks contained in each superblock, this is typically much easier. For the above example, \tias{to develop with more clarity} each of the vectors in the block will be considered as candidate for the left-hand side, and one could enumerate all subblocks for the right-hand side and verify for each of the rows in the vector. In practice, this can be optimized further.
+In the second part, we start from an atom $c(B_1, \ldots ,B_n)$ with maximal superblocks $B_i$, and generate and test all possible (sub)block assignments to arguments using the properties and actual data of the blocks. As we only have to consider the blocks $B'_i \sqsubseteq B_i$ contained in each superblock, this is typically much easier. For the above example, each of the vectors of $B6$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks for the right-hand side and verify the signature (e.g. at least size $4$) and test the definition for each of the rows. %In practice, this can be optimized further.
 \\\\
-We now describe in more detail how the headerless tables are extracted and how the superblocks are generated from them (step 1 and 2, Section 4.1), how the candidate superassignments are generated (step 3a, Section 4.2) and how the actual assignments are extracted from that (step 3b, Section 4.3). We then describe a number of optimizations that we perform to speed up step 3 and 4 (Section 4.4).
+We now describe in more detail how the headerless tables are extracted and how the maximal superblocks are generated from them (step 1 and 2, Section 4.1), how the candidate superassignments are generated (step 3a, Section 4.2) and how the actual assignments are extracted from that (step 3b, Section 4.3). We then describe a number of optimizations that we perform to speed up step 3 and 4 (Section 4.4).
 
 
 
@@ -563,45 +560,32 @@ We now describe in more detail how the headerless tables are extracted and how t
 
 \subsection{Table extraction}
 \label{sec:table_extraction}
-Many spreadsheets contain headers that provide hints at where the table(s) in the sheet are and what the meaning of the rows and columns is. However, detecting tables and headers is a complex problem on its own~\cite{header}. Furthermore, headers may be missing and their use often requires incorporating language-specific vocabulary, e.g. in English.
+Many spreadsheets contain headers that provide hints at where the table(s) in the sheet are and what the meaning of the rows and columns is. However, detecting tables and headers is a complex problem on its own~\cite{header}. Furthermore, headers may be missing and their use often requires incorporating language-specific vocabulary, e.g. English.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{figures/tabletool.png}
-  \caption{This figure shows the table selection tool of \sname. A user selects rectangular ranges of cells that correspond to (headerless) tables. If the data has an unambiguous orientation, this information can be provided as well.}
+  \caption{This figure shows a simple table selection tool. A user selects rectangular ranges of cells that correspond to (headerless) tables, an explicit orientation can also be provided.}
   \label{fig:visual_tool}
 \end{figure}
 
-Our algorithm requires tables to be specified.
-This information is provided to \sname in the form of a configuration file containing the name, coordinates within a spreadsheet and optionally the orientation of every table.
-The orientation can be used to indicate that a table should be interpreted as only rows or only columns.
+Instead, we assume tables are specified by means of their coordinates within a spreadsheet and optionally a fixed orientation of each table. The orientation can be used to indicate that a table should be interpreted as having only rows or only columns.
 
-This information can be provided manually or generated automatically.
-We offer two proof of concept approaches that aim to facilitate the specification of tables.
+We developed two simple prototypes to help with the specification of the tables:
+%This information can be provided manually or generated automatically.
 
 
+\paragraph{Automatic detection}
+%As mentioned above, automatic detection of headers and tables is a complex task.
+%Therefore, we define a restricted setting in which the task becomes easy enough to be automated.
+Under the following two assumptions, the table detection task becomes easy enough to be automated; 1) tables are rectangular blocks of data not containing any empty cells; and 2) tables are separated by at least one empty cell from other tables.
+The sheet is then processed row by row, splitting each row into ranges of non-empty cells and appending them to adjacent ranges in the previous row.
+Headers can be detected, for example, by checking if the first row or column contains only textual values. If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
 
-
-
-\subsubsection{Automatic detection}
-As mentioned above, automatic detection of headers and tables is a complex task.
-Therefore, we define a restricted setting in which the task becomes easy enough to be automated.
-We assume that 1) tables are rectangular blocks of data not containing any empty cells; and 2) tables are separated by at least one empty cell from other tables.
-Additionally, if the first row contains only textual values it treated as a header, otherwise, if the first column consists of only textual data is will be the header.
-If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
-
-The tool will now detect ranges of non-empty cells in every row and greedily merge these ranges across columns to obtain rectangular tables.
-If the first row of a table contains 
-This tool removes the need for human intervention, however, it is rather limited and can only be used in simple settings.
-
-
-
-
-
-\subsubsection{Visual}
-Since the specification of tables is usually easy for humans, we propose a second approach which aims to decrease the complexity of specifying tables by allowing users to indicate tables using a visual tool (Figure~\ref{fig:visual_tool}).
+\paragraph{Visual}
+The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (Figure~\ref{fig:visual_tool}).
 Users select tables excluding the header and optionally specify an orientation.
-The tool then generates the table definitions automatically.
+The tool then generates the specification of the tables automatically.
 
 
 
@@ -609,43 +593,40 @@ The tool then generates the table definitions automatically.
 
 \subsection{Block detection} \label{sec:make_groups}
 %A spreadsheet may contain multiple tables, and a table in turn will contain multiple (type-consistent) blocks.
-The goal of the block detection step is to partition tables into type-consistent (all-numeric or all-textual) blocks.
-We generate blocks automatically, partitioning tables into maximal type-consistent blocks.
-First, the spreadsheet data is preprocessed so that currency values and percentual values are transformed into their corresponding numeric (i.e. integer or floating point) representation (e.g. $2.75 \$$ as $2.75$ or $85\%$ as~$0.85$).
-Afterwards, tables are partitioned into maximal type-consistent blocks.
-If a table has no fixed orientation, the algorithm will attempt to construct both row-blocks and column-blocks.
-In order to find blocks, the type of each vector is determined, i.e. whether it is numeric or textual.
-All adjacent vectors that have the same type are merged to form a block. 
-If any row (column) of the table contains both numeric and textual values, it is type inconsistent and the algorithm will not produce any row-blocks (column-blocks) for that table.
-For tables that have a fixed orientation only blocks of that orientation are built.
+The goal of the block detection step is to partition tables into maximally type-consistent (all-numeric or all-textual) blocks.
+%We generate blocks automatically, partitioning tables into maximal type-consistent blocks.
+First, we preprocess the spreadsheet data so that currency values and percentual values are transformed into their corresponding numeric (i.e. integer or floating point) representation (e.g. $2.75 \$$ as $2.75$ or $85\%$ as~$0.85$).
+Then, each table is partitioned into maximal type-consistent blocks.
 
-\newcommand{\temps}{\ensuremath{S}}
+To find row-blocks, each row is treated as a vector and must be type-consistent; similarly for column-blocks. Then, adjacent vectors that are of the same type are merged to obtain the maximally type-consistent superblocks.
+
 
 \subsection{Algorithm}
 \label{sec:algo}
-Our method assumes that tables and blocks are given and solves the \tcl~problem by checking for each template: what combination of given (super)blocks may satisfy the signature and which specific (sub)blocks satisfy both the signature and the definition.
+Our method assumes that constraint templates and maximal blocks are given and solves the \tcl~problem by checking for each template $s$: what combination of maximal blocks can satisfy the signature (\textit{superblock assignment}) and which specific \textit{subblock assignments} satisfy both the signature and the definition.
+The pseudo-code of this approach is shown in Algorithm~\ref{algo:tcl}.
+%For every constraint template~$s$, the algorithm first generates all combinations of superblocks (i.e. superblock assignments) that are consistent with the signature.
+%In a second step it looks at every superblock assignment and finds subassignments that satisfy the signature and definition of~$s$.
 
-The main challenge we aim to address with our approach is to avoid having to check each possible combination of blocks for each constraint template as well as developing an \textit{extensible} method in which new constraint templates can be plugged in with relative ease. %We will use constraint satisfaction technology to partly answer this challenge.
-\tias{No, separate selection of superblocks from generation of subblocks}
-\samuel{I do not fully agree, the property vs content aspect is still important, it is combined with superblock / subblock but this could be done differently}
-To answer this challenge we separate checking the signature (concerning properties of a block) of a constraint template from checking the definition (concerning the values in a block) of a constraint template.
-Furthermore, we use constraint satisfaction technology to jointly search for and test the signature over all combinations of superblocks.
 
+This separation of checking the \textit{properties} of superblock assignments from checking the \textit{actual data} in the subblock assignment controls the exponential blow-up of combinations to test. Furthermore, we will use constraint satisfaction technology in the first step to efficiently enumerate superblock assignments that are compatible with the signature. %These are the two key properties of our approach.
+
+\newcommand{\temps}{\ensuremath{S}}
 \begin{algorithm}[t]
   \begin{algorithmic}[1]
     \footnotesize
-    \State \textbf{Input:} $\blocks$ -- blocks, $\temps$ -- constraint templates
+    \State \textbf{Input:} $\temps$ -- constraint templates, $\blocks$ -- maximal blocks
     \State \textbf{Output:} $C$ -- learned constraints
 
     \Procedure{LearnConstraints}{$\blocks$, $\temps$}
       \State $C \gets \emptyset$ %\Comment{The set of constraints}
       \ForAll{$s~\mathbf{in}~\temps$}
-        \State $n \gets$ number of arguments of template $s$
+        %\State $n \gets$ number of arguments of template $s$
         \State $A \gets \generategroups(s, \blocks)$
         \ForAll{$(B_1, \dots, B_n) \in A$}
         \State $A' \gets \findassignment(s, (B_1,\dots,B_n))$
         \ForAll{$(B_1',\dots,B_n') \in A'$}
-            \State $C \gets C \cup \{ s(B_1', \dots, B_n') \}$
+            \State $C \gets C \cup \{ c_s(B_1', \dots, B_n') \}$
           \EndFor
         \EndFor
       \EndFor
@@ -656,31 +637,29 @@ Furthermore, we use constraint satisfaction technology to jointly search for and
 \label{algo:tcl}
 \end{algorithm}
 
-The pseudo-code of the main method is shown in Algorithm~\ref{algo:tcl}.
-For every constraint template~$s$, the algorithm first generates all combinations of superblocks (i.e. superblock assignments) that are consistent with the signature.
-In a second step it looks at every superblock assignment and finds subassignments that satisfy the signature and definition of~$s$.
-
 
 
 
 
 \subsubsection{Generating superblock assignments}
-Given a constraint template~$s$ and the set of all blocks~\blocks, the goal is to find all combinations of blocks that satisfy the constraint signature. Let there be $b$ blocks and let~$s$ have~$n$ arguments, then a simple generate-and-test method would have to test $b^n$ combinations (given that blocks can be repeated), which can grow very rapidly with $b$, depending on $n$.
+% Let there be $b$ blocks and let~$s$ have~$n$ arguments, then a simple generate-and-test method would have to test $b^n$ combinations (given that blocks can be repeated), which can grow very rapidly with $b$, depending on $n$.
 
-However, the properties defined in the signature, such as those related to the type or size of a block, can be used to avoid considering certain groups for certain arguments.
-Furthermore, the choice of one argument can influence the possible candidates for the other arguments, for example, if they must have the same length.
-Instead of writing specialized code for each of these cases, we make use of the built-in reasoning mechanisms of constraint satisfaction solvers.
+Given a constraint template~$s$ and the set of all maximal blocks~\blocks, the goal is to find all combinations of maximal blocks that are consistent with the constraint signature.
+An argument assignment $(B_1, ... B_n)$ is \textit{consistent} with the signature of template $s$ if for each block $B_i$ there exists at least one subblock $B_i' \sqsubseteq B_i$ that satisfies the signature.
+
+Furthermore, the choice of one argument can influence the possible candidates blocks for the other arguments, for example, if they must have the same length.
+Instead of writing specialized code to generate and test the superblock assignments, we make use of the built-in reasoning mechanisms of constraint satisfaction solvers.
 
 A Constraint Satisfaction Problem (CSP) is a triple $(V,D,C)$ where $V$ is a set of \textit{variables}, $D$ the domain of possible values each variable can take and $C$ the set of constraints over $V$ that must be satisfied.
 In our case, we define one variable $V_i$ for each argument of a constraint template.
-Each variable can be assigned to each of the blocks in \blocks, so the domain consists of $|\{\blocks\}|$ identifiers.
+Each variable can be assigned each of the maximal blocks in \blocks, so the domain of the variables consists of $|\{\blocks\}|$ block identifiers.
 
 %Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of~$t$.
 %For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that a group~$G \in \groups$ is selected if there is at least one subgroup~$G' \subseteq G$ that satisfies the \CSignature.
 
-To reason over the blocks, we automatically add to the constraint program a set of background facts that contain the properties of each block, namely its type, size, number of columns and rows, length, orientation, and table.
-The actual constraints correspond to the requirements defined in the signature, such as whether arguments are of a certain type, have certain dependencies or have to be equal length or orientation, etc.
-
+To reason over the blocks, we add to the constraint program a set of background facts that contain the properties of each block, namely its type, table, orientation, size, length and number of rows and columns.
+%The actual constraints correspond to the requirements defined in the signature, such as whether arguments are of a certain type, have certain dependencies or have to be equal length or orientation, etc.
+%
 % \tias{More detailed description of the properties commented out, feel free to put in}
 %Translation:
 %\begin{description}
@@ -690,8 +669,8 @@ The actual constraints correspond to the requirements defined in the signature, 
 %  \item[Dependency] Fix dependent variables, for every assignment construct CSP that attempts to find values for the other variables
 %  \item[Same length / table / orientation] Require groups to gave the same length table ...
 %\end{description}
-
-\begin{table}[htb]
+%
+\begin{table}[t]
   \caption{Translation of signature requirements to superblock constraints. The requirements that do not need to be relaxed are: $\plength(B) = x$, $\por(B) = x$, $\ptable(B) = x$ and $\psize(B) \geq x$.}
   \label{tbl:translation}
   \begin{tabularx}{\linewidth}{lX}
@@ -704,35 +683,38 @@ The actual constraints correspond to the requirements defined in the signature, 
     & $\mathit{if}~\por(B) = \mathit{row}: \prows(B) \geq x$
   \end{tabularx}
 \end{table}
+%
+The actual constraints must enforce that a superblock assignment is \textit{consistent} with the requirements defined in the signature.
+%
+%In order for our approach to be complete, the signature constraints can not always be enforced directly on a block.
+%If a block matches the signature it is a valid candidate, however, if it does not there might exist subblocks that still satisfy the signature.
+%\begin{example}
+%  Consider, for example, the constraint template \ecseries{x} and a superblock candidate~$B$ for~$x$ containing both integer and floating point values.
+%  While the signature of the template requires~$x$ to be integer we cannot discard~$B$ since there might be subblocks~$B' \sqsubseteq B$ that only contain integer values and satisfy the signature.
+%\end{example}
 
-In order for our approach to be complete, the signature constraints can not always be enforced directly on a block.
-If a block matches the signature it is a valid candidate, however, if it does not there might exist subblocks that still satisfy the signature.
-\begin{example}
-  Consider, for example, the constraint template \ecseries{x} and a superblock candidate~$B$ for~$x$ containing both integer and floating point values.
-  While the signature of the template requires~$x$ to be integer we cannot discard~$B$ since there might be subblocks~$B' \sqsubseteq B$ that only contain integer values and satisfy the signature.
-\end{example}
-Table~\ref{tbl:translation} shows the how constraints from the signature are converted to constraints on superblocks.
+Table~\ref{tbl:translation} shows how the conversion from requirements of the signature to CSP constraints happens:
 Requirements on the lengths, orientations and tables of blocks can be directly enforced since they are invariant under block containment($\sqsubseteq$).
-Typing requirements need to be relaxed to check only for supertypes (numeric and textual).
+Typing requirements need to be relaxed to check only for base types (numeric and textual).
 Minimum sizes can be directly enforced, but exact size requirements are relaxed to minimum sizes, since subgroups might contains fewer vectors.
 Finally, restrictions on the number of rows or columns behave as length or size constraints based on the orientation of the group they are applied to.
 Subgroups of row-oriented (column-oriented) group will always have the same number of columns (rows), however, the number of rows (columns) might decrease.
 
 The $\generategroups(\textit{s,\blocks})$ method will use these conversion rules to construct a CSP and query a solver for all satisfying solutions.
-These solutions will correspond with the valid superblock assignments for constraint template~$s$.
+These solutions correspond to the valid superblock assignments for constraint template~$s$.
 
 \begin{example}
-Br and Bx are numeric; rows(Bx) ⇤ 2; and columns(Bx ) = length(Br )
+%Br and Bx are numeric; rows(Bx) ⇤ 2; and columns(Bx ) = length(Br )
 
-  Consider the constraint template $\ecsumc{r}{x}$, then the generated CSP will contain two variables $V_r, V_x$ corresponding to arguments~$r$ and~$x$.
-  Given blocks~\blocks, the domain of these variables are $D(V_r) = D(V_x) = \{ 1, \dots, |\blocks| \}$.
-  Finally, the signature will be translated into constraints:
+  Consider the constraint template $\ecsumc{\sg_r}{\mathbf{\sg_x}}$, then the generated CSP will contain two variables $V_r, V_x$ corresponding to arguments~$\sg_r$ and~$\mathbf{\sg_x}$.
+  Given maximal blocks~\blocks, the domain of these variables are $D(V_r) = D(V_x) = \{ 1, \dots, |\blocks| \}$.
+  Finally, the signature of $\ecsumc{\sg_r}{\mathbf{\sg_x}}$ (see Table~\ref{table:constraints}) will be translated into constraints:
   \begin{align*}
     & \numeric(V_r) \land \numeric(V_x) \land \prows(V_x) \geq 2 \\
     & (\por(V_x) = \mathit{row}) \Rightarrow (\pcols(V_x) \geq \plength(V_r)) \\
     & (\por(V_x) = \mathit{column}) \Rightarrow (\pcols(V_x) = \plength(V_r))
   \end{align*}
-  Every solution is a tuple of values for~$V_r$ and~$V_x$ corresponding directly with a superblock assignment over~\blocks.
+  %Every solution is a tuple of values for~$V_r$ and~$V_x$ corresponding directly with a superblock assignment over~\blocks.
 \end{example}
 
 
