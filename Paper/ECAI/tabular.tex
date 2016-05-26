@@ -721,13 +721,11 @@ These solutions correspond to the valid superblock assignments for constraint te
 
 
 
-\subsubsection{Constraints over satisfying subgroups}
+\subsubsection{Generating subblock assignments}
 \label{sec:algo:subgr}
-In the previous step superblock assignments are generated for a constraint template $s$ with $n$ arguments.
-In this step, given such a superblock assignment $(B_1, \dots, B_n)$, the goal is to discover valid \textit{subassignments}, i.e. assignments of subblocks $(B'_1, \dots, B'_n)$ (for all $i$, $B'_i \subseteq B_i$) that satisfy both the signature and the definition of template~$s$.
-\samuel{Is this repetition?}
-While the previous step reasons about the \textit{properties} of blocks (type, size, length, ...), this step reasons about the actual \textit{content} of the vectors in the blocks, that is, the data.
+Given a superblock assignment $(B_1, \dots, B_n)$ from the previous step, the goal is to discover valid \textit{subassignments}, i.e. assignments of subblocks $(B'_1, \dots, B'_n)$ (for all $i$, $B'_i \subseteq B_i$) that satisfy both the signature and the definition of template~$s$.
 
+%While the previous step reasoned about the \textit{properties} of blocks, in this step we will also reason about the actual \textit{content} of the blocks, that is, the data.
 \begin{example}
   Consider the sum-over-rows constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$.
   An example superblock assignment from Figure~\ref{fig:main_example} is $(B_r, \mathbf{\sg_x}) = (\range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{\rangeto{3}{8}})$.
@@ -736,18 +734,15 @@ While the previous step reasons about the \textit{properties} of blocks (type, s
   In Figure~\ref{fig:main_example} there is exactly one such satisfying subassignment: $(T_1[:7], T_1[:,3:6])$.
 \end{example}
 
-The search for subassignments is represented as the generic procedure $\findassignment$.
-However, the actual implementation is specified for every constraint template separately, allowing different methods to be used based on the type of template.
-One possible method is to reformulate the problem as a CSP, similar to the approach we employed in the last section.
-Often, however, a simple generate-and-test approach will suffice.
-In contrast to the previous step, the number of subblocks to generate here are typically manageable: $O(n*m^2)$ with $m$ the size of the largest block and $n$ the number of arguments of the template.
-We only consider continuous ranges as subblocks, so for a block of size $m$ there are $m*(m+1)/2$ possible subblocks to consider.
-Furthermore, few constraint solvers support floating point numbers, which are prevalent in spreadsheets.
+In this step, we could also formulate the problem as a CSP. %However, the search space is much smaller, e.g. $O(nm^2)$ with $n$ the number of arguments of the template and $m$ the size of the largest block.
+However, few CSP solvers support floating point numbers, which are prevalent in spreadsheets. Furthermore, in a CSP approach we would have to \textit{ground} out the definition for each of the corresponding elements in the vectors. This is inefficient, as the signature of the definition may already not be satisfied, or the first element in the data.
 
-For this reason, the \sname system uses generate-and-test to implement $\findassignment$ for most constraint templates.
-Given a superblock assignment, all subassignments are generated taking into account the required size, columns or rows.
-The subassignments are sequentially tested using a template-specific procedure \textit{Test} and valid subassignments are returned.
-The \textit{Test} procedure verifies if the definition is satisfied and, if necessary, checks signature constraints that have not yet been enforced (e.g. subtype constraints).
+Hence, a simple generate-and-test will usually suffice.
+%However, the actual implementation is specified for every constraint template separately, allowing different methods to be used based on the type of template.
+%For this reason, the \sname system uses generate-and-test to implement $\findassignment$ for most constraint templates.
+Given a superblock assignment, all disjoint subassignments are generated taking into account the required size, columns or rows.
+The disjoint subassignments are then sequentially tested using a template-specific procedure \textit{Test} and valid subassignments are returned.
+The \textit{Test} procedure verifies the exact signature (e.g. subtypes will not have been checked yet) and checks whether the definition is satisfied for all data in the blocks.
 
 \begin{algorithm}[tbh]
   \begin{algorithmic}
@@ -755,8 +750,8 @@ The \textit{Test} procedure verifies if the definition is satisfied and, if nece
     \Procedure{Subassignments}{$s$, $(B_1, \dots, B_n)$}
     \State $n \gets$ number of arguments of template $s$
     \State $A_{sub} \gets \emptyset$
-    \ForAll{$(B_1', \dots, B_n') \in \{ (B_1', \dots, B_n') | \forall i: B_i' \sqsubseteq B_i \}$}
-      \If{$disjoint(\{ B_1', \dots, B_n' \}) \land Test((B_1',\dots,B_n'))$}
+    \ForAll{$(B_1', \dots, B_n') \in \{ (B_1', \dots, B_n') | \forall i: B_i' \sqsubseteq B_i  \wedge \nexists i,j,i\neq j: B'_i \sqsubseteq B'_j \}$}
+      \If{$Test((B_1',\dots,B_n'))$}
         \State $A_{sub} \gets A_{sub} \cup \{ (B_1', \dots, B_n') \}$
       \EndIf
     \EndFor
@@ -810,15 +805,7 @@ The \textit{Test} procedure verifies if the definition is satisfied and, if nece
 
 
 \subsection{Optimizations} \label{sec:opts}
-\samuel{Should this not be part of approach / optimizations / redundancy?}One way to deal with such equivalences is to identify a \textit{canonical} constraint among the equivalent ones. For example, for the product constraint above, we could define a lexicographic ordering over the blocks and only consider the constraint with the smallest ordering.
-
-
-
-This section discusses various essential design decisions and optimizations aiming to improve the speed and extensibility of our system as well as to find less redundant constraints.
-
-
-
-
+This section discusses various design decisions and optimizations aimed at improving the speed and extensibility of our system as well as to eliminate some obvious redundant constraints.
 
 \subsubsection{Template dependencies}
 As discussed in Section~\ref{sec:form:dependencies}, some constraints depend on other constraints.
