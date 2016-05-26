@@ -192,7 +192,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
       % Table 1
       &~\ecseries{\range{T_{1}}{\rangeall}{1}} \\
 %
-      &~\ecperm{\range{T_{1}}{\rangeall}{1}}, \ecperm{\range{T_{1}}{\rangeall}{8}} \\
+%      &~\ecperm{\range{T_{1}}{\rangeall}{1}}, \ecperm{\range{T_{1}}{\rangeall}{8}} \\
 %
       &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}}\\
       &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{3}}^1, \ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{4}}^1 \\
@@ -225,7 +225,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
       &~\range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
     \end{align*}}
   \vspace{-10pt}
-  \caption{Constraints present in the running example (left), except \textit{ALLDIFFERENT} (16) and \textit{FOREIGNKEY} (5).
+  \caption{Constraints present in the running example (left), except \textit{ALLDIFFERENT} (16), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5).
   $^1$(Spurious constraints) $^2$(Redundant constraints not originally present)}
   \label{fig:sol_example}
 \end{subfigure}
@@ -961,32 +961,40 @@ These constraints added so they can be used in the signature of other constraint
 \section{Evaluation}\label{sec:evaluation}
 \sergey{we need to add a summary of the dataset, avg number of constraints, cells, rows, columns}
 In this section we experimentally validate our approach.
-We studied various questions, most notably with what accuracy our algorithm can find essential constraints.
+We studied various questions, most notably with what accuracy our algorithm can find constraints.
 
 The implementation is illustrated using a case study on the spreadsheet corresponding with the previously introduced example (figure~\ref{fig:main_example}).
 In order to quantify the results and generalize our findings we also evaluate our algorithm on a benchmark of 30 (\samuel{check number}) spreadsheets that we assembled from various sources.
 
-In this section we focus on \textit{functional} constraints that could be used in spreadsheets, ignoring constraints such as all-different or foreign-key.
+There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{(attached to to the submitted paper)}.
 
+In this section we focus on \textit{functional} constraints that could be used in spreadsheets, ignoring constraints such as all-different or foreign-key.
 All experiments were run on a Macbook Pro, Intel Core i7 2.3 GHz with 16GB RAM.
+
+
+
+
+
 
 \subsection{Case study}
 \tias{Move explanation of origin to first time it is introduced}
 Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
-This example combines several smaller examples that were used in an exercise session to teach Excel into one spreadsheet.
-Figure~\ref{fig:sol_example} shows the constraints that we expect to find.
+This example combines several smaller exercise session examples into one spreadsheet.
 
 \subsubsection{Results}
-\sname takes a few seconds to find 18 constraints, including all of the 12 solutions described in Figure~\ref{fig:sol_example}.
-Of the 6 remaining (redundant) constraints, 5 are $\mathit{rank}$ constraints that are true by accident, such as: \begin{align*}
-  & \ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}
-\end{align*}
-The other redundant constraint is an additional $\mathit{lookup}$ that holds because the two vectors in \range{T_2}{\rangeall}{\rangeto{2}{3}} can both be used to look each other up in \range{T_1}{\rangeall}{\rangeto{1}{2}} and we considered only one of them to be essential (lookup using the ID).
+\sname takes a few seconds to find the 18 constraints in Figure~\ref{fig:sol_example}.
+These include 5 spurious $\mathit{RANK}$ constraints, such as $\ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}$, that are true by accident.
+Moreover, there is 1 \textit{LOOKUP} constraint that was is present in the original spreadsheet (looking up ID based on Salesperson).
 
-For this example our primary goal of finding all constraints is achieved.
-The implementation also returns a number of redundant constraints ($33.33\%$ of the total).
+For this example our primary goal of finding all original constraints is achieved.
+The implementation also returns 6 additional constraints ($33.33\%$ of the total).
 This ratio is, as we will show, rather high compared to other spreadsheets.
 However, this example contains many short vectors which increases the chance for constraints to be true by accident.
+
+
+
+
+
 
 \subsection{Benchmark}
 There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel at an affiliated University, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{(attached to to the submitted paper)}.
@@ -1005,9 +1013,17 @@ We consider three types of constraints:
 
 We examine three main questions concerning the accuracy, redundancy and efficiency of our approach, our main focus being accuracy.
 
+
+
+
+
 \subsubsection*{Q1. How accurate is the approach?}
 Fortunately, our system is currently able to find $100\%$ of the implemented constraints (90) on the benchmark suite.
 There are only three essential constraints that have not been implemented yet, therefore our system currently identifies $96.77\%$ of the essential constraints.
+
+
+
+
 
 \subsubsection*{Q2. How many redundant constraints are discovered?}
 Our primary focus was, as mentioned before, accuracy, therefore we sometimes traded off less redundancy for more accuracy.
@@ -1023,6 +1039,11 @@ Accidental constraints are limited to the 5 rank constraints that were discussed
 Redundant constraints can be reduced in different ways.
 Duplications should be detected in a post-processing step that uses entailment or heuristics to filter constraints.
 Accidental constraints may be detected through heuristics, however, they can be also be removed by adding additional data.
+
+
+
+
+
 
 \subsubsection*{Q3. How fast is the algorithm?}
 Concerning the speed of the algorithm we also prioritized accuracy when a trade-off had to be made.
@@ -1052,8 +1073,16 @@ This avoids some of the explosion of combinations for constraints that have many
 For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to below 1 second.
 Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys that are present in the data.
 
+
+
+
+
 \section{Applications}\label{sec:applications}
 In this section, we illustrate how various motivating applications could be realized using our system.
+
+
+
+
 
 \subsection{Autocompletion}
 Autocompletion can be seen as using knowledge derived from a snapshot of spreadsheet data to predict new values before they are written by the user.
