@@ -853,13 +853,13 @@ Therefore, the implementation of $\findassignment$ does not have to take these b
 
 
 
-\subsubsection{Constraint solvers}
-\samuel{Tias, Sergey, have a look at his section, I'm torn about rewriting it, feeling it should either be reduced or expanded, especially the second part.}
-Generic constraint solving technology can be used for the candidate group generation as well as for enumerating the satisfying subgroups.
-Constraint solvers can be categorized as being stand-alone solvers, meaning that they have a text-based modeling language in which the CSP must be formulated, and \textit{embedded}, meaning that they have a programmatic API to formulate the CSP.
-
-\sname supports the ASP \cite{whaisasp} formalism, using the stand-alone Clingo 4.5.4 \cite{clingo} solver, the MiniZinc language \cite{minizinc} with the stand-alone Gecode 4.4.0 solver (which supports floats) and uses an embedded Python-based CP solver \cite{python_constraint}.
-The constraint signature that must be satisfied to generate the groups can be specified in each of the tree formalisms, to ease prototyping and extendability towards new constraints. The embedded solver is fastest as it does not have the overhead of file-writing and calling an external program, and is used in the experiments below.
+%\subsubsection{Constraint solvers}
+%\samuel{Tias, Sergey, have a look at his section, I'm torn about rewriting it, feeling it should either be reduced or expanded, especially the second part.}
+%Generic constraint solving technology can be used for the candidate group generation as well as for enumerating the satisfying subgroups.
+%Constraint solvers can be categorized as being stand-alone solvers, meaning that they have a text-based modeling language in which the CSP must be formulated, and \textit{embedded}, meaning that they have a programmatic API to formulate the CSP.
+%
+%\sname supports the ASP \cite{whaisasp} formalism, using the stand-alone Clingo 4.5.4 \cite{clingo} solver, the MiniZinc language \cite{minizinc} with the stand-alone Gecode 4.4.0 solver (which supports floats) and uses an embedded Python-based CP solver \cite{python_constraint}.
+%The constraint signature that must be satisfied to generate the groups can be specified in each of the tree formalisms, to ease prototyping and extendability towards new constraints. The embedded solver is fastest as it does not have the overhead of file-writing and calling an external program, and is used in the experiments below.
 
 
 
@@ -870,19 +870,19 @@ We consider two types of redundancy that we aim to eliminate during the search.
 As noted in Section~\ref{sec:form:dependencies}, for some constraint templates there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example, $\ecprod{B_R'}{B_1'}{B_2'} \Leftrightarrow \ecprod{B_R'}{B_2'}{B_1'}$.
 Such duplicates are avoided by defining a \textit{canonical} form for these constraints.
 In practice, we define an arbitrary but fixed block ordering and require those blocks that are interchangeable to adhere to this ordering.
-Moreover, \sname currently uses product (\ecprod{B_R'}{B_1'}{B_2'}) instead of division (\eccalc{B_1'}{B_R' / B_2'}) and difference (\ecdiff{B_r}{B_1}{B_2}) instead of sum (\eccalc{B_1}{B_r + B_2}).
-These choices are hardcoded preferences based on the prevalence of difference and product in financial spreadsheet data, however, these constraints can be trivially rewritten if necessary.
+Moreover, \sname currently contains only product (\ecprod{B_R'}{B_1'}{B_2'}) and not division (\eccalc{B_1'}{B_R' / B_2'}) as well as difference (\ecdiff{B_r}{B_1}{B_2}) and not sum (\eccalc{B_1}{B_r + B_2}).
+These choices are based on the prevalence of product and difference in financial spreadsheet data, however, division and sum could easily be added to, as can other constraints.
 
 
-The second type of redundancy we aim to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
+A last type of redundancy we aim to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
 For example, consider the constraint \ecsumc{B_r}{B[1:n]} where $B[k:n]$ consists of only zeros, then \ecsumc{B_r}{B[1:j]} will be true for all $k - 1 \leq j \leq n$.
 In \sname we have, therefore, chosen to only consider \textit{maximal} subblocks.
 
-In some cases a maximal subblock might falsely include irrelevant columns.
-By manually specifying more fine-grained blocks as input this behavior can often be avoided.
+As a result, in some cases a maximal subblock might falsely include irrelevant columns.
 Consider $B_1 = [[200, 300], [200, 150], [1, 2]]$ and $B_2 = [200, 300]$, then \sname will find the constraint $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$.
-If the target constraint is $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$, the last vector of~$B_1$ can be split off into a separate block.
-Alternatively, the algorithm can output all valid constraints, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$, however, this might produce many redundant constraints and introduce constraints that accidentally cover too little data.
+Should, the target constraint be $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$, then the last vector of~$B_1$ must be split off into a separate block before the above approach can find it.
+
+Alternatively, we can output all valid argument assignments instead of only maximal subblocks, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$, however, this might produce many redundant constraints and introduce constraints that accidentally cover too little data.
 
 
 
