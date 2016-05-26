@@ -176,16 +176,16 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 
 \begin{figure*}[thb]
 
-  \begin{subfigure}{.70\textwidth}
+  \begin{subfigure}{.65\textwidth}
   \begin{center}
     \includegraphics[width=1\textwidth]{figures/Demo2.png}
   \end{center}
   \vspace{-10pt}
-  \caption{Example spreadsheet (black words and numbers only). Green borders indicate headerless tables; the blue elements are added to clarify some constraints and relations. \tias{Use specific constraint names, e.g. 'SUM-row' above Total in T1}}
+  \caption{Example spreadsheet (black words and numbers only). Green background indicate headerless tables, dark borders indicate maximal type-consistent blocks.}
   \label{fig:main_example}
 \end{subfigure}
 \hfill
-\begin{subfigure}{.30\textwidth}
+\begin{subfigure}{.35\textwidth}
   {\footnotesize
     \begin{align*}
       % Table 1
@@ -193,9 +193,10 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 %
       &~\ecperm{\range{T_{1}}{\rangeall}{1}}, \ecperm{\range{T_{1}}{\rangeall}{8}} \\
 %
-      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{3}}, \ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{4}} \\
-      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}}, \ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{5}} \\
-      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{6}}, \ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{10}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}}\\
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{3}}^1, \ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{4}}^1 \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{5}}^1 , \ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{6}}^1 \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{10}}^1 \\
 %
       &~\ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
 %
@@ -213,7 +214,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
       &~\ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
 	  % Table 4
-      &~\eclookup{\range{T_{4}}{\rangeall}{2}}{\range{T_{4}}{\rangeall}{3}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}} \\
+      &~\eclookup{\range{T_{4}}{\rangeall}{2}}{\range{T_{4}}{\rangeall}{3}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}^2 \\
 %
       &~\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}} \\
 %
@@ -223,9 +224,11 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
       &~\range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
     \end{align*}}
   \vspace{-10pt}
-  \caption{Constraints present in the running example (left), except \textit{ALLDIFFERENT} (16) and \textit{FOREIGNKEY} (5).\samuel{Not the desired constraints ask : \tias{}}}
+  \caption{Constraints present in the running example (left), except \textit{ALLDIFFERENT} (16) and \textit{FOREIGNKEY} (5).
+  $^1$(Spurious constraints) $^2$(Redundant constraints not originally present)}
   \label{fig:sol_example}
 \end{subfigure}
+  \caption{Running example}
 \end{figure*}
 
 
@@ -265,7 +268,6 @@ A block has the following properties:
 \item \textit{length}: the length of its vectors; as all vectors are from the same table, they always have the same length.
 \item \textit{rows}: this is orientation specific, for row-based blocks this is the size, for column-based blocks the length
 \item \textit{columns}: also orientation specific, for row-based blocks this is the length, for column-based blocks the size
-\item \tias{What is missing is 'discrete', not needed?}
 \end{itemize}
 
 %We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
@@ -273,24 +275,21 @@ A block has the following properties:
 %For notational convenience, we will refer to vectors in {\rm roman} and to groups in {\bf bold}. {\bf CHECK}
 
 \begin{example}
-Consider headerless Table~1 in Figure~\ref{fig:main_example}, its rows are not type consistent (i.e. they contain both numeric and textual data). The table can be partitioned into the following five column-oriented blocks:
-{\small
-\begin{align*}
-&B_1 = \range{T_1}{\rangeall}{1},
-&B_2 = \range{T_1}{\rangeall}{2},\\
-&B_3 = \range{T_1}{\rangeall}{\rangeto{3}{8}},
-&B_4 = \range{T_1}{\rangeall}{9},\\
-&B_5 = \range{T_1}{\rangeall}{\rangeto{10}{11}}.
-\end{align*}
-\tias{Indicate in figure? see also Sergey's comment in figure}
-}
+Consider the (headerless) table~$T_1$ in Figure~\ref{fig:main_example}, its rows are not type consistent (i.e. they contain both numeric and textual data).
+However, the table can be partitioned into five column-oriented blocks $B_1, B_2, B_3, B_4, B_5$, as shown in the figure ($B_1 = \range{T_1}{\rangeall}{1}$, $B_2 = \range{T_1}{\rangeall}{2}$, $B_3 = \range{T_1}{\rangeall}{\rangeto{3}{8}}$, \dots).
+% {\small
+% B_1 = \range{T_1}{\rangeall}{1},
+% B_2 = \range{T_1}{\rangeall}{2},
+% B_3 = \range{T_1}{\rangeall}{\rangeto{3}{8}},
+% B_4 = \range{T_1}{\rangeall}{9},
+% B_5 = \range{T_1}{\rangeall}{\rangeto{10}{11}}
 \end{example}
 
 \begin{definition}
 \textbf{Block containment $\sqsubseteq$.} 
-A block $B'$ is contained in a block $B$, $B' \sqsubseteq B$, iff both are valid blocks (single orientation, contiguous, type consistent) and each of the vectors in $B'$ is also in $B$. For row-oriented blocks: $B' \sqsubseteq B \Leftrightarrow B=T[\rangeto{a}{b},:] \wedge B'=T[\rangeto{a'}{b'},:] \wedge a \leq a' \wedge b' \leq b$ and similarly for column-oriented blocks.
+A block $B'$ is contained in a block $B$, $B' \sqsubseteq B$, iff both are valid blocks (single orientation, contiguous, type consistent) with the same orientation and table, and each of the vectors in $B'$ is also in $B$. For row-oriented blocks: $B' \sqsubseteq B \Leftrightarrow B=\range{T}{\rangeto{a}{b}}{\rangeall} \wedge B'=\range{T}{\rangeto{a'}{b'}}{\rangeall} \wedge a \leq a' \wedge b' \leq b$ and similarly for column-oriented blocks.
 \end{definition}
-\sergey{do we need to mention explicitly that blocks have the same orientation and are in the same table?}
+
 We will sometimes write that $B'$ is a \textit{subblock} of $B$ or that $B$ is a \textit{superblock} of $B'$.
 %
 An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, which contains the sales numbers of all employees for the four quarters.
