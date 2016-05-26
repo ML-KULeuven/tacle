@@ -181,7 +181,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
     \includegraphics[width=1\textwidth]{figures/Demo2.png}
   \end{center}
   \vspace{-10pt}
-  \caption{Example spreadsheet (black words and numbers only). Green borders indicate headerless tables; the blue elements are added to clarify some constraints and relations. \tias{TODO: headers not in green boxes} \sergey{show blocks? orientation only over blocks, not over tables?}\tias{Use specific constraint names, e.g. 'SUM-row' above Total in T1}}
+  \caption{Example spreadsheet (black words and numbers only). Green borders indicate headerless tables; the blue elements are added to clarify some constraints and relations. \tias{Use specific constraint names, e.g. 'SUM-row' above Total in T1}}
   \label{fig:main_example}
 \end{subfigure}
 \hfill
@@ -223,7 +223,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
       &~\range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
     \end{align*}}
   \vspace{-10pt}
-  \caption{Constraints present in the running example (left), except \textit{ALLDIFFERENT} (16) and \textit{FOREIGNKEY} (5).}
+  \caption{Constraints present in the running example (left), except \textit{ALLDIFFERENT} (16) and \textit{FOREIGNKEY} (5).\samuel{Not the desired constraints ask : \tias{}}}
   \label{fig:sol_example}
 \end{subfigure}
 \end{figure*}
@@ -664,7 +664,6 @@ In a second step it looks at every superblock assignment and finds subassignment
 
 
 \subsubsection{Generating superblock assignments}
-%The goal of this step is to prune out impossible groups from the beginning by looking at their properties rather than their actual content (\CSignature vs \CFunction).
 Given a constraint template~$s$ and the set of all blocks~\blocks, the goal is to find all combinations of blocks that satisfy the constraint signature. Let there be $b$ blocks and let~$s$ have~$n$ arguments, then a simple generate-and-test method would have to test $b^n$ combinations (given that blocks can be repeated), which can grow very rapidly with $b$, depending on $n$.
 
 However, the properties defined in the signature, such as those related to the type or size of a block, can be used to avoid considering certain groups for certain arguments.
@@ -743,6 +742,7 @@ Br and Bx are numeric; rows(Bx) ⇤ 2; and columns(Bx ) = length(Br )
 \label{sec:algo:subgr}
 In the previous step superblock assignments are generated for a constraint template $s$ with $n$ arguments.
 In this step, given such a superblock assignment $(B_1, \dots, B_n)$, the goal is to discover valid \textit{subassignments}, i.e. assignments of subblocks $(B'_1, \dots, B'_n)$ (for all $i$, $B'_i \subseteq B_i$) that satisfy both the signature and the definition of template~$s$.
+\samuel{Is this repetition?}
 While the previous step reasons about the \textit{properties} of blocks (type, size, length, ...), this step reasons about the actual \textit{content} of the vectors in the blocks, that is, the data.
 
 \begin{example}
@@ -759,7 +759,7 @@ One possible method is to reformulate the problem as a CSP, similar to the appro
 Often, however, a simple generate-and-test approach will suffice.
 In contrast to the previous step, the number of subblocks to generate here are typically manageable: $O(n*m^2)$ with $m$ the size of the largest block and $n$ the number of arguments of the template.
 We only consider continuous ranges as subblocks, so for a block of size $m$ there are $m*(m+1)/2$ possible subblocks to consider.
-Furthermore, few constraint solvers support floating point numbers, which are prevalent in spreadsheet.
+Furthermore, few constraint solvers support floating point numbers, which are prevalent in spreadsheets.
 
 For this reason, the \sname system uses generate-and-test to implement $\findassignment$ for most constraint templates.
 Given a superblock assignment, all subassignments are generated taking into account the required size, columns or rows.
@@ -773,7 +773,7 @@ The \textit{Test} procedure verifies if the definition is satisfied and, if nece
     \State $n \gets$ number of arguments of template $s$
     \State $A_{sub} \gets \emptyset$
     \ForAll{$(B_1', \dots, B_n') \in \{ (B_1', \dots, B_n') | \forall i: B_i' \sqsubseteq B_i \}$}
-      \If{$disjoint(\{B_1', \dots, B_n'\}) \land Test((B_1',\dots,B_n'))$}
+      \If{$disjoint(\{ B_1', \dots, B_n' \}) \land Test((B_1',\dots,B_n'))$}
         \State $A_{sub} \gets A_{sub} \cup \{ (B_1', \dots, B_n') \}$
       \EndIf
     \EndFor
@@ -783,6 +783,7 @@ The \textit{Test} procedure verifies if the definition is satisfied and, if nece
 \caption{Generate-and-test for $\findassignment$}
 \label{algo:gen-test-subblocks}
 \end{algorithm}
+
 
 
 
@@ -895,7 +896,9 @@ We consider two types of redundancy that we aim to eliminate during the search.
 As noted in Section~\ref{sec:form:dependencies}, for some constraint templates there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example, $\ecprod{B_R'}{B_1'}{B_2'} \Leftrightarrow \ecprod{B_R'}{B_2'}{B_1'}$.
 Such duplicates are avoided by defining a \textit{canonical} form for these constraints.
 In practice, we define an arbitrary but fixed block ordering and require those blocks that are interchangeable to adhere to this ordering.
-\samuel{Mention B1*B2 vs PRODUCT?}
+Moreover, \sname currently uses product (\ecprod{B_R'}{B_1'}{B_2'}) instead of division (\eccalc{B_1'}{B_R' / B_2'}) and difference (\ecdiff{B_r}{B_1}{B_2}) instead of sum (\eccalc{B_1}{B_r + B_2}).
+These choices are hardcoded preferences based on the prevalence of difference and product in financial spreadsheet data, however, these constraints can be trivially rewritten if necessary.
+
 
 The second type of redundancy we aim to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
 For example, consider the constraint \ecsumc{B_r}{B[1:n]} where $B[k:n]$ consists of only zeros, then \ecsumc{B_r}{B[1:j]} will be true for all $k - 1 \leq j \leq n$.
@@ -916,9 +919,6 @@ The constraints that are currently supported in our system are shown in Table~\r
 Their inclusion was based on the analysis of the most popular Excel constraints as well as the spreadsheets we encountered.
 All these constraints are available in popular spreadsheet software, except for the structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUTATION} and \textit{FOREIGNKEY}).
 These constraints added so they can be used in the signature of other constraint templates; they are also popular in constraint satisfaction~\cite{modelseeker}.
-
-Note the the template $\ecdiff{B_r}{B_1}{B_2}$ can be rewritten as $B_1 = B_r + B_2$.
-Our choice to use difference is a hardcoded preference based on the prevalence of this type of constraint in financial spreadsheet data.
 
 %Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
 %These constraints have been selected based on the most-used Excel functions as well as their occurrence in various example spreadsheets we observed.
