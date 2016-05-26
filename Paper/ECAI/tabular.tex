@@ -263,9 +263,9 @@ We will refer to the \textit{vectors} of a block when we wish to refer to its ro
 A block has the following properties:
 \begin{itemize}
 \item \textit{type}: a block is type-consistent, so it has a type
-\item \textit{table}: the table that this block belongs to
+\item \textit{table}: the table that the block belongs to
 \item \textit{orientation}: either row-oriented or column-oriented
-\item \textit{size}: the size of a block is the number of vectors in it, that is, the number of rows or columns.
+\item \textit{size}: the number of vectors a block contains
 \item \textit{length}: the length of its vectors; as all vectors are from the same table, they always have the same length.
 \item \textit{rows}: this is orientation specific, for row-based blocks this is the size, for column-based blocks the length
 \item \textit{columns}: also orientation specific, for row-based blocks this is the length, for column-based blocks the size
@@ -288,71 +288,12 @@ However, the table can be partitioned into five column-oriented blocks $B_1, B_2
 
 \begin{definition}
 \textbf{Block containment $\sqsubseteq$.} 
-A block $B'$ is contained in a block $B$, $B' \sqsubseteq B$, iff both are valid blocks (single orientation, contiguous, type consistent) with the same orientation and table, and each of the vectors in $B'$ is also in $B$. For row-oriented blocks: $B' \sqsubseteq B \Leftrightarrow B=\range{T}{\rangeto{a}{b}}{\rangeall} \wedge B'=\range{T}{\rangeto{a'}{b'}}{\rangeall} \wedge a \leq a' \wedge b' \leq b$ and similarly for column-oriented blocks.
+A block $B'$ is contained in a block $B$, $B' \sqsubseteq B$, iff both are valid blocks (contiguous, type consistent) with the same orientation and table, and each of the vectors in $B'$ is also in $B$. For row-oriented blocks: $B' \sqsubseteq B \Leftrightarrow B=\range{T}{\rangeto{a}{b}}{\rangeall} \wedge B'=\range{T}{\rangeto{a'}{b'}}{\rangeall} \wedge a \leq a' \wedge b' \leq b$ and similarly for column-oriented blocks.
 \end{definition}
 
 We will sometimes write that $B'$ is a \textit{subblock} of $B$ or that $B$ is a \textit{superblock} of $B'$.
 %
 An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, which contains the sales numbers of all employees for the four quarters.
-
-
-\subsection{Constraint templates}
-The goal is to learn constraints over blocks in the data. The knowledge needed to learn a constraint is expressed through {\template}s.
-%
-A \template $s$ is a triple $s=\textit{(\CName, \CSignature, \CFunction)}$:
-%Let us elaborate on this:
-\begin{itemize}
-\item
-\textit{\CName}  specifies the syntactic form of the constraint $c(B_1, ...,B_n)$, that is, the name of the constraint $c$ together
-with $n$ abstract arguments $B_i$. Thus a constraint $c$ is viewed as a relation or predicate of arity $n$ in first order logic. Note that a function $B_r=f(B_1,...,B_n)$ can be represented with the $(n{+}1)$-ary predicate $c_f(B_r,B_1,...,B_n)$. Each argument will have to be instantiated with a block.
-% the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
-
-\item the \textit{\CSignature} defines the properties that the arguments of the predicate must satisfy. This can be any property of individual blocks, such as type, length, size and orientation, as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table, or have equal type or length. In terms of logical and relational learning \cite{luc_book}, the \CSignature is known as the {\em bias} of the learner, it specifies when the constraint its arguments are well-formed.
-
-\item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments of blocks to its arguments, it can be used to verify whether the constraint is satisfied or not by the actual data present in the blocks. %holds, in practice this will be a function that can be called when
-%the arguments are full instantiated to decide whether the constraint is satisfied or not.
-In logical and relational learning this is known as the background knowledge. %, which provides the definition of the predicate.
-\end{itemize}
-
-\begin{example}
-Several constraint templates are illustrated in Table \ref{table:constraints}. A non-trivial example is the constraint template for the row-based sum:
-
-\begin{itemize}
-  \item \CName: $\ecsumr{\sg_r}{\mathbf{\sg_x}}$, where $\sg_r$ and $\mathbf{\sg_x}$ are the arguments;
-  
-  \item \CSignature: $\sg_r$ has to be a single vector ($\textit{size}=1$) while $\mathbf{\sg_x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font. The two blocks have to be numeric. This constraint is orientation-specific, so it requires that the number of rows in $\mathbf{\sg_x}$ equals the length of $\sg_r$. While not strictly needed, we also add to the bias of this template that the number of columns to sum over is larger than $2$ as a block with two columns will also be captured by the $\eccalc{\sg_r}{\sg_1 + \sg_2}$ constraint;
-  
-  \item \CFunction: each value in the vector $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$.
-\end{itemize}
-\end{example}
-
-
-It is helpful to see the analogy of constraint templates with first order logic (FOL) and constraint satisfaction.
-From a FOL perspective, the name of the constraint (e.g. \textit{SUM}) is just the predicate name, and the arguments $B_r$ and $B_x$ are the terms, which can be seen as either uninstantiated variables or as concrete values.
-This also holds in our setting, where an instantiation of a variable corresponds to a concrete block. For example for $\ecrank{B_r}{B_x}$ and the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $B_r$ is the $8$th vector in $T_1$: $B_r = \range{T_1}{\rangeall}{8} = [2,1,3,4]$ and the value of $B_x$ is the $7$th vector: $B_x = \range{T_1}{\rangeall}{7} = [1514, 1551, 691, 392]$.
-
-%When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
-%From a FOL perspective, the name of the constraint ($\mathit{RANK}$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
-%This also holds in our setting: when we write
-%      $\ecrank{\range{T}{\rangeall}{8}}{\range{T}{\rangeall}{7}}$,
-%we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table $T$ (provided~$T$ has an 8th column).
-%So, $T$ is viewed as table variable here, with the effect that  ${\range{T}{\rangeall}{8}}$ is a group variable.
-
-\newcommand{\sigc}{\ensuremath{\format{Sig}_c}}
-\newcommand{\defc}{\ensuremath{\format{Def}_c}}
-%\tias{TODO: conceptually $c(A_1, ..., A_n) :- Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$ where '$c$' is here both the constraint name and the template}.
-With this interpretation, we can speak about the signature and definition of a constraint template being \textit{satisfied}. We say that a signature (definition) of a constraint template with $n$ arguments is satisfied by the blocks $(B_1, ..., B_n)$ if $\sigc(B_1, ..., B_n)$ (respectively $\defc(B_1, ..., B_n)$) is satisfied. Likewise, the template is satisfied if both the signature and definition are satisfied; in logic programming, we would write a Prolog-like clause: $c(B_1, ..., B_n) \leftarrow \sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$. Under this interpretation, the term constraint and constraint template can be used interchangeably.
-
-\begin{definition}
-A \textbf{valid argument assignment} of a constraint $c$ is a tuple $(B_1, ..., B_n)$ such that $c(B_1, ..., B_n)$ is satisfied, that is, both the signature and the definition of the corresponding constraint template are satisfied by the assignment of $(B_1, ..., B_n)$ to the arguments.
-\end{definition}
-
-%\samuel{\tias{Of the right (minimum) dimension?? Note that this is also sloppy because the ':8' is not considered part of the variable...} True, I changed the wording a bit but personally I would leave it at this now, you can always say you look at $T[:,i:j]$ iff $cols(T) >= max(i,j)$}.
-%Alternatively, and perhaps more naturally, we can interpret the argument as the value it takes in a particular table $T$ such as $T_1$ in Figure 1, that is,
-%${\range{T_1}{\rangeall}{8}} =  [2,1,3,4]$.
-%Then we can also talk about constraints being satisfied. Basically, a constraint $c(A_1, ..., A_n)$ is {\em satisfied}  in a set of tables ${\cal T}$ if and only if the constraint holds on the values that the $A_i$ take in the set of tables ${\cal T}$. \samuel{\tias{I find this confusing: a group as we defined it is defined on one table, not on multiple tables. we should separate the table variable from the 'range' variables then...} waiting for Luc's opinion here}
-%Figure 3 provides a list of constraints that are satisfied by the tables in Figure 1.
-
 
 \begin{table*}
 \caption{Overview of constraint templates implemented in \sname.
@@ -424,22 +365,82 @@ Templates marked with $*$ are \textit{structural}, i.e. they are not functional 
     \ecsumprod{\sg_r}{\sg_1}{\sg_2}
       & Arguments $\{\sg_r, \sg_1, \sg_2\}$ are all $\numeric$; $\plength(\sg_{1}) = \plength(\sg_{2}) \geq 2$; and $\prows(\sg_{r}) = \pcols(\sg_{r}) = 1$
       & $\sg_{r}[i] = \sum_{i = 1}^{\plength(\sg_{1})} \sg_{1}[i] \times \sg_{2}[i]$.
-      \\
-
-
   \end{tabularx}}
 \end{table*}
+
+
+\subsection{Constraint templates}
+The goal is to learn constraints over blocks in the data. The knowledge needed to learn a constraint is expressed through {\template}s.
+%
+A \template $s$ is a triple $s=\textit{(\CName, \CSignature, \CFunction)}$:
+%Let us elaborate on this:
+\begin{itemize}
+\item
+\textit{\CName}  specifies the syntactic form of the constraint $s(B_1, ...,B_n)$, that is, the name of the template together
+with $n$ abstract arguments $B_i$.
+Thus a constraint is viewed as a relation or predicate of arity $n$ in first order logic.
+Note that a function $B_r=f(B_1,...,B_n)$ can be represented with the $(n{+}1)$-ary predicate $s_f(B_r,B_1,...,B_n)$.
+Each argument will have to be instantiated with a block.
+% the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
+
+\item the \textit{\CSignature} defines the requirements that the arguments of the predicate must satisfy.
+This can concern any property of individual blocks as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table or have equal length.
+In terms of logical and relational learning \cite{luc_book}, the \CSignature is known as the {\em bias} of the learner, it specifies when the constraint its arguments are well-formed.
+
+\item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments of blocks to its arguments, it can be used to verify whether the constraint is satisfied or not by the actual data present in the blocks. %holds, in practice this will be a function that can be called when
+%the arguments are full instantiated to decide whether the constraint is satisfied or not.
+In logical and relational learning this is known as the background knowledge. %, which provides the definition of the predicate.
+\end{itemize}
+
+\begin{example}
+Several constraint templates are illustrated in Table \ref{table:constraints}. A non-trivial example is the constraint template for the row-based sum:
+
+\begin{itemize}
+  \item \CName: $\ecsumr{\sg_r}{\mathbf{\sg_x}}$, where $\sg_r$ and $\mathbf{\sg_x}$ are the arguments;
+  
+  \item \CSignature: $\sg_r$ has to be a single vector ($\textit{size}=1$) while $\mathbf{\sg_x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font. The two blocks have to be numeric. This constraint is orientation-specific, so it requires that the number of rows in $\mathbf{\sg_x}$ equals the length of $\sg_r$. While not strictly needed, we also add to the bias of this template that the number of columns to sum over is larger than $2$ as a block with two columns will also be captured by the $\eccalc{\sg_r}{\sg_1 + \sg_2}$ constraint;
+  
+  \item \CFunction: each value in the vector $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$.
+\end{itemize}
+\end{example}
+
+
+It is helpful to see the analogy of constraint templates with first order logic (FOL) and constraint satisfaction.
+From a FOL perspective, the name of the constraint (e.g. \textit{SUM}) is just the predicate name, and the arguments $B_r$ and $B_x$ are the terms, which can be seen as either uninstantiated variables or as concrete values.
+This also holds in our setting, where an instantiation of a variable corresponds to a concrete block. For example for $\ecrank{B_r}{B_x}$ and the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $B_r$ is the $8$th vector in $T_1$: $B_r = \range{T_1}{\rangeall}{8} = [2,1,3,4]$ and the value of $B_x$ is the $7$th vector: $B_x = \range{T_1}{\rangeall}{7} = [1514, 1551, 691, 392]$.
+
+%When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
+%From a FOL perspective, the name of the constraint ($\mathit{RANK}$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
+%This also holds in our setting: when we write
+%      $\ecrank{\range{T}{\rangeall}{8}}{\range{T}{\rangeall}{7}}$,
+%we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table $T$ (provided~$T$ has an 8th column).
+%So, $T$ is viewed as table variable here, with the effect that  ${\range{T}{\rangeall}{8}}$ is a group variable.
+
+\newcommand{\sigc}{\ensuremath{\format{Sig}_s}}
+\newcommand{\defc}{\ensuremath{\format{Def}_s}}
+%\tias{TODO: conceptually $c(A_1, ..., A_n) :- Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$ where '$c$' is here both the constraint name and the template}.
+With this interpretation, we can speak about the signature and definition of a constraint template being \textit{satisfied}.
+We say that a signature (definition) of a constraint template~$s$ with $n$ arguments is satisfied by the blocks $(B_1, ..., B_n)$ if $\sigc(B_1, ..., B_n)$ (respectively $\defc(B_1, ..., B_n)$) is satisfied.
+Likewise, the template is satisfied if both the signature and definition are satisfied; in logic programming, we would write a Prolog-like clause: $s(B_1, ..., B_n) \leftarrow \sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$.
+Under this interpretation, the term constraint and constraint template can be used interchangeably.
+
+\begin{definition}
+A \textbf{valid argument assignment} of a constraint $s$ is a tuple $(B_1, ..., B_n)$ such that $s(B_1, ..., B_n)$ is satisfied, that is, both the signature and the definition of the corresponding constraint template are satisfied by the assignment of $(B_1, ..., B_n)$ to the arguments.
+\end{definition}
+
+
+
 
 
 \subsection{Problem Definition}\label{sec:problem_statement}
 The problem of learning constraints from tabular data can be seen as an inverse {\em constraint satisfaction problem} (CSP).
 In a CSP one is given a set of constraints over variables that must all be satisfied, and the goal is to find an instantiation of all the variables that satisfies these constraints. In the context of spreadsheets, the variables would be (blocks of) cells, and one would be given the actual constraints and functions with the goal of finding the values in the cells.
-The inverse problem is, given only an instantiation of the cells, find the constraints that are satisfied in the spreadsheet.
+The inverse problem is, given only an instantiation of the cells, to find the constraints that are satisfied in the spreadsheet.
 
 We define the {\bf Tabular Constraint Learning Problem} as follows:
 %
 \begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}\\
-{\bf Given} a set of instantiated blocks ${\cal B}$ and a set of {\template}s ${\cal S}$: {\bf find} all constraints $c(B'_1, ..., B'_n)$ where $c$ is a constraint with a corresponding template in ${\cal S}$ and $(B'_1, ..., B'_n)$ is a valid argument assignment of the constraint $c$.
+{\bf Given} a set of instantiated blocks ${\cal B}$ and a set of {\template}s ${\cal S}$: {\bf find} all constraints $s(B'_1, ..., B'_n)$ where $s \in {\cal S}$ and $(B'_1, ..., B'_n)$ is a valid argument assignment of the template~$s$.
 \end{definition}
 % Let us now define what it means for a constraint from \template to hold in general. Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $t^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
 % \sergey{moved from formalization END}
