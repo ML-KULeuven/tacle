@@ -721,13 +721,11 @@ These solutions correspond to the valid superblock assignments for constraint te
 
 
 
-\subsubsection{Constraints over satisfying subgroups}
+\subsubsection{Generating subblock assignments}
 \label{sec:algo:subgr}
-In the previous step superblock assignments are generated for a constraint template $s$ with $n$ arguments.
-In this step, given such a superblock assignment $(B_1, \dots, B_n)$, the goal is to discover valid \textit{subassignments}, i.e. assignments of subblocks $(B'_1, \dots, B'_n)$ (for all $i$, $B'_i \subseteq B_i$) that satisfy both the signature and the definition of template~$s$.
-\samuel{Is this repetition?}
-While the previous step reasons about the \textit{properties} of blocks (type, size, length, ...), this step reasons about the actual \textit{content} of the vectors in the blocks, that is, the data.
+Given a superblock assignment $(B_1, \dots, B_n)$ from the previous step, the goal is to discover valid \textit{subassignments}, i.e. assignments of subblocks $(B'_1, \dots, B'_n)$ (for all $i$, $B'_i \subseteq B_i$) that satisfy both the signature and the definition of template~$s$.
 
+%While the previous step reasoned about the \textit{properties} of blocks, in this step we will also reason about the actual \textit{content} of the blocks, that is, the data.
 \begin{example}
   Consider the sum-over-rows constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$.
   An example superblock assignment from Figure~\ref{fig:main_example} is $(B_r, \mathbf{\sg_x}) = (\range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{\rangeto{3}{8}})$.
@@ -736,18 +734,15 @@ While the previous step reasons about the \textit{properties} of blocks (type, s
   In Figure~\ref{fig:main_example} there is exactly one such satisfying subassignment: $(T_1[:7], T_1[:,3:6])$.
 \end{example}
 
-The search for subassignments is represented as the generic procedure $\findassignment$.
-However, the actual implementation is specified for every constraint template separately, allowing different methods to be used based on the type of template.
-One possible method is to reformulate the problem as a CSP, similar to the approach we employed in the last section.
-Often, however, a simple generate-and-test approach will suffice.
-In contrast to the previous step, the number of subblocks to generate here are typically manageable: $O(n*m^2)$ with $m$ the size of the largest block and $n$ the number of arguments of the template.
-We only consider continuous ranges as subblocks, so for a block of size $m$ there are $m*(m+1)/2$ possible subblocks to consider.
-Furthermore, few constraint solvers support floating point numbers, which are prevalent in spreadsheets.
+In this step, we could also formulate the problem as a CSP. %However, the search space is much smaller, e.g. $O(nm^2)$ with $n$ the number of arguments of the template and $m$ the size of the largest block.
+However, few CSP solvers support floating point numbers, which are prevalent in spreadsheets. Furthermore, in a CSP approach we would have to \textit{ground} out the definition for each of the corresponding elements in the vectors. This is inefficient, as the signature of the definition may already not be satisfied, or the first element in the data.
 
-For this reason, the \sname system uses generate-and-test to implement $\findassignment$ for most constraint templates.
-Given a superblock assignment, all subassignments are generated taking into account the required size, columns or rows.
-The subassignments are sequentially tested using a template-specific procedure \textit{Test} and valid subassignments are returned.
-The \textit{Test} procedure verifies if the definition is satisfied and, if necessary, checks signature constraints that have not yet been enforced (e.g. subtype constraints).
+Hence, a simple generate-and-test will usually suffice.
+%However, the actual implementation is specified for every constraint template separately, allowing different methods to be used based on the type of template.
+%For this reason, the \sname system uses generate-and-test to implement $\findassignment$ for most constraint templates.
+Given a superblock assignment, all disjoint subassignments are generated taking into account the required size, columns or rows.
+The disjoint subassignments are then sequentially tested using a template-specific procedure \textit{Test} and valid subassignments are returned.
+The \textit{Test} procedure verifies the exact signature (e.g. subtypes will not have been checked yet) and checks whether the definition is satisfied for all data in the blocks.
 
 \begin{algorithm}[tbh]
   \begin{algorithmic}
@@ -755,8 +750,8 @@ The \textit{Test} procedure verifies if the definition is satisfied and, if nece
     \Procedure{Subassignments}{$s$, $(B_1, \dots, B_n)$}
     \State $n \gets$ number of arguments of template $s$
     \State $A_{sub} \gets \emptyset$
-    \ForAll{$(B_1', \dots, B_n') \in \{ (B_1', \dots, B_n') | \forall i: B_i' \sqsubseteq B_i \}$}
-      \If{$disjoint(\{ B_1', \dots, B_n' \}) \land Test((B_1',\dots,B_n'))$}
+    \ForAll{$(B_1', \dots, B_n') \in \{ (B_1', \dots, B_n') | \forall i: B_i' \sqsubseteq B_i  \wedge \nexists i,j,i\neq j: B'_i \sqsubseteq B'_j \}$}
+      \If{$Test((B_1',\dots,B_n'))$}
         \State $A_{sub} \gets A_{sub} \cup \{ (B_1', \dots, B_n') \}$
       \EndIf
     \EndFor
@@ -810,15 +805,7 @@ The \textit{Test} procedure verifies if the definition is satisfied and, if nece
 
 
 \subsection{Optimizations} \label{sec:opts}
-\samuel{Should this not be part of approach / optimizations / redundancy?}One way to deal with such equivalences is to identify a \textit{canonical} constraint among the equivalent ones. For example, for the product constraint above, we could define a lexicographic ordering over the blocks and only consider the constraint with the smallest ordering.
-
-
-
-This section discusses various essential design decisions and optimizations aiming to improve the speed and extensibility of our system as well as to find less redundant constraints.
-
-
-
-
+This section discusses various design decisions and optimizations aimed at improving the speed and extensibility of our system as well as to eliminate some obvious redundant constraints.
 
 \subsubsection{Template dependencies}
 As discussed in Section~\ref{sec:form:dependencies}, some constraints depend on other constraints.
@@ -866,13 +853,13 @@ Therefore, the implementation of $\findassignment$ does not have to take these b
 
 
 
-\subsubsection{Constraint solvers}
-\samuel{Tias, Sergey, have a look at his section, I'm torn about rewriting it, feeling it should either be reduced or expanded, especially the second part.}
-Generic constraint solving technology can be used for the candidate group generation as well as for enumerating the satisfying subgroups.
-Constraint solvers can be categorized as being stand-alone solvers, meaning that they have a text-based modeling language in which the CSP must be formulated, and \textit{embedded}, meaning that they have a programmatic API to formulate the CSP.
-
-\sname supports the ASP \cite{whaisasp} formalism, using the stand-alone Clingo 4.5.4 \cite{clingo} solver, the MiniZinc language \cite{minizinc} with the stand-alone Gecode 4.4.0 solver (which supports floats) and uses an embedded Python-based CP solver \cite{python_constraint}.
-The constraint signature that must be satisfied to generate the groups can be specified in each of the tree formalisms, to ease prototyping and extendability towards new constraints. The embedded solver is fastest as it does not have the overhead of file-writing and calling an external program, and is used in the experiments below.
+%\subsubsection{Constraint solvers}
+%\samuel{Tias, Sergey, have a look at his section, I'm torn about rewriting it, feeling it should either be reduced or expanded, especially the second part.}
+%Generic constraint solving technology can be used for the candidate group generation as well as for enumerating the satisfying subgroups.
+%Constraint solvers can be categorized as being stand-alone solvers, meaning that they have a text-based modeling language in which the CSP must be formulated, and \textit{embedded}, meaning that they have a programmatic API to formulate the CSP.
+%
+%\sname supports the ASP \cite{whaisasp} formalism, using the stand-alone Clingo 4.5.4 \cite{clingo} solver, the MiniZinc language \cite{minizinc} with the stand-alone Gecode 4.4.0 solver (which supports floats) and uses an embedded Python-based CP solver \cite{python_constraint}.
+%The constraint signature that must be satisfied to generate the groups can be specified in each of the tree formalisms, to ease prototyping and extendability towards new constraints. The embedded solver is fastest as it does not have the overhead of file-writing and calling an external program, and is used in the experiments below.
 
 
 
@@ -883,19 +870,19 @@ We consider two types of redundancy that we aim to eliminate during the search.
 As noted in Section~\ref{sec:form:dependencies}, for some constraint templates there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example, $\ecprod{B_R'}{B_1'}{B_2'} \Leftrightarrow \ecprod{B_R'}{B_2'}{B_1'}$.
 Such duplicates are avoided by defining a \textit{canonical} form for these constraints.
 In practice, we define an arbitrary but fixed block ordering and require those blocks that are interchangeable to adhere to this ordering.
-Moreover, \sname currently uses product (\ecprod{B_R'}{B_1'}{B_2'}) instead of division (\eccalc{B_1'}{B_R' / B_2'}) and difference (\ecdiff{B_r}{B_1}{B_2}) instead of sum (\eccalc{B_1}{B_r + B_2}).
-These choices are hardcoded preferences based on the prevalence of difference and product in financial spreadsheet data, however, these constraints can be trivially rewritten if necessary.
+Moreover, \sname currently contains only product (\ecprod{B_R'}{B_1'}{B_2'}) and not division (\eccalc{B_1'}{B_R' / B_2'}) as well as difference (\ecdiff{B_r}{B_1}{B_2}) and not sum (\eccalc{B_1}{B_r + B_2}).
+These choices are based on the prevalence of product and difference in financial spreadsheet data, however, division and sum could easily be added to, as can other constraints.
 
 
-The second type of redundancy we aim to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
+A last type of redundancy we aim to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
 For example, consider the constraint \ecsumc{B_r}{B[1:n]} where $B[k:n]$ consists of only zeros, then \ecsumc{B_r}{B[1:j]} will be true for all $k - 1 \leq j \leq n$.
 In \sname we have, therefore, chosen to only consider \textit{maximal} subblocks.
 
-In some cases a maximal subblock might falsely include irrelevant columns.
-By manually specifying more fine-grained blocks as input this behavior can often be avoided.
+As a result, in some cases a maximal subblock might falsely include irrelevant columns.
 Consider $B_1 = [[200, 300], [200, 150], [1, 2]]$ and $B_2 = [200, 300]$, then \sname will find the constraint $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$.
-If the target constraint is $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$, the last vector of~$B_1$ can be split off into a separate block.
-Alternatively, the algorithm can output all valid constraints, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$, however, this might produce many redundant constraints and introduce constraints that accidentally cover too little data.
+Should, the target constraint be $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$, then the last vector of~$B_1$ must be split off into a separate block before the above approach can find it.
+
+Alternatively, we can output all valid argument assignments instead of only maximal subblocks, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$, however, this might produce many redundant constraints and introduce constraints that accidentally cover too little data.
 
 
 
