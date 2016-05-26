@@ -1073,19 +1073,21 @@ Unfortunately, this assumption is sometimes too strong, when users are intereste
 In this section, we illustrate how various motivating applications could be realized using our system.
 
 \subsection{Autocompletion}
-\sergey{I think the time discussion is irrelevant, should it be cut out completely?}
+Autocompletion can be seen as using knowledge derived from a snapshot of spreadsheet data to predict new values before they are written by the user.
+The snapshot~($D_0$) is used to learn constraints and these are combined with new data~($\Delta D$) that the user has added.
+Using~$\Delta D$ we can keep track of which vectors have changed and which vectors are now incomplete.
+A \textit{functional} constraint corresponds to a spreadsheet formula.
+Such a constraint, e.g. $\ecsumc{B_r}{\mathbf{B_x}}$, is able to compute a result~($B_r$) based on its input~($\mathbf{B_x}$).
+If all the input vectors / blocks have been filled and the result is incomplete, the constraint can predict the result value(s).
 
-Autocompletion can be seen as using knowledge derived from data at time~$t_0$ and new input data at time~$t_1 > t_0$ to predict data that the user has not yet written.
-Therefore, constraints are learned at time~$t_0$ and combined with data from a new row~$i$ (column~$j$) that the user has added to a table~$T$ by time~$t_1$.
-Constraints that do not conflict with the added data are considered \textit{viable}.
-Viable constraints that have enough input data to compute the result for a blank cell~$T[i,j]$ in the new row (column) are \textit{active}, which means they can be used to predict the outcome for that cell.
-\textit{Active} constraints can be used to autocomplete blank cells such that the user does not have to fill in the values manually.
-Once the user has stopped editing the new row~$i$ (column~$j$), the table~$T$ is updated to include~$i$ ($j$) and constraints are learned once again.
+Let us illustrate this on one of the spreadsheets from the gathered dataset.
+Consider Figure \ref{fig:autocompletion_example} containing two tables.
+By learning constraints on the tables excluding the last row, we find constraints $\ecsumif{\range{T_2}{\rangeall}{2}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{3}}$ and $\ecsumif{\range{T_2}{\rangeall}{3}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{4}}$.
+The new data $\Delta D$ consists of the new value \textit{West} in the last row.
+Therefore, vector~$\range{T_2}{:}{1}$ is changed and vectors~$\range{T_2}{:}{2}$, $\range{T_2}{:}{3}$ have become incomplete.
+The \textit{SUMIF} constraints have enough input to fill the incomplete vectors and predict the values in the last row: $\range{T_2}{4}{2} = 1547$ and $\range{T_2}{4}{3} = 428128$.
 
-Let us illustrate this on one of the spreadsheets from the gathered dataset. In Figure \ref{fig:autocompletion_example}, we see two tables the upper one is completed and in the lower one values in the last raw are not yet filled, then the system finds a satisfying constraint (\textit{SUMIF}) and based on it proposes filling values.
-
-\sergey{there should be a discussion on what to do if multiple constraints satisfy the data and propose predictions, just a sketch here for now}
-If multiple constraints satisfy the data and allow autocompletion, then there is a number of ways to handle it. Firstly, autocompletion can be disabled. Secondly, the most specific constrain can be applied. Thirdly, if one is not more specific than the other, one needs to introduce an autocompletion order, which would resolve the problem by picking only one constraint to suggest the values.
+In case multiple constraints predict different values for the same cell, the algorithm will have to either prioritize constraints based on their specificity or a heuristic, not make a prediction, or present the choice to the user.
 
 \subsection{Error detection}
 \begin{figure*}[thb]
@@ -1109,21 +1111,22 @@ If multiple constraints satisfy the data and allow autocompletion, then there is
 \end{figure*}
 
 
-\sergey{Either we need to elaborate on the online detection or remove offline-online and simplify the rest, otherwise it is not clear what is going on; again I don't see any point in time here}
+\sergey{Either we need to elaborate on the online detection or remove offline-online and simplify the rest, otherwise it is not clear what is going on}\samuel{Is this still the case?}
 
 We consider two cases of error detection.
 The first setting is the \textit{online} detection of errors which is similar to the autocompletion setting.
-However, instead of considering viable constraints, we look at \textit{conflict} constraints, i.e. constraints that were learned at time~$t_0$ but do not agree with the newly added data at time~$t_1$.
+However, we look at \textit{conflict} constraints, i.e. constraints that were learned on the snapshot data but do not agree with the newly added data~$\Delta D$.
 Such conflict constraints can indicate errors in the input.
-Since conflict constraints could also be accidental constraints that are correctly invalidated by the new data, the size of the data at time ~$t_0$ should be large enough.
+However, such conflicts can be wrongly caused by spurious constraints.
+Therefore, conflicts should only be detected if the snapshot data is large enough.
 
 The second type of error detection is \textit{offline} and attempts to detect errors in a spreadsheet.
 Consider, for example, a use case concerning crime statistics provided by the FBI.
 An extract of the spreadsheet is depicted in Figure~\ref{fig:fbi}.
 When run on this sheet, our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
-A possible approach to detect such missing or wrong values is to look at a sample of the table that excludes the erroneous row and compare the constraints learned on this sample with the constraints learned by adding the row containing the mistake.
+A possible approach to detect such missing or wrong values is to look at a sample of the table that excludes the erroneous row, e.g. trying to leave out each row, and compare the constraints learned on this sample with the constraints learned by adding the row containing the mistake.
 The sample needs to large enough such that we have enough confidence that the constraints are correct. For example, in Figure \ref{fig:fbi} all but one row satisfy the constraint, which is a strong indication that there is a constraint violation.
-If we define the sample to be our data at time~$t_0$ and the added row to be the additional input at~$t_1$, this task can be formulated as online error detection and dealt with in the same way.
+If we define the sample to be the snapshot data and the added row to be the additional input~$\Delta D$, this task can be formulated as online error detection and dealt with in the same way.
 %Of course, generating large enough samples and rows (columns) to be added can be done in multiple ways.
 %In the limited case of detecting single errors one can leave out every row (column), consider the remaining data to be the sample and
 %and the left out row (column) to be new input.
@@ -1171,6 +1174,7 @@ Aside from finding errors, the system can be extended to deal with noise and the
 Soft constraints are the (potentially weighted) constraints that hold only on some of the data.
 This would extend the approach to new application domains as well as provide more native error detection.
 
+\tias{write limitations: single cons, complete rows/cols only, (what else?) and deal with it as future work}.
 \bibliographystyle{plain}
 \bibliography{references}
 \end{document}
