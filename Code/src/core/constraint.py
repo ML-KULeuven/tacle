@@ -273,6 +273,7 @@ class ConditionalAggregate(Constraint):
         source = ConstraintSource(variables, all_diff, {all_diff.x.name: "OK"})
         filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]),
                    SameTable([self.f_key, self.values]), Not(SameTable([self.f_key, self.o_key])),
+                   #SameTable([self.o_key, self.result]), #TODO think about this
                    NotPartial([self.o_key]), SameType([self.f_key, self.o_key]),
                    SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
         p_format = "{R} = " + name.upper() + "IF({FK}={OK}, {V})"

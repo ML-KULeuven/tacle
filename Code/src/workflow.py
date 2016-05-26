@@ -76,14 +76,16 @@ def main(csv_file, groups_file, verbose, silent=False, parse_silent=False, const
     ordered = order_constraints(supported)
 
     for constraint in ordered:
+        if verbose and not silent:
+            print(constraint.name, end=" ", flush=True)
         t_start = time.time()
         assignments = manager.find_assignments(constraint, groups, solutions)
         t_assign = time.time()
         solutions.add(constraint, manager.find_solutions(constraint, assignments, solutions))
         t_end = time.time()
-        f_string = "{name} [assignment time: {assign:.3f}, solving time: {solve:.3f}]"
         if verbose and not silent:
-            print(f_string.format(name=constraint.name, assign=t_assign - t_start, solve=t_end - t_assign))
+            f_string = "[assignment time: {assign:.3f}, solving time: {solve:.3f}]"
+            print(f_string.format(assign=t_assign - t_start, solve=t_end - t_assign))
         if len(solutions.get_solutions(constraint)) > 0 and not silent:
             print("\n".join(["\t" + constraint.to_string(s) for s in solutions.get_solutions(constraint)]))
         if (len(solutions.get_solutions(constraint)) > 0 or verbose) and not silent:
