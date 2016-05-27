@@ -97,12 +97,9 @@
 %\newdef{definition}{Definition} % ACM specific
 
 
-%%\ecaisubmission   % inserts page numbers. Use only for submission of paper.
-                  % Do NOT use for camera-ready version of paper.
-
 \begin{document}
 
-\title{Learning constraints in tabular data}
+\title{Learning constraints in spreadsheets and tabular data}
 % see http://www.acm.org/binaries/content/assets/publications/article-templates/sig-alternate-sample.tex
 
 %\author{Name1 Surname1 \and Name2 Surname2 \and Name3 Surname3 \institute{----------------------} }
@@ -112,7 +109,7 @@
 \begin{abstract}
 %Spreadsheets, comma separated value files and other tabular data representations are in wide use today. However, the correct use and maintenance of functions in and between the tabular data can be error-prone and overwhelming. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. Our method takes inspiration form inductive logic programming and constraint satisfiability. We represent common spreadsheet functions as predicates with arguments that must satisfy number of constraints over the arguments. This allows generic constraint satisfaction techniques to be used to find all such satisfying predicates/functions within the rows, columns and submatrices of the tables. We show the effectiveness and accuracy of this approach on a number of spreadsheets from varying sources.
 Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
-However, modeling, maintaining and discovering formulas in tabular data and between spreadsheets can be time consuming and error-prone.
+However, modeling, maintaining and discovering formulas in tabular data and spreadsheets can be time consuming and error-prone.
 In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data.
 We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking.
 Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
@@ -150,11 +147,10 @@ This provides a flavor of how this problem is different from standard data minin
 \samuel{A: at this point I have an idea what the abstract means by "function" constraints, but wonder what the "relation" ones are}
 One can see that understanding and learning constraints in tabular data is hence a new and challenging problem for machine learning.
 
-The approach that we introduce borrows techniques from logical and relational learning \cite{luc_book}, where
-the discovery of clausal constraints has been studied in an inductive logic programming setting \cite{claudien,lallouet}; and from constraint learning,  where several approaches to learning sets of constraints have been developed in a constraint programming setting \cite{Quacq,Conacq,modelseeker};
+The approach that we introduce borrows techniques from logical and relational learning \cite{luc_book}, where the discovery of clausal constraints has been studied in inductive logic programming \cite{claudien,lallouet}; and from constraint learning,  where several approaches to learning sets of constraints have been developed in a constraint programming setting \cite{Quacq,Conacq,modelseeker};
 and from mining in databases, where inductive techniques have been applied to discover constraints (such as functional and multi-valued dependencies) in relational databases \cite{savnik}.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from
 very few examples.  Our approach contrasts with these in that it focusses
-on learning both column- and row-constraints, as does Modelseeker~\cite{modelseeker} which is restricted to traditional CSPs. It contrasts with Flashfill in that it can learn from numeric data too, as well as general constraints in addition to functions.
+on learning both column- and row-constraints, as does Modelseeker~\cite{modelseeker} which is restricted to traditional constraint satisfaction problems (CSPs). It contrasts with Flashfill in that it can learn from numeric data too, as well as general constraints in addition to functions.
 A more detailed discussion on related work is contained in Section~\ref{sec:related_work}.
 
 \samuel{Move this up a paragraph}
@@ -252,11 +248,11 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 
 
 \section{Formalization}\label{sec:formalization}
-Our goal is to automatically discover constraints (functions and relations) between the rows and the columns of tables in a spreadsheet. This is applicable not just to data from spreadsheets, but any data in tabular form, hence the name.
+Our goal is to automatically discover constraints (functions and relations) between the rows and the columns of tables in a spreadsheet. This is applicable not just to data from spreadsheets, but to any data in tabular form, hence the name.
 
 %An example spreadsheet with tables is given in Figure~\ref{fig:main_example}, we will use this as running example throughout the paper.
 
-We first introduce some terminology and the concept of \template, after which we define the problem and make some additional considerations.
+We first introduce some terminology and the concept of a \template, after which we define the problem and make some additional considerations.
 
 \subsection{Terminology}
 Spreadsheets and tabular data may conceptually consist of multiple tables, such as in Figure~\ref{fig:main_example}. Note that a table can contain a header; however, we wish to reason over entire rows and columns of data, and hence we will consider \textbf{headerless tables} only.
@@ -285,6 +281,8 @@ A block has the following properties:
 \item \textit{orientation}: either row-oriented or column-oriented
 \item \textit{size}: the number of vectors a block contains
 \item \textit{length}: the length of its vectors; as all vectors are from the same table, they always have the same length.
+\\\\
+\luc{these are the vectors along \dots along}
 \item \textit{rows}: this is orientation specific, for row-based blocks this is the size, for column-based blocks the length
 \item \textit{columns}: also orientation specific, for row-based blocks this is the length, for column-based blocks the size
 \end{itemize}
@@ -385,13 +383,15 @@ Templates marked with $*$ are \textit{structural}, i.e. they are not functional 
       & Arguments $\{\sg_r, \sg_1, \sg_2\}$ are all $\numeric$; $\plength(\sg_{1}) = \plength(\sg_{2}) \geq 2$; and $\prows(\sg_{r}) = \pcols(\sg_{r}) = 1$
       & $\sg_{r}[i] = \sum_{i = 1}^{\plength(\sg_{1})} \sg_{1}[i] \times \sg_{2}[i]$.
   \end{tabularx}}
+
+  \luc{there are some fancy constraints here. it might be good to say something about them ... like an example of one of the more complex ones in the text ... maybe state what conditional means, what aggregate ... }
 \end{table*}
 
 
 \subsection{Constraint templates}
 The goal is to learn constraints over blocks in the data. The knowledge needed to learn a constraint is expressed through {\template}s.
 %
-A \template $s$ is a triple $s=\textit{(\CName, \CSignature, \CFunction)}$:
+A \template $s$ is a triple $t = \textit{(\CName, \CSignature, \CFunction)}$:
 %Let us elaborate on this:
 \begin{itemize}
 \item
@@ -421,7 +421,7 @@ Several constraint templates are illustrated in Table \ref{table:constraints}. A
   
   \item \CSignature: $\sg_r$ has to be a single vector ($\textit{size}=1$) while $\mathbf{\sg_x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font. The two blocks have to be numeric. This constraint is orientation-specific, so it requires that the number of rows in $\mathbf{\sg_x}$ equals the length of $\sg_r$. While not strictly needed, we also add to the bias of this template that the number of columns to sum over is larger than $2$ as a block with two columns will also be captured by the $\eccalc{\sg_r}{\sg_1 + \sg_2}$ constraint;
   
-  \item \CFunction: each value in the vector $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$.
+  \item \CFunction: each value in the vector $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$. \luc{example where it holds}
 \end{itemize}
 \end{example}
 
@@ -444,11 +444,11 @@ This also holds in our setting, where an instantiation of a variable corresponds
 With this interpretation, we can speak about the signature and definition of a constraint template being \textit{satisfied}.
 \samuel{A: how do you get from the signature and the definition to these predicates? I guess this is what I'm missing on the formal side above… this needs to be made explicit}
 We say that a signature (definition) of a constraint template~$s$ with $n$ arguments is satisfied by the blocks $(B_1, ..., B_n)$ if $\sigc(B_1, ..., B_n)$ (respectively $\defc(B_1, ..., B_n)$) is satisfied.
-Likewise, the template is satisfied if both the signature and definition are satisfied; in logic programming, we would write a Prolog-like clause: $s(B_1, ..., B_n) \leftarrow \sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$.
+Likewise, the template is satisfied if both the signature and definition are satisfied; in logic programming and logical relational learning, we would define the predicate~$s$ using a Prolog like clause: $s(B_1, ..., B_n) \leftarrow \sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$.
 Under this interpretation, the term constraint and constraint template can be used interchangeably.
 
 \begin{definition}
-A \textbf{valid argument assignment} of a constraint $s$ is a tuple $(B_1, ..., B_n)$ such that $s(B_1, ..., B_n)$ is satisfied, that is, both the signature and the definition of the corresponding constraint template are satisfied by the assignment of $(B_1, ..., B_n)$ to the arguments.
+A \textbf{valid argument assignment} of a constraint $s$ is a tuple of blocks $(B_1, ..., B_n)$ such that $s(B_1, ..., B_n)$ is satisfied, that is, both the signature and the definition of the corresponding constraint template are satisfied by the assignment of $(B_1, ..., B_n)$ to the arguments.
 \end{definition}
 
 
@@ -460,12 +460,12 @@ The problem of learning constraints from tabular data can be seen as an inverse 
 In a CSP one is given a set of constraints over variables that must all be satisfied, and the goal is to find an instantiation of all the variables that satisfies these constraints. In the context of spreadsheets, the variables would be (blocks of) cells, and one would be given the actual constraints and functions with the goal of finding the values in the cells.
 The inverse problem is, given only an instantiation of the cells, to find the constraints that are satisfied in the spreadsheet.
 
-We define the {\bf Tabular Constraint Learning Problem} as follows:
+We define the inverse problem, that is the {\bf Tabular Constraint Learning Problem}, as follows:
 %
 \samuel{A: so you expect the user to define blocks? can this be automated?
 (also, later on, your solution seems to start from the tables rather than the blocks, why not match the two?)}
 \begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}\\
-{\bf Given} a set of instantiated blocks ${\cal B}$ and a set of {\template}s ${\cal S}$: {\bf find} all constraints $s(B'_1, ..., B'_n)$ where $s \in {\cal S}$ and $(B'_1, ..., B'_n)$ is a valid argument assignment of the template~$s$.
+{\bf Given} a set of instantiated blocks ${\cal B}$ and a set of {\template}s ${\cal S}$: {\bf find} all constraints $s(B'_1, ..., B'_n)$ where $s \in {\cal S}$, $\forall i: B_i' \sqsubseteq B_i \in {\cal B}$ and $(B'_1, ..., B'_n)$ is a satisfied argument assignment of the template~$s$.
 \end{definition}
 % Let us now define what it means for a constraint from \template to hold in general. Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $t^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
 % \sergey{moved from formalization END}
@@ -491,6 +491,7 @@ Apart from easing the specification of the signature and definition, in Section~
 \subsubsection{Redundancies}
 \label{sec:form:redundancies}
 Depending on the application, some constraints in the solution to the tabular constraint learning problem may be considered \textit{redundant}. This is because constraints may be logically equivalent or may be implied by other constraints.
+\luc{if you have permutation, alldiff is redundant.}
 
 Within the same constraint, there can be equivalent argument assignments if the order of some of the arguments does not matter. For example for the product constraint, $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecprod{\sg_r}{\sg_2}{\sg_1}$ so one can be considered redundant to the other.
 
@@ -498,7 +499,9 @@ Two different constraints may be logically equivalent due to their nature, e.g. 
 
 When the data has rows or columns containing exactly the same data, then any constraint with such a vector in its argument assignment will also have an argument assignment with the other equivalent vectors.
 
-Because dealing with redundancy is often application-dependent, we explain in the next section our generic method for finding all constraints. We describe some optimisations that avoid obvious equivalences in Section~\ref{sec:opts} and will investigate the impact of redundancy in the experiments.
+Dealing with redundancy is often application-dependent.
+Therefore, in Section~\ref{sec:approach} we will first explain our generic method for finding all constraints, before describing some optimizations that avoid obvious equivalences (Section~\ref{sec:opts}).
+Later, we will investigate the impact of redundancy in the experiments.
 
 %More formally, a constraint $c_1(G_1, ... G_n)$ \textit{implies} another constraint~$c_2(G'_1, ..., G'_m)$ whenever
 %the  following statement holds: $$\forall G_i, G'_j : c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m).$$
@@ -564,25 +567,26 @@ Our proposed methodology contains the following steps:
 \item Partition the tables into maximally contiguous, type-consistent \textit{superblocks}
 \item Generate for each constraint template all valid argument assignments in two steps:
 \begin{enumerate}
-\item For each constraint $c$, generate all atoms $c(B_1, \ldots ,B_n)$ where each $B_i$ is a maximal \textit{superblock} and the $B_i$ are compatible with the signature.
-\item For each generated atom $c(B_1, \ldots ,B_n)$, find all valid $c(B'_1, \ldots, B'_n)$ such that for all $i$ holds $B'_i \sqsubseteq B_i$ and the signature and definition of $c(B'_1, \ldots, B'_n)$ are satisfied.
+\item For each constraint $c$, generate all atoms $c(B_1, \ldots ,B_n)$ where each $B_i$ is a maximal superblock and the $B_i$ are \textit{compatible} (defined below) with the signature. 
+\item For each generated atom $c(B_1, \ldots ,B_n)$ in 3a), find all valid $c(B'_1, \ldots, B'_n)$ such that for all $i$ holds $B'_i \sqsubseteq B_i$ and the signature and definition of $c(B'_1, \ldots, B'_n)$ are satisfied.
 \end{enumerate}
 \end{enumerate}
+\luc{introduce the notion of a maximal superblock earlier ???}
 
 The core of our method is step 3. In principle, one could use a generate-and-test approach by generating all possible blocks from the superblock and testing each combination of blocks for each of the arguments of the constraints. However, each superblock of size $m$ has $m*(m+1)/2$ contiguous subblocks, meaning that a constraint with $n$ arguments would have to check $O(n^{m^2})$ combinations of blocks.
 
-Instead, we divide this step into two parts: in the first part, we will not reason over individual (sub)blocks and their data, but rather over the properties of the maximal superblocks.
+Instead, we divide this step into two parts: in step 3a, we will not reason over individual (sub)blocks and their data, but rather over the properties of the maximal superblocks.
 % and what combination of superblocks may lead to a valid argument assignment.\\
-Consider Table 1 and 2 in Figure~\ref{fig:main_example} and the $\mathit{SUM}_{col}$ constraint template.
-Instead of considering all possible subblocks of T1 and T2, we first reason over the properties of the superblocks.
-For example, $B2$ and $B4$ are not numeric so they can be immediately discarded.
+Consider tables $T_1$ and $T_2$ in Figure~\ref{fig:main_example} and the $\mathit{SUM}_{col}$ constraint template.
+Instead of considering all possible subblocks of $T_1$ and $T_2$, we first reason over the properties of the superblocks.
+For example, $B_2$ and $B_4$ are not numeric so they can be immediately discarded.
 \samuel{Iff Br is from T2?}
-Looking at the sizes, $B1$ and~$B2$ contain only one and two columns respectively, however, the rows in $T2$ have length 4 so we only need to consider superblocks with at least 4 columns, which only $B3$ satisfies.
+Looking at the sizes, $B_1$ and~$B_2$ contain only one and two columns respectively, however, the rows in $T_2$ have length 4 so we only need to consider superblocks with at least 4 columns, which only $B_3$ satisfies. \luc{so the generated atom in step 3a is \dots }
 
-In the second part, we start from an atom $c(B_1, \ldots ,B_n)$ with maximal superblocks $B_i$, and generate and test all possible (sub)block assignments to arguments using the properties and actual data of the blocks. As we only have to consider the blocks $B'_i \sqsubseteq B_i$ contained in each superblock, this is typically much easier. For the above example, each of the vectors of $B6$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks for the right-hand side and verify the signature (e.g. at least size $4$) and test the definition for each of the rows. %In practice, this can be optimized further.
+In step 3b, we start from an atom $c(B_1, \ldots, B_n)$ with maximal superblocks $B_i$, and generate and test all possible (sub)block assignments to arguments using the properties and actual data of the blocks. As we only have to consider the blocks $B'_i \sqsubseteq B_i$ contained in each superblock, this is typically much easier. For the above example, each of the vectors of $B_6$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks for the right-hand side and verify the signature (e.g. at least size $4$) and test whether for each row the definition is satisfied. %In practice, this can be optimized further.
 \\\\
 \samuel{Section references not correct}
-We now describe in more detail how the headerless tables are extracted and how the maximal superblocks are generated from them (step 1 and 2, Section 4.1), how the candidate superassignments are generated (step 3a, Section 4.2) and how the actual assignments are extracted from that (step 3b, Section 4.3). We then describe a number of optimizations that we perform to speed up step 3 and 4 (Section 4.4).
+We now describe in more detail how the headerless tables are extracted and how the maximal superblocks are generated from them (step 1 and 2, Section 4.1), how the candidate superassignments are generated (step 3a, Section 4.2) and how the actual assignments are extracted from that (step 3b, Section 4.3). We then describe a number of optimizations that we perform to speed up steps 3 and 4 (Section 4.4).
 
 
 
@@ -639,7 +643,7 @@ The pseudo-code of this approach is shown in Algorithm~\ref{algo:tcl}.
 %In a second step it looks at every superblock assignment and finds subassignments that satisfy the signature and definition of~$s$.
 
 
-This separation of checking the \textit{properties} of superblock assignments from checking the \textit{actual data} in the subblock assignment controls the exponential blow-up of combinations to test. Furthermore, we will use constraint satisfaction technology in the first step to efficiently enumerate superblock assignments that are compatible with the signature. %These are the two key properties of our approach.
+This separation of checking the \textit{properties} of superblock assignments from checking the \textit{actual data} in the subblock assignment controls the exponential blow-up of combinations to test. Furthermore, we use constraint satisfaction technology in the first step to efficiently enumerate superblock assignments that are compatible with the signature. %These are the two key properties of our approach.
 
 \newcommand{\temps}{\ensuremath{S}}
 \begin{algorithm}[t]
@@ -656,6 +660,7 @@ This separation of checking the \textit{properties} of superblock assignments fr
         \ForAll{$(B_1, \dots, B_n) \in A$}
         \State $A' \gets \findassignment(s, (B_1,\dots,B_n))$
         \ForAll{$(B_1',\dots,B_n') \in A'$}
+            \Comment \luc{if cs(B; …( satisfied/?}
             \State $C \gets C \cup \{ c_s(B_1', \dots, B_n') \}$
           \EndFor
         \EndFor
@@ -671,7 +676,7 @@ This separation of checking the \textit{properties} of superblock assignments fr
 
 
 
-\subsubsection{Generating superblock assignments}
+\subsubsection{Generating superblock assignments (Step 3a)}
 % Let there be $b$ blocks and let~$s$ have~$n$ arguments, then a simple generate-and-test method would have to test $b^n$ combinations (given that blocks can be repeated), which can grow very rapidly with $b$, depending on $n$.
 
 Given a constraint template~$s$ and the set of all maximal blocks~\blocks, the goal is to find all combinations of maximal blocks that are consistent with the constraint signature.
@@ -723,7 +728,7 @@ The actual constraints must enforce that a superblock assignment is \textit{cons
 %  While the signature of the template requires~$x$ to be integer we cannot discard~$B$ since there might be subblocks~$B' \sqsubseteq B$ that only contain integer values and satisfy the signature.
 %\end{example}
 
-Table~\ref{tbl:translation} shows how the conversion from requirements of the signature to CSP constraints happens:
+Table~\ref{tbl:translation} shows how the conversion from requirements of the signature to CSP constraints works:
 Requirements on the lengths, orientations and tables of blocks can be directly enforced since they are invariant under block containment($\sqsubseteq$).
 Typing requirements need to be relaxed to check only for base types (numeric and textual).
 Minimum sizes can be directly enforced, but exact size requirements are relaxed to minimum sizes, since blocks with two many vectors contain subblocks of the required size.
@@ -751,7 +756,7 @@ These solutions correspond to the valid superblock assignments for constraint te
 
 
 
-\subsubsection{Generating subblock assignments}
+\subsubsection{Generating subblock assignments (Step 3b)}
 \label{sec:algo:subgr}
 Given a superblock assignment $(B_1, \dots, B_n)$ from the previous step, the goal is to discover valid \textit{subassignments}, i.e. assignments of subblocks $(B'_1, \dots, B'_n)$ (for all $i$, $B'_i \subseteq B_i$) that satisfy both the signature and the definition of template~$s$.
 
@@ -761,18 +766,19 @@ Given a superblock assignment $(B_1, \dots, B_n)$ from the previous step, the go
   An example superblock assignment from Figure~\ref{fig:main_example} is $(B_r, \mathbf{\sg_x}) = (\range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{\rangeto{3}{8}})$.
   Note that this assignment does not satisfy the signature yet, $\sg_r$ contains more than one vector and $\psize(\mathbf{\sg_x}) \neq \plength(B_r)$.
   This step aims to generate subassignments $(B_r' \sqsubseteq B_r, \mathbf{B_x}' \sqsubseteq \mathbf{B_x})$ that \textit{do} satisfy the signature and test whether they satisfy the definition: $\forall i, \sg_r[0][i] = \sum_j \mathbf{\sg_x}[j][i]$, where $B[i][j]$ indicates the $i$th value of the $j$th vector in $B$.
-  In Figure~\ref{fig:main_example} there is exactly one such satisfying subassignment: $(T_1[:7], T_1[:,3:6])$.
+  In Figure~\ref{fig:main_example} there is exactly one such satisfying subassignment: $(T_1[:7], T_1[:,3:6])$. \luc{why [j][i] and not [j,i] ?}
 \end{example}
 
 In this step, we could also formulate the problem as a CSP. %However, the search space is much smaller, e.g. $O(nm^2)$ with $n$ the number of arguments of the template and $m$ the size of the largest block.
 However, few CSP solvers support floating point numbers, which are prevalent in spreadsheets.
 Furthermore, in a CSP approach we would have to \textit{ground} out the definition for each of the corresponding elements in the vectors.
 \samuel{Tias, there is something wrong here:}
-This is inefficient, as the signature of the definition may already not be satisfied, or the first element in the data.
+This is inefficient, as already the signature of the definition may not be satisfied, or the first element in the data.
 
 Hence, a simple generate-and-test will usually suffice.
 %However, the actual implementation is specified for every constraint template separately, allowing different methods to be used based on the type of template.
 %For this reason, the \sname system uses generate-and-test to implement $\findassignment$ for most constraint templates.
+\luc{test = definition, why use another term ?}
 Given a superblock assignment, all disjoint subassignments are generated taking into account the required size, columns or rows.
 The disjoint subassignments are then sequentially tested using a template-specific procedure \textit{Test} and valid subassignments are returned.
 The \textit{Test} procedure verifies the exact signature (e.g. subtypes will not have been checked yet) and checks whether the definition is satisfied for all data in the blocks.
@@ -783,8 +789,9 @@ The \textit{Test} procedure verifies the exact signature (e.g. subtypes will not
     \Procedure{Subassignments}{$s$, $(B_1, \dots, B_n)$}
     \State $n \gets$ number of arguments of template $s$
     \State $A_{sub} \gets \emptyset$
-    \ForAll{$(B_1', \dots, B_n') \in \{ (B_1', \dots, B_n') | \forall i: B_i' \sqsubseteq B_i  \wedge \nexists i,j,i\neq j: B'_i \sqsubseteq B'_j \}$}
+    \ForAll{$(B_1', \dots, B_n') \textbf{ where } \forall i: B_i' \sqsubseteq B_i  \land \textit{disjoint}_{j \neq i}(B_i', B_j')$}
       \If{$Test((B_1',\dots,B_n'))$}
+      \Comment \luc{Test = def is satisfied}
         \State $A_{sub} \gets A_{sub} \cup \{ (B_1', \dots, B_n') \}$
       \EndIf
     \EndFor
@@ -873,7 +880,7 @@ Let us illustrate this step with an example.
 \begin{example}
   Consider $\ecfkey{B_{fk}}{B_{pk}}$ whose signature includes $\ecalldiff{B_{pk}}$ and assume that~$C$ are the constraints found for \textit{ALLDIFFERENT}.
   Instead of generating assignments for~$B_{pk}$ using the given blocks~$\blocks$, we will only consider (sub)blocks~$P = \{ B' | \ecalldiff{B'} \in C \}$.
-  $P$~can be seen as a set of partial assignments in which the blocks for certain arguments have been fixed.
+  $P$~can be seen as a set of partial assignments in which the argument $B_{pk}$ has been fixed. \samuel{is it clear now?}
 \end{example}
 
 The \generategroups implementation now takes into account previously found constraints to obtain partial assignments~$P$ for a template.
@@ -914,7 +921,7 @@ In \sname we have, therefore, chosen to only consider \textit{maximal} subblocks
 
 As a result, in some cases a maximal subblock might falsely include irrelevant columns.
 Consider $B_1 = [[200, 300], [200, 150], [1, 2]]$ and $B_2 = [200, 300]$, then \sname will find the constraint $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$.
-Should, the target constraint be $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$, then the last vector of~$B_1$ must be split off into a separate block before the above approach can find it.
+Should the target constraint be $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$, then the last vector of~$B_1$ must be split off into a separate block before the above approach can find it.
 
 Alternatively, we can output all valid argument assignments instead of only maximal subblocks, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$, however, this might produce many redundant constraints and introduce constraints that accidentally cover too little data.
 
@@ -984,7 +991,7 @@ These constraints were added so that they can be used in the signature of other 
 In this section we experimentally validate our approach.
 We studied various questions \samuel{Mention questions here?}, most notably with what accuracy our algorithm can find constraints.
 
-The implementation is illustrated using a case study on the spreadsheet corresponding with the previously introduced example (figure~\ref{fig:main_example}).
+The implementation is illustrated using a case study on the spreadsheet corresponding to the previously introduced example (Figure~\ref{fig:main_example}).
 In order to quantify the results and generalize our findings we also evaluate our algorithm on a benchmark of 30 (\samuel{check number}) spreadsheets that we assembled from various sources.
 
 There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel \samuel{Including running example?}, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{(attached to to the submitted paper)}.
@@ -1019,7 +1026,8 @@ The low precision can be explained by the many short vectors which increases the
 All spreadsheets have been converted to CSV files.
 Definitions of tables were added manually, providing a way to compare results and overcoming shortcomings in the table detection algorithm (in some harder cases blocks where also provided manually).
 
-\samuel{Revisit [what does "implemented" mean here? what's the difference between "implemented" and "algorithm", esp given that we are talking experiments? ]}
+\samuel{Revisit [what does "implemented" mean here? what's the difference between "implemented" and "algorithm", esp given that we are talking experiments? ] }
+\luc{what is not implemented, strange \dots in a paper !!!}
 For every spreadsheet a ground-truth has been provided manually, specifying the essential (or original) constraints that are expected to be discovered.
 We consider three types of constraints:
 \begin{description}
@@ -1047,6 +1055,7 @@ There are only three templates that have not been implemented yet, so w.r.t. the
 Our primary focus was, as mentioned before, accuracy, therefore we sometimes traded off less redundancy for more accuracy.
 The motivation is that solutions can still be pruned using entailment or heuristics afterwards.
 The constraints we considered to be redundant are either duplications (results that can be calculated in different ways, one of which seems superior) or constraints that hold by accident.
+\luc{be more precise here !!! Q1 / Q2 }
 
 Across all spreadsheets our implementation finds 121 constraints, 28 ($23.14\%$) of which are redundant.
 However, the average redundancy per spreadsheet is only $8.33\%$.
@@ -1054,8 +1063,8 @@ Examining the redundant constraints reveals that many (12) of them are duplicati
 Many of the remaining constraints are duplications stemming from the overlapping role of difference and sum.
 Accidental constraints are limited to the 5 rank constraints that were discussed in the case study.
 
-Redundant constraints can be reduced in different ways.samuel
-Duplications should be detected in a post-processing step that uses entailment or heuristics to filter constraints.
+Redundant constraints can be reduced in different ways.
+Duplications should be identified in a post-processing step that uses entailment or heuristics to filter constraints.
 Accidental constraints may be detected through heuristics, however, they can be also be removed by adding additional data.
 
 
@@ -1085,8 +1094,9 @@ For conditional aggregates the number of candidate primary keys (all-different) 
 \samuel{Expand summary}
 \sergey{would it make sense to specify the size of a spreadsheet in the number of non-zero cells?}
 
+\samuel{Single paragraph / section}
 \paragraph{Dependencies}
-In order for the algorithm to run efficiently it is crucial to use dependencies and find constraint incrementally whenever possible.
+In order for the algorithm to run efficiently it is crucial to use dependencies and find constraints incrementally whenever possible.
 This avoids some of the explosion of combinations for constraints that have many arguments.
 For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to below 1 second.
 Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys that are present in the data.
