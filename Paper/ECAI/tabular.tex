@@ -14,7 +14,7 @@
 \usepackage{framed}
 \usepackage{amsmath}
 \usepackage{tabularx}
-\usepackage{subcaption}
+\usepackage[margin=0.1cm]{subcaption}
 \usepackage[inline]{enumitem}
 
 \usepackage[dvipsnames]{xcolor}
@@ -182,7 +182,11 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
     \includegraphics[width=1\textwidth]{figures/Demo2.png}
   \end{center}
   \vspace{-10pt}
-  \caption{Example spreadsheet (black words and numbers only). Green background indicate headerless tables, dark borders indicate maximal type-consistent blocks.}
+  \caption{
+    Example spreadsheet (black words and numbers only).
+    Green background indicate headerless tables, dark borders indicate maximal type-consistent blocks.
+    This example was created by combining several smaller Excel sheets originating from an exercise session.
+  }
   \label{fig:main_example}
 \end{subfigure}
 \hfill
@@ -226,7 +230,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
     \end{align*}}
   \vspace{-10pt}
   \caption{Constraints present in the running example (left), except \textit{ALLDIFFERENT} (16), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5).
-  $^1$(Spurious constraints) $^2$(Redundant constraints not originally present)}
+  $^1$(Spurious constraints) $^2$(Not present in original source)}
   \label{fig:sol_example}
 \end{subfigure}
   \caption{Running example}
@@ -820,9 +824,9 @@ Constraint templates that have no dependencies are omitted.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/constraint_dependency.png}
-  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_2$ depends on~$s_2$ (the \CSignature of~$s_2$ includes $s_1$).
-    The graph is extracted from the Signature column in Table~\ref{table:constraints}.\samuel{Correct aggregates}
+  \includegraphics[width=0.8\linewidth]{figures/constraint_dependency2.pdf}
+  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_2$ depends on~$s_1$ (the \CSignature of~$s_2$ includes $s_1$).
+    The graph is extracted from the Signature column in Table~\ref{table:constraints}.
   }
   \label{fig:learning_order}
 \end{figure}
@@ -955,8 +959,8 @@ In order to quantify the results and generalize our findings we also evaluate ou
 
 There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{(attached to to the submitted paper)}.
 
-In this section we focus on \textit{functional} constraints that could be used in spreadsheets, ignoring constraints such as all-different or foreign-key.
-All experiments were run on a Macbook Pro, Intel Core i7 2.3 GHz with 16GB RAM.
+In this section we focus on \textit{functional} constraints that could be used in spreadsheets, ignoring the structural constraints \textit{ALLDIFFERENT}, \textit{FOREIGNKEY} and \textit{PERMUTATION}.
+All experiments were run using Python 3.5.1 (custom Anaconda environment) on a Macbook Pro, Intel Core i7 2.3~GHz with 16GB RAM.
 
 
 
@@ -966,17 +970,15 @@ All experiments were run on a Macbook Pro, Intel Core i7 2.3 GHz with 16GB RAM.
 \subsection{Case study}
 \tias{Move explanation of origin to first time it is introduced}
 Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
-This example combines several smaller exercise session examples into one spreadsheet.
 
 \subsubsection{Results}
-\sname takes a few seconds to find the 18 constraints in Figure~\ref{fig:sol_example}.
+\sname takes a few seconds to find the constraints in Figure~\ref{fig:sol_example} (excluding structural constraints).
 These include 5 spurious $\mathit{RANK}$ constraints, such as $\ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}$, that are true by accident.
-Moreover, there is 1 \textit{LOOKUP} constraint that was is present in the original spreadsheet (looking up ID based on Salesperson).
+Moreover, there is 1 \textit{LOOKUP} constraint that was not present in the original spreadsheet (looking up ID based on Salesperson).
 
-For this example our primary goal of finding all original constraints is achieved.
-The implementation also returns 6 additional constraints ($33.33\%$ of the total).
-This ratio is, as we will show, rather high compared to other spreadsheets.
-However, this example contains many short vectors which increases the chance for constraints to be true by accident.
+For this example our primary goal of finding all original constraints is achieved, the recall is $1.0$.
+The implementation also returns 6 additional constraints, therefore, our precision is $12/18 = 0.67$, which is rather low compared to other spreadsheets in the benchmark.
+The low precision can be explained by the many short vectors which increases the chance for constraints to be true by accident.
 
 
 
@@ -987,9 +989,10 @@ However, this example contains many short vectors which increases the chance for
 There are three main categories of spreadsheets in the benchmark: spreadsheets from an exercise session teaching Excel at an affiliated University, spreadsheets from tutorials online and publicly available spreadsheets such as crime statistics or financial reports that demonstrate more real world usage\footnote{(attached to to the submitted paper)}.
 The case study is also included.
 
-All spreadsheets have been converted to CSV with no manual intervention unless noted.
+All spreadsheets have been converted to CSV files.
 Definitions of tables were added manually, providing a way to compare results and overcoming shortcomings in the table detection algorithm (in some harder cases groups where also provided manually).
 
+\samuel{Revisit}
 For every spreadsheet a ground-truth has been provided manually, specifying the essential (or original) constraints that are expected to be discovered.
 We consider three types of constraints:
 \begin{description}
@@ -998,15 +1001,15 @@ We consider three types of constraints:
   \item[Non-trivial] Constraints currently outside of the scope of this system (e.g. generic nested mathematical or logical formulas or n-ary constraints)
 \end{description}
 
-We examine three main questions concerning the accuracy, redundancy and efficiency of our approach, our main focus being accuracy.
+We examine three main questions concerning the accuracy (recall), redundancy (precision) and efficiency of our approach, our main focus being accuracy.
 
 
 
 
 
 \subsubsection*{Q1. How accurate is the approach?}
-Fortunately, our system is currently able to find $100\%$ of the implemented constraints (90) on the benchmark suite.
-There are only three essential constraints that have not been implemented yet, therefore our system currently identifies $96.77\%$ of the essential constraints.
+Fortunately, for the implemented constraint templates, our system achieves a recall of $1.0$, i.e. it is able to find all of the supported constraints (90) on the benchmark suite.
+There are only three templates that have not been implemented yet, so w.r.t. the ground truth the total recall of our system is $0.97$.
 
 
 
@@ -1023,7 +1026,7 @@ Examining the redundant constraints reveals that many (12) of them are duplicati
 Many of the remaining constraints are duplications stemming from the overlapping role of difference and sum.
 Accidental constraints are limited to the 5 rank constraints that were discussed in the case study.
 
-Redundant constraints can be reduced in different ways.
+Redundant constraints can be reduced in different ways.samuel
 Duplications should be detected in a post-processing step that uses entailment or heuristics to filter constraints.
 Accidental constraints may be detected through heuristics, however, they can be also be removed by adding additional data.
 
