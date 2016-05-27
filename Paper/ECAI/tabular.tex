@@ -135,10 +135,19 @@ For example the influential Reinhart-Rogoff economical paper ``Growth in a Time 
 
 In this paper,  we investigate whether learning techniques can be used to infer constraints (formulas and other relations) from raw spreadsheet data.
 This is a new and unconventional machine learning problem.
+\samuel{A: be more specific about which headers, there's a lot to see in that figure - 
+use T1 / T2 to avoid confusion with regular table references
+ - 
+why is T2 oriented differently from the others?
+ - 
+what is "the corresponding column"?
+ - 
+I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now, also in terms of formulations ("the row-wise sum of the previous columns", hu? do you mean that in each row, total is the sum of the values for quarters?)}
 Consider the example in Figure~\ref{fig:main_example}, where the header's names already suggest the usage of spreadsheet operations such as \textit{average} or \textit{sum}.
 Looking at the first row in Table~2 and the data in Table~1, it is clear that the values in this row were computed by summing the values in the corresponding column of Table~1.
 Examining Table~1 also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by taking the row-wise sum of the previous four columns.
 This provides a flavor of how this problem is different from standard data mining settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple tables with relationships between them. And on the other hand, the data is most often mixed textual and numeric. %, since people tend to use spreadsheets for financial and accounting computations.
+\samuel{A: at this point I have an idea what the abstract means by "function" constraints, but wonder what the "relation" ones are}
 One can see that understanding and learning constraints in tabular data is hence a new and challenging problem for machine learning.
 
 The approach that we introduce borrows techniques from logical and relational learning \cite{luc_book}, where
@@ -396,8 +405,10 @@ Each argument will have to be instantiated with a block.
 \item \textit{\CSignature} defines the requirements that the arguments of the predicate must satisfy.
 This can concern any property of individual blocks as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table or have equal length.
 In terms of logical and relational learning \cite{luc_book}, the \CSignature is known as the {\em bias} of the learner, it specifies when the arguments of a constraint are well-formed.
-
-\item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments of blocks to its arguments, it can be used to verify whether the constraint is satisfied or not by the actual data present in the blocks. %holds, in practice this will be a function that can be called when
+\\\\
+\samuel{A: how do you get from the signature and the definition to these predicates? I guess this is what I'm missing on the formal side above… this needs to be made explicit}
+\item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds.
+Given an assignment of blocks to its arguments, it can be used to verify whether the constraint is satisfied or not by the actual data present in the blocks. %holds, in practice this will be a function that can be called when
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
 In logical and relational learning this is known as the background knowledge. %, which provides the definition of the predicate.
 \end{itemize}
@@ -431,6 +442,7 @@ This also holds in our setting, where an instantiation of a variable corresponds
 \newcommand{\defc}{\ensuremath{\format{Def}_s}}
 %\tias{TODO: conceptually $c(A_1, ..., A_n) :- Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$ where '$c$' is here both the constraint name and the template}.
 With this interpretation, we can speak about the signature and definition of a constraint template being \textit{satisfied}.
+\samuel{A: how do you get from the signature and the definition to these predicates? I guess this is what I'm missing on the formal side above… this needs to be made explicit}
 We say that a signature (definition) of a constraint template~$s$ with $n$ arguments is satisfied by the blocks $(B_1, ..., B_n)$ if $\sigc(B_1, ..., B_n)$ (respectively $\defc(B_1, ..., B_n)$) is satisfied.
 Likewise, the template is satisfied if both the signature and definition are satisfied; in logic programming, we would write a Prolog-like clause: $s(B_1, ..., B_n) \leftarrow \sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$.
 Under this interpretation, the term constraint and constraint template can be used interchangeably.
@@ -450,6 +462,8 @@ The inverse problem is, given only an instantiation of the cells, to find the co
 
 We define the {\bf Tabular Constraint Learning Problem} as follows:
 %
+\samuel{A: so you expect the user to define blocks? can this be automated?
+(also, later on, your solution seems to start from the tables rather than the blocks, why not match the two?)}
 \begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}\\
 {\bf Given} a set of instantiated blocks ${\cal B}$ and a set of {\template}s ${\cal S}$: {\bf find} all constraints $s(B'_1, ..., B'_n)$ where $s \in {\cal S}$ and $(B'_1, ..., B'_n)$ is a valid argument assignment of the template~$s$.
 \end{definition}
