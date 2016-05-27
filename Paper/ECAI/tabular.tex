@@ -111,25 +111,35 @@
 
 \begin{abstract}
 %Spreadsheets, comma separated value files and other tabular data representations are in wide use today. However, the correct use and maintenance of functions in and between the tabular data can be error-prone and overwhelming. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. Our method takes inspiration form inductive logic programming and constraint satisfiability. We represent common spreadsheet functions as predicates with arguments that must satisfy number of constraints over the arguments. This allows generic constraint satisfaction techniques to be used to find all such satisfying predicates/functions within the rows, columns and submatrices of the tables. We show the effectiveness and accuracy of this approach on a number of spreadsheets from varying sources.
-Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today. However, modeling, maintaining and discovering formulas in tabular data and between spreadsheets can be time consuming and error-prone. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking. Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction. Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints. Constraint learning techniques are used to identify predicates (constraints) that hold between blocks of rows and columns of the tables. %New types of constraints can be easily added to the system by specifying them in a declarative language.
+Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
+However, modeling, maintaining and discovering formulas in tabular data and between spreadsheets can be time consuming and error-prone.
+In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data.
+We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking.
+Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
+Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints.
+Constraint learning techniques are used to identify predicates (constraints) that hold between blocks of rows and columns of the tables.
+%New types of constraints can be easily added to the system by specifying them in a declarative language.
 We show that our approach is able to accurately discover constraints in spreadsheets from various sources.
 \end{abstract}
 
 \section{Introduction}
-Millions of people across the world use spreadsheets every day. The tabular representation of the data is often intuitive, and the programming of functions in individual cells is quickly learned. However, large and complex sheets (possibly with multiple tables and relations between different them) can be hard to handle. Many end-users lack the understanding of the underlying structures and dependencies in such sheets and the data they contain. Especially when spreadsheets have been exported from
-other software such as Enterprise Resource Planning (ERP) systems; in this case, %, it is hard to understand the data as in this case,
-often a comma-separated values (CSV) format is used meaning that all formula's are lost, including inter-sheet formulas and relations.
+Millions of people across the world use spreadsheets every day.
+The tabular representation of the data is often intuitive, and the programming of functions in individual cells is quickly learned.
+However, large and complex sheets (possibly with multiple tables and relations between them) can be hard to handle.
+Many end-users lack the understanding of the underlying structures and dependencies in such sheets and the data they contain.
+This is especially the case when spreadsheets have been exported from other software such as Enterprise Resource Planning (ERP) systems.
+In this case, often a comma-separated values (CSV) format is used meaning that all formulas are lost, including inter-sheet formulas and relations.
 %This limited understanding is especially the case with spreadsheets exported from other software such as ERP packages. In this case,
-Even in manually created spreadsheets, it can be challenging to be consistent and correct with formula's across big spreadsheets. For example the influential Reinhart-Rogoff economical paper ``Growth in a Time of Debt'' had some of its claims contested~\cite{flaw_excel}, after an investigation of the used Excel sheets was shown to contain some mistakes in formulae.
+Even in manually created spreadsheets, it can be challenging to be consistent and correct with formulas across big spreadsheets.
+For example the influential Reinhart-Rogoff economical paper ``Growth in a Time of Debt'' had some of its claims contested~\cite{flaw_excel}, after an investigation of the used Excel sheets was shown to contain some mistakes in formulae.
 
-In this paper,  we investigate whether learning techniques can be used to infer constraints (formula's and other relations) from raw spreadsheet data.
+In this paper,  we investigate whether learning techniques can be used to infer constraints (formulas and other relations) from raw spreadsheet data.
 This is a new and unconventional machine learning problem.
 Consider the example in Figure~\ref{fig:main_example}, where the header's names already suggest the usage of spreadsheet operations such as \textit{average} or \textit{sum}.
 Looking at the first row in Table~2 and the data in Table~1, it is clear that the values in this row were computed by summing the values in the corresponding column of Table~1.
 Examining Table~1 also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by taking the row-wise sum of the previous four columns.
 This provides a flavor of how this problem is different from standard data mining settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple tables with relationships between them. And on the other hand, the data is most often mixed textual and numeric. %, since people tend to use spreadsheets for financial and accounting computations.
 One can see that understanding and learning constraints in tabular data is hence a new and challenging problem for machine learning.
-
 
 The approach that we introduce borrows techniques from logical and relational learning \cite{luc_book}, where
 the discovery of clausal constraints has been studied in an inductive logic programming setting \cite{claudien,lallouet}; and from constraint learning,  where several approaches to learning sets of constraints have been developed in a constraint programming setting \cite{Quacq,Conacq,modelseeker};
@@ -138,14 +148,9 @@ very few examples.  Our approach contrasts with these in that it focusses
 on learning both column- and row-constraints, as does Modelseeker~\cite{modelseeker} which is restricted to traditional CSPs. It contrasts with Flashfill in that it can learn from numeric data too, as well as general constraints in addition to functions.
 A more detailed discussion on related work is contained in Section~\ref{sec:related_work}.
 
-%the field of Inductive Logic Programming has long... \tias{TODO for Sergey or Luc}. Additionally, the field of Constraint Programming has recently started investigating ways in which Constraint Satisfaction Problems can automatically be inferred from known solutions. Here, methods ranging from generate-and-test~\cite{todo:modelseeker}, concept learning~\cite{todo:conacq} and Inductive Logic Programming~\cite{todo:lallouet} have been used with encouraging results.
-
-%Another line of work from which we draw inspiration is that of \tias{TODO for ?, flashfill et al}. We will consider the case where all data is given at once. However, as in the use case of flashfill, one could also use this technique to derive formula's interactively while a user is entering values in a cell \tias{TODO SAMUEL: proofread/refine last statement}.
-
-
-
-The question that we answer in this paper is: is it possible to discover or reconstruct structural constraints (relations, functions) in flat tabular spreadsheet data?
-To answer this question we contribute a general-purpose method and system, named \sname (pronounced as the word ``tackle''), for discovering row-wise and column-wise constraints.
+\samuel{Move this up a paragraph}
+The question that we answer in this paper is: is it possible to discover or reconstruct constraints (relations, functions) in flat tabular spreadsheet data?
+To answer this question we contribute a general-purpose method and system, named \sname (from: Tabular Constraint Learner, pronounced ``tackle''), for discovering row-wise and column-wise constraints.
 %Furthermore, the algorithm accepts declarative specifications of the constraints and predicates of interest (the "bias"). \tias{revise declarative claim?}
 It operates directly on (headerless) tables of a spreadsheet in an unsupervised setting, as it reasons on that raw tabular data directly with no example constraint instantiations given. %, and discovers column- and row-wise constraints.
 We demonstrate the utility of our approach in an experimental evaluation.
@@ -261,7 +266,7 @@ If it contains only rows we say it has \textit{row-orientation}, if only columns
 \end{definition}
 
 In line with this definition, we can use the following notation to refer to blocks: $B = T[\rangeto{a}{b},:]$ for a row-oriented block containing rows $a$ to $b$ in table $T$; and similarly $B = T[{:},\rangeto{a}{b}]$ for a column-oriented block.
-We will refer to the \textit{vectors} of a block when we wish to refer to its rows/columns independent of their orientation.
+We will refer to the \textit{vectors} of a block when we wish to refer to its rows/columns independently of their orientation.
 
 
 A block has the following properties:
@@ -387,9 +392,9 @@ Note that a function $B_r=f(B_1,...,B_n)$ can be represented with the $(n{+}1)$-
 Each argument will have to be instantiated with a block.
 % the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
 
-\item the \textit{\CSignature} defines the requirements that the arguments of the predicate must satisfy.
+\item \textit{\CSignature} defines the requirements that the arguments of the predicate must satisfy.
 This can concern any property of individual blocks as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table or have equal length.
-In terms of logical and relational learning \cite{luc_book}, the \CSignature is known as the {\em bias} of the learner, it specifies when the constraint its arguments are well-formed.
+In terms of logical and relational learning \cite{luc_book}, the \CSignature is known as the {\em bias} of the learner, it specifies when the arguments of a constraint are well-formed.
 
 \item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds. Given an assignments of blocks to its arguments, it can be used to verify whether the constraint is satisfied or not by the actual data present in the blocks. %holds, in practice this will be a function that can be called when
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
@@ -410,6 +415,7 @@ Several constraint templates are illustrated in Table \ref{table:constraints}. A
 
 
 It is helpful to see the analogy of constraint templates with first order logic (FOL) and constraint satisfaction.
+\samuel{Is terms the right word? Shouldn't it be arguments, too?}
 From a FOL perspective, the name of the constraint (e.g. \textit{SUM}) is just the predicate name, and the arguments $B_r$ and $B_x$ are the terms, which can be seen as either uninstantiated variables or as concrete values.
 This also holds in our setting, where an instantiation of a variable corresponds to a concrete block. For example for $\ecrank{B_r}{B_x}$ and the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $B_r$ is the $8$th vector in $T_1$: $B_r = \range{T_1}{\rangeall}{8} = [2,1,3,4]$ and the value of $B_x$ is the $7$th vector: $B_x = \range{T_1}{\rangeall}{7} = [1514, 1551, 691, 392]$.
 
@@ -467,7 +473,8 @@ In FOL, we can see that one constraint entails the other, for example if $\ecper
 
 Apart from easing the specification of the signature and definition, in Section~\ref{sec:approach} we will see how such dependencies can be used to speed up the search for constraints.
 
-\paragraph{Redundancies}
+\subsubsection{Redundancies}
+\label{sec:form:redundancies}
 Depending on the application, some constraints in the solution to the tabular constraint learning problem may be considered \textit{redundant}. This is because constraints may be logically equivalent or may be implied by other constraints.
 
 Within the same constraint, there can be equivalent argument assignments if the order of some of the arguments does not matter. For example for the product constraint, $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecprod{\sg_r}{\sg_2}{\sg_1}$ so one can be considered redundant to the other.
@@ -478,8 +485,6 @@ When the data has rows or columns containing exactly the same data, then any con
 
 Because dealing with redundancy is often application-dependent, we explain in the next section our generic method for finding all constraints. We describe some optimisations that avoid obvious equivalences in Section~\ref{sec:opts} and will investigate the impact of redundancy in the experiments.
 
-
-%
 %More formally, a constraint $c_1(G_1, ... G_n)$ \textit{implies} another constraint~$c_2(G'_1, ..., G'_m)$ whenever
 %the  following statement holds: $$\forall G_i, G'_j : c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m).$$
 %
