@@ -281,10 +281,9 @@ A block has the following properties:
 \item \textit{orientation}: either row-oriented or column-oriented
 \item \textit{size}: the number of vectors a block contains
 \item \textit{length}: the length of its vectors; as all vectors are from the same table, they always have the same length.
-\\\\
-\luc{these are the vectors along \dots along}
-\item \textit{rows}: this is orientation specific, for row-based blocks this is the size, for column-based blocks the length
-\item \textit{columns}: also orientation specific, for row-based blocks this is the length, for column-based blocks the size
+\item \textit{rows}: the number of rows in the block
+(in row-oriented blocks this is equivalent to the size)
+\item \textit{columns}: the number of columns in the block (in row-oriented blocks this is equivalent to the length)
 \end{itemize}
 
 %We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
@@ -419,9 +418,10 @@ Several constraint templates are illustrated in Table \ref{table:constraints}. A
 \begin{itemize}
   \item \CName: $\ecsumr{\sg_r}{\mathbf{\sg_x}}$, where $\sg_r$ and $\mathbf{\sg_x}$ are the arguments;
   
-  \item \CSignature: $\sg_r$ has to be a single vector ($\textit{size}=1$) while $\mathbf{\sg_x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font. The two blocks have to be numeric. This constraint is orientation-specific, so it requires that the number of rows in $\mathbf{\sg_x}$ equals the length of $\sg_r$. While not strictly needed, we also add to the bias of this template that the number of columns to sum over is larger than $2$ as a block with two columns will also be captured by the $\eccalc{\sg_r}{\sg_1 + \sg_2}$ constraint;
+  \item \CSignature: $\sg_r$ has to be a single vector ($\textit{size}=1$) while $\mathbf{\sg_x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font. The two blocks have to be numeric. This constraint is orientation-specific, so it requires that the number of rows in $\mathbf{\sg_x}$ equals the length of $\sg_r$. While not strictly needed, we also add to the bias of this template that the number of columns to sum over is larger than $2$ as a block with two columns will also be captured by the $\eccalc{\sg_r}{\sg_1 + \sg_2}$ constraint; \samuel{check}
   
-  \item \CFunction: each value in the vector $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$. \luc{example where it holds}
+  \item \CFunction: each value in the vector $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$. 
+  For example, $B_r = [12, 7]$ and $\mathbf{\sg_x}$ consists of columns: $[5, 15]$, $[7, -8]$.
 \end{itemize}
 \end{example}
 
@@ -491,6 +491,7 @@ Apart from easing the specification of the signature and definition, in Section~
 \subsubsection{Redundancies}
 \label{sec:form:redundancies}
 Depending on the application, some constraints in the solution to the tabular constraint learning problem may be considered \textit{redundant}. This is because constraints may be logically equivalent or may be implied by other constraints.
+
 \luc{if you have permutation, alldiff is redundant.}
 
 Within the same constraint, there can be equivalent argument assignments if the order of some of the arguments does not matter. For example for the product constraint, $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecprod{\sg_r}{\sg_2}{\sg_1}$ so one can be considered redundant to the other.
@@ -564,11 +565,11 @@ The aim of our method is to detect constraints between rows and columns of tabul
 Our proposed methodology contains the following steps:
 \begin{enumerate}
 \item Extract headerless tables from tabular data
-\item Partition the tables into maximally contiguous, type-consistent \textit{superblocks}
+\item Partition the tables into contiguous, type-consistent \textit{superblocks}
 \item Generate for each constraint template all valid argument assignments in two steps:
 \begin{enumerate}
-\item For each constraint $c$, generate all atoms $c(B_1, \ldots ,B_n)$ where each $B_i$ is a maximal superblock and the $B_i$ are \textit{compatible} (defined below) with the signature. 
-\item For each generated atom $c(B_1, \ldots ,B_n)$ in 3a), find all valid $c(B'_1, \ldots, B'_n)$ such that for all $i$ holds $B'_i \sqsubseteq B_i$ and the signature and definition of $c(B'_1, \ldots, B'_n)$ are satisfied.
+\item For each constraint template~$s$, generate all assignments $(B_1, \ldots ,B_n)$ where each $B_i$ is a superblock and the $B_i$ are \textit{compatible} (defined below) with the signature of~$s$. 
+\item For each generated assignment $(B_1, \ldots ,B_n)$ in 3a), find all valid constraints $s(B'_1, \ldots, B'_n)$ such that for all $i$ holds $B'_i \sqsubseteq B_i$ and the signature and definition of~$s$ are satisfied.
 \end{enumerate}
 \end{enumerate}
 \luc{introduce the notion of a maximal superblock earlier ???}
@@ -583,10 +584,10 @@ For example, $B_2$ and $B_4$ are not numeric so they can be immediately discarde
 \samuel{Iff Br is from T2?}
 Looking at the sizes, $B_1$ and~$B_2$ contain only one and two columns respectively, however, the rows in $T_2$ have length 4 so we only need to consider superblocks with at least 4 columns, which only $B_3$ satisfies. \luc{so the generated atom in step 3a is \dots }
 
-In step 3b, we start from an atom $c(B_1, \ldots, B_n)$ with maximal superblocks $B_i$, and generate and test all possible (sub)block assignments to arguments using the properties and actual data of the blocks. As we only have to consider the blocks $B'_i \sqsubseteq B_i$ contained in each superblock, this is typically much easier. For the above example, each of the vectors of $B_6$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks for the right-hand side and verify the signature (e.g. at least size $4$) and test whether for each row the definition is satisfied. %In practice, this can be optimized further.
-\\\\
-\samuel{Section references not correct}
-We now describe in more detail how the headerless tables are extracted and how the maximal superblocks are generated from them (step 1 and 2, Section 4.1), how the candidate superassignments are generated (step 3a, Section 4.2) and how the actual assignments are extracted from that (step 3b, Section 4.3). We then describe a number of optimizations that we perform to speed up steps 3 and 4 (Section 4.4).
+In step 3b, we start from an assignment $(B_1, \ldots, B_n)$ with superblocks $B_i$, and generate and test all possible (sub)block assignments to arguments using the properties and actual data of the blocks. As we only have to consider the blocks $B'_i \sqsubseteq B_i$ contained in each superblock, this is typically much easier. For the above example, each of the vectors of $B_6$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks for the right-hand side and verify the signature (e.g. at least size $4$) and test whether for each row the definition is satisfied. %In practice, this can be optimized further.
+
+We now describe in more detail how headerless tables are extracted (step 1, Section~\ref{sec:table_extraction}) and how superblocks are generated from them (step 2, Section~\ref{sec:make_groups}), how the candidate superblock assignments are generated (step 3a, Section~\ref{sec:algo:super}) and how the actual assignments are extracted from that (step 3b, Section~\ref{sec:algo:subgr}).
+In Section~\ref{sec:opts} we describe a number of optimizations designed to speed up steps the algorithm.
 
 
 
@@ -660,7 +661,6 @@ This separation of checking the \textit{properties} of superblock assignments fr
         \ForAll{$(B_1, \dots, B_n) \in A$}
         \State $A' \gets \findassignment(s, (B_1,\dots,B_n))$
         \ForAll{$(B_1',\dots,B_n') \in A'$}
-            \Comment \luc{if cs(B; …( satisfied/?}
             \State $C \gets C \cup \{ c_s(B_1', \dots, B_n') \}$
           \EndFor
         \EndFor
@@ -677,6 +677,8 @@ This separation of checking the \textit{properties} of superblock assignments fr
 
 
 \subsubsection{Generating superblock assignments (Step 3a)}
+\label{sec:algo:super}
+\
 % Let there be $b$ blocks and let~$s$ have~$n$ arguments, then a simple generate-and-test method would have to test $b^n$ combinations (given that blocks can be repeated), which can grow very rapidly with $b$, depending on $n$.
 
 Given a constraint template~$s$ and the set of all maximal blocks~\blocks, the goal is to find all combinations of maximal blocks that are consistent with the constraint signature.
@@ -780,8 +782,7 @@ Hence, a simple generate-and-test will usually suffice.
 %For this reason, the \sname system uses generate-and-test to implement $\findassignment$ for most constraint templates.
 \luc{test = definition, why use another term ?}
 Given a superblock assignment, all disjoint subassignments are generated taking into account the required size, columns or rows.
-The disjoint subassignments are then sequentially tested using a template-specific procedure \textit{Test} and valid subassignments are returned.
-The \textit{Test} procedure verifies the exact signature (e.g. subtypes will not have been checked yet) and checks whether the definition is satisfied for all data in the blocks.
+For every (disjoint) subassignment the exact signature (e.g. subtypes will not have been checked yet) and definition will be tested and all satisfying subassignments are returned.
 
 \begin{algorithm}[tbh]
   \begin{algorithmic}
@@ -790,8 +791,7 @@ The \textit{Test} procedure verifies the exact signature (e.g. subtypes will not
     \State $n \gets$ number of arguments of template $s$
     \State $A_{sub} \gets \emptyset$
     \ForAll{$(B_1', \dots, B_n') \textbf{ where } \forall i: B_i' \sqsubseteq B_i  \land \textit{disjoint}_{j \neq i}(B_i', B_j')$}
-      \If{$Test((B_1',\dots,B_n'))$}
-      \Comment \luc{Test = def is satisfied}
+      \If{$\mathit{Sig}_s(B_1',\dots,B_n') \land \mathit{Def}_s(B_1',\dots,B_n')$}
         \State $A_{sub} \gets A_{sub} \cup \{ (B_1', \dots, B_n') \}$
       \EndIf
     \EndFor
