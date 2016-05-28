@@ -309,8 +309,9 @@ An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, w
   Templates marked with $\dagger$ are \textit{aggregate} templates, the table shows the version for sum but \sname also supports max, min, average, product and count.
   Subgroups in normal font have to be vectors, whereas subgroups in \textbf{bold} may contain more than one vector.
   Templates marked with $*$ are \textit{structural}, i.e. they are not functional and cannot be implemented in most spreadsheet software.
-  $\discrete(x)$ is a shortcut for: $\textual(x) \lor \numeric(x)$.
-}\label{table:constraints}
+  $\discrete(x)$ is a shortcut for: $\textual(x) \lor \numeric(x)$.  \luc{there are some fancy constraints here. it might be good to say something about them ... like an example of one of the more complex ones in the text ... maybe state what conditional means, what aggregate ... }
+}
+\label{table:constraints}
   {\centering
   \begin{tabularx}{\textwidth}{l X X}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ \hline \hline
@@ -415,7 +416,6 @@ An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, w
       & $\sg_{r}[1] = \sum_{j = 1}^{\plength(\sg_{1})} \sg_{1}[j] \times \sg_{2}[j]$.
   \end{tabularx}}
 
-  \luc{there are some fancy constraints here. it might be good to say something about them ... like an example of one of the more complex ones in the text ... maybe state what conditional means, what aggregate ... }
 \end{table*}
 
 
@@ -450,9 +450,12 @@ Several constraint templates are illustrated in Table \ref{table:constraints}. A
 \begin{itemize}
   \item \CName: $\ecsumr{\sg_r}{\mathbf{\sg_x}}$, where $\sg_r$ and $\mathbf{\sg_x}$ are the arguments;
   
-  \item \CSignature: $\sg_r$ has to be a single vector ($\textit{size}=1$) while $\mathbf{\sg_x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font. The two blocks have to be numeric. This constraint is orientation-specific, so it requires that the number of rows in $\mathbf{\sg_x}$ equals the length of $\sg_r$. While not strictly needed, we also add to the bias of this template that the number of columns to sum over is larger than $2$ as a block with two columns will also be captured by the $\eccalc{\sg_r}{\sg_1 + \sg_2}$ constraint; \samuel{check}
+  \item \CSignature: $\sg_r$ has to be a single vector ($\textit{size}=1$) while $\mathbf{\sg_x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font.
+  Both blocks have to be numeric.
+  This constraint is orientation-specific, so it requires that the number of rows in $\mathbf{\sg_x}$ equals the length of $\sg_r$.
+  Moreover, we add to the bias that the number of columns to sum over is at least~$2$.
   
-  \item \CFunction: each value in the vector $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$. 
+  \item \CFunction: each value in the vector $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$.
   For example, $B_r = [12, 7]$ and $\mathbf{\sg_x}$ consists of columns: $[5, 15]$, $[7, -8]$.
 \end{itemize}
 \end{example}
@@ -522,9 +525,7 @@ Apart from easing the specification of the signature and definition, in Section~
 
 \subsubsection{Redundancies}
 \label{sec:form:redundancies}
-Depending on the application, some constraints in the solution to the tabular constraint learning problem may be considered \textit{redundant}. This is because constraints may be logically equivalent or may be implied by other constraints.
-
-\luc{if you have permutation, alldiff is redundant.}
+Depending on the application, some constraints in the solution to the tabular constraint learning problem may be considered \textit{redundant}. This is because constraints may be logically equivalent or may be implied by other constraints, e.g. if you know $\ecperm{B_x}$, $\ecalldiff{B_x}$ is redundant.
 
 Within the same constraint, there can be equivalent argument assignments if the order of some of the arguments does not matter. For example for the product constraint, $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecprod{\sg_r}{\sg_2}{\sg_1}$ so one can be considered redundant to the other.
 
@@ -604,7 +605,6 @@ Our proposed methodology contains the following steps:
 \item For each generated assignment $(B_1, \ldots ,B_n)$ in 3a), find all valid constraints $s(B'_1, \ldots, B'_n)$ such that for all $i$ holds $B'_i \sqsubseteq B_i$ and the signature and definition of~$s$ are satisfied.
 \end{enumerate}
 \end{enumerate}
-\luc{introduce the notion of a maximal superblock earlier ???}
 
 The core of our method is step 3. In principle, one could use a generate-and-test approach by generating all possible blocks from the superblock and testing each combination of blocks for each of the arguments of the constraints. However, each superblock of size $m$ has $m*(m+1)/2$ contiguous subblocks, meaning that a constraint with $n$ arguments would have to check $O(n^{m^2})$ combinations of blocks.
 
@@ -895,7 +895,6 @@ Constraint templates that have no dependencies are omitted.
   \label{fig:learning_order}
 \end{figure}
 
-\samuel{Angelika: trim this section for repeated information}
 Using the dependency graph~(\dependencies) we can reorder the templates such that a template occurs after any template it depends on.
 Concretely, the input templates~$\temps$ (see Algorithm~\ref{algo:tcl}) are reordered to agree with the partial ordering imposed by~\dependencies (e.g. \textit{ALLDIFFERENT} before \textit{FOREIGNKEY}).
 Considering Algorithm~\ref{algo:tcl}, this step can be seen as preprocessing the input~\temps.
@@ -1227,10 +1226,8 @@ Currently, the system only learns single constraints and extending our approach 
 %This shift would bring the approach in line with programming by example.
 
 Aside from finding errors, the system can be extended to deal with noise and the ability to learn soft constraints.
-Soft constraints are the (potentially weighted) constraints that hold only on some of the data.
+Soft constraints are (potentially weighted) constraints that hold only on some of the data.
 This would extend the approach to new application domains as well as provide more native error detection.
-
-\tias{write limitations: single cons, complete rows/cols only, (what else?) and deal with it as future work}.
 \bibliographystyle{plain}
 \bibliography{references}
 \end{document}
