@@ -132,26 +132,17 @@ For example the influential Reinhart-Rogoff economical paper ``Growth in a Time 
 
 In this paper,  we investigate whether learning techniques can be used to infer constraints (formulas and other relations) from raw spreadsheet data.
 This is a new and unconventional machine learning problem.
-\samuel{A: be more specific about which headers, there's a lot to see in that figure - 
-use T1 / T2 to avoid confusion with regular table references
- - 
-why is T2 oriented differently from the others?
- - 
-what is "the corresponding column"?
- - 
-I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now, also in terms of formulations ("the row-wise sum of the previous columns", hu? do you mean that in each row, total is the sum of the values for quarters?)}
-Consider the example in Figure~\ref{fig:main_example}, where the header's names already suggest the usage of spreadsheet operations such as \textit{average} or \textit{sum}.
-Looking at the first row in Table~2 and the data in Table~1, it is clear that the values in this row were computed by summing the values in the corresponding column of Table~1.
-Examining Table~1 also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by taking the row-wise sum of the previous four columns.
-This provides a flavor of how this problem is different from standard data mining settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple tables with relationships between them. And on the other hand, the data is most often mixed textual and numeric. %, since people tend to use spreadsheets for financial and accounting computations.
-\samuel{A: at this point I have an idea what the abstract means by "function" constraints, but wonder what the "relation" ones are}
+\samuel{A: I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
+Consider the example in Figure~\ref{fig:main_example}, where header names such as \textbf{Total} and \textbf{Rank} already suggest the usage of spreadsheet operations such as \textit{SUM} or \textit{RANK}.
+Looking at the first row in Table~$T_2$ and the data in Table~$T_1$, it is clear that the values in this row were computed by summing the values in the corresponding columns (\textbf{1st Quarter} through \textbf{Total}) of $T_1$.
+Examining $T_1$ also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by summing the rows of the previous four columns.
+This provides a flavor of how this problem is different from standard data mining settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple tables with relationships between them (e.g. foreign-keys). And on the other hand, the data is most often mixed textual and numeric. %, since people tend to use spreadsheets for financial and accounting computations.
 One can see that understanding and learning constraints in tabular data is hence a new and challenging problem for machine learning.
 
 The approach that we introduce borrows techniques from logical and relational learning \cite{luc_book}, where the discovery of clausal constraints has been studied in inductive logic programming \cite{claudien,lallouet}; and from constraint learning,  where several approaches to learning sets of constraints have been developed in a constraint programming setting \cite{Quacq,Conacq,modelseeker};
 and from mining in databases, where inductive techniques have been applied to discover constraints (such as functional and multi-valued dependencies) in relational databases \cite{savnik}.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from
 very few examples.  Our approach contrasts with these in that it focusses
 on learning both column- and row-constraints, as does Modelseeker~\cite{modelseeker} which is restricted to traditional constraint satisfaction problems (CSPs). It contrasts with Flashfill in that it can learn from numeric data too, as well as general constraints in addition to functions.
-A more detailed discussion on related work is contained in Section~\ref{sec:related_work}.
 
 \samuel{Move this up a paragraph}
 The question that we answer in this paper is: is it possible to discover or reconstruct constraints (relations, functions) in flat tabular spreadsheet data?
@@ -162,7 +153,7 @@ We demonstrate the utility of our approach in an experimental evaluation.
 Moreover, we sketch additional application scenario's such as autocompletion and error detection.
 \\\\
 This paper is organized as follows.
-Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:approach} presents the problem statement and the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents an overview of the related work. Section \ref{sec:conclusions} provides conclusions.
+Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:approach} presents the problem statement and the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents a more detailed discussion of the related work. Section \ref{sec:conclusions} provides conclusions.
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
@@ -405,7 +396,7 @@ Each argument will have to be instantiated with a block.
 This can concern any property of individual blocks as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table or have equal length.
 In terms of logical and relational learning \cite{luc_book}, the \CSignature is known as the {\em bias} of the learner, it specifies when the arguments of a constraint are well-formed.
 \\\\
-\samuel{A: how do you get from the signature and the definition to these predicates? I guess this is what I'm missing on the formal side above… this needs to be made explicit}
+\samuel{A: I'm a bit confused by the fact that you seem to be mixing the formal way of writing these triples with textual explanation, both in the example in the text and in the table; I'd prefer to see the formal thing and then get the explanation, as that's what I'd need to use your approach}
 \item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds.
 Given an assignment of blocks to its arguments, it can be used to verify whether the constraint is satisfied or not by the actual data present in the blocks. %holds, in practice this will be a function that can be called when
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
@@ -427,9 +418,9 @@ Several constraint templates are illustrated in Table \ref{table:constraints}. A
 
 
 It is helpful to see the analogy of constraint templates with first order logic (FOL) and constraint satisfaction.
-\samuel{Is terms the right word? Shouldn't it be arguments, too?}
-From a FOL perspective, the name of the constraint (e.g. \textit{SUM}) is just the predicate name, and the arguments $B_r$ and $B_x$ are the terms, which can be seen as either uninstantiated variables or as concrete values.
-This also holds in our setting, where an instantiation of a variable corresponds to a concrete block. For example for $\ecrank{B_r}{B_x}$ and the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $B_r$ is the $8$th vector in $T_1$: $B_r = \range{T_1}{\rangeall}{8} = [2,1,3,4]$ and the value of $B_x$ is the $7$th vector: $B_x = \range{T_1}{\rangeall}{7} = [1514, 1551, 691, 392]$.
+From a FOL perspective, a constraint of the form $\ecrank{B_r}{B_x}$ can be seen as a predicate $\textit{RANK}(B_r, B_x)$ where \textit{RANK} is the name of the predicate and its arguments~$B_r$ and~$B_x$ are terms, which can be seen as either uninstantiated variables or as concrete values.
+This also holds in our setting, where an instantiation of a variable corresponds to a concrete block.
+For example, for the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $B_r$ is the $8$th vector in $T_1$: $B_r = \range{T_1}{\rangeall}{8} = [2,1,3,4]$ and the value of $B_x$ is the $7$th vector: $B_x = \range{T_1}{\rangeall}{7} = [1514, 1551, 691, 392]$.
 
 %When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
 %From a FOL perspective, the name of the constraint ($\mathit{RANK}$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
@@ -457,15 +448,14 @@ A \textbf{valid argument assignment} of a constraint $s$ is a tuple of blocks $(
 
 \subsection{Problem Definition}\label{sec:problem_statement}
 The problem of learning constraints from tabular data can be seen as an inverse {\em constraint satisfaction problem} (CSP).
-In a CSP one is given a set of constraints over variables that must all be satisfied, and the goal is to find an instantiation of all the variables that satisfies these constraints. In the context of spreadsheets, the variables would be (blocks of) cells, and one would be given the actual constraints and functions with the goal of finding the values in the cells.
+In a CSP one is given a set of constraints over variables that must all be satisfied, and the goal is to find an instantiation of all the variables that satisfies these constraints.
+In the context of spreadsheets, the variables would be (blocks of) cells, and one would be given the actual constraints and functions with the goal of finding the values in the cells.
 The inverse problem is, given only an instantiation of the cells, to find the constraints that are satisfied in the spreadsheet.
 
 We define the inverse problem, that is the {\bf Tabular Constraint Learning Problem}, as follows:
 %
-\samuel{A: so you expect the user to define blocks? can this be automated?
-(also, later on, your solution seems to start from the tables rather than the blocks, why not match the two?)}
 \begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}\\
-{\bf Given} a set of instantiated blocks ${\cal B}$ and a set of {\template}s ${\cal S}$: {\bf find} all constraints $s(B'_1, ..., B'_n)$ where $s \in {\cal S}$, $\forall i: B_i' \sqsubseteq B_i \in {\cal B}$ and $(B'_1, ..., B'_n)$ is a satisfied argument assignment of the template~$s$.
+{\bf Given} a set of instantiated blocks~${\cal B}$ over tables~${\cal T}$ and a set of {\template}s ${\cal S}$: {\bf find} all constraints $s(B'_1, ..., B'_n)$ where $s \in {\cal S}$, $\forall i: B_i' \sqsubseteq B_i \in {\cal B}$ and $(B'_1, ..., B'_n)$ is a satisfied argument assignment of the template~$s$.
 \end{definition}
 % Let us now define what it means for a constraint from \template to hold in general. Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $t^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
 % \sergey{moved from formalization END}
@@ -477,6 +467,7 @@ We define the inverse problem, that is the {\bf Tabular Constraint Learning Prob
 %     \textbf{Find:}&  all constraints $C$ over \groups for each template $t$ in \constraints \\
 %   \end{tabular}
 
+Blocks and tables are expected to be given, in Section~\ref{sec:approach} we will discuss how these can be extracted from a spreadsheet.
 Figure~\ref{fig:sol_example} shows the solution to the tabular constraint learning problem when applied on the blocks of Figure~\ref{fig:main_example} and constraint templates listed in Table~\ref{table:constraints}.
 
 \subsection{Other considerations}
@@ -576,13 +567,13 @@ Our proposed methodology contains the following steps:
 
 The core of our method is step 3. In principle, one could use a generate-and-test approach by generating all possible blocks from the superblock and testing each combination of blocks for each of the arguments of the constraints. However, each superblock of size $m$ has $m*(m+1)/2$ contiguous subblocks, meaning that a constraint with $n$ arguments would have to check $O(n^{m^2})$ combinations of blocks.
 
-Instead, we divide this step into two parts: in step 3a, we will not reason over individual (sub)blocks and their data, but rather over the properties of the maximal superblocks.
+Instead, we divide this step into two parts: in step 3a, we will not reason over individual (sub)blocks and their data, but rather over the properties of the superblocks.
 % and what combination of superblocks may lead to a valid argument assignment.\\
-Consider tables $T_1$ and $T_2$ in Figure~\ref{fig:main_example} and the $\mathit{SUM}_{col}$ constraint template.
-Instead of considering all possible subblocks of $T_1$ and $T_2$, we first reason over the properties of the superblocks.
+Consider table~$T_1$ in Figure~\ref{fig:main_example} and the $\mathit{SUM}_{row}$ constraint template.
+Instead of considering all possible subblocks of $T_1$, we first reason over the properties of the superblocks.
 For example, $B_2$ and $B_4$ are not numeric so they can be immediately discarded.
-\samuel{Iff Br is from T2?}
-Looking at the sizes, $B_1$ and~$B_2$ contain only one and two columns respectively, however, the rows in $T_2$ have length 4 so we only need to consider superblocks with at least 4 columns, which only $B_3$ satisfies. \luc{so the generated atom in step 3a is \dots }
+Superblocks~$B_1, B_3$ and $B_5$ are valid candidates for $B_r$, however, since they all have length~4, $\mathbf{B_x}$ needs at least 4~columns which is only satisfied by $B_3$.
+So the assignments generated in step 3a would be $(B_1, B_3), (B_3, B_3), (B_5, B_3)$.
 
 In step 3b, we start from an assignment $(B_1, \ldots, B_n)$ with superblocks $B_i$, and generate and test all possible (sub)block assignments to arguments using the properties and actual data of the blocks. As we only have to consider the blocks $B'_i \sqsubseteq B_i$ contained in each superblock, this is typically much easier. For the above example, each of the vectors of $B_6$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks for the right-hand side and verify the signature (e.g. at least size $4$) and test whether for each row the definition is satisfied. %In practice, this can be optimized further.
 
@@ -774,13 +765,11 @@ Given a superblock assignment $(B_1, \dots, B_n)$ from the previous step, the go
 In this step, we could also formulate the problem as a CSP. %However, the search space is much smaller, e.g. $O(nm^2)$ with $n$ the number of arguments of the template and $m$ the size of the largest block.
 However, few CSP solvers support floating point numbers, which are prevalent in spreadsheets.
 Furthermore, in a CSP approach we would have to \textit{ground} out the definition for each of the corresponding elements in the vectors.
-\samuel{Tias, there is something wrong here:}
-This is inefficient, as already the signature of the definition may not be satisfied, or the first element in the data.
+This is inefficient, as already the blocks may not satisfy the signature or the first elements in the data may not satisfy the definition.
 
 Hence, a simple generate-and-test will usually suffice.
 %However, the actual implementation is specified for every constraint template separately, allowing different methods to be used based on the type of template.
 %For this reason, the \sname system uses generate-and-test to implement $\findassignment$ for most constraint templates.
-\luc{test = definition, why use another term ?}
 Given a superblock assignment, all disjoint subassignments are generated taking into account the required size, columns or rows.
 For every (disjoint) subassignment the exact signature (e.g. subtypes will not have been checked yet) and definition will be tested and all satisfying subassignments are returned.
 
@@ -848,14 +837,12 @@ For every (disjoint) subassignment the exact signature (e.g. subtypes will not h
 This section discusses various design decisions and optimizations aimed at improving the speed and extensibility of our system as well as to eliminate some obvious redundant constraints.
 
 \subsubsection{Template dependencies}
-As discussed in Section~\ref{sec:form:dependencies}, some constraints depend on other constraints.
-This is apparent when looking at the template signatures in Table~\ref{table:constraints}, where one can see that some signatures depend on other constraints, such as \textit{LOOKUP} depending on \textit{FOREIGNKEY}.
-If a constraint template~$s_1$ includes template~$s_2$ in its signature, we say that~$s_1$ depends on~$s_2$.
+As discussed in Section~\ref{sec:form:dependencies}, some constraint templates depend on others by including templates they depend on in their signature (see Table~\ref{table:constraints}).
 
 In Inductive Logic Programming, one often exploits implications between constraints to structure the search space \cite{luc_book}.
 Our approach uses the dependencies between templates to define a dependency graph.
 We assume that signatures do not contain equivalences or loops, and hence the resulting graph is a directed acyclic graph (DAG).
-Figure~\ref{fig:learning_order} shows the dependency graph extracted from the signature definitions in Table~\ref{table:constraints}. 
+Figure~\ref{fig:learning_order} shows the dependency graph extracted from the signatures in Table~\ref{table:constraints}. 
 Constraint templates that have no dependencies are omitted.
 
 \begin{figure}[t]
@@ -869,13 +856,10 @@ Constraint templates that have no dependencies are omitted.
 
 \samuel{Angelika: trim this section for repeated information}
 Using the dependency graph~(\dependencies) we can reorder the templates such that a template occurs after any template it depends on.
-Concretely, the input templates~$\temps$ (see Algorithm~\ref{algo:tcl}) are reordered to agree with the partial ordering imposed by~\dependencies.
-
-The dependency graph represents a partial ordering and is used to produce a linear ordering of the given templates such that more general templates occur before templates that depend on them (e.g. \textit{ALLDIFFERENT} before \textit{FOREIGNKEY}).
+Concretely, the input templates~$\temps$ (see Algorithm~\ref{algo:tcl}) are reordered to agree with the partial ordering imposed by~\dependencies (e.g. \textit{ALLDIFFERENT} before \textit{FOREIGNKEY}).
 Considering Algorithm~\ref{algo:tcl}, this step can be seen as preprocessing the input~\temps.
-Learning in this order allows templates to use constraints they depend on as these will have already been found.
+Learning in this order allows templates to use constraints they depend on, as these constraints will have already been learned.
 This is exploited in the \generategroups step to speedup the algorithm by reducing the search space.
-Let us illustrate this step with an example.
 
 \begin{example}
   Consider $\ecfkey{B_{fk}}{B_{pk}}$ whose signature includes $\ecalldiff{B_{pk}}$ and assume that~$C$ are the constraints found for \textit{ALLDIFFERENT}.
@@ -931,9 +915,8 @@ Alternatively, we can output all valid argument assignments instead of only maxi
 
 \subsubsection{Constraints}
 The constraints that are currently supported in our system are shown in Table~\ref{table:constraints}.
-Their inclusion was based on the analysis of the most popular Excel constraints \samuel{How do we know?} as well as the spreadsheets we encountered.
-All these constraints are available in popular spreadsheet software, except for the structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUTATION} and \textit{FOREIGNKEY}).
-These constraints were added so that they can be used in the signature of other constraint templates; they are also popular in constraint satisfaction~\cite{modelseeker}.
+We included most formulas that we encountered in tutorial spreadsheets including the popular \textit{SUM} and \textit{LOOKUP} constraints\footnote{\href{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}}.
+We also added three structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUTATION} and \textit{FOREIGNKEY}) so that they can be used in the signature of other constraint templates; they are also popular in constraint satisfaction~\cite{modelseeker}.
 
 %Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
 %These constraints have been selected based on the most-used Excel functions as well as their occurrence in various example spreadsheets we observed.
@@ -1005,7 +988,6 @@ All experiments were run using Python 3.5.1 (custom Anaconda environment) on a M
 
 
 \subsection{Case study}
-\tias{Move explanation of origin to first time it is introduced}
 Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
 
 \subsubsection{Results}
