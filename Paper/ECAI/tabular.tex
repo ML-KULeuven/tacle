@@ -132,7 +132,6 @@ For example the influential Reinhart-Rogoff economical paper ``Growth in a Time 
 
 In this paper,  we investigate whether learning techniques can be used to infer constraints (formulas and other relations) from raw spreadsheet data.
 This is a new and unconventional machine learning problem.
-\samuel{A: I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
 Consider the example in Figure~\ref{fig:main_example}, where header names such as \textbf{Total} and \textbf{Rank} already suggest the usage of spreadsheet operations such as \textit{SUM} or \textit{RANK}.
 Looking at the first row in Table~$T_2$ and the data in Table~$T_1$, it is clear that the values in this row were computed by summing the values in the corresponding columns (\textbf{1st Quarter} through \textbf{Total}) of $T_1$.
 Examining $T_1$ also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by summing the rows of the previous four columns.
@@ -188,6 +187,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
     Green background indicate headerless tables, dark borders indicate maximal type-consistent blocks.
     Most tables only contain type-consistent columns, however, the data in table~$T_2$ can be used as both column- and row vectors.
     This example was created by combining several smaller Excel sheets originating from an exercise session.
+    \samuel{A: I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
   }
   \label{fig:main_example}
 \end{subfigure}
@@ -309,7 +309,7 @@ An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, w
   Templates marked with $\dagger$ are \textit{aggregate} templates, the table shows the version for sum but \sname also supports max, min, average, product and count.
   Subgroups in normal font have to be vectors, whereas subgroups in \textbf{bold} may contain more than one vector.
   Templates marked with $*$ are \textit{structural}, i.e. they are not functional and cannot be implemented in most spreadsheet software.
-  $\discrete(x)$ is a shortcut for: $\textual(x) \lor \numeric(x)$.  \luc{there are some fancy constraints here. it might be good to say something about them ... like an example of one of the more complex ones in the text ... maybe state what conditional means, what aggregate ... }
+  $\discrete(x)$ is a shortcut for: $\textual(x) \lor \numeric(x)$.  {\small\luc{there are some fancy constraints here. it might be good to say something about them ... like an example of one of the more complex ones in the text ... maybe state what conditional means, what aggregate ... }}
 }
 \label{table:constraints}
   {\centering
