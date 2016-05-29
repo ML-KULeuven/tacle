@@ -1009,10 +1009,12 @@ We also added three structural constraints (\textit{ALLDIFFERENT}, \textit{PERMU
 \newcommand{\runfile}{0.50}
 \newcommand{\runfilestd}{0.02}
 
+\newcommand{\benchsize}{??}
+
 \section{Evaluation}\label{sec:evaluation}
 \sergey{we need to add a summary of the dataset, avg number of constraints, cells, rows, columns}
 In this section we experimentally validate our approach.
-We studied various questions \samuel{Mention questions here?}, most notably with what accuracy our algorithm can find constraints.
+We studied three main questions concerning the accuracy (\textit{Q1}), precision (\textit{Q2}) and speed (\textit{Q3}) of our algorithm.
 
 The implementation is illustrated using a case study on the spreadsheet corresponding to the previously introduced example (Figure~\ref{fig:main_example}).
 In order to quantify the results and generalize our findings we also evaluate our algorithm on a benchmark of 30 (\samuel{check number}) spreadsheets that we assembled from various sources.
@@ -1029,8 +1031,6 @@ All experiments were run using Python 3.5.1 (custom Anaconda environment) on a M
 
 \subsection{Case study}
 Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
-
-\subsubsection{Results}
 \sname takes a few seconds to find the constraints in Figure~\ref{fig:sol_example} (excluding structural constraints).
 These include 5 spurious $\mathit{RANK}$ constraints, such as $\ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}$, that are true by accident.
 Moreover, there is 1 \textit{LOOKUP} constraint that was not present in the original spreadsheet (looking up ID based on Salesperson).
@@ -1046,49 +1046,38 @@ The low precision can be explained by the many short vectors which increases the
 
 \subsection{Benchmark}
 All spreadsheets have been converted to CSV files.
-Definitions of tables were added manually, providing a way to compare results and overcoming shortcomings in the table detection algorithm (in some harder cases blocks where also provided manually).
+Definitions of tables were added manually, providing a way to compare results and overcoming shortcomings in the table detection algorithm (in some harder cases with $\mathit{None}$ values, blocks where also provided manually). \samuel{chec}
 
 \samuel{Revisit [what does "implemented" mean here? what's the difference between "implemented" and "algorithm", esp given that we are talking experiments? ] }
 \luc{what is not implemented, strange \dots in a paper !!!}
-For every spreadsheet a ground-truth has been provided manually, specifying the essential (or original) constraints that are expected to be discovered.
-We consider three types of constraints:
-\begin{description}
-  \item[Implemented] \samuel{Dupl} Constraint that have been implemented and are expected to be found (all constraints in Table~\ref{table:constraints})
-  \item[Essential] \samuel{Dupl} Constraint that have or have not been implemented but could be found using our algorithm (e.g. fuzzy conditional sum)
-  \item[Non-trivial] Constraints currently outside of the scope of this system (e.g. generic nested mathematical or logical formulas or n-ary constraints)
-\end{description}
-
-We examine three main questions concerning the accuracy (recall), redundancy (precision) and efficiency of our approach, our main focus being accuracy.
+For every spreadsheet a ground-truth has been provided manually, specifying the \textbf{relevant} constraints that are expected to be (re-)discovered.
+Not all relevant constraints are currently supported by \sname, therefore, we sometimes consider the subset of \textbf{supported} constraints.
+Constraints that are currently outside of the scope of this system, e.g. generic nested mathematical or logical formulas, are ignored.
 
 
 
 
 
-\subsubsection*{Q1. How accurate is the approach?}
-\samuel{Sounds like we were surprised}
-Fortunately, for the implemented constraint templates, our system achieves a recall of $1.0$, i.e. it is able to find all of the supported constraints (90) on the benchmark suite.
-There are only three templates that have not been implemented yet, so w.r.t. the ground truth the total recall of our system is $0.97$.
+\subsubsection*{Q1. How accurate \sname?}
+Our implementation achieves a recall of~$0.97$ for relevant constraints, i.e. it finds~90 of~93 relevant constraints in the benchmark suite.
+The recall for supported constraints is $1.0$ (90 of 90).
 
 
 
 
 
-\subsubsection*{Q2. How many redundant constraints are discovered?}
-Our primary focus was, as mentioned before, accuracy, therefore we sometimes traded off less redundancy for more accuracy.
-The motivation is that solutions can still be pruned using entailment or heuristics afterwards.
-The constraints we considered to be redundant are either duplications (results that can be calculated in different ways, one of which seems superior) or constraints that hold by accident.
-\luc{be more precise here !!! Q1 / Q2 }
+\subsubsection*{Q2. How precise is \sname?}
+Our implementation finds 121 constraints across all spreadsheets, 28 of which are not present in the ground-truth.
+Therefore, the calculated precision is \samuel{Check numbers}.
+Notable, the average precision per spreadsheet is \samuel{math}.
+This gap is explained by the large number of additional constraints produced by few spreadsheets \samuel{More info?}.
 
-Across all spreadsheets our implementation finds 121 constraints, 28 ($23.14\%$) of which are redundant.
-However, the average redundancy per spreadsheet is only $8.33\%$.
-Examining the redundant constraints reveals that many (12) of them are duplications occurring in a single spreadsheet.
-Many of the remaining constraints are duplications stemming from the overlapping role of difference and sum.
-Accidental constraints are limited to the 5 rank constraints that were discussed in the case study.
+Examining the additional constraints more closely reveals that only \samuel{x} of the constraints are spurious, i.e. they hold by accident and can be disproved by adding additional data.
+Most constraints are \textit{redundant}, such as duplications or implications of other constraints.
+Many redundant constraints are the result of bad spreadsheet design, i.e. copying data in multiple places, and the overlapping role of difference and the sum aggregate.
 
-Redundant constraints can be reduced in different ways.
-Duplications should be identified in a post-processing step that uses entailment or heuristics to filter constraints.
-Accidental constraints may be detected through heuristics, however, they can be also be removed by adding additional data.
-
+We consider precision (i.e. avoiding redundant constraints) a secondary goal, focusing primarily on accuracy.
+The rationale is that the precision can be increased by post-processing the constraints using entailment or heuristics.
 
 
 
@@ -1096,7 +1085,7 @@ Accidental constraints may be detected through heuristics, however, they can be 
 
 \subsubsection*{Q3. How fast is the algorithm?}
 Concerning the speed of the algorithm we also prioritized accuracy when a trade-off had to be made.
-For the 32 spreadsheets in the benchmark our implementation ran in ${\runtotal}s \pm {\runtotalstd}s$.
+For the \benchsize~spreadsheets in the benchmark our implementation ran in ${\runtotal}s \pm {\runtotalstd}s$.
 The execution times vary widely though between spreadsheets, only four spreadsheets taking more than $0.2s$.
 Most of the execution time in these cases goes towards searching either aggregate constraints or conditional aggregates.
 The search for aggregates will be slow on spreadsheets containing larger groups of numeric data.
@@ -1117,7 +1106,7 @@ For conditional aggregates the number of candidate primary keys (all-different) 
 \sergey{would it make sense to specify the size of a spreadsheet in the number of non-zero cells?}
 
 \samuel{Single paragraph / section}
-\paragraph{Dependencies}
+\paragraph*{Dependencies}
 In order for the algorithm to run efficiently it is crucial to use dependencies and find constraints incrementally whenever possible.
 This avoids some of the explosion of combinations for constraints that have many arguments.
 For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to below 1 second.
