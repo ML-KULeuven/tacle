@@ -84,7 +84,7 @@
 \newcommand{\nat}{\mathcal{N}}
 
 \newcommand{\sg}{B}
-
+\newcommand{\sbl}[1]{\ensuremath{B_{\textit{#1}}}}
 
 
 
@@ -318,7 +318,7 @@ An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, w
     $\ecalldiff{\sg_x}^*$
       & $\discrete(\sg_x)$
       
-      & All values in $\sg_x$ are different: $\sg_x[i] \neq \sg_x[j]$ if $i \neq j$
+      & All values in $\sg_x$ are different. $i \neq j$: $\sg_x[i] \neq \sg_x[j]$
       \\ \hline
     %X = Y & & \\
 
@@ -335,26 +335,26 @@ An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, w
       \\ \hline
 
     $\ecfkey{\sg_{fk}}{\sg_{pk}}^*$
-      & $\sg_{fk}$ and~$\sg_{pk}$ are both $\discrete$; $\ptype(\sg_{fk}) = \ptype(\sg_{pk})$; $\ptable(\sg_{fk}) \neq \ptable(\sg_{pk})$; and $\ecalldiff{\sg_{pk}}$
+      & $\sg_{\mathit{fk}}$ and~$\sg_{pk}$ are $\discrete$; they must have different $\ptable$s but the same $\ptype$; and $\ecalldiff{\sbl{pk}}$
 
       & Every value in~$\sg_{fk}$ also exist in~$\sg_{pk}$ \\ \hline
 
-    \eclookup{\sg_r}{\sg_{fk}}{\sg_{pk}}{\sg_{val}}
-      & $\sg_{fk}$ and $\sg_{pk}$ are both $\discrete$; arguments $\{\sg_{fk}, \sg_{r}\}$ and $\{\sg_{pk}, \sg_{val}\}$ within the same set have the same \plength, \ptable and \por; $\sg_{r}$ and~$\sg_{val}$ have the same type; and \ecfkey{\sg_{fk}}{\sg_{pk}}.
+    \eclookup{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}
+      & $\sbl{fk}$ and $\sbl{pk}$ are $\discrete$; arguments $\{\sbl{fk}, \sbl{r}\}$ and $\{\sbl{pk}, \sbl{val}\}$ within the same set have the same \plength, \ptable and \por; $\sbl{r}$ and~$\sbl{val}$ have the same type; and \ecfkey{\sbl{fk}}{\sbl{pk}}.
       
-      & $\sg_r[i]$ is the same value as looking up~$\sg_{fk}[i]$ in~$\sg_{pk}$  and returning the corresponding value in~$\sg_{val}$.
+      & $\sbl{r}[i] = \sbl{val}[j]$ where $\sbl{pk}[j] = \sbl{fk}[i]$
       \\ \hline
 
-    \eclookupfuzzy{\sg_r}{\sg_{fk}}{\sg_{pk}}{\sg_{val}}
+    \eclookupfuzzy{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}
       & \textit{Same as lookup}
       
-      & $\sg_r[i]$ is the same value as looking up the last item in~$\sg_{pk}$ smaller than~$\sg_{fk}[i]$ and returning the corresponding value in~$\sg_{val}$.
+      & $\sbl{r}[i] = \sbl{val}[j]$ where $\sbl{pk}[j] \leq \sbl{fk}[i]$, $j$~maximal
       \\ \hline
 
-    \eclookupprod{\sg_r}{\sg_1}{\sg_{fk}}{\sg_{pk}}{\sg_{val}}
+    \eclookupprod{\sbl{r}}{\sbl{1}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}
       & Arguments $\{\sg_{r}, \sg_{1}, \sg_{fk}\}$ are $\numeric$, arguments $\{\sg_{pk}, \sg_{val}\}$ are $\discrete$ and within both sets all arguments have the same \plength, \ptable and \por; also \ecfkey{\sg_{fk}}{\sg_{pk}}.
       
-      & $\sg_{r}[i]$ is the obtained by multiplying $\sg_{1}[i]$ with $\eclookupf{\sg_{fk}}{\sg_{pk}}{\sg_{val}}{}[i]$.
+      & $\sbl{r}[i] = \sbl{1}[i] \times \eclookupf{\sbl{fk}}{\sbl{pk}}{\sbl{val}}{}[i]$.
       \\ \hline
 
     \ecprod{\sg_r}{\sg_1}{\sg_2}
@@ -411,7 +411,7 @@ An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, w
       \] \\ \hline
       
     \ecsumprod{\sg_r}{\sg_1}{\sg_2}
-      & Arguments $\{\sg_r, \sg_1, \sg_2\}$ are all $\numeric$; $\plength(\sg_{1}) = \plength(\sg_{2}) \geq 2$; and $\prows(\sg_{r}) = \pcols(\sg_{r}) = 1$
+      & Arguments $\{\sg_r, \sg_1, \sg_2\}$ are $\numeric$; $\plength(\sg_{1}) = \plength(\sg_{2}) \geq 2$; and $\prows(\sg_{r}) = \pcols(\sg_{r}) = 1$
       
       & $\sg_{r}[1] = \sum_{j = 1}^{\plength(\sg_{1})} \sg_{1}[j] \times \sg_{2}[j]$.
   \end{tabularx}}
