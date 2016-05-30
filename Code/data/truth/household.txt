@@ -2,5 +2,7 @@
 	"Essential":
 		{
 			"sum (col)": [{"X": "T1[:, 2]", "Y": "T2[1, :]"}]
-		}
+		},
+	"Non-Trivial":
+		{}
 }

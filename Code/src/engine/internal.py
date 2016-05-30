@@ -290,24 +290,29 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             keys = [c.result, c.first, c.second]
 
             def is_product(r, o1, o2):
-                return numpy.vectorize(equal)(r, numpy.vectorize(Operation.PRODUCT.func)(o1, o2)).all()
+                for i in range(0, len(r)):
+                    if not equal(r[i], Operation.PRODUCT.func(o1[i], o2[i])):
+                        return False
+                return True
 
             return self._generate_test_vectors(assignments, keys, is_product, lambda r, o1, o2: ordered(o1, o2))
 
         def diff(c: Diff, assignments, solutions):
             def is_diff(r, o1, o2):
-                return numpy.vectorize(equal)(r, o1 - o2).all()
+                for i in range(0, len(r)):
+                    if not equal(r[i], o1[i] - o2[i]):
+                        return False
+                return True
 
             keys = [c.result, c.first, c.second]
             return self._generate_test_vectors(assignments, keys, is_diff, lambda r, _, o2: o2 < r)
 
         def percent_diff(c: PercentualDiff, assignments, solutions):
             def is_diff(r, o1, o2):
-                if equal_v(o2, 0).any():
-                    return False
-                calculated = (o1 - o2) / o2
-                equal_t = numpy.vectorize(lambda x, y: equal(x, y, True))
-                return equal_t(r, calculated).all()
+                for i in range(0, len(r)):
+                    if o2[i] == 0 or not equal(r[i], (o1[i] - o2[i]) / o2[i], True):
+                        return False
+                return True
 
             keys = [c.result, c.first, c.second]
             return self._generate_test_vectors(assignments, keys, is_diff)
@@ -353,7 +358,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return solutions
 
         def equality(c: Equal, assignments, _):
-            test = lambda x, y: equal_v(x, y).all()
+            def test(x, y):
+                for i in range(0, len(x)):
+                    if not equal(x[i], y[i]):
+                        return False
+                return True
+
             return self._generate_test_vectors(assignments, [c.first, c.second], test, ordered)
 
         def equal_group(c: EqualGroup, assignments, solutions: Solutions):

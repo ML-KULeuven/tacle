@@ -52,8 +52,7 @@ real = [
     "pattern_mining",
 ]
 
-# files = exercises + tutorials + real
-files = real
+files = exercises + tutorials + real
 
 
 def is_excel_constraint(c: Constraint):
