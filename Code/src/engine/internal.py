@@ -265,13 +265,16 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         x_data = x_data.T
 
                     def check(start, end):
-                        result = c.operation.aggregate(x_data[start:end, :], 0, x_group.is_partial)
-                        if equal_v(result, y_group.get_vector(y_i + 1)).all():
-                            x_subgroup = x_group.vector_subset(start + 1, end)
-                            y_subgroup = y_group.vector_subset(y_i + 1, y_i + 1)
-                            add({c.x.name: x_subgroup, c.y.name: y_subgroup})
-                            return True
-                        return False
+                        d1, d2 = x_data.shape
+                        y_vector = y_group.get_vector(y_i + 1)
+                        for i in range(0, d2):
+                            result = c.operation.aggregate(x_data[start:end, i], 0, x_group.is_partial)
+                            if not equal_v(result, y_vector.data[i]).all():
+                                return False
+                        x_subgroup = x_group.vector_subset(start + 1, end)
+                        y_subgroup = y_group.vector_subset(y_i + 1, y_i + 1)
+                        add({c.x.name: x_subgroup, c.y.name: y_subgroup})
+                        return True
 
                     max_range = MaxRange(check)
                     for y_i in range(y_group.vectors()):
