@@ -148,9 +148,10 @@ Moreover, we sketch additional application scenario's such as autocompletion and
 
 The approach that we introduce borrows techniques from logical and relational learning \cite{luc_book}, where the discovery of clausal constraints has been studied in inductive logic programming \cite{claudien,lallouet}; and from constraint learning,  where several approaches to learning sets of constraints have been developed in a constraint programming setting \cite{Quacq,Conacq,modelseeker};
 and from mining in databases, where inductive techniques have been applied to discover constraints (such as functional and multi-valued dependencies) in relational databases \cite{savnik}.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from
-very few examples.  Our approach contrasts with these in that it focusses
-on learning both column- and row-constraints, as does Modelseeker~\cite{modelseeker} which is restricted to traditional constraint satisfaction problems (CSPs). It contrasts with Flashfill in that it can learn from numeric data too, as well as general constraints in addition to functions.
-\\\\
+very few examples.
+Our approach contrasts with these in that it focuses
+on learning both column- and row-constraints, as does Modelseeker~\cite{modelseeker} which is restricted to traditional constraint satisfaction problems (CSPs). It contrasts with Flashfill in that it can learn from numeric data, too, as well as general constraints in addition to functions.
+
 This paper is organized as follows.
 Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:approach} presents the problem statement and the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents a more detailed discussion of the related work. Section \ref{sec:conclusions} provides conclusions.
 
@@ -185,8 +186,8 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
   \caption{
     Example spreadsheet (black words and numbers only).
     Green background indicate headerless tables, dark borders indicate maximal type-consistent blocks.
-    Most tables only contain type-consistent columns, however, the data in table~$T_2$ can be used as both column- and row vectors.
-    This example was created by combining several smaller Excel sheets originating from an exercise session.
+    Most tables only contain type-consistent columns, however, table~$T_2$ also contains type-consistent row.
+    This example was created by combining several Excel sheets from several exercise sessions.
     % I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
   }
   \label{fig:main_example}
@@ -252,7 +253,10 @@ Spreadsheets and tabular data may conceptually consist of multiple tables, such 
 Formally, a (headerless) table is an $n \times m$ matrix. Each entry is called a \textit{cell}.
 A cell has a {\bf type}, which can be numeric or textual. We further distinguish numeric types in subtypes: integer and float. We also consider \textit{None} as a special type when a cell is empty; \textit{None} is a subtype of all other types.
 
-A row or a column is \textbf{type-consistent} if all cells in that row or column are of the same base type, that is, numeric or textual. We will use notation $T[a,{:}]$ to refer to the $a$-th row of table $T$, and similarly $T[{:},a]$ for the $a$-th column. For example in Figure~\ref{fig:main_example}, $T_1[1,:] = [1,2,3,4]$ and $T_5[:,1] = ['$Diana Coolen$', 5]$. The latter is not type-consistent while the former is.
+A row or a column is \textbf{type-consistent} if all cells in that row or column are of the same base type, i.e. numeric or textual.
+We will use notation $T[a,{:}]$ to refer to the $a$-th row of table $T$ and similarly $T[{:},a]$ for the $a$-th column.
+For example, in Figure~\ref{fig:main_example}, $T_1[1,:] = [1,2,3,4]$ and $T_5[:,1] = ['$Diana Coolen$', 5]$.
+$T_5[:,1]$ is not type-consistent while $T_1[1,:]$ is.
 %We will write \textbf{vector} to refer to a single row or column when its orientation does not matter.
 
 The most important concept is that of a \textbf{block}. 
@@ -435,7 +439,7 @@ Each argument will have to be instantiated with a block.
 % the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
 
 \item \textit{\CSignature} defines the requirements that the arguments of the predicate must satisfy.
-This can concern any property of individual blocks as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table or have equal length.
+This can concern properties of individual blocks as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table or have equal length.
 In terms of logical and relational learning \cite{luc_book}, the \CSignature is known as the {\em bias} of the learner, it specifies when the arguments of a constraint are well-formed.
 We can capture this bias for a template~$s$ using a predicate $\sigc$.
 \item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds.
@@ -450,7 +454,7 @@ The constraint templates implemented in \sname are defined in Table~\ref{table:c
 A non-trivial example is, for example, the constraint template for the row-based sum:
 
 \begin{itemize}
-  \item \CName: $\ecsumr{\sg_r}{\mathbf{\sg_x}}$, where $\sg_r$ and $\mathbf{\sg_x}$ are the arguments;
+  \item \CName: $\ecsumr{\sg_r}{\mathbf{\sg_x}}$, for arguments $\sg_r$ and $\mathbf{\sg_x}$.
   
   \item \CSignature: $\sg_r$ has to be a single vector ($\textit{size}=1$) while $\mathbf{\sg_x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font.
   Both blocks have to be numeric.
@@ -944,7 +948,7 @@ In \sname we have, therefore, chosen to only consider \textit{maximal} subblocks
 
 As a result, in some cases a maximal subblock might falsely include irrelevant columns.
 Consider $B_1 = [[200, 300], [200, 150], [1, 2]]$ and $B_2 = [200, 300]$, then \sname will find the constraint $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$.
-Should the target constraint be $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}2])}$, then the last vector of~$B_1$ must be split off into a separate block before the above approach can find it.
+Should the target constraint be $\eccalc{B_2}{\mathit{MAX}(B_1[1{:}2])}$, then the last vector of~$B_1$ must be split off into a separate block before the above approach can find it.
 
 Alternatively, we can output all valid argument assignments instead of only maximal subblocks, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$, however, this might produce many redundant constraints and introduce constraints that accidentally cover too little data.
 
@@ -1045,7 +1049,7 @@ The low precision can be explained by the many short vectors which increases the
 
 \subsection{Benchmark}
 All spreadsheets have been converted to CSV files.
-Definitions of tables were added manually, providing a way to compare results and overcoming shortcomings in the table detection algorithm (in some harder cases with $\mathit{None}$ values, blocks where also provided manually). \samuel{chec}
+Definitions of tables are given (in some harder cases with $\mathit{None}$ values, blocks are defined manually). \samuel{chec}
 
 \samuel{Revisit [what does "implemented" mean here? what's the difference between "implemented" and "algorithm", esp given that we are talking experiments? ] }
 \luc{what is not implemented, strange \dots in a paper !!!}
@@ -1091,10 +1095,10 @@ The search for aggregates will be slow on spreadsheets containing larger groups 
 For conditional aggregates the number of candidate primary keys (all-different) and numeric vectors determines the running time (e.g. the case study example).
 
 \begin{table}
-  \caption{Overview evaluation on essential constraints of the collected Spreadsheet dataset}
+  \caption{Overview evaluation on benchmark}
   \centering
   \begin{tabular}{lll}
-    & \textbf{Total} & \textbf{Average per spreadsheet} \\
+    & \textbf{Total} & \textbf{Spreadsheet (avg)} \\
     \textbf{Relevant constraints} & $93$ & $2.91$ \\
     \textbf{Recall} & $96.77\%$ & $94.27\%$ \\
     \textbf{Precision} & $23.14\%~(28)$ & $8.33\%~(0.88)$ \\
