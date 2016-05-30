@@ -112,11 +112,11 @@
 %Spreadsheets, comma separated value files and other tabular data representations are in wide use today. However, the correct use and maintenance of functions in and between the tabular data can be error-prone and overwhelming. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. Our method takes inspiration form inductive logic programming and constraint satisfiability. We represent common spreadsheet functions as predicates with arguments that must satisfy number of constraints over the arguments. This allows generic constraint satisfaction techniques to be used to find all such satisfying predicates/functions within the rows, columns and submatrices of the tables. We show the effectiveness and accuracy of this approach on a number of spreadsheets from varying sources.
 Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
 However, modeling, maintaining and discovering formulas in tabular data and spreadsheets can be time consuming and error-prone.
-In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data.
+In this work, we investigate the automatic discovery of constraints (functions and relations) in raw tabular data.
 We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking.
 Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
 Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints.
-Constraint learning techniques are used to identify predicates (constraints) that hold between blocks of rows and columns of the tables.
+Constraint learning techniques are used to identify the predicates that hold between blocks of rows and columns of the tables.
 %New types of constraints can be easily added to the system by specifying them in a declarative language.
 We show that our approach is able to accurately discover constraints in spreadsheets from various sources.
 \end{abstract}
@@ -129,21 +129,21 @@ Many end-users lack the understanding of the underlying structures and dependenc
 This is especially the case when spreadsheets have been exported from other software such as Enterprise Resource Planning (ERP) systems.
 In this case, often a comma-separated values (CSV) format is used meaning that all formulas are lost, including inter-sheet formulas and relations.
 %This limited understanding is especially the case with spreadsheets exported from other software such as ERP packages. In this case,
-Even in manually created spreadsheets, it can be challenging to be consistent and correct with formulas across big spreadsheets.
-For example the influential Reinhart-Rogoff economical paper ``Growth in a Time of Debt'' had some of its claims contested~\cite{flaw_excel}, after an investigation of the used Excel sheets was shown to contain some mistakes in formulae.
+Even in manually created spreadsheets, it can be challenging to be consistent and correct with formulas across big tables.
+For example the influential Reinhart-Rogoff economical paper ``Growth in a Time of Debt'' had some of its claims contested~\cite{flaw_excel}, after an investigation of the used Excel sheets was shown to contain mistakes in formulae.
 
 In this paper,  we investigate whether learning techniques can be used to infer constraints (formulas and other relations) from raw spreadsheet data.
 This is a new and unconventional machine learning problem.
 Consider the example in Figure~\ref{fig:main_example}, where header names such as \textbf{Total} and \textbf{Rank} already suggest the usage of spreadsheet operations such as \textit{SUM} or \textit{RANK}.
 Looking at the first row in Table~$T_2$ and the data in Table~$T_1$, it is clear that the values in this row were computed by summing the values in the corresponding columns (\textbf{1st Quarter} through \textbf{Total}) of $T_1$.
 Examining $T_1$ also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by summing the rows of the previous four columns.
-This provides a flavor of how this problem is different from standard data mining settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple tables with relationships between them (e.g. foreign-keys). And on the other hand, the data is most often mixed textual and numeric. %, since people tend to use spreadsheets for financial and accounting computations.
-One can see that understanding and learning constraints in tabular data is hence a new and challenging problem for machine learning.
+This provides a flavor of how this problem is different from standard mining and learning settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple tables with relationships between them (e.g. foreign-keys). And on the other hand, the data is most often mixed textual and numeric. %, since people tend to use spreadsheets for financial and accounting computations.
+Hence understanding and learning constraints in tabular data is a novel and challenging problem for machine learning.
 
 % Moved up
-The question that we answer in this paper is: is it possible to discover or reconstruct constraints (relations, functions) in flat tabular spreadsheet data?
+The question that we answer in this paper is: is it possible to discover or reconstruct constraints in flat tabular spreadsheet data?
 To answer this question we contribute a general-purpose method and system, named \sname (from: Tabular Constraint Learner, pronounced ``tackle''), for discovering row-wise and column-wise constraints.
-It operates directly on (headerless) tables of a spreadsheet in an unsupervised setting, as it reasons on that raw tabular data directly with no example constraint instantiations given. %, and discovers column- and row-wise constraints.
+It operates directly on (headerless) tables of a spreadsheet in an unsupervised setting, that is, it reasons on raw tabular data directly with no example constraint instantiations given. %, and discovers column- and row-wise constraints.
 We demonstrate the utility of our approach in an experimental evaluation.
 Moreover, we sketch additional application scenario's such as autocompletion and error detection.
 
@@ -151,7 +151,7 @@ The approach that we introduce borrows techniques from logical and relational le
 and from mining in databases, where inductive techniques have been applied to discover constraints (such as functional and multi-valued dependencies) in relational databases \cite{savnik}.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from
 very few examples.
 Our approach contrasts with these in that it focuses
-on learning both column- and row-constraints, as does Modelseeker~\cite{modelseeker} which is restricted to traditional constraint satisfaction problems (CSPs). It contrasts with Flashfill in that it can learn from numeric data, too, as well as general constraints in addition to functions.
+on learning both column- and row-constraints on integer, floating point as well as textual data.
 
 This paper is organized as follows.
 Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:approach} presents the problem statement and the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents a more detailed discussion of the related work. Section \ref{sec:conclusions} provides conclusions.
