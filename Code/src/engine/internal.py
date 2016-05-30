@@ -305,9 +305,10 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             def is_diff(r, o1, o2):
                 if equal_v(o2, 0).any():
                     return False
-                calculated = (o1 - o2) / o2
-                equal_t = numpy.vectorize(lambda x, y: equal(x, y, True))
-                return equal_t(r, calculated).all()
+                for i in range(0, len(r)):
+                    if not equal(r[i], (o1[i] - o2[i]) / o2[i]):
+                        return False
+                return True
 
             keys = [c.result, c.first, c.second]
             return self._generate_test_vectors(assignments, keys, is_diff)
