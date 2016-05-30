@@ -690,11 +690,11 @@ This separation of checking the \textit{properties} of superblock assignments fr
 
     \Procedure{LearnConstraints}{$\blocks$, $\temps$}
       \State $C \gets \emptyset$ %\Comment{The set of constraints}
-      \ForAll{$s~\mathbf{in}~\temps$}
+      \ForAll{$s~\mathbf{in}~\temps$} \label{algo:tcl:for}
         %\State $n \gets$ number of arguments of template $s$
-        \State $A \gets \generategroups(s, \blocks)$
+        \State $A \gets \generategroups(s, \blocks)$  \label{algo:tcl:super}
         \ForAll{$(B_1, \dots, B_n) \in A$}
-        \State $A' \gets \findassignment(s, (B_1,\dots,B_n))$
+        \State{$A' \gets \findassignment(s, (B_1,\dots,B_n))$}
         \ForAll{$(B_1',\dots,B_n') \in A'$}
             \State $C \gets C \cup \{ c_s(B_1', \dots, B_n') \}$
           \EndFor
@@ -743,7 +743,7 @@ To reason over the blocks, we add to the constraint program a set of background 
 %\end{description}
 %
 \begin{table}[t]
-  \caption{Translation of signature requirements to superblock constraints. The requirements that do not need to be relaxed are: $\plength(B) = x$, $\por(B) = x$, $\ptable(B) = x$ and $\psize(B) \geq x$.}
+  \caption{Translation of signature requirements to superblock constraints. The following need not be relaxed: $\plength(B) = x$, $\por(B) = x$, $\ptable(B) = x$ and $\psize(B) \geq x$.}
   \label{tbl:translation}
   \begin{tabularx}{\linewidth}{lX}
     \textbf{Requirement} & \textbf{Superblock constraint} \\ \hline \hline
@@ -778,13 +778,13 @@ These solutions correspond to the valid superblock assignments for constraint te
 \begin{example}
 %Br and Bx are numeric; rows(Bx) ⇤ 2; and columns(Bx ) = length(Br )
 
-  Consider the constraint template $\ecsumc{\sg_r}{\mathbf{\sg_x}}$, then the generated CSP will contain two variables $V_r, V_x$ corresponding to arguments~$\sg_r$ and~$\mathbf{\sg_x}$.
+  Consider the constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$, then the generated CSP will contain two variables $V_r, V_x$ corresponding to arguments~$\sg_r$ and~$\mathbf{\sg_x}$.
   Given maximal blocks~\blocks, the domain of these variables are $D(V_r) = D(V_x) = \{ 1, \dots, |\blocks| \}$.
-  Finally, the signature of $\ecsumc{\sg_r}{\mathbf{\sg_x}}$ (see Table~\ref{table:constraints}) will be translated into constraints:
+  Finally, the signature of $\ecsumr{\sg_r}{\mathbf{\sg_x}}$ (see Table~\ref{table:constraints}) will be translated into constraints:
   \begin{align*}
-    & \numeric(V_r) \land \numeric(V_x) \land \prows(V_x) \geq 2 \\
-    & (\por(V_x) = \mathit{row}) \Rightarrow (\pcols(V_x) \geq \plength(V_r)) \\
-    & (\por(V_x) = \mathit{column}) \Rightarrow (\pcols(V_x) = \plength(V_r))
+    & \numeric(V_r) \land \numeric(V_x) \land \pcols(V_x) \geq 2 \\
+    & (\por(V_x) = \mathit{column}) \Rightarrow (\prows(V_x) \geq \plength(V_r)) \\
+    & (\por(V_x) = \mathit{row}) \Rightarrow (\prows(V_x) = \plength(V_r))
   \end{align*}
   %Every solution is a tuple of values for~$V_r$ and~$V_x$ corresponding directly with a superblock assignment over~\blocks.
 \end{example}
@@ -801,18 +801,18 @@ Given a superblock assignment $(B_1, \dots, B_n)$ from the previous step, the go
 \begin{example}
   Consider the sum-over-rows constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$.
   An example superblock assignment from Figure~\ref{fig:main_example} is $(B_r, \mathbf{\sg_x}) = (\range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{\rangeto{3}{8}})$.
-  Note that this assignment does not satisfy the signature yet, $\sg_r$ contains more than one vector and $\psize(\mathbf{\sg_x}) \neq \plength(B_r)$.
-  This step aims to generate subassignments $(B_r' \sqsubseteq B_r, \mathbf{B_x}' \sqsubseteq \mathbf{B_x})$ that \textit{do} satisfy the signature and test whether they satisfy the definition:
-  $\forall i, \sbl{r}[i] = \sum_{j = 1}^{\pcols(\bsbl{x})} \mathit{row}(i, \bsbl{x})[j]$.
+  Note that this assignment does not satisfy the signature yet because $\sg_r$ contains more than one vector.
+  This step aims to generate subassignments $(B_r' \sqsubseteq B_r, \mathbf{B_x}' \sqsubseteq \mathbf{B_x})$ that do satisfy the signature and test whether they satisfy the definition:
+  $\forall i, \sbl{r}[i] = \sum_{j = 1}^{length(\bsbl{x})} \mathit{row}(i, \bsbl{x})[j]$.
   In Figure~\ref{fig:main_example} there is exactly one such subassignment: $(\range{T_1}{\rangeall}{7}, \range{T_1}{\rangeall}{\rangeto{3}{6}})$.
 \end{example}
 
 In this step, we could also formulate the problem as a CSP. %However, the search space is much smaller, e.g. $O(nm^2)$ with $n$ the number of arguments of the template and $m$ the size of the largest block.
 However, few CSP solvers support floating point numbers, which are prevalent in spreadsheets.
 Furthermore, in a CSP approach we would have to \textit{ground} out the definition for each of the corresponding elements in the vectors.
-This is inefficient, as already the blocks may not satisfy the signature or the first elements in the data may not satisfy the definition.
+This is inefficient, as already such blocks may not satisfy the signature or the first elements in the data may not satisfy the definition.
 
-Hence, a simple generate-and-test will usually suffice.
+On the other hand, a simple generate-and-test will usually suffice.
 %However, the actual implementation is specified for every constraint template separately, allowing different methods to be used based on the type of template.
 %For this reason, the \sname system uses generate-and-test to implement $\findassignment$ for most constraint templates.
 Given a superblock assignment, all disjoint subassignments are generated taking into account the required size, columns or rows.
@@ -892,31 +892,30 @@ Constraint templates that have no dependencies are omitted.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/constraint_dependency2.pdf}
-  \caption{Dependency graph; an arrow from~$s_1$ to~$s_2$ indicates that $s_2$ depends on~$s_1$ (the \CSignature of~$s_2$ includes $s_1$).
-    The graph is extracted from the Signature column in Table~\ref{table:constraints}.
+  \includegraphics[width=0.65\linewidth]{figures/constraint_dependency2.pdf}
+  \caption{Dependency graph of Table~\ref{table:constraints}; an arrow from~$s_1$ to~$s_2$ indicates that $s_2$ depends on~$s_1$ (its signature includes $s_1$).
   }
   \label{fig:learning_order}
 \end{figure}
 
 Using the dependency graph~(\dependencies) we can reorder the templates such that a template occurs after any template it depends on.
-Concretely, the input templates~$\temps$ (see Algorithm~\ref{algo:tcl}) are reordered to agree with the partial ordering imposed by~\dependencies (e.g. \textit{ALLDIFFERENT} before \textit{FOREIGNKEY}).
-Considering Algorithm~\ref{algo:tcl}, this step can be seen as preprocessing the input~\temps.
-Learning in this order allows templates to use constraints they depend on, as these constraints will have already been learned.
-This is exploited in the \generategroups step to speedup the algorithm by reducing the search space.
+Concretely, in Algorithm~\ref{algo:tcl} line \ref{algo:tcl:for} the input templates~$\temps$ are handled following an ordering that agrees with the partial ordering imposed by~\dependencies (e.g. \textit{ALLDIFFERENT} before \textit{FOREIGNKEY}).
+When using this ordering, templates later in the ordering can use the learned constraints of the templates they depend on.
+This is made possible by adding, on line \ref{algo:tcl:super}, the set of learned constraints $C$ to the argument of \generategroups.
+
+This is used to speed up the \generategroups step. For constraint templates where some arguments are also part of a constraint that it depends on, it is not needed to search for superblocks and subblocks from scratch. Instead, one can start from all and only the actual argument assignments of the depending constraint, and only search matching superblocks for the remaining arguments.
 
 \begin{example}
-  Consider $\ecfkey{B_{fk}}{B_{pk}}$ whose signature includes $\ecalldiff{B_{pk}}$ and assume that~$C$ are the constraints found for \textit{ALLDIFFERENT}.
-  Instead of generating assignments for~$B_{pk}$ using the given blocks~$\blocks$, we will only consider (sub)blocks~$P = \{ B' | \ecalldiff{B'} \in C \}$.
-  $P$~can be seen as a set of partial assignments in which the argument $B_{pk}$ has been fixed.
+  Consider $\ecfkey{B_{fk}}{B_{pk}}$, which states that every value in $B_{fk}$ also exists in $B_{pk}$; its signature includes $\ecalldiff{B_{pk}}$. There are 16 \textit{ALLDIFFERENT} constraints to be found in Figure~\ref{fig:main_example}, hence, the \generategroups only needs to check which superblocks for $B_{pk}$ are compatible (different table, same type) with these 16 assignments to $B_{fk}$.
 \end{example}
 
-The \generategroups implementation now takes into account previously found constraints to obtain partial assignments~$P$ for a template.
-Instead of generating one CSP to find all assignments, a CSP is generated for every~$p \in P$ which finds all assignments completing~$p$.
-The procedure to generate CSPs remains the same, except that the partial assignment is used to fix the domains of the dependent variables.
+%Instead of generating assignments for~$B_{pk}$ using the given blocks~$\blocks$, we will only consider (sub)blocks~$P = \{ B' | \ecalldiff{B'} \in C \}$.
+%$P$~can be seen as a set of partial assignments in which the argument $B_{pk}$ has been fixed.
+Instead of generating one CSP to find all assignments, a CSP is generated for every known assignment of the depending constraint (and variables involved), which then searches for all assignments completing this partial assignment.
+The procedure to generate CSPs remains the same otherwise. %, except that the known subassignment(s) are added as extra blocks that can only be assigned to their corresponding variable.
 
-This approach has the additional benefit of ensuring that the (sub)blocks assigned to the dependent arguments already satisfy both the signature and definition of the original template.
-Therefore, the implementation of $\findassignment$ does not have to take these blocks into account.
+%This approach has the additional benefit of ensuring that the (sub)blocks assigned to the dependent arguments already satisfy both the signature and definition of the template it depends on.
+%Therefore, the implementation of $\findassignment$ does not have to take these blocks into account.
 
 
 
@@ -935,23 +934,22 @@ Therefore, the implementation of $\findassignment$ does not have to take these b
 
 
 \subsubsection{Redundancy}
-We consider two types of redundancy that we aim to eliminate during the search.
+We consider two types of redundancy that we aim to eliminate during search.
 As noted in Section~\ref{sec:form:dependencies}, for some constraint templates there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example, $\ecprod{B_R'}{B_1'}{B_2'} \Leftrightarrow \ecprod{B_R'}{B_2'}{B_1'}$.
 Such duplicates are avoided by defining a \textit{canonical} form for these constraints.
 In practice, we define an arbitrary but fixed block ordering and require those blocks that are interchangeable to adhere to this ordering.
-Moreover, \sname currently contains only product (\ecprod{B_R'}{B_1'}{B_2'}) and not division (\eccalc{B_1'}{B_R' / B_2'}) as well as difference (\ecdiff{B_r}{B_1}{B_2}) and not sum (\eccalc{B_1}{B_r + B_2}).
-These choices are based on the prevalence of product and difference in financial spreadsheet data, however, division and sum as well as other constraints could easily be added.
+Moreover, among the semantically equivalent constraints product (\ecprod{B_R'}{B_1'}{B_2'}) and division (\eccalc{B_1'}{B_R' / B_2'}) we only added division, as well as only difference (\ecdiff{B_r}{B_1}{B_2}) and not sum (\eccalc{B_1}{B_r + B_2}). However, division and sum could easily be added, as could it be added explicitly in post-processing based on the matching product and difference constraints.
 
 
-A last type of redundancy we aim to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
+A last type of redundancy we chose to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
 For example, consider the constraint \ecsumc{B_r}{B[1{:}n]} where $B[k{:}n]$ consists of only zeros, then \ecsumc{B_r}{B[1{:}j]} will be true for all $k - 1 \leq j \leq n$.
 In \sname we have, therefore, chosen to only consider \textit{maximal} subblocks.
 
 As a result, in some cases a maximal subblock might falsely include irrelevant columns.
 Consider $B_1 = [[200, 300], [200, 150], [1, 2]]$ and $B_2 = [200, 300]$, then \sname will find the constraint $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$.
-Should the target constraint be $\eccalc{B_2}{\mathit{MAX}(B_1[1{:}2])}$, then the last vector of~$B_1$ must be split off into a separate block before the above approach can find it.
+Should the target constraint be $\eccalc{B_2}{\mathit{MAX}(B_1[1{:}2])}$, then the last vector of~$B_1$ must be split off into a separate block before the above approach could find it.
 
-Alternatively, we can output all valid argument assignments instead of only maximal subblocks, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$, however, this might produce many redundant constraints and introduce constraints that accidentally cover too little data.
+Alternatively, we can output all valid argument assignments instead of only maximal subblocks, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$, however, this might produce many redundant constraints including constraints that accidentally cover too little data.
 
 
 
@@ -961,6 +959,8 @@ Alternatively, we can output all valid argument assignments instead of only maxi
 The constraints that are currently supported in our system are shown in Table~\ref{table:constraints}.
 We included most formulas that we encountered in tutorial spreadsheets including the popular \textit{SUM} and \textit{LOOKUP} constraints\footnote{\href{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}}.
 We also added three structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUTATION} and \textit{FOREIGNKEY}) so that they can be used in the signature of other constraint templates; they are also popular in constraint satisfaction~\cite{modelseeker}.
+
+\tias{This would be a good place to say that for aggregates, you do SUBASSIGNMENTS with specialised code...}
 
 %Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
 %These constraints have been selected based on the most-used Excel functions as well as their occurrence in various example spreadsheets we observed.
@@ -1109,9 +1109,9 @@ For conditional aggregates the number of candidate primary keys (all-different) 
 \samuel{Expand summary}
 \sergey{would it make sense to specify the size of a spreadsheet in the number of non-zero cells?}
 
-We explained various optimizations, most notably the exploitation of dependencies.
-Using the dependencies to find constraints incrementally cuts down large parts of the search trees, especially for constraints that have many arguments.
-Essentially, one obtains a more specialized search without much effort.
+%We explained various optimizations, most notably the exploitation of dependencies.
+%Using the dependencies to find constraints incrementally cuts down large parts of the search trees, especially for constraints that have many arguments.
+%Essentially, one obtains a more specialized search without much effort.
 
 
 In order for the algorithm to run efficiently it is crucial to use dependencies and find constraints incrementally whenever possible.
@@ -1132,20 +1132,18 @@ In this section, we illustrate how various motivating applications could be real
 
 \subsection{Autocompletion}
 Autocompletion can be seen as using knowledge derived from a snapshot of spreadsheet data to predict new values before they are written by the user.
-The snapshot~($D_0$) is used to learn constraints and these are combined with new data~($\Delta D$) that the user has added.
-Using~$\Delta D$ we can keep track of which vectors have changed and which vectors are now incomplete.
-A \textit{functional} constraint corresponds to a spreadsheet formula.
-Such a constraint, e.g. $\ecsumc{B_r}{\mathbf{B_x}}$, is able to compute a result~($B_r$) based on its input~($\mathbf{B_x}$).
-If all the input vectors / blocks have been filled and the result is incomplete, the constraint can predict the result value(s).
+A snapshot~($D_0$) is used to learn constraints and these are combined with new data~($\Delta D$) that the user has added.
+Using~$\Delta D$ we can keep track of which vectors have changed and which vectors are now \textit{incomplete}.
+\textit{Functional} constraints, such as $\ecsumc{B_r}{\mathbf{B_x}}$, are able to compute a result~($B_r$) based on its input~($\mathbf{B_x}$).
+If all vectors in the input blocks have changed and the output vector is incomplete, the constraint can compute the resulting value(s).
 
-Let us illustrate this on one of the spreadsheets from the gathered dataset.
 Consider Figure \ref{fig:autocompletion_example} containing two tables.
-By learning constraints on the tables excluding the last row, we find constraints $\ecsumif{\range{T_2}{\rangeall}{2}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{3}}$ and $\ecsumif{\range{T_2}{\rangeall}{3}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{4}}$.
-The new data $\Delta D$ consists of the new value \textit{West} in the last row.
+Learning on a snapshot that does not contain line 17, we find constraints $\ecsumif{\range{T_2}{\rangeall}{2}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{3}}$ and $\ecsumif{\range{T_2}{\rangeall}{3}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{4}}$.
+The new data $\Delta D$ consists of the new value \textit{West} on line 17.
 Therefore, vector~$\range{T_2}{:}{1}$ is changed and vectors~$\range{T_2}{:}{2}$, $\range{T_2}{:}{3}$ have become incomplete.
 The \textit{SUMIF} constraints have enough input to fill the incomplete vectors and predict the values in the last row: $\range{T_2}{4}{2} = 1547$ and $\range{T_2}{4}{3} = 428128$.
 
-In case multiple constraints predict different values for the same cell, the algorithm will have to either prioritize constraints based on their specificity or a heuristic, not make a prediction, or present the choice to the user.
+%In case multiple constraints predict different values for the same cell, the algorithm will have to either prioritize constraints based on their specificity or a heuristic, not make a prediction, or present the choice to the user.
 
 \subsection{Error detection}
 \begin{figure*}[thb]
@@ -1168,18 +1166,18 @@ In case multiple constraints predict different values for the same cell, the alg
 
 We consider two cases of error detection.
 The first setting is the \textit{online} detection of errors which is similar to the autocompletion setting.
-However, we look at \textit{conflict} constraints, i.e. constraints that were learned on the snapshot data but do not agree with the newly added data~$\Delta D$.
+Here, we look at \textit{conflict} constraints, i.e. constraints that were learned on the snapshot data but do not agree with the newly added data~$\Delta D$.
 Such conflict constraints can indicate errors in the input.
 However, such conflicts can be wrongly caused by spurious constraints.
-Therefore, conflicts should only be detected if the snapshot data is large enough. An exact specification of what large enough means (i.e., how to measure the confidence in the constraint violation) is a separate application-dependent research question and will be investigated in the future work.
+Therefore, conflicts should perhaps only be detected if the snapshot data is large enough.
+%An exact specification of what large enough means (i.e., how to measure the confidence in the constraint violation) is a separate application-dependent research question and will be investigated in the future work.
 
 The second type of error detection is \textit{offline} and attempts to detect errors in a spreadsheet.
-Consider, for example, a use case concerning crime statistics provided by the FBI.
-An extract of the spreadsheet is depicted in Figure~\ref{fig:fbi}.
-When run on this sheet, our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
-A possible approach to detect such missing or wrong values is to look at a sample of the table that excludes the erroneous row, e.g. trying to leave out each row, and compare the constraints learned on this sample with the constraints learned by adding the row containing the mistake.
-The sample needs to be large enough such that we have enough confidence that the constraints are correct. For example, in Figure \ref{fig:fbi} all but one row satisfy the constraint, which is a strong indication that there is a constraint violation.
-If we define the sample to be the snapshot data and the added row to be the additional input~$\Delta D$, this task can be formulated as online error detection and dealt with in the same way.
+Consider a use case concerning crime statistics provided by the FBI in Figure~\ref{fig:fbi}.
+Our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
+A possible approach to detect such missing or wrong values is to look at a sample of the table, e.g. trying to leave out each row, and compare the constraints learned on this sample with the constraints learned on the whole table.
+%The sample needs to be large enough such that we have enough confidence that the constraints are correct. For example, in Figure \ref{fig:fbi} all but one row satisfy the constraint, which is a strong indication that there is a constraint violation.
+If we define the sample to be the snapshot data and the other row(s) to be the additional input~$\Delta D$, this task can be formulated as online error detection and dealt with in the same way.
 %Of course, generating large enough samples and rows (columns) to be added can be done in multiple ways.
 %In the limited case of detecting single errors one can leave out every row (column), consider the remaining data to be the sample and
 %and the left out row (column) to be new input.
