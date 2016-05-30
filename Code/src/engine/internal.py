@@ -303,10 +303,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
         def percent_diff(c: PercentualDiff, assignments, solutions):
             def is_diff(r, o1, o2):
-                if equal_v(o2, 0).any():
-                    return False
                 for i in range(0, len(r)):
-                    if not equal(r[i], (o1[i] - o2[i]) / o2[i]):
+                    if o2[i] == 0 or not equal(r[i], (o1[i] - o2[i]) / o2[i]):
                         return False
                 return True
 
