@@ -1212,18 +1212,15 @@ Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabula
 
 % points: 1) can be a base for an actual plugin or a function in excel 2) novel problem and challenge for systems and constraint solvers 3) can be part of the complicated pipeline togehter with the header detection
 Our goal is to automatically identify constraints in a spreadsheet.
-We have presented and evaluated our approach, implemented as the system \sname, that is able to learn a large set of constraints from CSV data.
-Moreover, the amount of redundant constraints found by the system is limited despite the lack of more sophisticated post-processing steps.
+We have presented and evaluated our approach, implemented as the system \sname, that is able to learn many different constraints in tabular data.
+The resulting method has high accuracy, produces limited number of redundant constraints and is sufficiently efficient for normal as well as interactive use.
 
-For the future development of the system there are multiple directions. Integrating the system in an interactive setting would offer users the possibility to easily receive and provide feedback.
-Moreover, the system can be adapted to deal with additional types and produce less redundant constraints through the use of (heuristic) filtering or post-processing.
+The approach is designed to find constraints that hold over entire columns and rows. In future work we plan to extend this to learn arbitrary nested constraints (e.g. $B_r = (B_1 + B_2) / B_3$), as well as constraints over only a subset of the vectors. This may give rise to more redundant and spurious constraints, which was not problematic up to this point.
 
-Currently, the system only learns single constraints and extending our approach to nested constraints would allow more expressive concepts to be learned. Also, \sname only works on complete rows and columns, allowing partial vectors is an important future direction for developing applications based on the system.
-%This shift would bring the approach in line with programming by example.
+One other line of work, which can also mitigate redundant and spurious constraints, is to integrate the approach an interactive setting, where users can receive and provide feedback; more similar to an active learning setting. Other ways to handle redundant constraints include the (heuristic) filtering or post-processing of the constraint set.
 
-Aside from finding errors, the system can be extended to deal with noise and the ability to learn soft constraints.
-Soft constraints are (potentially weighted) constraints that hold only on some of the data.
-This would extend the approach to new application domains as well as provide more native error detection.
+A final direction is that the current approach assumes noise-free data (but see the part on error correction); in inductive logic programming there has been much work on how to handle noisy data, while in constraint satisfaction a popular alternative is to consider \textit{soft} constraints that can be violated (at a cost). 
+This could extend the approach to new application domains, beyond traditional spreadsheets.
 
 
 \bibliographystyle{plain}
