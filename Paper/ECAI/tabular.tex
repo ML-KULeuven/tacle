@@ -203,9 +203,9 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 %      &~\ecperm{\range{T_{1}}{\rangeall}{1}}, \ecperm{\range{T_{1}}{\rangeall}{8}} \\
 %
       &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}}\\
-      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{3}}^1, \ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{4}}^1 \\
-      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{5}}^1 , \ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{6}}^1 \\
-      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{10}}^1 \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{3}}^*, \ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{4}}^* \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{5}}^* , \ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{6}}^* \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{10}}^* \\
 %
       &~\ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
 %
@@ -223,7 +223,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
       &~\ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
 	  % Table 4
-      &~\eclookup{\range{T_{4}}{\rangeall}{2}}{\range{T_{4}}{\rangeall}{3}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}^2 \\
+      &~\eclookup{\range{T_{4}}{\rangeall}{2}}{\range{T_{4}}{\rangeall}{3}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}^* \\
 %
       &~\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}} \\
 %
@@ -232,9 +232,9 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 %
       &~\range{T_{6}}{\rangeall}{4} = PREV(\range{T_{6}}{\rangeall}{4}) + \range{T_{6}}{\rangeall}{2} - \range{T_{6}}{\rangeall}{3}
     \end{align*}}
-  \vspace{-10pt}
-  \caption{Constraints present in the running example (left), except \textit{ALLDIFFERENT} (16), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5).
-  $^1$(Spurious constraints) $^2$(Not present in original source)}
+  \vspace{-18pt}
+  \caption{Constraints present in the running example (left), except \textit{ALLDIFFERENT} (16), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5).\\
+  $^*$: Not present in original document}
   \label{fig:sol_example}
 \end{subfigure}
   \caption{Running example}
@@ -242,7 +242,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
 
 
 \section{Formalization}\label{sec:formalization}
-Our goal is to automatically discover constraints (functions and relations) between the rows and the columns of tables in a spreadsheet. This is applicable not just to data from spreadsheets, but to any data in tabular form, hence the name.
+Our goal is to automatically discover constraints between the rows and the columns of tables in a spreadsheet. This is applicable not just to data from spreadsheets, but to any data in tabular form, hence the name.
 
 %An example spreadsheet with tables is given in Figure~\ref{fig:main_example}, we will use this as running example throughout the paper.
 
@@ -273,7 +273,7 @@ We will refer to the \textit{vectors} of a block when we wish to refer to its ro
 
 A block has the following properties:
 \begin{itemize}
-\item \textit{type}: a block is type-consistent, so it has a type
+\item \textit{type}: a block is type-consistent, so it has one type
 \item \textit{table}: the table that the block belongs to
 \item \textit{orientation}: either row-oriented or column-oriented
 \item \textit{size}: the number of vectors a block contains
@@ -312,11 +312,11 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
 \begin{table*}[!h]
 \caption{
   Overview of constraint templates implemented in \sname.
-  Templates marked with $\dagger$ are \textit{aggregate} templates, the table shows the version for sum but \sname also supports max, min, average, product and count.
-  Subgroups in normal font have to be vectors, whereas subgroups in \textbf{bold} may contain more than one vector.
-  Templates marked with $*$ are \textit{structural}, i.e. they are not functional and cannot be implemented in most spreadsheet software.
+  Subgroups in normal font have to be vectors, whereas subgroups in \textbf{bold} may contain more than one vector;
   $\discrete(x)$ is a shortcut for: $\textual(x) \lor \numeric(x)$.
-  {\small\luc{maybe say s.th. about some fancy constraints: example of a more complex one in the text (what does conditional mean, aggregate ... )}}
+  Templates marked with $*$ are \textit{structural}, i.e. they are not functional and cannot be implemented in most spreadsheet software.
+  Templates marked with $\dagger$ are \textit{aggregate} templates, the table shows $SUM$ but \sname also supports $MAX$, $MIN$, $AVERAGE$, $PRODUCT$ and $COUNT$.
+  %{\small\luc{maybe say s.th. about some fancy constraints: example of a more complex one in the text (what does conditional mean, aggregate ... )}}
 }
 \label{table:constraints}
   {\centering
@@ -463,8 +463,9 @@ A non-trivial example is, for example, the constraint template for the row-based
   Moreover, we add to the bias that the number of columns to sum over is at least~$2$.
   
   \item \CFunction: each value in the vector $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$.
-  For example, $B_r = [12, 7]$ and $\mathbf{\sg_x}$ consists of columns: $[5, 15]$, $[7, -8]$.
+  %For example, $B_r = [12, 7]$ and $\mathbf{\sg_x}$ consists of columns: $[5, 15]$, $[7, -8]$.
 \end{itemize}
+$SUM$ is an aggregate constraint, and a similar constraint is available for aggregate operators $MIN$, $MAX$, $AVERAGE$, $PRODUCT$ and $COUNT$. The \textit{conditional} aggregate variant $SUMIF$ only ranges over those cells that satisfy a condition on a related cell in that table, e.g. $\range{T_1}{\rangeall}{10}$ and the data in $T_5$ for matching salesperson names.
 \end{example}
 
 
@@ -482,7 +483,7 @@ For example, for the spreadsheet in Figure~\ref{fig:main_example}, when we write
 
 With this interpretation, we can speak about the signature and definition of a constraint template being \textit{satisfied}.
 We say that a signature (definition) of a constraint template~$s$ with $n$ arguments is satisfied by the blocks $(B_1, ..., B_n)$ if $\sigc(B_1, ..., B_n)$ (respectively $\defc(B_1, ..., B_n)$) is satisfied.
-Likewise, the template is satisfied if both the signature and definition are satisfied; in logic programming and logical relational learning, we would define the predicate~$s$ using a Prolog like clause: $s(B_1, ..., B_n) \leftarrow \sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$.
+Likewise, the template is satisfied if both the signature and definition are satisfied; in logic programming, we would define the predicate~$s$ using a Prolog like clause: $s(B_1, ..., B_n) \leftarrow \sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$.
 Under this interpretation, the term constraint and constraint template can be used interchangeably.
 
 \begin{definition}
@@ -514,7 +515,7 @@ We define the inverse problem, that is the {\bf Tabular Constraint Learning Prob
 %     \textbf{Find:}&  all constraints $C$ over \groups for each template $t$ in \constraints \\
 %   \end{tabular}
 
-Blocks and tables are expected to be given, in Section~\ref{sec:approach} we will discuss how these can be extracted from a spreadsheet.
+The input is a set of blocks, and in Section~\ref{sec:approach} we will discuss how these can be extracted from a spreadsheet.
 Figure~\ref{fig:sol_example} shows the solution to the tabular constraint learning problem when applied on the blocks of Figure~\ref{fig:main_example} and constraint templates listed in Table~\ref{table:constraints}.
 
 \subsection{Other considerations}
@@ -531,13 +532,12 @@ Apart from easing the specification of the signature and definition, in Section~
 Depending on the application, some constraints in the solution to the tabular constraint learning problem may be considered \textit{redundant}. This is because constraints may be logically equivalent or may be implied by other constraints, e.g. if you know $\ecperm{B_x}$, $\ecalldiff{B_x}$ is redundant.
 
 Within the same constraint, there can be equivalent argument assignments if the order of some of the arguments does not matter. For example for the product constraint, $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecprod{\sg_r}{\sg_2}{\sg_1}$ so one can be considered redundant to the other.
+Two different constraints can also be logically equivalent, due to their nature e.g. for addition/subtraction and product/division: $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecdiv{\sg_1}{\sg_r}{\sg_2}$.
 
-Two different constraints may be logically equivalent due to their nature, e.g. for addition/subtraction and product/division: $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecdiv{\sg_1}{\sg_r}{\sg_2}$.
-
-When the data has rows or columns containing exactly the same data, then any constraint with such a vector in its argument assignment will also have an argument assignment with the other equivalent vectors.
+Finally, when the data has rows or columns that contain \textit{exactly} the same values, then any constraint with such a vector in its argument assignment will also have an argument assignment with the other equivalent vectors.
 
 Dealing with redundancy is often application-dependent.
-Therefore, in Section~\ref{sec:approach} we will first explain our generic method for finding all constraints, before describing some optimizations that avoid obvious equivalences (Section~\ref{sec:opts}).
+Therefore, in Section~\ref{sec:approach} we first explain our generic method for finding all constraints, before describing some optimizations that avoid obvious equivalences (Section~\ref{sec:opts}).
 Later, we will investigate the impact of redundancy in the experiments.
 
 %More formally, a constraint $c_1(G_1, ... G_n)$ \textit{implies} another constraint~$c_2(G'_1, ..., G'_m)$ whenever
@@ -619,10 +619,10 @@ For example, $B_2$ and $B_4$ are not numeric so they can be immediately discarde
 Superblocks~$B_1, B_3$ and $B_5$ are valid candidates for $B_r$, however, since they all have length~4, $\mathbf{B_x}$ needs at least 4~columns which is only satisfied by $B_3$.
 So the assignments generated in step 3a would be $(B_1, B_3), (B_3, B_3), (B_5, B_3)$.
 
-In step 3b, we start from an assignment $(B_1, \ldots, B_n)$ with superblocks $B_i$, and generate and test all possible (sub)block assignments to arguments using the properties and actual data of the blocks. As we only have to consider the blocks $B'_i \sqsubseteq B_i$ contained in each superblock, this is typically much easier. For the above example, each of the vectors of $B_6$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks for the right-hand side and verify the signature (e.g. at least size $4$) and test whether for each row the definition is satisfied. %In practice, this can be optimized further.
+In step 3b, we start from an assignment $(B_1, \ldots, B_n)$ with superblocks $B_i$, and generate and test all possible (sub)block assignments to arguments using the properties and actual data of the blocks. As we only have to consider the blocks $B'_i \sqsubseteq B_i$ contained in each superblock, this is typically much easier. For the above example and $(B_5, B_3)$, each of the vectors of $B_5$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks of $B_3$ for the right-hand side and verify the signature (e.g. at least size $4$) and test whether for each row the definition is satisfied. %In practice, this can be optimized further.
 
 We now describe in more detail how headerless tables are extracted (step 1, Section~\ref{sec:table_extraction}) and how superblocks are generated from them (step 2, Section~\ref{sec:make_groups}), how the candidate superblock assignments are generated (step 3a, Section~\ref{sec:algo:super}) and how the actual assignments are extracted from that (step 3b, Section~\ref{sec:algo:subgr}).
-In Section~\ref{sec:opts} we describe a number of optimizations designed to speed up steps the algorithm.
+In Section~\ref{sec:opts} we describe a number of optimizations designed to speed up the algorithm.
 
 
 
@@ -668,7 +668,7 @@ The goal of the block detection step is to partition tables into maximally type-
 First, we preprocess the spreadsheet data so that currency values and percentual values are transformed into their corresponding numeric (i.e. integer or floating point) representation (e.g. $2.75 \$$ as $2.75$ or $85\%$ as~$0.85$).
 Then, each table is partitioned into maximal type-consistent blocks.
 
-To find row-blocks, each row is treated as a vector and must be type-consistent; similarly for column-blocks. Then, adjacent vectors that are of the same type are merged to obtain the maximally type-consistent superblocks.
+To find row-blocks, each row is treated as a vector and must be type-consistent; similarly for columns and column-blocks. Then, adjacent vectors that are of the same type are merged to obtain the maximally type-consistent superblocks.
 
 
 \subsection{Algorithm}
