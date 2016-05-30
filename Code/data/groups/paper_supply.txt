@@ -4,11 +4,11 @@
 			{
 				"Name": "T1",
 				"Bounds": [3, 6, 1, 4],
-				"Orientation": "Column"
+				"Orientation": "None"
 			}, 			{
 				"Name": "T2",
 				"Bounds": [8, 8, 2, 4],
-				"Orientation": "Row"
+				"Orientation": "None"
 			}
 		]
 }
