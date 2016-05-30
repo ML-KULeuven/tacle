@@ -2,5 +2,9 @@
 	"Essential":
 		{
 			"difference": [{"O2": "T1[:, 3]", "O1": "T1[:, 2]", "R": "T1[:, 4]"}]
-		}
+		},
+	"Non-trivial":
+	    {
+	        "series start=2006": [{"X": "T1[:, 1]"}]
+	    }
 }
