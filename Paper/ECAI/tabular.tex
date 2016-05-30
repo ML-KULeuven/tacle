@@ -85,6 +85,7 @@
 
 \newcommand{\sg}{B}
 \newcommand{\sbl}[1]{\ensuremath{B_{\textit{#1}}}}
+\newcommand{\bsbl}[1]{\ensuremath{\mathbf{B_{\textit{#1}}}}}
 
 
 
@@ -138,18 +139,17 @@ Examining $T_1$ also shows that computations are not only performed column-wise 
 This provides a flavor of how this problem is different from standard data mining settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple tables with relationships between them (e.g. foreign-keys). And on the other hand, the data is most often mixed textual and numeric. %, since people tend to use spreadsheets for financial and accounting computations.
 One can see that understanding and learning constraints in tabular data is hence a new and challenging problem for machine learning.
 
+% Moved up
+The question that we answer in this paper is: is it possible to discover or reconstruct constraints (relations, functions) in flat tabular spreadsheet data?
+To answer this question we contribute a general-purpose method and system, named \sname (from: Tabular Constraint Learner, pronounced ``tackle''), for discovering row-wise and column-wise constraints.
+It operates directly on (headerless) tables of a spreadsheet in an unsupervised setting, as it reasons on that raw tabular data directly with no example constraint instantiations given. %, and discovers column- and row-wise constraints.
+We demonstrate the utility of our approach in an experimental evaluation.
+Moreover, we sketch additional application scenario's such as autocompletion and error detection.
+
 The approach that we introduce borrows techniques from logical and relational learning \cite{luc_book}, where the discovery of clausal constraints has been studied in inductive logic programming \cite{claudien,lallouet}; and from constraint learning,  where several approaches to learning sets of constraints have been developed in a constraint programming setting \cite{Quacq,Conacq,modelseeker};
 and from mining in databases, where inductive techniques have been applied to discover constraints (such as functional and multi-valued dependencies) in relational databases \cite{savnik}.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from
 very few examples.  Our approach contrasts with these in that it focusses
 on learning both column- and row-constraints, as does Modelseeker~\cite{modelseeker} which is restricted to traditional constraint satisfaction problems (CSPs). It contrasts with Flashfill in that it can learn from numeric data too, as well as general constraints in addition to functions.
-
-\samuel{Move this up a paragraph}
-The question that we answer in this paper is: is it possible to discover or reconstruct constraints (relations, functions) in flat tabular spreadsheet data?
-To answer this question we contribute a general-purpose method and system, named \sname (from: Tabular Constraint Learner, pronounced ``tackle''), for discovering row-wise and column-wise constraints.
-%Furthermore, the algorithm accepts declarative specifications of the constraints and predicates of interest (the "bias"). \tias{revise declarative claim?}
-It operates directly on (headerless) tables of a spreadsheet in an unsupervised setting, as it reasons on that raw tabular data directly with no example constraint instantiations given. %, and discovers column- and row-wise constraints.
-We demonstrate the utility of our approach in an experimental evaluation.
-Moreover, we sketch additional application scenario's such as autocompletion and error detection.
 \\\\
 This paper is organized as follows.
 Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:approach} presents the problem statement and the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents a more detailed discussion of the related work. Section \ref{sec:conclusions} provides conclusions.
@@ -187,7 +187,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
     Green background indicate headerless tables, dark borders indicate maximal type-consistent blocks.
     Most tables only contain type-consistent columns, however, the data in table~$T_2$ can be used as both column- and row vectors.
     This example was created by combining several smaller Excel sheets originating from an exercise session.
-    \samuel{A: I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
+    % I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
   }
   \label{fig:main_example}
 \end{subfigure}
@@ -301,7 +301,7 @@ A block $B'$ is contained in a block $B$, $B' \sqsubseteq B$, iff both are valid
 
 We will sometimes write that $B'$ is a \textit{subblock} of $B$ or that $B$ is a \textit{superblock} of $B'$.
 %
-An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, which contains the sales numbers of all employees for the four quarters.
+An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, which contains the sales numbers of all employees for the four quarters.
 
 \begin{table*}
 \caption{
@@ -309,7 +309,8 @@ An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, w
   Templates marked with $\dagger$ are \textit{aggregate} templates, the table shows the version for sum but \sname also supports max, min, average, product and count.
   Subgroups in normal font have to be vectors, whereas subgroups in \textbf{bold} may contain more than one vector.
   Templates marked with $*$ are \textit{structural}, i.e. they are not functional and cannot be implemented in most spreadsheet software.
-  $\discrete(x)$ is a shortcut for: $\textual(x) \lor \numeric(x)$.  {\small\luc{there are some fancy constraints here. it might be good to say something about them ... like an example of one of the more complex ones in the text ... maybe state what conditional means, what aggregate ... }}
+  $\discrete(x)$ is a shortcut for: $\textual(x) \lor \numeric(x)$.
+  {\small\luc{maybe say s.th. about some fancy constraints: example of a more complex one in the text (what does conditional mean, aggregate ... )}}
 }
 \label{table:constraints}
   {\centering
@@ -390,21 +391,19 @@ An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, w
     $\ecsumr{\sg_r}{\mathbf{\sg_x}}^\dagger$
       & $\sg_r$ and $\mathbf{\sg_x}$ are $\numeric$; $\pcols(\mathbf{\sg_x}) \geq 2$; and $\prows(\mathbf{\sg_x}) = \plength(\sg_r)$
       
-      & $B_r[i] = \sum ($row~$i$ of $\mathbf{B_x})$
+      & $B_r[i] = \sum_{j = 1}^{\pcols(\bsbl{x})} \mathit{row}(i, \bsbl{x})[j]$
       \\ \hline
 
     $\ecsumc{\sg_r}{\mathbf{\sg_x}}^\dagger$
       & $\sg_r$ and $\mathbf{\sg_x}$ are $\numeric$; $\prows(\mathbf{\sg_x}) \geq 2$; and $\pcols(\mathbf{\sg_x}) = \plength(\sg_r)$
       
-      & $B_r[i] = \sum ($column~$i$ of $\mathbf{B_x})$
+      & $B_r[i] = \sum_{j = 1}^{\prows(\bsbl{x})} \mathit{column}(i, \bsbl{x})[j]$
       \\ \hline
 
     $\ecsumif{\sg_r}{\sg_{fk}}{\sg_{pk}}{\sg_{val}}^\dagger$
       & $\sg_{fk}, \sg_{pk}$ are $\discrete$; $\sg_{r}, \sg_{val}$ are $\numeric$; within the sets $\{\sg_{val}, \sg_{fk}\}$ and $\{\sg_{pk}, \sg_{r}\}$ arguments have the same $\plength$ and $\por$; $\sg_{fk}$ and $\sg_{val}$ have the same $\ptable$; $\sg_{fk}$ and $\sg_{pk}$ must have different $\ptable$s but the same $\ptype$; and \ecalldiff{\sg_{pk}}
       
-      & 
-      \[
-        B_r[i] = \sum_{j=1}^{\plength(B_{\textit{val}})} \begin{cases}
+      & \[ B_r[i] = \sum_{j=1}^{\plength(B_{\textit{val}})} \begin{cases}
           \sg_{val}[j] & \text{if } \sg_{fk}[j] = \sg_{pk}[i] \\
           0 & \text{otherwise}
         \end{cases}
@@ -418,6 +417,8 @@ An example is that $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, w
 
 \end{table*}
 
+\newcommand{\sigc}{\ensuremath{\format{Sig}_s}}
+\newcommand{\defc}{\ensuremath{\format{Def}_s}}
 
 \subsection{Constraint templates}
 The goal is to learn constraints over blocks in the data. The knowledge needed to learn a constraint is expressed through {\template}s.
@@ -436,16 +437,17 @@ Each argument will have to be instantiated with a block.
 \item \textit{\CSignature} defines the requirements that the arguments of the predicate must satisfy.
 This can concern any property of individual blocks as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table or have equal length.
 In terms of logical and relational learning \cite{luc_book}, the \CSignature is known as the {\em bias} of the learner, it specifies when the arguments of a constraint are well-formed.
-\\\\
-\samuel{A: I'm a bit confused by the fact that you seem to be mixing the formal way of writing these triples with textual explanation, both in the example in the text and in the table; I'd prefer to see the formal thing and then get the explanation, as that's what I'd need to use your approach}
+We can capture this bias for a template~$s$ using a predicate $\sigc$.
 \item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds.
 Given an assignment of blocks to its arguments, it can be used to verify whether the constraint is satisfied or not by the actual data present in the blocks. %holds, in practice this will be a function that can be called when
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
-In logical and relational learning this is known as the background knowledge. %, which provides the definition of the predicate.
+In logical and relational learning this is known as the background knowledge.
+We introduce the predicate \defc~to capture this background knowledge for a template~$s$.
 \end{itemize}
 
 \begin{example}
-Several constraint templates are illustrated in Table \ref{table:constraints}. A non-trivial example is the constraint template for the row-based sum:
+The constraint templates implemented in \sname are defined in Table~\ref{table:constraints}.
+A non-trivial example is, for example, the constraint template for the row-based sum:
 
 \begin{itemize}
   \item \CName: $\ecsumr{\sg_r}{\mathbf{\sg_x}}$, where $\sg_r$ and $\mathbf{\sg_x}$ are the arguments;
@@ -473,11 +475,7 @@ For example, for the spreadsheet in Figure~\ref{fig:main_example}, when we write
 %we can interpret the argument ${\range{T}{\rangeall}{8}}$ as a group variable that would apply to any table $T$ (provided~$T$ has an 8th column).
 %So, $T$ is viewed as table variable here, with the effect that  ${\range{T}{\rangeall}{8}}$ is a group variable.
 
-\newcommand{\sigc}{\ensuremath{\format{Sig}_s}}
-\newcommand{\defc}{\ensuremath{\format{Def}_s}}
-%\tias{TODO: conceptually $c(A_1, ..., A_n) :- Sig_c(A_1, ..., A_n) \wedge Def_c(A_1, ..., A_n)$ where '$c$' is here both the constraint name and the template}.
 With this interpretation, we can speak about the signature and definition of a constraint template being \textit{satisfied}.
-\samuel{A: how do you get from the signature and the definition to these predicates? I guess this is what I'm missing on the formal side above… this needs to be made explicit}
 We say that a signature (definition) of a constraint template~$s$ with $n$ arguments is satisfied by the blocks $(B_1, ..., B_n)$ if $\sigc(B_1, ..., B_n)$ (respectively $\defc(B_1, ..., B_n)$) is satisfied.
 Likewise, the template is satisfied if both the signature and definition are satisfied; in logic programming and logical relational learning, we would define the predicate~$s$ using a Prolog like clause: $s(B_1, ..., B_n) \leftarrow \sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$.
 Under this interpretation, the term constraint and constraint template can be used interchangeably.
@@ -632,7 +630,7 @@ Many spreadsheets contain headers that provide hints at where the table(s) in th
 \begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{figures/tabletool.png}
-  \caption{This figure shows a simple table selection tool. A user selects rectangular ranges of cells that correspond to (headerless) tables, an explicit orientation can also be provided.}
+  \caption{This simple table selection tool allows users to select rectangular ranges of cells corresponding (headerless) tables, an explicit orientation can also be provided.}
   \label{fig:visual_tool}
 \end{figure}
 
@@ -799,8 +797,9 @@ Given a superblock assignment $(B_1, \dots, B_n)$ from the previous step, the go
   Consider the sum-over-rows constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$.
   An example superblock assignment from Figure~\ref{fig:main_example} is $(B_r, \mathbf{\sg_x}) = (\range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{\rangeto{3}{8}})$.
   Note that this assignment does not satisfy the signature yet, $\sg_r$ contains more than one vector and $\psize(\mathbf{\sg_x}) \neq \plength(B_r)$.
-  This step aims to generate subassignments $(B_r' \sqsubseteq B_r, \mathbf{B_x}' \sqsubseteq \mathbf{B_x})$ that \textit{do} satisfy the signature and test whether they satisfy the definition: $\forall i, \sg_r[0][i] = \sum_j \mathbf{\sg_x}[j][i]$, where $B[i][j]$ indicates the $i$th value of the $j$th vector in $B$.
-  In Figure~\ref{fig:main_example} there is exactly one such satisfying subassignment: $(T_1[:7], T_1[:,3:6])$. \luc{why [j][i] and not [j,i] ?}
+  This step aims to generate subassignments $(B_r' \sqsubseteq B_r, \mathbf{B_x}' \sqsubseteq \mathbf{B_x})$ that \textit{do} satisfy the signature and test whether they satisfy the definition:
+  $\forall i, \sbl{r}[i] = \sum_{j = 1}^{\pcols(\bsbl{x})} \mathit{row}(i, \bsbl{x})[j]$.
+  In Figure~\ref{fig:main_example} there is exactly one such subassignment: $(\range{T_1}{\rangeall}{7}, \range{T_1}{\rangeall}{\rangeto{3}{6}})$.
 \end{example}
 
 In this step, we could also formulate the problem as a CSP. %However, the search space is much smaller, e.g. $O(nm^2)$ with $n$ the number of arguments of the template and $m$ the size of the largest block.
@@ -904,7 +903,7 @@ This is exploited in the \generategroups step to speedup the algorithm by reduci
 \begin{example}
   Consider $\ecfkey{B_{fk}}{B_{pk}}$ whose signature includes $\ecalldiff{B_{pk}}$ and assume that~$C$ are the constraints found for \textit{ALLDIFFERENT}.
   Instead of generating assignments for~$B_{pk}$ using the given blocks~$\blocks$, we will only consider (sub)blocks~$P = \{ B' | \ecalldiff{B'} \in C \}$.
-  $P$~can be seen as a set of partial assignments in which the argument $B_{pk}$ has been fixed. \samuel{is it clear now?}
+  $P$~can be seen as a set of partial assignments in which the argument $B_{pk}$ has been fixed.
 \end{example}
 
 The \generategroups implementation now takes into account previously found constraints to obtain partial assignments~$P$ for a template.
@@ -940,14 +939,14 @@ These choices are based on the prevalence of product and difference in financial
 
 
 A last type of redundancy we aim to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
-For example, consider the constraint \ecsumc{B_r}{B[1:n]} where $B[k:n]$ consists of only zeros, then \ecsumc{B_r}{B[1:j]} will be true for all $k - 1 \leq j \leq n$.
+For example, consider the constraint \ecsumc{B_r}{B[1{:}n]} where $B[k{:}n]$ consists of only zeros, then \ecsumc{B_r}{B[1{:}j]} will be true for all $k - 1 \leq j \leq n$.
 In \sname we have, therefore, chosen to only consider \textit{maximal} subblocks.
 
 As a result, in some cases a maximal subblock might falsely include irrelevant columns.
-Consider $B_1 = [[200, 300], [200, 150], [1, 2]]$ and $B_2 = [200, 300]$, then \sname will find the constraint $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$.
-Should the target constraint be $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$, then the last vector of~$B_1$ must be split off into a separate block before the above approach can find it.
+Consider $B_1 = [[200, 300], [200, 150], [1, 2]]$ and $B_2 = [200, 300]$, then \sname will find the constraint $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$.
+Should the target constraint be $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}2])}$, then the last vector of~$B_1$ must be split off into a separate block before the above approach can find it.
 
-Alternatively, we can output all valid argument assignments instead of only maximal subblocks, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1:3])}$, however, this might produce many redundant constraints and introduce constraints that accidentally cover too little data.
+Alternatively, we can output all valid argument assignments instead of only maximal subblocks, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$, however, this might produce many redundant constraints and introduce constraints that accidentally cover too little data.
 
 
 
@@ -1058,7 +1057,7 @@ Constraints that are currently outside of the scope of this system, e.g. generic
 
 
 
-\subsubsection*{Q1. How accurate \sname?}
+\subsubsection*{Q1. How accurate is \sname?}
 Our implementation achieves a recall of~$0.97$ for relevant constraints, i.e. it finds~90 of~93 relevant constraints in the benchmark suite.
 The recall for supported constraints is $1.0$ (90 of 90).
 
@@ -1083,7 +1082,7 @@ The rationale is that the precision can be increased by post-processing the cons
 
 
 
-\subsubsection*{Q3. How fast is the algorithm?}
+\subsubsection*{Q3. How fast is \sname?}
 Concerning the speed of the algorithm we also prioritized accuracy when a trade-off had to be made.
 For the \benchsize~spreadsheets in the benchmark our implementation ran in ${\runtotal}s \pm {\runtotalstd}s$.
 The execution times vary widely though between spreadsheets, only four spreadsheets taking more than $0.2s$.
@@ -1092,21 +1091,24 @@ The search for aggregates will be slow on spreadsheets containing larger groups 
 For conditional aggregates the number of candidate primary keys (all-different) and numeric vectors determines the running time (e.g. the case study example).
 
 \begin{table}
+  \caption{Overview evaluation on essential constraints of the collected Spreadsheet dataset}
   \centering
   \begin{tabular}{lll}
     & \textbf{Total} & \textbf{Average per spreadsheet} \\
-    \textbf{Constraints} & $93$ & $2.91$ \\
-    \textbf{Accuracy} & $96.77\%$ & $94.27\%$ \\
-    \textbf{Redundant} & $23.14\%~(28)$ & $8.33\%~(0.88)$ \\
+    \textbf{Relevant constraints} & $93$ & $2.91$ \\
+    \textbf{Recall} & $96.77\%$ & $94.27\%$ \\
+    \textbf{Precision} & $23.14\%~(28)$ & $8.33\%~(0.88)$ \\
     \textbf{Speed (s)} & ${\runtotal}s \pm {\runtotalstd}s$ & ${\runfile}s \pm {\runfilestd}s$
   \end{tabular}
-  \caption{Overview evaluation on essential constraints of the collected Spreadsheet dataset}
 \end{table}
 \samuel{Expand summary}
 \sergey{would it make sense to specify the size of a spreadsheet in the number of non-zero cells?}
 
-\samuel{Single paragraph / section}
-\paragraph*{Dependencies}
+We explained various optimizations, most notably the exploitation of dependencies.
+Using the dependencies to find constraints incrementally cuts down large parts of the search trees, especially for constraints that have many arguments.
+Essentially, one obtains a more specialized search without much effort.
+
+
 In order for the algorithm to run efficiently it is crucial to use dependencies and find constraints incrementally whenever possible.
 This avoids some of the explosion of combinations for constraints that have many arguments.
 For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to below 1 second.
