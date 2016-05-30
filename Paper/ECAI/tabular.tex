@@ -324,8 +324,7 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
       & $\discrete(\sg_x)$
       
       & All values in $\sg_x$ are different. $i \neq j$: $\sg_x[i] \neq \sg_x[j]$
-      \\ \hline
-    %X = Y & & \\
+      \\[-5pt] \hline
 
     $\ecperm{\sg_x}^*$
       & $\numeric(\sg_{x})$, $\ecalldiff{\sg_{x}}$
@@ -337,72 +336,72 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
       & $\integer(\sg_{x})$ and $\ecperm{\sg_{x}}$
       
       & $\sg_{x}[1] = 1$ and $\sg_{x}[i] = \sg_{x}[i - 1] + 1$.
-      \\ \hline
+      \\[-5pt] \hline
 
     $\ecfkey{\sg_{fk}}{\sg_{pk}}^*$
       & $\sg_{\mathit{fk}}$ and~$\sg_{pk}$ are $\discrete$; they must have different $\ptable$s but the same $\ptype$; and $\ecalldiff{\sbl{pk}}$
 
-      & Every value in~$\sg_{fk}$ also exist in~$\sg_{pk}$ \\ \hline
+      & Every value in~$\sg_{fk}$ also exist in~$\sg_{pk}$ \\[-5pt] \hline
 
     \eclookup{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}
       & $\sbl{fk}$ and $\sbl{pk}$ are $\discrete$; arguments $\{\sbl{fk}, \sbl{r}\}$ and $\{\sbl{pk}, \sbl{val}\}$ within the same set have the same \plength, \ptable and \por; $\sbl{r}$ and~$\sbl{val}$ have the same type; and \ecfkey{\sbl{fk}}{\sbl{pk}}.
       
       & $\sbl{r}[i] = \sbl{val}[j]$ where $\sbl{pk}[j] = \sbl{fk}[i]$
-      \\ \hline
+      \\[-5pt] \hline
 
     \eclookupfuzzy{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}
       & \textit{Same as lookup}
       
       & $\sbl{r}[i] = \sbl{val}[j]$ where $\sbl{pk}[j] \leq \sbl{fk}[i]$, $j$~maximal
-      \\ \hline
+      \\[-5pt] \hline
 
     \eclookupprod{\sbl{r}}{\sbl{1}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}
       & Arguments $\{\sg_{r}, \sg_{1}, \sg_{fk}\}$ are $\numeric$, arguments $\{\sg_{pk}, \sg_{val}\}$ are $\discrete$ and within both sets all arguments have the same \plength, \ptable and \por; also \ecfkey{\sg_{fk}}{\sg_{pk}}.
       
       & $\sbl{r}[i] = \sbl{1}[i] \times \eclookupf{\sbl{fk}}{\sbl{pk}}{\sbl{val}}{}[i]$.
-      \\ \hline
+      \\[-5pt] \hline
 
     \ecprod{\sg_r}{\sg_1}{\sg_2}
       & Arguments $\{\sg_{r}, \sg_{1}, \sg_{2}\}$ are all $\numeric$ and have the same $\plength$
       
       & $\sg_{r}[i] = \sg_{1}[i] \times \sg_{2}[i]$.
-      \\ \hline
+      \\[-5pt] \hline
 
     \ecdiff{\sg_r}{\sg_1}{\sg_2}
       & Arguments $\{\sg_{r}, \sg_{1}, \sg_{2}\}$ are all $\numeric$ and have the same $\plength$ and $ \por$
       
       & $\sg_{r}[i] = \sg_{1}[i] - \sg_{2}[i]$.
-      \\ \hline
+      \\[-5pt] \hline
 
     \ecproj{\sg_r}{\mathbf{\sg_x}}
       & Arguments $\{\sg_{r}, \mathbf{\sg_x}\}$ all have the same $\plength$, $\por$, $\ptable$ and $\ptype$; $\mathbf{\sg_x}$ contains at least~2 vectors; and $\sg_r = \mathit{SUM}_{\por(\mathbf{\sg_x})}(\mathbf{\sg_x})$
       
       & At every position~$i$ in $1$ through $\plength(\sg_{r})$ there is exactly one vector~$v$ in $\mathbf{\sg_x}$ such that $v[i]$ is a non-blank value, then $v[i] = \sg_{r}[i]$.
-      \\ \hline
+      \\[-5pt] \hline
 
     \ecrank{\sg_r}{\sg_x}
       & $\integer(\sg_{r})$; $\numeric(\sg_{x})$; and $\plength(\sg_{r}) = \plength(\sg_{x})$
       
       & The values in $\sg_{r}$ represent the rank (from largest to smallest) of the values in $\sg_{x}$ (including ties)
-      \\ \hline
+      \\[-5pt] \hline
 
     \ectotal{\sg_r}{\sg_{pos}}{\sg_{neg}}
       & Arguments $\{\sg_{r}, \sg_{pos}, \sg_{neg}\}$ are all $\numeric$ and all have the same $\plength$, which is at least $2$
       
       & $\sg_{r}[i] = \sg_{r}[i - 1] + \sg_{pos}[i] - \sg_{neg}[i]$.
-      \\ \hline
+      \\[-5pt] \hline
 
     $\ecsumr{\sg_r}{\mathbf{\sg_x}}^\dagger$
       & $\sg_r$ and $\mathbf{\sg_x}$ are $\numeric$; $\pcols(\mathbf{\sg_x}) \geq 2$; and $\prows(\mathbf{\sg_x}) = \plength(\sg_r)$
       
       & $B_r[i] = \sum_{j = 1}^{\pcols(\bsbl{x})} \mathit{row}(i, \bsbl{x})[j]$
-      \\ \hline
+      \\[-5pt] \hline
 
     $\ecsumc{\sg_r}{\mathbf{\sg_x}}^\dagger$
       & $\sg_r$ and $\mathbf{\sg_x}$ are $\numeric$; $\prows(\mathbf{\sg_x}) \geq 2$; and $\pcols(\mathbf{\sg_x}) = \plength(\sg_r)$
       
       & $B_r[i] = \sum_{j = 1}^{\prows(\bsbl{x})} \mathit{column}(i, \bsbl{x})[j]$
-      \\ \hline
+      \\[-5pt] \hline
 
     $\ecsumif{\sg_r}{\sg_{fk}}{\sg_{pk}}{\sg_{val}}^\dagger$
       & $\sg_{fk}, \sg_{pk}$ are $\discrete$; $\sg_{r}, \sg_{val}$ are $\numeric$; within the sets $\{\sg_{val}, \sg_{fk}\}$ and $\{\sg_{pk}, \sg_{r}\}$ arguments have the same $\plength$ and $\por$; $\sg_{fk}$ and $\sg_{val}$ have the same $\ptable$; $\sg_{fk}$ and $\sg_{pk}$ must have different $\ptable$s but the same $\ptype$; and \ecalldiff{\sg_{pk}}
@@ -411,7 +410,7 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
           \sg_{val}[j] & \text{if } \sg_{fk}[j] = \sg_{pk}[i] \\
           0 & \text{otherwise}
         \end{cases}
-      \] \\ \hline
+      \] \\[-5pt] \hline
       
     \ecsumprod{\sg_r}{\sg_1}{\sg_2}
       & Arguments $\{\sg_r, \sg_1, \sg_2\}$ are $\numeric$; $\plength(\sg_{1}) = \plength(\sg_{2}) \geq 2$; and $\prows(\sg_{r}) = \pcols(\sg_{r}) = 1$
