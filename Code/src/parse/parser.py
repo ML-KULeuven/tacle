@@ -141,9 +141,13 @@ def create_group(bounds_list, table: Table):
 
     data = bounds.subset(table.data)
     types = np.vectorize(detect_type)(data)
-    g_type = infer_type(types.flatten())
+    if row:
+        gtype_set = [infer_type(row) for row in types]
+    else:
+        gtype_set = [infer_type(col) for col in types.T]
+    g_type = GType.max(gtype_set)
     cast_f = np.vectorize(lambda t, v: cast(g_type, t, v), otypes=[np.object if g_type is GType.string else np.float])
-    return Group(table, bounds, row, cast_f(types, data), g_type)
+    return Group(table, bounds, row, cast_f(types, data), gtype_set)
 
 
 def detect_tables(type_data):
@@ -212,7 +216,7 @@ def detect_groups(type_data, tables):
         start = 0
         for col in range(cols):
             if not same[col]:
-                groups.append(create_group([":", start + 1, col + 1, ":"], table))
+                groups.append(create_group([":", start + 1, col + 1], table))
                 start = col + 1
 
     for t in tables:

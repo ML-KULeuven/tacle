@@ -58,7 +58,7 @@ class Source:
 
             for variable in self.variables:
                 candidates = [assignment[variable.name]] if variable.name in assignment else groups
-                domain = list([g for g in candidates if g.dtype in variable.types])
+                domain = list([g for g in candidates if any(st in variable.types for st in g.vector_types)])
                 if len(domain) == 0:
                     return variable.name in assignment, []
                 problem.addVariable(variable.name, domain)

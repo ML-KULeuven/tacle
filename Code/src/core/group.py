@@ -8,6 +8,19 @@ class GType(Enum):
     float = 1
     string = 2
 
+    @staticmethod
+    def super(gtype):
+        if gtype == GType.int:
+            return GType.float
+        else:
+            return gtype
+
+    @staticmethod
+    def max(gtype_set):
+        if any([gt == GType.string for gt in gtype_set]) and not all([gt == GType.string for gt in gtype_set]):
+            raise Exception("Inconsistent types")
+        return GType(max([gt.value for gt in gtype_set]))
+
 
 # --- Orientation ---
 
@@ -118,11 +131,12 @@ class Table:
 # --- Group ---
 
 class Group:
-    def __init__(self, table, bounds, row, data, dtype):
+    def __init__(self, table, bounds, row, data, gtype_set):
         self._table = table
         self._bounds = bounds
         self._row = row
-        self._dtype = dtype
+        self._vector_types = gtype_set
+        self._dtype = GType.max(gtype_set)
         self._data = data
         from core.constraint import blank_filter
         self._is_partial = not numpy.all(numpy.vectorize(blank_filter(self._data)[1])(self._data))
@@ -147,6 +161,10 @@ class Group:
     @property
     def dtype(self):
         return self._dtype
+
+    @property
+    def vector_types(self):
+        return self._vector_types
 
     @property
     def data(self):
@@ -200,8 +218,11 @@ class Group:
     def subgroup(self, bounds):
         if bounds not in self._subgroups:
             sub_bounds = Bounds([1, self.rows(), 1, self.columns()]).combine(bounds)
+            r1, r2, c1, c2 = sub_bounds.bounds
             sub_data = sub_bounds.subset(self.data)
-            group = Group(self.table, self.bounds.combine(bounds), self.row, sub_data, self.dtype)
+            indices = [r1, r2] if self.row else [c1, c2]
+            vector_types = [self._vector_types[i - 1] for i in range(indices[0], indices[1] + 1)]
+            group = Group(self.table, self.bounds.combine(bounds), self.row, sub_data, vector_types)
             self._subgroups[bounds] = group
             return group
         return self._subgroups[bounds]

@@ -7,6 +7,9 @@ product.ods,sales_blanks.csv,support.office.com/en-us/article/Guidelines-and-exa
 
 # Exercises from Brussels Odisee Faculty of Business Management Course
 OEF 24.xlsx,expenses.csv,NA
+Baltimore.xlsx,baltimore.csv,NA
+Bedrijfsresultaten.xlsx,bedrijfsresultaten.csv,NA
+Bevolking Belgie.xlsx,belgium.csv,NA
 Prijs volgens gewicht.xlsx,price_weight.csv,NA
 Body Mass Index.xslx,bmi.csv,NA
 Afgelegde ritten per chauffeur.xlsx,rides.csv,NA
@@ -40,3 +43,4 @@ RWE-Annual-Report-tables-2014.xls:external_revenue,external_revenue.csv,www.rwe.
 RWE-Annual-Report-tables-2014.xls:financial_result,financial_result.csv,www.rwe.com/app/wartung/hv2014/bpk_docs/RWE-Annual-Report-tables-2014.xls
 fbi_offenses.xls,fbi_offenses_2.csv,www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2012/preliminary-annual-uniform-crime-report-january-december-2012/tables/table-4-cuts/table_4_offenses_reported_to_law_enforcement_by_state_oklahoma_through_wisconsin_2012.xls
 FY092ndQuarter.xls,fy09.csv,https://www.ihs.gov/epi/documents/vaccine/reports/FY092ndQuarter.xls
+TODO pattern mining
