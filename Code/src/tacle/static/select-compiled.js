@@ -37,7 +37,7 @@ var App = React.createClass({
     displayName: "App",
 
     getInitialState: function () {
-        return { data: [], start: null, end: null, orientation: "none", tables: [] };
+        return { data: [], start: null, end: null, orientation: "none", tables: [], constraints: "" };
     },
     update: function (state, callback) {
         this.setState(state, callback);
@@ -61,6 +61,17 @@ var App = React.createClass({
 
             reader.readAsText(file);
         }
+    },
+    learn: function (event) {
+        event.preventDefault();
+        var self = this;
+        $.ajax({
+            method: "POST",
+            url: "feedback",
+            data: { csv_data: Papa.unparse(this.state.data), tables_json: exportTables(this.state.tables) }
+        }).done(function (msg) {
+            self.setState({ constraints: msg });
+        });
     },
     render: function () {
         var or = function (or) {
@@ -90,11 +101,26 @@ var App = React.createClass({
                     "a",
                     { href: makeTextFile(exportTables(this.state.tables)), download: "tables.csv" },
                     "Generate JSON"
+                ),
+                React.createElement(
+                    "span",
+                    null,
+                    " | "
+                ),
+                React.createElement(
+                    "a",
+                    { href: "", onClick: this.learn },
+                    "Learn constraints"
                 )
             ),
             React.createElement(
                 "div",
                 { className: "content" },
+                React.createElement(
+                    "pre",
+                    { className: "constraints" },
+                    this.state.constraints
+                ),
                 React.createElement(Table, { data: this.state.data, state: this.state, setState: this.update }),
                 React.createElement("br", null),
                 React.createElement("input", { type: "file", onChange: this.import }),

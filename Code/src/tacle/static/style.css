@@ -24,7 +24,7 @@ td.selected {
 }
 
 td.disabled {
-    background-color: rgb(200, 255, 200);
+    background-color: rgb(207, 255, 255);
 }
 
 .full, .menu, .content {
@@ -42,10 +42,14 @@ label {
     z-index: 100;
     padding: 5px;
     box-sizing: border-box;
-    background-color: aquamarine;
+    background-color: rgb(127, 255, 212);
 }
 
 .content {
     position: absolute;
-    top: 50px;
+    top: 60px;
+}
+
+.constraints {
+    color: cadetblue;
 }
