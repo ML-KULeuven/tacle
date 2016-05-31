@@ -30,6 +30,7 @@ constraint_list = [
 constraint_list += Aggregate.instances()
 constraint_list += ConditionalAggregate.instances()
 
+
 def order_constraints(constraints: List[Constraint]):
     ordered = []
     found = set()

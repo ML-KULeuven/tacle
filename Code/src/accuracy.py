@@ -6,6 +6,7 @@ from pandas import json
 import print_truth
 import workflow
 from core.constraint import *
+from core.group import Bounds
 from engine.util import local
 
 exercises = [
@@ -206,5 +207,18 @@ def calc_ratio(counters: List[CategoryCounter], ex_f1, ex_f2, per_file):
         return s1 / s2, s1, s2
 
 
+def measure_size():
+    for name in files:
+        groups_file = local("data/groups/{}.txt".format(name))
+        with open(groups_file) as file:
+            json_data = json.load(file)
+            table_count = len(json_data["Tables"])
+            cell_count = 0
+            for table in json_data["Tables"]:
+                bounds = Bounds(table["Bounds"])
+                cell_count += bounds.columns() * bounds.rows()
+            print("{}, {}, {}".format(name, table_count, cell_count))
+
+
 if __name__ == '__main__':
-    main()
+    measure_size()
