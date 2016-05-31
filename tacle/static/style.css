@@ -1,0 +1,51 @@
+body {
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    padding: 0;
+    margin: 0;
+}
+
+table {
+    border-collapse: collapse;
+    margin: 0 auto;
+}
+
+td {
+    border: 1px solid rgb(200, 200, 200);
+    padding: 3px;
+}
+
+td:hover {
+    cursor: pointer;
+}
+
+td.selected {
+    background-color: rgb(200, 200, 200);
+}
+
+td.disabled {
+    background-color: rgb(200, 255, 200);
+}
+
+.full, .menu, .content {
+    width: 100%;
+    text-align: center;
+}
+
+label {
+    margin: 3px;
+}
+
+.menu {
+    position: fixed;
+    height: 50px;
+    z-index: 100;
+    padding: 5px;
+    box-sizing: border-box;
+    background-color: aquamarine;
+}
+
+.content {
+    position: absolute;
+    top: 50px;
+}
