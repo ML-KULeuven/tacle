@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect
 from engine.util import TempFile
-import workflow
+from accuracy import is_excel_constraint
+import workflow 
 
 app = Flask(__name__)
 
@@ -27,8 +28,9 @@ def test_post():
 def display_solutions(solutions):
     str_repr = ""
     for constraint in solutions.solutions:
-        for solution in solutions.get_solutions(constraint):
-           str_repr += constraint.to_string(solution) + "\n" 
+        if is_excel_constraint(constraint):
+            for solution in solutions.get_solutions(constraint):
+               str_repr += constraint.to_string(solution) + "\n" 
     return str_repr
 
 
