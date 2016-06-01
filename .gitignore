@@ -47,3 +47,6 @@ Code/.idea
 __pycache__/
 
 Paper/.idea/
+
+#virtual environment
+Code/src/tacle/virt/
