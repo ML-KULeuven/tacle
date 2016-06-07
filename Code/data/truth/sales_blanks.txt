@@ -3,6 +3,6 @@
 		{
 			"product": [{"O1": "T1[:, 3]", "O2": "T1[:, 4]", "R": "T1[:, 5]"}]
 		},
-	"Non-Trivial":
+	"Non-trivial":
 		{}
 }

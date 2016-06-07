@@ -1,0 +1,52 @@
+model,data,runtime,solutions,propagations,nodes,failures,peak_depth,time,,obj,solution
+rel_closed,pceec/NaryYearRel,0.011,136,26737,1103,416,3,0.01,,0,entity[0]  # 2entity[1]  # 1entity[2]  # 1 -- obj=0.000000
+rel_closed,example/relinst,0.141,1649,41601,19113,7908,4,0.14,,0,entity[0]  # 879entity[1]  # 0 -- obj=0.000000
+rel_closed,checkins/nary-modes-0,55:37.7,232749,11108541,5339057,2436780,5,6940.21,,0,entity[0]  # 224803entity[1]  # 0 -- obj=0.000000
+rel_closed,imdb/1year,1.032,523,805403,20117,9536,4,1.02,,0,entity[0]  # 1entity[1]  # 98entity[2]  # 1 -- obj=0.000000
+rel_closed,imdb/2years,7.446,1034,3139522,59099,28516,4,7.44,,0,entity[0]  # 1entity[1]  # 172entity[2]  # 1 -- obj=0.000000
+rel_closed,imdb/5years,03:23.8,3695,33420244,416071,204341,5,203.85,,0,entity[0]  # 1entity[1]  # 332entity[2]  # 0 -- obj=0.000000
+rel_closed,imdb/10years,32:29.1,8362,141448429,1744323,863800,5,1949.93,,0,entity[0]  # 1entity[1]  # 369entity[2]  # 0 -- obj=0.000000
+rel_closed,imdb/20years,05:28.7,15295,422344589,5466571,2717991,6,11124.27,,0,entity[0]  # 1   entity[1]  # 376        entity[2]  # 0 -- obj=0.000000
+rel_closed,imdb/30years,16:09.8,25507,874058955,11889357,5919172,7,36941.07,,0,entity[0]  # 1 entity[1]  # 544        entity[2]  # 0 -- obj=0.000000
+,,,,,,,,,,,
+model,data,runtime,solutions,propagations,nodes,failures,peak_depth,time,,obj,solution
+rel_maxent -bnd naieve,pceec/NaryYearRel,0.099,5,26247,961,476,3,0.03,300%,0.6604,entity[0]  # 2entity[1]  # 1entity[2]  # 1 -- obj=0.660422
+rel_maxent -bnd naieve,example/relinst,0.122,9,19618,5455,2719,3,0.12,85.71%,0.7511,entity[0]  # 30entity[1]  # 1 -- obj=0.751088
+rel_maxent -bnd naieve,checkins/nary-modes-0,02:07.1,18,88140,23377,11671,4,126.95,1.83%,0.7889,entity[0]  # 3998entity[1]  # 1 -- obj=0.788910
+rel_maxent -bnd naieve,imdb/1year,1.141,12,461019,13821,6899,4,1.14,111.76%,0.9843,entity[0]  # 1entity[1]  # 24entity[2]  # 1 -- obj=0.984270
+rel_maxent -bnd naieve,imdb/2years,4.575,14,1637851,20843,10408,4,4.56,61.29%,1.0042,entity[0]  # 1entity[1]  # 49entity[2]  # 1 -- obj=1.004189
+rel_maxent -bnd naieve,imdb/5years,01:57.9,19,16844179,158795,79379,4,117.36,57.57%,1.2854,entity[0]  # 1entity[1]  # 36entity[2]  # 2 -- obj=1.285380
+rel_maxent -bnd naieve,imdb/10years,23:54.3,22,70384715,791849,395903,4,1432.16,73.45%,1.4776,entity[0]  # 2entity[1]  # 58entity[2]  # 1 -- obj=1.477581
+rel_maxent -bnd naieve,imdb/20years,05:03.2,22,209346088,2568171,1284064,5,7497.98,67.40%,1.6692,entity[0]  # 2entity[1]  # 54entity[2]  # 3 -- obj=1.669208
+rel_maxent -bnd naieve,imdb/30years,32:00.1,29,432420870,5802505,2901224,6,22465.45,60.81%,1.6323,entity[0]  # 2entity[1]  # 143entity[2]  # 2 -- obj=1.632291
+,,,,,,,,,,,
+model,data,runtime,solutions,propagations,nodes,failures,peak_depth,time,,obj,solution
+rel_maxent -bnd linear,pceec/NaryYearRel,0.009,5,17622,319,155,3,0.01,100%,0.6604,entity[0]  # 2entity[1]  # 1entity[2]  # 1 -- obj=0.660422
+rel_maxent -bnd linear,example/relinst,0.057,9,7361,2055,1019,3,0.06,42.86%,0.7511,entity[0]  # 30entity[1]  # 1 -- obj=0.751088
+rel_maxent -bnd linear,checkins/nary-modes-0,03:40.0,18,75689,20207,10086,4,219.73,3.17%,0.7889,entity[0]  # 3998entity[1]  # 1 -- obj=0.788910
+rel_maxent -bnd linear,imdb/1year,0.607,12,389669,3867,1922,3,0.6,58.82%,0.9843,entity[0]  # 1entity[1]  # 24entity[2]  # 1 -- obj=0.984270
+rel_maxent -bnd linear,imdb/2years,2.713,14,1459055,3739,1856,3,2.67,35.89%,1.0042,entity[0]  # 1entity[1]  # 49entity[2]  # 1 -- obj=1.004189
+rel_maxent -bnd linear,imdb/5years,01:00.6,19,15025794,14227,7095,3,60.49,29.67%,1.2854,entity[0]  # 1entity[1]  # 36entity[2]  # 2 -- obj=1.285380
+rel_maxent -bnd linear,imdb/10years,03:08.4,22,62635712,33585,16771,4,188.34,9.66%,1.4776,entity[0]  # 2entity[1]  # 58entity[2]  # 1 -- obj=1.477581
+rel_maxent -bnd linear,imdb/20years,14:20.2,22,187059149,82169,41063,3,860.23,7.73%,1.6692,entity[0]  # 2entity[1]  # 54entity[2]  # 3 -- obj=1.669208
+rel_maxent -bnd linear,imdb/30years,38:42.9,29,387361443,148551,74247,4,2323.28,6.29%,1.6323,entity[0]  # 2entity[1]  # 143entity[2]  # 2 -- obj=1.632291
+model,data,runtime,solutions,propagations,nodes,failures,peak_depth,time,,obj,solution
+rel_maxent -bnd full,pceec/NaryYearRel,0.009,5,17600,317,154,3,0.01,100%,0.6604,entity[0]  # 2entity[1]  # 1entity[2]  # 1 -- obj=0.660422
+rel_maxent -bnd full,example/relinst,0.056,9,7361,2055,1019,3,0.05,35.71%,0.7511,entity[0]  # 30entity[1]  # 1 -- obj=0.751088
+rel_maxent -bnd full,checkins/nary-modes-0,03:14.0,18,75689,20207,10086,4,193.58,2.79%,0.7889,entity[0]  # 3998entity[1]  # 1 -- obj=0.788910
+rel_maxent -bnd full,imdb/1year,0.428,12,384001,2845,1411,3,0.41,40.20%,0.9843,entity[0]  # 1entity[1]  # 24entity[2]  # 1 -- obj=0.984270
+rel_maxent -bnd full,imdb/2years,1.739,14,1452018,3251,1612,3,1.72,23.12%,1.0042,entity[0]  # 1entity[1]  # 49entity[2]  # 1 -- obj=1.004189
+rel_maxent -bnd full,imdb/5years,21.709,19,14978035,9075,4519,3,21.65,10.62%,1.2854,entity[0]  # 1entity[1]  # 36entity[2]  # 2 -- obj=1.285380
+rel_maxent -bnd full,imdb/10years,01:37.3,22,62520689,23269,11613,4,97.19,4.98%,1.4776,entity[0]  # 2entity[1]  # 58entity[2]  # 1 -- obj=1.477581
+rel_maxent -bnd full,imdb/20years,04:06.0,22,186854773,50553,25255,3,245.94,2.21%,1.6692,entity[0]  # 2entity[1]  # 54entity[2]  # 3 -- obj=1.669208
+rel_maxent -bnd full,imdb/30years,09:45.8,29,386818601,92879,46411,4,585.74,1.59%,1.6323,entity[0]  # 2entity[1]  # 143entity[2]  # 2 -- obj=1.632291
+model,data,runtime,solutions,propagations,nodes,failures,peak_depth,time,,obj,solution
+rel_maxent -bnd black,pceec/NaryYearRel,0.082,5,17600,317,154,3,0.01,100%,0.6604,entity[0]  # 2entity[1]  # 1entity[2]  # 1 -- obj=0.660422
+rel_maxent -bnd black,example/relinst,0.057,9,5213,1459,721,3,0.05,35.71%,0.7511,entity[0]  # 30entity[1]  # 1 -- obj=0.751088
+rel_maxent -bnd black,checkins/nary-modes-0,23.421,18,10998,3157,1561,4,23.37,0.34%,0.7889,entity[0]  # 3998entity[1]  # 1 -- obj=0.788910
+rel_maxent -bnd black,imdb/1year,0.3,12,377217,1993,985,3,0.28,27.45%,0.9843,entity[0]  # 1entity[1]  # 24entity[2]  # 1 -- obj=0.984270
+rel_maxent -bnd black,imdb/2years,1.114,14,1438076,2567,1270,3,1.09,14.65%,1.0042,entity[0]  # 1entity[1]  # 49entity[2]  # 1 -- obj=1.004189
+rel_maxent -bnd black,imdb/5years,11.668,19,14926665,6863,3413,3,11.62,5.70%,1.2854,entity[0]  # 1entity[1]  # 36entity[2]  # 2 -- obj=1.285380
+rel_maxent -bnd black,imdb/10years,01:35.1,22,62437957,19355,9656,4,94.99,4.87%,1.4776,entity[0]  # 2entity[1]  # 58entity[2]  # 1 -- obj=1.477581
+rel_maxent -bnd black,imdb/20years,04:48.9,22,186722243,42325,21141,3,288.74,2.60%,1.6692,entity[0]  # 2entity[1]  # 54entity[2]  # 3 -- obj=1.669208
+rel_maxent -bnd black,imdb/30years,08:44.7,29,386594877,76997,38470,3,524.61,1.42%,1.6323,entity[0]  # 2entity[1]  # 143entity[2]  # 2 -- obj=1.632291

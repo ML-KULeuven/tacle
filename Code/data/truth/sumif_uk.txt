@@ -3,6 +3,6 @@
 		{
 			"sum-if (infer)": [{"R": "T2[:, 1]", "V": "T1[:, 2]", "FK": "T1[:, 3]"}]
 		},
-	"Non-Trivial":
+	"Non-trivial":
 		{}
 }

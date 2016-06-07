@@ -3,6 +3,6 @@
 		{
 			"sum-product": [{"R": "T2[1, :]", "O2": "T1[:, 3]", "O1": "T1[:, 2]"}]
 		},
-	"Non-Trivial":
+	"Non-trivial":
 		{}
 }

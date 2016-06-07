@@ -1,0 +1,20 @@
+ID,Salesperson,1st Quarter,2nd Quarter,3rd Quarter,4th Quarter,Total,Rank,Label,Items sold total,Max items sold
+1,Diana Coolen,353,378,396,387,1514,2,Great,34,20
+2,Marc Desmet,370,408,387,386,1551,1,Great,29,10
+3,Kris Goossens,175,146,167,203,691,3,Low,19,19
+4,Birgit Kenis,93,98,96,105,392,4,Low,17,15
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,Salesperson,Items sold
+,Total,991,1030,1046,1081,4148,,,Diana Coolen,5
+,Average,247.75,257.5,261.5,270.25,1037,,,Marc Desmet,10
+,Max,370,408,396,387,1551,,,Marc Desmet,8
+,Min,93,98,96,105,392,,,Diana Coolen,9
+,,,,,,,,,Birgit Kenis,15
+,,,,,,,,,Marc Desmet,8
+Quarter,Income,Expenses,Total,,Customer,Contact,Contact Name,,Birgit Kenis,2
+Q1,991,212,779,,Frank,1,Diana Coolen,,Diana Coolen,20
+Q2,1030,710,1099,,Sarah,3,Kris Goossens,,Marc Desmet,3
+Q3,1046,137,2008,,George,3,Kris Goossens,,Kris Goossens,19
+Q4,1081,240,2849,,Mary,2,Marc Desmet,,,
+,,,,,Tim,4,Birgit Kenis,,,
