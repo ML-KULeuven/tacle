@@ -7,6 +7,7 @@ import print_truth
 import workflow
 from core.constraint import *
 from core.group import Bounds
+from draw import Plotter
 from engine.util import local
 
 exercises = [
@@ -51,17 +52,20 @@ real = [
     "financial_result",
     "fbi_offenses_corr",
     "pattern_mining",
+    "exps_tias"
 ]
 
-files = exercises + tutorials + real
+files = ["exps_tias"]  # exercises + tutorials + real
+
+
+def excel_constraints():
+    return Aggregate.instances() + ConditionalAggregate.instances() +\
+        [Series(), Rank(), Lookup(), FuzzyLookup(), RunningTotal(), Product(), Diff(), SumProduct(),
+         ForeignProduct(), Equal(), PercentualDiff(), Projection()]
 
 
 def is_excel_constraint(c: Constraint):
-    return isinstance(c, Aggregate) or isinstance(c, ConditionalAggregate) or isinstance(c, Series) \
-        or isinstance(c, Rank) or isinstance(c, Lookup) or isinstance(c, FuzzyLookup) or isinstance(c, RunningTotal) \
-        or isinstance(c, Product) or isinstance(c, Diff) or isinstance(c, SumProduct) \
-        or isinstance(c, ForeignProduct) or isinstance(c, Equal) or isinstance(c, PercentualDiff) \
-        or isinstance(c, Projection)
+    return c in excel_constraints()
 
 
 constraint_map = {c.name: c for c in workflow.constraint_list}
@@ -87,7 +91,7 @@ def main():
         if not os.path.isfile(csv_file):
             raise Exception("File not found: {}".format(csv_file))
         groups_file = local("data/groups/{}.txt".format(name))
-        silent = True
+        silent = False  # TODO True
         if not os.path.isfile(groups_file):
             with open(groups_file, "w+") as f:
                 print("{\n\t\"Tables\":\n\t\t[\n\n\t\t]\n}", file=f, flush=True)
@@ -207,18 +211,5 @@ def calc_ratio(counters: List[CategoryCounter], ex_f1, ex_f2, per_file):
         return s1 / s2, s1, s2
 
 
-def measure_size():
-    for name in files:
-        groups_file = local("data/groups/{}.txt".format(name))
-        with open(groups_file) as file:
-            json_data = json.load(file)
-            table_count = len(json_data["Tables"])
-            cell_count = 0
-            for table in json_data["Tables"]:
-                bounds = Bounds(table["Bounds"])
-                cell_count += bounds.columns() * bounds.rows()
-            print("{}, {}, {}".format(name, table_count, cell_count))
-
-
 if __name__ == '__main__':
-    measure_size()
+    main()

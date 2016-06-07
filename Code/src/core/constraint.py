@@ -239,7 +239,7 @@ class Lookup(Constraint):
                    SameLength([self.f_key, self.f_value]), SameLength([self.o_key, self.o_value]),
                    SameTable([self.f_key, self.f_value]), SameTable([self.o_key, self.o_value]),
                    SameOrientation([self.f_key, self.f_value]), SameOrientation([self.o_key, self.o_value])]
-        super().__init__("lookup", "{FV} = LOOKUP({FK}, {OK}, {OV})", source, filters)
+        super().__init__("lookup", "{FV} = LOOKUP({FK}, {OK}, {OV})", source, filters, {Equal()})
 
 
 class FuzzyLookup(Constraint):
@@ -255,7 +255,7 @@ class FuzzyLookup(Constraint):
                    SameLength([self.f_key, self.f_value]), SameLength([self.o_key, self.o_value]),
                    SameTable([self.f_key, self.f_value]), SameTable([self.o_key, self.o_value]),
                    SameOrientation([self.f_key, self.f_value]), SameOrientation([self.o_key, self.o_value])]
-        super().__init__("fuzzy-lookup", "{FV} = FUZZY-LOOKUP({FK}, {OK}, {OV})", source, filters)
+        super().__init__("fuzzy-lookup", "{FV} = FUZZY-LOOKUP({FK}, {OK}, {OV})", source, filters, {Equal()})
 
 
 class ConditionalAggregate(Constraint):
@@ -273,11 +273,11 @@ class ConditionalAggregate(Constraint):
         source = ConstraintSource(variables, all_diff, {all_diff.x.name: "OK"})
         filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]),
                    SameTable([self.f_key, self.values]), Not(SameTable([self.f_key, self.o_key])),
-                   SameTable([self.o_key, self.result]), #TODO think about this
+                   SameTable([self.o_key, self.result]),  # TODO think about this
                    NotPartial([self.o_key]), SameType([self.f_key, self.o_key]),
                    SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
         p_format = "{R} = " + name.upper() + "IF({FK}={OK}, {V})"
-        super().__init__("{}-if".format(name.lower()), p_format, source, filters, depends_on={ForeignKey()})
+        super().__init__("{}-if".format(name.lower()), p_format, source, filters, depends_on={Lookup()})
 
     @property
     def operation(self) -> Operation:
@@ -305,7 +305,7 @@ class RunningTotal(Constraint):
         variables = [self.acc, self.pos, self.neg]
         source = Source(variables)
         filters = [SameLength(variables), SizeFilter(variables, length=2), NotPartial(variables)]
-        super().__init__("running-total", "{A} = PREV({A}) + {P} - {N}", source, filters)
+        super().__init__("running-total", "{A} = PREV({A}) + {P} - {N}", source, filters, {Equal()})
 
 
 class ForeignOperation(Constraint):
@@ -376,7 +376,7 @@ class PercentualDiff(VectorOperation):
         variables = self.list_variables()
         source = Source(variables)
         filters = [SameLength(variables), NotPartial(variables), SameOrientation(variables)]
-        super().__init__("percentual-diff", "{R} = ({O1} - {O2}) / {O2}", source, filters, False)
+        super().__init__("percentual-diff", "{R} = ({O1} - {O2}) / {O2}", source, filters, False, {Equal()})
 
 
 class Projection(Constraint):

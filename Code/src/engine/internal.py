@@ -2,6 +2,8 @@ import itertools
 
 import math
 
+import sys
+
 from core.constraint import *
 from core.group import Group
 from core.solutions import Solutions
@@ -140,7 +142,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     if not pk_v.overlaps_with(pv_v):
                         pk_dict = dict(zip(pk_v.get_vector(1), pv_v.get_vector(1)))
                         for fk_v, fv_v in itertools.product(fk, fv):
-                            if not any(g1.overlaps_with(g2) for g1 in [pk_v, pv_v] for g2 in [fk_v, fv_v]) \
+                            if not (found_equal(pk_v, fk_v, solutions) and found_equal(pv_v, fv_v, solutions))\
+                                    and not any(g1.overlaps_with(g2) for g1 in [pk_v, pv_v] for g2 in [fk_v, fv_v]) \
                                     and not fk_v.overlaps_with(fv_v) \
                                     and is_lookup(pk_dict, fk_v.get_vector(1), fv_v.get_vector(1)):
                                 result = {c.o_key: pk_v, c.o_value: pv_v, c.f_key: fk_v, c.f_value: fv_v}
@@ -158,7 +161,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         return i - 1
                 return len(collection) - 1
 
-            def is_lookup(ok, ov, fk, fv):
+            def test_equal(ok_v, ov_v, fk_v, fv_v):
+                ok, ov, fk, fv = (vec.get_vector(1) for vec in (ok_v, ov_v, fk_v, fv_v))
                 exact = True
                 for i in range(len(fk)):
                     index = find_fuzzy(fk[i], ok)
@@ -166,9 +170,9 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         exact = False
                     if index is None or not equal(ov[index], fv[i]):
                         return False
-                return not exact
+                return not exact and not found_equal(ok_v, fk_v, solutions) and not found_equal(ov_v, fv_v, solutions)
 
-            return self._generate_test_vectors(assignments, keys, is_lookup)
+            return self._generate_test_vectors(assignments, keys, lambda *args: True, test_equal)
 
         def conditional_aggregate(c: ConditionalAggregate, assignments, solutions: Solutions):
             keys = [c.o_key, c.result, c.f_key, c.values]
@@ -197,6 +201,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     masks = {u: vectors[fk] == u for u in unique}
                     fk_dict[fk] = masks
 
+                any_match = False
                 for i in range(len(vectors[ok])):
                     if vectors[ok][i] not in fk_dict[fk]:
                         res = c.default
@@ -204,22 +209,34 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         k = vectors[ok][i]
                         data = vectors[v][fk_dict[fk][k]]
                         res = c.operation.aggregate(data) if len(data) > 0 else c.default
-                    if not equal(res, vectors[r][i], True):
+                        any_match = True
+
+                    n_digits = precision_and_scale(vectors[r][i])[1]
+                    res = numpy.round(res, n_digits)
+                    if not equal(res, vectors[r][i]):
                         return False
-                return True
+
+                    lookup = Lookup()
+                    if solutions.has(lookup, [lookup.f_value, lookup.f_key, lookup.o_key, lookup.o_value],
+                                     [fk, v, r, ok]):
+                        return False
+                return any_match
 
             return list(self._generate_test_vectors(assignments, keys, lambda *args: True, is_aggregate))
 
         def running_total(c: RunningTotal, assignments, solutions):
-            def is_running_diff(acc, pos, neg):
-                if not acc[0] == pos[0] - neg[0]:
+            def is_running_diff(acc_v, pos_v, neg_v):
+                acc_d, pos_d, neg_d = (v.get_vector(1) for v in (acc_v, pos_v, neg_v))
+                if not acc_d[0] == pos_d[0] - neg_d[0]:
                     return False
-                for i in range(1, len(acc)):
-                    if not equal(acc[i], acc[i - 1] + pos[i] - neg[i]):
+                for i in range(1, len(acc_d)):
+                    if not equal(acc_d[i], acc_d[i - 1] + pos_d[i] - neg_d[i]):
                         return False
+                if found_equal(pos_v, neg_v, solutions):
+                    return False
                 return True
 
-            return self._generate_test_vectors(assignments, [c.acc, c.pos, c.neg], is_running_diff)
+            return self._generate_test_vectors(assignments, [c.acc, c.pos, c.neg], lambda *args: True, is_running_diff)
 
         def foreign_operation(c: ForeignOperation, assignments, solutions):
             keys = [c.o_key, c.f_key, c.result, c.o_value, c.f_value]
@@ -289,33 +306,50 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         def product(c: Product, assignments, solutions):
             keys = [c.result, c.first, c.second]
 
-            def is_product(r, o1, o2):
+            def is_product(r_v, o1_v, o2_v):
+                if not ordered(o1_v, o2_v):
+                    return False
+                r, o1, o2 = (v.get_vector(1) for v in (r_v, o1_v, o2_v))
                 for i in range(0, len(r)):
-                    if not equal(r[i], Operation.PRODUCT.func(o1[i], o2[i])):
+                    if r_v > o2_v:
+                        expected = r[i]
+                        actual = Operation.PRODUCT.func(o1[i], o2[i])
+                    else:
+                        expected = o2[i]
+                        actual = r[i] / o1[i]
+                    res = smart_round(actual, expected)
+                    if not equal(expected, res):
                         return False
                 return True
 
-            return self._generate_test_vectors(assignments, keys, is_product, lambda r, o1, o2: ordered(o1, o2))
+            return self._generate_test_vectors(assignments, keys, lambda *args: True, is_product)
 
         def diff(c: Diff, assignments, solutions):
             def is_diff(r, o1, o2):
                 for i in range(0, len(r)):
                     if not equal(r[i], o1[i] - o2[i]):
                         return False
-                return True
+                return all(not equal_v(v, 0).all() for v in (r, o1, o2))
 
             keys = [c.result, c.first, c.second]
             return self._generate_test_vectors(assignments, keys, is_diff, lambda r, _, o2: o2 < r)
 
         def percent_diff(c: PercentualDiff, assignments, solutions):
-            def is_diff(r, o1, o2):
+
+            def is_diff(r_v, o1_v, o2_v):
+                r, o1, o2 = (v.get_vector(1) for v in (r_v, o1_v, o2_v))
                 for i in range(0, len(r)):
-                    if o2[i] == 0 or not equal(r[i], (o1[i] - o2[i]) / o2[i], True):
+                    res = (o1[i] - o2[i]) / o2[i]
+                    n_digits = precision_and_scale(r[i])[1]
+                    res = numpy.round(res, n_digits)
+                    if o2[i] == 0 or not equal(r[i], res):
                         return False
+                if found_equal(o1_v, o2_v, solutions):
+                    return False
                 return True
 
             keys = [c.result, c.first, c.second]
-            return self._generate_test_vectors(assignments, keys, is_diff)
+            return self._generate_test_vectors(assignments, keys, lambda *args: True, is_diff)
 
         def sum_product(c: Product, assignments, solutions):
             keys = [c.result, c.first, c.second]
@@ -455,6 +489,10 @@ def precision_and_scale(x):
     return magnitude + scale, scale
 
 
+def smart_round(number, reference):
+    n_digits = precision_and_scale(reference)[1]
+    return numpy.round(number, n_digits)
+
 equal_v = numpy.vectorize(equal)
 
 
@@ -499,3 +537,9 @@ def complete(vector):
         if not blank_f(vector[i]):
             vector[i] = vector[i - 1]
     return vector
+
+
+def found_equal(v1, v2, solutions):
+    eq = Equal()
+    keys = [eq.first, eq.second]
+    return solutions.has(eq, keys, (v1, v2)) if v1 < v2 else solutions.has(eq, keys, (v2, v1))
