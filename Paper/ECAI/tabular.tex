@@ -632,13 +632,13 @@ In Section~\ref{sec:opts} we describe a number of optimizations designed to spee
 \label{sec:table_extraction}
 Many spreadsheets contain headers that provide hints at where the table(s) in the sheet are and what the meaning of the rows and columns is. However, detecting tables and headers is a complex problem on its own~\cite{header}. Furthermore, headers may be missing and their use often requires incorporating language-specific vocabulary, e.g. English.
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=1\linewidth]{figures/tabletool.png}
-  \caption{This simple table selection tool allows users to select rectangular ranges of cells corresponding to (headerless) tables.
-  An explicit orientation can also be provided.}
-  \label{fig:visual_tool}
-\end{figure}
+% \begin{figure}[t]
+%   \centering
+%   \includegraphics[width=1\linewidth]{figures/tabletool.png}
+%   \caption{This simple table selection tool allows users to select rectangular ranges of cells corresponding to (headerless) tables.
+%   An explicit orientation can also be provided.}
+%   \label{fig:visual_tool}
+% \end{figure}
 
 Instead, we assume tables are specified by means of their coordinates within a spreadsheet and optionally a fixed orientation of each table. The orientation can be used to indicate that a table should be interpreted as having only rows or only columns.
 
@@ -654,7 +654,7 @@ The sheet is then processed row by row, splitting each row into ranges of non-em
 Headers can be detected, for example, by checking if the first row or column contains only textual values. If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
 
 \paragraph{Visual}
-The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (Figure~\ref{fig:visual_tool}).
+The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool.% (Figure~\ref{fig:visual_tool})
 Users select tables excluding the header and optionally specify an orientation.
 The tool then generates the specification of the tables automatically.
 
@@ -1158,31 +1158,31 @@ Using~$\Delta D$ we can keep track of which vectors have changed and which vecto
 \textit{Functional} constraints, such as $\ecsumc{B_r}{\mathbf{B_x}}$, are able to compute a result~($B_r$) based on its input~($\mathbf{B_x}$).
 If all vectors in the input blocks have changed and the output vector is incomplete, the constraint can compute the resulting value(s).
 
-% Consider Figure \ref{fig:autocompletion_example} containing two tables.
-% Learning on a snapshot that does not contain line 17, we find constraints $\ecsumif{\range{T_2}{\rangeall}{2}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{3}}$ and $\ecsumif{\range{T_2}{\rangeall}{3}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{4}}$.
-% The new data $\Delta D$ consists of the new value \textit{West} on line 17.
-% Therefore, vector~$\range{T_2}{:}{1}$ is changed and vectors~$\range{T_2}{:}{2}$, $\range{T_2}{:}{3}$ have become incomplete.
-% The \textit{SUMIF} constraints have enough input to fill the incomplete vectors and predict the values in the last row: $\range{T_2}{4}{2} = 1547$ and $\range{T_2}{4}{3} = 428128$.
+Consider Figure \ref{fig:autocompletion_example} containing two tables.
+Learning on a snapshot that does not contain line 17, we find constraints $\ecsumif{\range{T_2}{\rangeall}{2}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{3}}$ and $\ecsumif{\range{T_2}{\rangeall}{3}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{4}}$.
+The new data $\Delta D$ consists of the new value \textit{West} on line 17.
+Therefore, vector~$\range{T_2}{:}{1}$ is changed and vectors~$\range{T_2}{:}{2}$, $\range{T_2}{:}{3}$ have become incomplete.
+The \textit{SUMIF} constraints have enough input to fill the incomplete vectors and predict the values in the last row: $\range{T_2}{4}{2} = 1547$ and $\range{T_2}{4}{3} = 428128$.
 
 %In case multiple constraints predict different values for the same cell, the algorithm will have to either prioritize constraints based on their specificity or a heuristic, not make a prediction, or present the choice to the user.
 
 \subsection{Error detection}
 \begin{figure}[thb]
-%\begin{subfigure}{.70\textwidth}
-  \begin{center}
-    \includegraphics[width=\linewidth]{figures/fbi_figure_highlighted.png}
-  \end{center}
-  \caption{Real world tabular constraint reconstruction: FBI crime statistics}
-  \label{fig:fbi}
+% %\begin{subfigure}{.70\textwidth}
+%   \begin{center}
+%     \includegraphics[width=\width]{figures/fbi_figure_highlighted.png}
+%   \end{center}
+%   \caption{Real world tabular constraint reconstruction: FBI crime statistics}
+%   \label{fig:fbi}
 %\end{subfigure}
 % \hfill
 % \begin{subfigure}{.29\textwidth}
-% \begin{center}
-%     \includegraphics[width=\textwidth]{figures/autocompletion_example.png}
-%   \end{center}
-%   \caption{\sergey{Samuel, Tias have a look at it, should be corrected and extended, like with groups indications and formulas?}}
-%   \label{fig:autocompletion_example}
-% \end{subfigure}
+\begin{center}
+    \includegraphics[width=0.60\linewidth]{figures/autocompletion_example.png}
+  \end{center}
+  \caption{\sergey{Samuel, Tias have a look at it, should be corrected and extended, like with groups indications and formulas?}}
+  \label{fig:autocompletion_example}
+%\end{subfigure}
 \end{figure}
 
 We consider two cases of error detection.
@@ -1194,10 +1194,10 @@ Therefore, conflicts should perhaps only be detected if the snapshot data is lar
 %An exact specification of what large enough means (i.e., how to measure the confidence in the constraint violation) is a separate application-dependent research question and will be investigated in the future work.
 
 The second type of error detection is \textit{offline} and attempts to detect errors in a spreadsheet.
-Consider a use case concerning crime statistics provided by the FBI in Figure~\ref{fig:fbi}.
-Our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
-A possible approach to detect such missing or wrong values is to look at a sample of the table, e.g. trying to leave out each row, and compare the constraints learned on this sample with the constraints learned on the whole table.
-%The sample needs to be large enough such that we have enough confidence that the constraints are correct. For example, in Figure \ref{fig:fbi} all but one row satisfy the constraint, which is a strong indication that there is a constraint violation.
+% Consider a use case concerning crime statistics provided by the FBI in Figure~\ref{fig:fbi}.
+% Our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
+% A possible approach to detect such missing or wrong values is to look at a sample of the table, e.g. trying to leave out each row, and compare the constraints learned on this sample with the constraints learned on the whole table.
+  %The sample needs to be large enough such that we have enough confidence that the constraints are correct. For example, in Figure \ref{fig:fbi} all but one row satisfy the constraint, which is a strong indication that there is a constraint violation.
 If we define the sample to be the snapshot data and the other row(s) to be the additional input~$\Delta D$, this task can be formulated as online error detection and dealt with in the same way.
 %Of course, generating large enough samples and rows (columns) to be added can be done in multiple ways.
 %In the limited case of detecting single errors one can leave out every row (column), consider the remaining data to be the sample and
