@@ -1051,7 +1051,7 @@ All experiments were run using Python 3.5.1 on a Macbook Pro, Intel Core i7 2.3~
 \subsection{Case study}
 Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
 \sname takes a few seconds to find the constraints in Figure~\ref{fig:sol_example} (excluding structural constraints).
-These include 5 spurious $\mathit{RANK}$ constraints, such as $\ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}$, that are true by accident.
+These include 5 spurious $\mathit{RANK}$ constraints, e.g. $\ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}$, that are true by accident.
 Moreover, there is 1 \textit{LOOKUP} constraint that was not present in the original spreadsheet (looking up ID based on Salesperson).
 
 For this example our primary goal of finding all original constraints is achieved, the recall (i.e. $\frac{\text{relevant discovered}}{\text{relevant}}$) is~$1.0$.
@@ -1137,7 +1137,8 @@ On many spreadsheets \sname achieves good results.
 However, factors such as incompatible formatting, bad spreadsheet design and rounding issues can lead to decreased recall, many additional constraints and long running times due to an exponential blow-up of candidate constraints.
 For example, we tested a spreadsheet (``exps\_tias'') with 6~tables, 531~cells and many duplicate columns across tables.
 While we obtained a recall of~$1.0$, the algorithm ran for $14.30s$ and the overall precision was~$0.52$ and only~$0.11$ when ignoring equalities.
-This shows the need for a (heuristic) post-processing step to increase precision and further optimizations to decrease running times.
+By using a (heuristic) post-processing step the precision for this example could be increased.
+The running time can be improved by further optimizing the implementation, especially for conditional aggregates.
 
 
 
