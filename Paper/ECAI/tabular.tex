@@ -318,7 +318,7 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
   Subgroups in normal font have to be vectors, whereas subgroups in \textbf{bold} may contain more than one vector;
   $\discrete(x)$ is a shortcut for: $\textual(x) \lor \numeric(x)$.
   Templates marked with $*$ are \textit{structural}, i.e. they are not functional and cannot be implemented in most spreadsheet software.
-  Templates marked with $\dagger$ are \textit{aggregate} templates, the table shows $SUM$ but \sname also supports $MAX$, $MIN$, $AVERAGE$, $PRODUCT$ and $COUNT$.
+  Templates marked with $\dagger$ are \textit{aggregate} templates, the table shows \textit{SUM} but \sname also supports \textit{MAX}, \textit{MIN}, \textit{AVERAGE}, \textit{PRODUCT} and \textit{COUNT}.
   %{\small\luc{maybe say s.th. about some fancy constraints: example of a more complex one in the text (what does conditional mean, aggregate ... )}}
 }
 \label{table:constraints}
@@ -376,6 +376,12 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
       & Arguments $\{\sg_{r}, \sg_{1}, \sg_{2}\}$ are all $\numeric$ and have the same $\plength$ and $ \por$
       
       & $\sg_{r}[i] = \sg_{1}[i] - \sg_{2}[i]$.
+      \\[\PADSEP] \hline
+
+    $\eccalc{\sg_r}{\frac{\sg_1 - \sg_2}{\sg_2}}$
+      & \textit{Same as \ecdiff{\sg_r}{\sg_1}{\sg_2}}
+
+      & $\sg_{r}[i] = (\sg_{1}[i] - \sg_{2}[i]) / \sg_{2}[i]$.
       \\[\PADSEP] \hline
 
     \ecproj{\sg_r}{\mathbf{\sg_x}}
@@ -883,7 +889,7 @@ For every (disjoint) subassignment the exact signature (e.g. subtypes will not h
 
 
 \subsection{Optimizations} \label{sec:opts}
-This section discusses various design decisions and optimizations aimed at improving the speed and extensibility of our system as well as to eliminate some obvious redundant constraints.
+This section discusses various design decisions and optimizations aimed at improving the speed and extensibility of our system as well as to eliminate redundant constraints.
 
 \subsubsection{Template dependencies}
 As discussed in Section~\ref{sec:form:dependencies}, some constraint templates depend on others by including templates they depend on in their signature (see Table~\ref{table:constraints}).
@@ -949,11 +955,11 @@ A last type of redundancy we chose to reduce is that there may be multiple \text
 For example, consider the constraint \ecsumc{B_r}{B[1{:}n]} where $B[k{:}n]$ consists of only zeros, then \ecsumc{B_r}{B[1{:}j]} will be true for all $k - 1 \leq j \leq n$.
 In \sname we have, therefore, chosen to only consider \textit{maximal} subblocks.
 
-As a result, in some cases a maximal subblock might falsely include irrelevant columns.
+In some cases a maximal subblock might falsely include irrelevant columns.
 Consider $B_1 = [[200, 300], [200, 150], [1, 2]]$ and $B_2 = [200, 300]$, then \sname will find the constraint $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$.
-Should the target constraint be $\eccalc{B_2}{\mathit{MAX}(B_1[1{:}2])}$, then the last vector of~$B_1$ must be split off into a separate block before the above approach could find it.
+Should the target constraint be $\eccalc{B_2}{\mathit{MAX}(B_1[1{:}2])}$, then the last vector of~$B_1$ must be split off into a separate block.
 
-Alternatively, we can output all valid argument assignments instead of only maximal subblocks, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$, however, this might produce many redundant constraints including constraints that accidentally cover too little data.
+Alternatively, we can output all valid assignments instead of only maximal subblocks, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$, however, this might produce many redundant constraints including constraints that accidentally cover too little data.
 
 
 
@@ -1037,14 +1043,15 @@ Group definitions are only specified if the spreadsheet contains ambiguous \text
 
 For every spreadsheet we specified a ground-truth of constraints, i.e. the \textbf{intended} constraints that are expected to be (re-)discovered.
 These were determined using the formulas (if present), context and headers in the original spreadsheets.
-We encoded all relevant constraints using our representation (in canonical form).
-Not all relevant constraints are currently supported by \sname, therefore, we sometimes consider the subset of \textbf{supported} constraints.
-Constraints that are currently outside of the scope of this system are, for example, generic nested mathematical or logical formulas.
+We encoded all intended constraints using our representation (in canonical form).
+Not all intended constraints are currently supported by \sname, therefore, we sometimes consider the subset of \textbf{supported} constraints.
+Constraints that are currently outside of the scope of this system are, for example, nested mathematical or logical formulas.
 
 
-We focus on \textit{functional} constraints that could be used in spreadsheets, ignoring the structural constraints \textit{ALLDIFFERENT}, \textit{FOREIGNKEY} and \textit{PERMUTATION}.
-We included detected equalities as relevant constraints (in 5~spreadsheets).
+We focus on \textit{functional} constraints that could be used as formulas in spreadsheets, ignoring the structural constraints \textit{ALLDIFFERENT}, \textit{FOREIGNKEY} and \textit{PERMUTATION}.
+Moreover, we included detected equalities as intended constraints (in 5~spreadsheets).
 All experiments were run using Python 3.5.1 on a Macbook Pro, Intel Core i7 2.3~GHz with 16GB RAM.
+
 
 
 
@@ -1057,8 +1064,8 @@ Let us illustrate our implementation using the example presented in Figure~\ref{
 These include 5 spurious $\mathit{RANK}$ constraints, e.g. $\ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}$, that are true by accident.
 Moreover, there is 1 \textit{LOOKUP} constraint that was not present in the original spreadsheet (looking up ID based on Salesperson).
 
-For this example our primary goal of finding all original constraints is achieved, the recall (i.e. $\frac{\text{relevant discovered}}{\text{relevant}}$) is~$1.0$.
-The implementation also returns 6 additional constraints, therefore, our precision (i.e. $\frac{\text{relevant discovered}}{\text{all discovered}}$) is $12/18 = 0.67$, which is rather low compared to, for example, the spreadsheets in the benchmark.
+For this example our primary goal of finding all original constraints is achieved, the recall (i.e. $\frac{\text{intended discovered}}{\text{intended}}$) is~$1.0$.
+The implementation also returns 6 additional constraints, therefore, our precision (i.e. $\frac{\text{intended discovered}}{\text{all discovered}}$) is $12/18 = 0.67$, which is rather low compared to, for example, the spreadsheets in the benchmark.
 The low precision can be explained by the many short vectors which increases the chance for constraints to be true by accident.
 
 
@@ -1067,7 +1074,7 @@ The low precision can be explained by the many short vectors which increases the
 
 \subsection{Benchmark}
 Table~\ref{tbl:category_overview} gives an overview of the spreadsheets in the different categories and summarizes the results of our experiments.
-Notice that for the data category the average number of tables and cells is higher while the number of relevant constraints is lower compared to the other categories.
+Notice that for the data category the average number of tables and cells is higher while the number of intended constraints is lower compared to the other categories.
 
 {\setlength{\tabcolsep}{0.33em}
 \begin{table}[]
@@ -1079,15 +1086,15 @@ Notice that for the data category the average number of tables and cells is high
  & Overall & Sheet avg & Overall & Sheet avg & Overall & Sheet avg \\ \hline
     \textbf{Tables} & 19 & 2.11 & 48 & 2.29 & 4 & 1 \\ \hline
     \textbf{Cells} & 1231 & 137 & 1889 & 90 & 2320 & 580 \\ \hline
-    \textbf{\begin{tabular}[c]{@{}l@{}}Relevant\\[-4pt] Constraints\end{tabular}} & 34 & 3.78 & 52 & 2.48 & 6 & 1.50 \\ \hline \hline
+    \textbf{\begin{tabular}[c]{@{}l@{}}Intended\\[-4.5pt] Constraints\end{tabular}} & 34 & 3.78 & 52 & 2.48 & 6 & 1.50 \\ \hline \hline
 \textbf{Recall} & 0.85 & 0.83 & 0.88 & 0.87 & 1.00 & 1.00 \\ \hline
-\textbf{\begin{tabular}[c]{@{}l@{}}Recall\\[-4pt] Supported\end{tabular}} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\ \hline
+\textbf{\begin{tabular}[c]{@{}l@{}}Recall\\[-4.5pt] Supported\end{tabular}} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\ \hline
 \textbf{Precision} & 0.97 & 0.98 & 0.70 & 0.91 & 1.00 & 1.00 \\ \hline
 \textbf{Speed (s)} & 1.62 & 0.18 & 1.76 & 0.08 & 0.81 & 0.20
 \end{tabularx}
 \end{table}}
 
-\subsubsection*{Q1. How many relevant constraints are found by \sname?}
+\subsubsection*{Q1. How many intended constraints are found by \sname?}
 The overall recall achieved by \sname is~$0.88~(81/92)$.
 Similarly, the overall and average recall per category is high, as shown in Table~\ref{tbl:category_overview}.
 The recall for supported constraints is $1.00$, meaning that all supported constraints are found.
@@ -1098,8 +1105,7 @@ The recall for supported constraints is $1.00$, meaning that all supported const
 
 \subsubsection*{Q2. How precise is \sname?}
 Across all spreadsheets \sname achieves a precision of~$0.79~(81/102)$.
-However, the overall precision per category reveals that the precision is much higher for the exercises and data categories ($0.97$ and $1.00$) and much lower for the tutorials category ($0.70$).
-Moreover, the average precision per spreadsheet is, for all categories, over $0.90$.
+While the average precision per spreadsheet is over $0.90$ for all categories, the overall precision is much higher for the exercises and data categories ($0.97$ and $1.00$) than for the tutorials category ($0.70$).
 Examining the tutorial spreadsheets confirms that there are a few spreadsheets that have a high number of additional constraints.
 A qualitative analysis of these spreadsheets shows that their low precision is caused by duplicate data or multiple ways to calculate the same results.
 For these spreadsheets the precision can be increased by post-processing the constraints using entailment (to detect implications) and heuristics (e.g. taking into account the alignment of results).
@@ -1123,25 +1129,28 @@ While most spreadsheets can be analyzed very quickly, running times can go up to
 %Essentially, one obtains a more specialized search without much effort.
 
 
-In order for the algorithm to run efficiently it is crucial to use dependencies and find constraints incrementally whenever possible.
-This avoids some of the explosion of combinations for constraints that have many arguments.
-For example, using foreign keys as a base constraint to find conditional aggregates reduces the running time for the case study from about 3 seconds to below 1 second.
-Unfortunately, this assumption is sometimes too strong, when users are interested in aggregates for only some of the keys that are present in the data.
+To illustrate that using dependencies to find constraints incrementally can increase the efficiency, we ran the benchmarks using foreign keys as a base constraint to find conditional aggregates.
+The total running times per category are decreased by 6\% (exercises), 30\% (tutorials) and~3\% (data) showing the strong effect of this dependency.
+However, the assumption that conditional aggregates are defined for all keys in the foreign key column is too strong in practice.
+
+Of the 32 constraint templates that are supported (including equality), the slowest by far is fuzzy lookup using about 36\% of the running time.
+It is followed by product ($\pm 5\%$), relative difference ($\pm 5\%$) and various row-aggregates ($3.5\% - 4\%$).
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{figures/comparison.pdf}
-  \caption{Overview of the average properties and performance of spreadsheets within every benchmark category relative to the maximum across all spreadsheets.}
+  \caption{Overview of the average properties and performance of spreadsheets within every benchmark category relative to the maximum across all spreadsheets.
+  Green bars indicate standard deviation within the category.}
   \label{fig:comparison}
 \end{figure}
 
 \subsection{Testing the limits}
-On many spreadsheets \sname achieves good results.
+On many spreadsheets that adhere to the bias of tables, continuous blocks and vectors \sname achieves good results.
 However, factors such as incompatible formatting, bad spreadsheet design and rounding issues can lead to decreased recall, many additional constraints and long running times due to an exponential blow-up of candidate constraints.
 For example, we tested a spreadsheet (``exps\_tias'') with 6~tables, 531~cells and many duplicate columns across tables.
 While we obtained a recall of~$1.0$, the algorithm ran for $14.30s$ and the overall precision was~$0.52$ and only~$0.11$ when ignoring equalities.
 By using a (heuristic) post-processing step the precision for this example could be increased.
-The running time can be improved by further optimizing the implementation, especially for conditional aggregates.
+The running time can be improved by implementing additional optimizations.
 
 
 
@@ -1239,7 +1248,7 @@ Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabula
 % points: 1) can be a base for an actual plugin or a function in excel 2) novel problem and challenge for systems and constraint solvers 3) can be part of the complicated pipeline togehter with the header detection
 Our goal is to automatically identify constraints in a spreadsheet.
 We have presented and evaluated our approach, implemented as the system \sname, that is able to learn many different constraints in tabular data.
-The resulting method has high accuracy, produces limited number of redundant constraints and is sufficiently efficient for normal as well as interactive use.
+The resulting method has high recall, produces limited number of redundant constraints and is sufficiently efficient for normal and interactive use.
 
 The approach is designed to find constraints that hold over entire columns and rows. In future work we plan to extend this to learn arbitrary nested constraints (e.g. $B_r = (B_1 + B_2) / B_3$), as well as constraints over only a subset of the vectors. This may give rise to more redundant and spurious constraints, which was not problematic up to this point.
 
