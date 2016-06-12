@@ -16,6 +16,7 @@
 \usepackage{tabularx}
 \usepackage[margin=0.1cm]{subcaption}
 \usepackage[inline]{enumitem}
+\usepackage{footmisc}
 
 \usepackage[dvipsnames]{xcolor}
 \newcommand{\PADSEP}{-7pt}
@@ -112,7 +113,7 @@
 \begin{abstract}
 Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
 However, modeling, maintaining and discovering formulas in tabular data and spreadsheets can be time consuming and error-prone.
-In this work, we investigate the automatic discovery of constraints (functions and relations) in raw tabular data.
+In this work, we investigate the automatic discovery of constraints (formula and relations) in raw tabular data.
 We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking.
 Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
 Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints.
@@ -657,7 +658,7 @@ The sheet is then processed row by row, splitting each row into ranges of non-em
 Headers can be detected, for example, by checking if the first row or column contains only textual values. If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
 
 \paragraph{Visual}
-The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool.
+The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (screenshots are available in the accompanying github repository with meta-data\footnote{\url{https://github.com/for-DSAA2016-review/TaCLe}\label{github-link}}).
 Users select tables excluding the header and optionally specify an orientation.
 The tool then generates the specification of the tables automatically.
 
@@ -1008,7 +1009,7 @@ In order to quantify the results and generalize our findings we also evaluate ou
 \subsection{Method}
 \label{sec:evalualtion:method}
 In order to obtain a benchmark of spreadsheets we looked at three sources:
-1)~spreadsheets from an exercise session for teaching Excel based on~\cite{excel_book}; 2)~spreadsheets from tutorials online; and 3)~publicly available \textit{data} spreadsheets such as real-world crime statistics or financial reports\footnote{(benchmark attached to to the submitted paper)}.
+1)~spreadsheets from an exercise session for teaching Excel based on~\cite{excel_book}; 2)~spreadsheets from tutorials online; and 3)~publicly available \textit{data} spreadsheets such as real-world crime statistics or financial reports (available at the same repository\footref{github-link}).
 All spreadsheets were converted to CSV and the table definitions are fixed.
 Group definitions are only specified if the spreadsheet contains ambiguous \textit{None} values. 
 
@@ -1033,11 +1034,10 @@ All experiments were run using Python 3.5.1 on a Macbook Pro, Intel Core i7 2.3~
 Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
 \sname takes a few seconds to find the constraints in Figure~\ref{fig:sol_example} (excluding structural constraints).
 These include 5 spurious $\textit{RANK}$ constraints, e.g. $\ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}$, that are true by accident.
-Moreover, there is 1 \textit{LOOKUP} constraint that was not present in the original spreadsheet (looking up ID based on Salesperson).
+Moreover, there is 1 \textit{LOOKUP} constraint that was not intended in the original spreadsheet (looking up ID based on Salesperson) and which is symmetric to the intended one (Salesperson based on ID).
 
-For this example our primary goal of finding all original constraints is achieved, the recall (i.e. $\frac{\text{intended discovered}}{\text{all intended}}$) is~$1.0$.
-The implementation also returns 6 additional constraints, therefore, our precision (i.e. $\frac{\text{intended discovered}}{\text{all discovered}}$) is $12/18 = 0.67$, which is rather low compared to, for example, the spreadsheets in the benchmark.
-The low precision can be explained by the many short vectors which increases the chance for constraints to be true by accident.
+For this example our primary goal of rediscovering all intended constraints is achieved, the recall (i.e. $\frac{\text{intended discovered}}{\text{all intended}}$) is~$1.0$.
+The implementation also returns 6 additional constraints, therefore, our precision (i.e. $\frac{\text{intended discovered}}{\text{all discovered}}$) is $12/18 = 0.67$, which is mostly due to the spurious RANK constraints. We believe this is due to the many short vectors which increases the chance for constraints to be true by accident.
 
 
 
@@ -1066,9 +1066,8 @@ Notice that for the data category the average number of cells is higher while th
 \end{table}}
 
 \subsubsection*{Q1. How many intended constraints are found by \sname?}
-The overall recall achieved by \sname is~$0.88~(81/92)$.
-Similarly, the overall and average recall per category is high, as shown in Table~\ref{tbl:category_overview}.
-The recall for supported constraints is $1.00$, meaning that all supported constraints are found.
+The overall recall achieved by \sname is~$0.88~(81/92)$. The overall and average recall per category is also high, as shown in Table~\ref{tbl:category_overview}.
+The intended constraints not discovered correspond to constraints not supported by the system (supported recall is 1).
 
 
 
@@ -1078,8 +1077,8 @@ The recall for supported constraints is $1.00$, meaning that all supported const
 Across all spreadsheets \sname achieves a precision of~$0.79~(81/102)$.
 While the average precision per spreadsheet is over $0.90$ for all categories, the overall precision is much higher for the exercises and data categories ($0.97$ and $1.00$) than for the tutorials category ($0.70$).
 Examining the tutorial spreadsheets confirms that there are a few spreadsheets that have a high number of additional constraints.
-A qualitative analysis of these spreadsheets shows that their low precision is caused by duplicate data or multiple ways to calculate the same results.
-For these spreadsheets the precision can be increased by post-processing the constraints using entailment (to detect implications) and heuristics (e.g. taking into account the alignment of results).
+A qualitative analysis of these spreadsheets shows that their lower precision is caused by duplicate data or multiple ways to calculate the same vectors.
+For these spreadsheets the precision could be increased by post-processing the constraints to detect implications or heuristically selecting one among multiple ways to compute the same vector.
 
 
 
@@ -1099,13 +1098,10 @@ While most spreadsheets can be analyzed very quickly, running times can go up to
 %Using the dependencies to find constraints incrementally cuts down large parts of the search trees, especially for constraints that have many arguments.
 %Essentially, one obtains a more specialized search without much effort.
 
-
-To illustrate that using dependencies to find constraints incrementally can increase the efficiency, we ran the benchmarks using foreign keys as a base constraint to find conditional aggregates.
-The total running times per category are decreased by 6\% (exercises), 30\% (tutorials) and~3\% (data), showing the strong effect of this dependency.
-However, the assumption that conditional aggregates are defined for all keys in the foreign key column is too strong in practice.
-
 Of the 32 supported constraint templates (including equality), the slowest by far is fuzzy lookup using $\pm 36\%$ of the running time.
 It is followed by product ($\pm 5\%$), relative difference ($\pm 5\%$) and various row-aggregates (each $3.5\% - 4\%$).
+
+To illustrate that using dependencies to find constraints incrementally can increase the efficiency, we ran the benchmarks using FOREIGNKEY instead of ALLDIFFERENT as base constraint to find conditional aggregates such as SUMIF. This assumption is too strong in practice, not all keys have to be used in the conditions. However, the total running times per category are decreased by 6\% (exercises), 30\% (tutorials) and~3\% (data), showing the strong effect of the use of dependencies.
 
 \begin{figure}[t]
   \centering
@@ -1116,12 +1112,11 @@ It is followed by product ($\pm 5\%$), relative difference ($\pm 5\%$) and vario
 \end{figure}
 
 \subsection{Testing the limits}
-On many spreadsheets that adhere to the bias of tables, continuous blocks and vectors \sname achieves good results.
-However, factors such as incompatible formatting, bad spreadsheet design and rounding issues can lead to decreased recall, many additional constraints and long running times due to an exponential blow-up of candidate constraints.
-For example, we tested a spreadsheet (``exps'') with 6~tables, 531~cells and many duplicate columns across tables.
-While we obtained a recall of~$1.0$, the algorithm ran for $14.30s$ and the overall precision was~$0.52$ and only~$0.11$ when ignoring equalities.
-By using a (heuristic) post-processing step the precision for this example could be increased.
-The running time can be improved by implementing additional optimizations.
+Our algorithm relies on a correct table and group detection step, and we noticed that exported CSV files can make this more difficult in case of rounding errors due to low-precision formatting as well as misformatting of strings so they are interpreted as numbers.
+Automatically generated sheets can also contain many duplicate (equal) rows or columns, which are a source of increased runtime and decreased recall for our algorithm. For example, we tested a spreadsheet (``exps'') with 6~tables, 531~cells and many duplicate columns across tables.
+While we obtained a recall of~$1.0$, the algorithm ran for $14.30s$ and the overall precision was~$0.52$ and only~$0.11$ when counting constraints with equal columns separately.
+%By using a (heuristic) post-processing step the precision for this example could be increased.
+%The running time can be improved by implementing additional optimizations.
 
 
 
@@ -1136,11 +1131,11 @@ In this section, we illustrate how various motivating applications could be real
 
 
 \subsection{Autocompletion}
-Autocompletion can be seen as using knowledge derived from a snapshot of spreadsheet data to predict new values before they are written by the user.
+Autocompletion can be seen as using knowledge derived from the current data to predict new values before they are written by the user.
 A snapshot~($D_0$) is used to learn constraints and these are combined with new data~($\Delta D$) that the user has added.
 Using~$\Delta D$ we can keep track of which vectors have changed and which vectors are now \textit{incomplete}.
-\textit{Functional} constraints, such as $\ecsumc{\sbl{r}}{\mathbf{\sbl{x}}}$, are able to compute a result~($\sbl{r}$) based on its input~($\mathbf{\sbl{x}}$).
-If all vectors in the input blocks have changed and the output vector is incomplete, the constraint can compute the resulting value(s).
+\textit{Functional} constraints, such as $\ecsumc{\sbl{r}}{\mathbf{\sbl{x}}}$, are able to compute a result~($\sbl{r}$) based on its \textit{input}~($\mathbf{\sbl{x}}$).
+If all vectors in the input blocks have changed and the result vector is incomplete, the constraint can compute the resulting value(s).
 
 Consider Figure \ref{fig:autocompletion_example} containing two tables.
 Learning on a snapshot that does not contain the row below $T_2$, we find constraints $\ecsumif{\range{T_2}{\rangeall}{2}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{3}}$ and $\ecsumif{\range{T_2}{\rangeall}{3}}{\range{T_1}{\rangeall}{2}}{\range{T_2}{\rangeall}{1}}{\range{T_1}{\rangeall}{4}}$.
@@ -1151,7 +1146,7 @@ The \textit{SUMIF} constraints have enough input to fill the incomplete vectors 
 %In case multiple constraints predict different values for the same cell, the algorithm will have to either prioritize constraints based on their specificity or a heuristic, not make a prediction, or present the choice to the user.
 
 \subsection{Error detection}
-\begin{figure}[thb]
+\begin{figure}[t]
 % %\begin{subfigure}{.70\textwidth}
 %   \begin{center}
 %     \includegraphics[width=\width]{figures/fbi_figure_highlighted.png}
@@ -1172,18 +1167,20 @@ The \textit{SUMIF} constraints have enough input to fill the incomplete vectors 
 
 We consider two cases of error detection.
 The first setting is the \textit{online} detection of errors and is similar to the autocompletion setting.
-We look at \textit{conflict} constraints, i.e. constraints that were learned on the snapshot data but do not agree with the newly added data~$\Delta D$.
-Conflict constraints can indicate errors in the input.
-However, such conflicts can be wrongly caused by spurious constraints.
-Hence, conflicts should perhaps only be detected if the snapshot data is large enough.
+Using snapshots, we search for \textit{conflict} constraints, which are learned on a previous snapshot but do not agree with newly added data~$\Delta D$.
+Such conflicts can indicate (typing) errors in the data just entered. For example, in case 'Wes' instead of 'West' was added in Figure~\ref{fig:autocompletion_example}.
+%Conflict constraints can indicate errors in the input.
+%However, such conflicts can be wrongly caused by spurious constraints.
+%Hence, conflicts should perhaps only be detected if the snapshot data is large enough.
 %An exact specification of what large enough means (i.e., how to measure the confidence in the constraint violation) is a separate application-dependent research question and will be investigated in the future work.
 
-The second type of error detection is \textit{offline} and attempts to detect errors in a spreadsheet.
+The second setting is \textit{offline} error detection in a static spreadsheet.
 % Consider a use case concerning crime statistics provided by the FBI in Figure~\ref{fig:fbi}.
 % Our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
 % A possible approach to detect such missing or wrong values is to look at a sample of the table, e.g. trying to leave out each row, and compare the constraints learned on this sample with the constraints learned on the whole table.
   %The sample needs to be large enough such that we have enough confidence that the constraints are correct. For example, in Figure \ref{fig:fbi} all but one row satisfy the constraint, which is a strong indication that there is a constraint violation.
-This task can be formulated as online error detection by repeatedly partitioning the spreadsheet into a snapshot~$D_i$ and ``input'' $\Delta D_i$ (e.g. leave out each row and consider it as $\Delta D_i$) to detect conflicts.
+Instead of snapshots, one can repeatedly search for conflict constraints between the original spreadsheet and a sheet with a row or column removed. Many schemes can be devised for choosing which row(s) or column(s) are removed.
+%This task can be formulated as online error detection by repeatedly partitioning the spreadsheet into a snapshot~$D_i$ and ``input'' $\Delta D_i$ (e.g. leave out each row and consider it as $\Delta D_i$) to detect conflicts.
 
 %Of course, generating large enough samples and rows (columns) to be added can be done in multiple ways.
 %In the limited case of detecting single errors one can leave out every row (column), consider the remaining data to be the sample and
@@ -1206,7 +1203,7 @@ in spreadsheets are often different from those in databases.
 
 Second, there exist a number of algorithms in the constraint programming community that induce constraint (programs)
 from one or more examples and questions. Two well-known approaches include ModelSeeker \cite{modelseeker} and Quacq \cite{Quacq}.
-The former starts from a single example in the form of a vector of values and then exhaustively looks for the most specific constraints from a large constraint library that hold in the vector. To this aim, it cleverly enumerates different de-vectorized tables; for instance, if the initial vector was of dimension $1 \times 20$, it would consider rearrangements of size $2 \times 10$, $4 \times 5$, $5 \times 4$, … and Modelseeker would then look for both column, row  and even diagonal constraints. Key differences with our technique are that we assume the tables are given (a reasonable assumption if one starts from a spreadsheet), and that ModelSeeker's constraints are the typical ones from the constraint programming community, aimed at combinatorial optimization and scheduling, and restricted to integer values; furthermore we can consider multiple tables and sheets. Conacq \cite{Conacq} acquires a conjunction of constraints using techniques inspired on Mitchell's version spaces to process examples; its successor Quacq uses active learning to query the user whether a partical constraint is satisfied or not. Each of the examples/queries is processed for each constraint, and hence an important issue is how fast the algorithm converges to the entire solution set (e.g. for Sudoku).
+The former starts from a single example in the form of a vector of values and then exhaustively looks for the most specific constraints from a large constraint library that hold in the vector. To this aim, it cleverly enumerates different de-vectorized tables; for instance, if the initial vector was of dimension $1 \times 20$, it would consider rearrangements of size $2 \times 10$, $4 \times 5$, $5 \times 4$, … and Modelseeker would then look for both column, row  and even diagonal constraints. Key differences are that we assume given spreadsheets with \textit{multiple} tables; and that ModelSeeker's constraints are restricted to integer values and often typical for constraint programming community, e.g. aimed at combinatorial optimization and scheduling. Conacq \cite{Conacq} acquires a conjunction of constraints using techniques inspired on Mitchell's version spaces to process examples; its successor Quacq uses active learning to query the user regarding satisfiability. Each of the examples/queries is processed for each constraint, hence an important issue is how fast the algorithm converges to the entire solution set (e.g. for Sudoku).
 The focus is again on integer variables and typical combinatorial optimisation constraints.
 %As the conjunction for typical constraint programming problems (such as Sudoku) can be quite large, a key problem is to cope with redundant constraints. As Modelseeker, these systems focus on the types of constraints in combinatorial optimization but unlike ModelSeeker and our approach, they do not assume the variables are organized in tabular form.
 
