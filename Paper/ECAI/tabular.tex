@@ -658,7 +658,7 @@ The sheet is then processed row by row, splitting each row into ranges of non-em
 Headers can be detected, for example, by checking if the first row or column contains only textual values. If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
 
 \paragraph{Visual}
-The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (screenshots are available in the accompanying github repository\footnote{\url{https://github.com/for-DSAA2016-review/TaCLe}\label{github-link}}).
+The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (screenshots are available in the accompanying github repository with meta-data\footnote{\url{https://github.com/for-DSAA2016-review/TaCLe}\label{github-link}}).
 Users select tables excluding the header and optionally specify an orientation.
 The tool then generates the specification of the tables automatically.
 
@@ -1009,7 +1009,7 @@ In order to quantify the results and generalize our findings we also evaluate ou
 \subsection{Method}
 \label{sec:evalualtion:method}
 In order to obtain a benchmark of spreadsheets we looked at three sources:
-1)~spreadsheets from an exercise session for teaching Excel based on~\cite{excel_book}; 2)~spreadsheets from tutorials online; and 3)~publicly available \textit{data} spreadsheets such as real-world crime statistics or financial reports\footref{github-link}.
+1)~spreadsheets from an exercise session for teaching Excel based on~\cite{excel_book}; 2)~spreadsheets from tutorials online; and 3)~publicly available \textit{data} spreadsheets such as real-world crime statistics or financial reports (available at the same repository\footref{github-link}).
 All spreadsheets were converted to CSV and the table definitions are fixed.
 Group definitions are only specified if the spreadsheet contains ambiguous \textit{None} values. 
 
