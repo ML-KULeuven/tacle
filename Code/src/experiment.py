@@ -98,11 +98,11 @@ class Experiment:
 
     def run(self):
         if not self._run:
-            t_before = time.time()
             csv_file, config_file = self._get_csv_file(), self._get_config_file()
-            solutions = workflow.main(csv_file, config_file, False, silent=True, parse_silent=True)
-            self._running_times.append(time.time() - t_before)
-
+            learning_task = workflow.task(csv_file, config_file)
+            solutions = learning_task.run()
+#
+            self._running_times.append(learning_task.total_time())
             self.count_constraints(solutions)
             self.measure_size(config_file)
         self._run = True

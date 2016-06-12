@@ -82,7 +82,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return self._generate_test_vectors(assignments, [c.x], test_list)
 
         def all_different(c: AllDifferent, assignments, solutions):
-            return self._generate_test_vectors(assignments, [c.x], lambda v: len(set(v)) == len(v))
+            return self._generate_test_vectors(assignments, [c.x], lambda v: len(set(v)) == len(v)
+                                               , lambda g: g.is_textual() or g.is_integer())
 
         def permutation(c: Permutation, assignments, solutions):
             def test_set(vector):

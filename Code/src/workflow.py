@@ -2,6 +2,7 @@ import argparse
 import time
 
 from core.constraint import *
+from core.learning import LearningTask
 from core.solutions import Solutions
 from core.strategy import StrategyManager
 from engine.idp import IdpAssignmentStrategy
@@ -9,26 +10,29 @@ from engine.internal import InternalCSPStrategy, InternalSolvingStrategy
 from engine.minizinc import MinizincAssignmentStrategy, MinizincSolvingStrategy
 from parse.parser import get_groups_tables
 
-constraint_list = [
-    # EqualGroup(),
-    Permutation(),
-    Series(),
-    AllDifferent(),
-    Projection(),
-    Rank(),
-    ForeignKey(),
-    Lookup(),
-    FuzzyLookup(),
-    RunningTotal(),
-    ForeignProduct(),
-    Product(),
-    Diff(),
-    PercentualDiff(),
-    SumProduct(),
-    Equal(),
-]
-constraint_list += Aggregate.instances()
-constraint_list += ConditionalAggregate.instances()
+
+def get_constraint_list():
+    constraint_list = [
+        # EqualGroup(),
+        Permutation(),
+        Series(),
+        AllDifferent(),
+        Projection(),
+        Rank(),
+        ForeignKey(),
+        Lookup(),
+        FuzzyLookup(),
+        RunningTotal(),
+        ForeignProduct(),
+        Product(),
+        Diff(),
+        PercentualDiff(),
+        SumProduct(),
+        Equal(),
+    ]
+    constraint_list += Aggregate.instances()
+    constraint_list += ConditionalAggregate.instances()
+    return constraint_list
 
 
 def order_constraints(constraints: List[Constraint]):
@@ -49,9 +53,16 @@ def order_constraints(constraints: List[Constraint]):
     return ordered
 
 
-def main(csv_file, groups_file, verbose, silent=False, parse_silent=False, constraints=constraint_list):
+def task(csv_file, groups_file, constraints=None):
+    if constraints is None:
+        constraints = get_constraint_list()
+    return LearningTask(csv_file, groups_file, get_manager(), constraints)
+
+
+def main(csv_file, groups_file, verbose, silent=False, constraints=None):
+    print("I AM BEING RUN")
     manager = get_manager()
-    groups = list(get_groups_tables(csv_file, groups_file, silent=parse_silent))
+    groups = list(get_groups_tables(csv_file, groups_file))
 
     solutions = Solutions()
     t_origin = time.time()
@@ -59,6 +70,8 @@ def main(csv_file, groups_file, verbose, silent=False, parse_silent=False, const
     supported = []
     unsupported_assignment = []
     unsupported_solving = []
+    if constraints is None:
+        constraints = get_constraint_list()
     for constraint in constraints:
         if not manager.supports_assignments_for(constraint):
             unsupported_assignment.append(constraint)
@@ -75,15 +88,22 @@ def main(csv_file, groups_file, verbose, silent=False, parse_silent=False, const
         print()
 
     ordered = order_constraints(supported)
-
+    assign = 0
+    solve = 0
+    add = 0
     for constraint in ordered:
         if verbose and not silent:
             print(constraint.name, end=" ", flush=True)
         t_start = time.time()
         assignments = manager.find_assignments(constraint, groups, solutions)
         t_assign = time.time()
-        solutions.add(constraint, manager.find_solutions(constraint, assignments, solutions))
+        found = list(manager.find_solutions(constraint, assignments, solutions))
+        t_before_add = time.time()
+        solutions.add(constraint, found)
         t_end = time.time()
+        assign += t_assign - t_start
+        solve += t_before_add - t_assign
+        add += t_end - t_before_add
         if verbose and not silent:
             f_string = "[assignment time: {assign:.3f}, solving time: {solve:.3f}]"
             print(f_string.format(assign=t_assign - t_start, solve=t_end - t_assign))
@@ -92,8 +112,8 @@ def main(csv_file, groups_file, verbose, silent=False, parse_silent=False, const
         if (len(solutions.get_solutions(constraint)) > 0 or verbose) and not silent:
             print()
 
-    if verbose and not silent:
-        print("Total: {0:.3f}".format(time.time() - t_origin))
+    if verbose and not silent or True: # TODO:
+        print("Total: {0:.3f} (Assign: {1:.3f}, Solve: {2:.3f}, Add: {3:.3f})".format(time.time() - t_origin, assign, solve, add))
 
     return solutions
 

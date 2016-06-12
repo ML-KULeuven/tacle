@@ -1,7 +1,5 @@
-[
-    {
-        "Category": "Exercises",
-        "Files": [
+{
+    "Exercises": [
             "baltimore",
             "bedrijfsresultaten",
             "belgium",
@@ -11,11 +9,8 @@
             "rides",
             "score",
             "shares"
-        ]
-    },
-    {
-        "Category": "Tutorials",
-        "Files": [
+        ],
+    "Tutorials": [
             "sumif_region",
             "age_department_sumif",
             "average_ablebits",
@@ -37,15 +32,11 @@
             "sumif_uk",
             "sumproduct",
             "week_2_busn_store_2"
-        ]
-    },
-    {
-        "Category": "Data",
-        "Files": [
+        ],
+    "Data": [
             "external_revenue",
             "financial_result",
             "fbi_offenses_corr",
             "pattern_mining"
         ]
-    }
-]
+}

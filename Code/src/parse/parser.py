@@ -5,10 +5,14 @@ import numpy as np
 import pandas as pd
 import re
 
+import time
+
 from core.group import Bounds, Table, Group, Orientation, GType
 
 
 # TODO Single vector => try both orientations
+from util import printing
+
 
 def parse(filename):
     with open(filename, "r") as file:
@@ -84,20 +88,21 @@ def infer_type(types):
     return GType.float
 
 
-def get_groups_tables(csv_file, groups_file=None, silent=False):
+def get_groups_tables(csv_file, groups_file=None):
+    parse_printer = printing.get(__name__, on=False)
+    t_start = time.time()
     data = parse(csv_file)
     type_data = np.vectorize(detect_type)(data)
     if groups_file is None:
         t = list(detect_tables(type_data))
         t = [(b, Table("T{}".format(i + 1), Bounds(b).subset(data), o)) for i, (b, o) in enumerate(t)]
-        if not silent:
-            print("PARSE: Detected tables: {}".format(", ".join(["{} = [{}:{}, {}:{}]".format(table.name, *bounds)
-                                                                 for bounds, table in t])))
+
+        if parse_printer.on():
+            tables = ["{} = [{}:{}, {}:{}]".format(table.name, *bounds) for bounds, table in t]
+            parse_printer.form("PARSE: Detected tables: {}", ", ".join(tables))
+
         groups = detect_groups(type_data, t)
-        if not silent:
-            print("PARSE: Detected groups: {}".format(", ".join(str(g) for g in groups)))
-            print()
-        return groups
+        parse_printer.form("PARSE: Detected groups: {}", ", ".join(str(g) for g in groups))
     else:
         table_dict = {}
         t = []
@@ -123,10 +128,9 @@ def get_groups_tables(csv_file, groups_file=None, silent=False):
                     groups.append(create_group(group_description["Bounds"], table))
             else:
                 groups = detect_groups(type_data, t)
-                if not silent:
-                    print("PARSE: Detected groups: {}".format(", ".join(str(g) for g in groups)))
-                    print()
-        return groups
+                parse_printer.form("PARSE: Detected groups: {}", ", ".join(str(g) for g in groups))
+    parse_printer.form("PARSE: Parsing took {}s", time.time() - t_start)
+    return groups
 
 
 def create_group(bounds_list, table: Table):
