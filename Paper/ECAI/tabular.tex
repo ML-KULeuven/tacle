@@ -257,7 +257,7 @@ A cell has a {\bf type}, which can be numeric or textual. We further distinguish
 
 A row or a column is \textbf{type-consistent} if all cells in that row or column are of the same base type, i.e. numeric or textual.
 We will use notation $T[a,{:}]$ to refer to the $a$-th row of table $T$ and similarly $T[{:},a]$ for the $a$-th column.
-For example, in Figure~\ref{fig:main_example}, $T_1[1,:] = [1,2,3,4]$ and $T_3[:,1] = ['$Diana Coolen$', 5]$.
+For example, in Figure~\ref{fig:main_example}, $T_1[:,1] = [1,2,3,4]$ and $T_3[1,:] = ['$Diana Coolen$', 5]$.
 $T_3[1, :]$ is not type-consistent while $T_1[:, 1]$ is.
 %We will write \textbf{vector} to refer to a single row or column when its orientation does not matter.
 
