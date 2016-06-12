@@ -84,9 +84,10 @@
 \newcommand{\pcols}{\format{columns}}
 \newcommand{\nat}{\mathcal{N}}
 
-\newcommand{\sg}{B}
-\newcommand{\sbl}[1]{\ensuremath{B_{\textit{#1}}}}
-\newcommand{\bsbl}[1]{\ensuremath{\mathbf{B_{\textit{#1}}}}}
+\newcommand{\sbs}{B}
+\newcommand{\sbl}[1]{\ensuremath{\sbs_{\textit{#1}}}}
+\newcommand{\ssbl}[1]{\ensuremath{\sbs'_{\textit{#1}}}}
+\newcommand{\bsbl}[1]{\ensuremath{\mathbf{\sbs_{\textit{#1}}}}}
 
 
 
@@ -109,7 +110,6 @@
 \maketitle
 
 \begin{abstract}
-%Spreadsheets, comma separated value files and other tabular data representations are in wide use today. However, the correct use and maintenance of functions in and between the tabular data can be error-prone and overwhelming. In this work, we investigate the automatic discovery of constraints (functions and relations) from raw tabular data. Our method takes inspiration form inductive logic programming and constraint satisfiability. We represent common spreadsheet functions as predicates with arguments that must satisfy number of constraints over the arguments. This allows generic constraint satisfaction techniques to be used to find all such satisfying predicates/functions within the rows, columns and submatrices of the tables. We show the effectiveness and accuracy of this approach on a number of spreadsheets from varying sources.
 Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
 However, modeling, maintaining and discovering formulas in tabular data and spreadsheets can be time consuming and error-prone.
 In this work, we investigate the automatic discovery of constraints (functions and relations) in raw tabular data.
@@ -117,7 +117,6 @@ We see multiple promising applications for this technique, e.g. in rediscovering
 Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
 Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints.
 Constraint learning techniques are used to identify the predicates that hold between blocks of rows and columns of the tables.
-%New types of constraints can be easily added to the system by specifying them in a declarative language.
 We show that our approach is able to accurately discover constraints in spreadsheets from various sources.
 \end{abstract}
 
@@ -135,10 +134,10 @@ For example the influential Reinhart-Rogoff economical paper ``Growth in a Time 
 In this paper,  we investigate whether learning techniques can be used to infer constraints (formulas and other relations) from raw spreadsheet data.
 This is a new and unconventional machine learning problem.
 Consider the example in Figure~\ref{fig:main_example}, where header names such as \textbf{Total} and \textbf{Rank} already suggest the usage of spreadsheet operations such as \textit{SUM} or \textit{RANK}.
-Looking at the first row in Table~$T_2$ and the data in Table~$T_1$, it is clear that the values in this row were computed by summing the values in the corresponding columns (\textbf{1st Quarter} through \textbf{Total}) of $T_1$.
+Looking at the first row in table~$T_2$ and the data in table~$T_1$, it is clear that the values in this row were computed by summing the values in the corresponding columns (\textbf{1st Quarter} through \textbf{Total}) of $T_1$.
 Examining $T_1$ also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by summing the rows of the previous four columns.
-This provides a flavor of how this problem is different from standard mining and learning settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple tables with relationships between them (e.g. foreign-keys). And on the other hand, the data is most often mixed textual and numeric. %, since people tend to use spreadsheets for financial and accounting computations.
-Hence understanding and learning constraints in tabular data is a novel and challenging problem for machine learning.
+This provides a flavor of how this problem is different from standard mining and learning settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple tables with relationships between them (e.g. foreign-keys). On the other hand, the data is most often mixed, e.g. textual and numeric. %, since people tend to use spreadsheets for financial and accounting computations.
+Therefore, understanding and learning constraints in tabular data is a novel and challenging problem for machine learning.
 
 % Moved up
 The question that we answer in this paper is: is it possible to discover or reconstruct constraints in flat tabular spreadsheet data?
@@ -150,11 +149,10 @@ Moreover, we sketch additional application scenario's such as autocompletion and
 The approach that we introduce borrows techniques from logical and relational learning \cite{luc_book}, where the discovery of clausal constraints has been studied in inductive logic programming \cite{claudien,lallouet}; and from constraint learning,  where several approaches to learning sets of constraints have been developed in a constraint programming setting \cite{Quacq,Conacq,modelseeker};
 and from mining in databases, where inductive techniques have been applied to discover constraints (such as functional and multi-valued dependencies) in relational databases \cite{savnik}.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from
 very few examples.
-Our approach contrasts with these in that it focuses
-on learning both column- and row-constraints on integer, floating point as well as textual data.
+Our approach contrasts with these in that it focuses on learning both column- and row-constraints across tables on integer, floating point as well as textual data.
 
 This paper is organized as follows.
-Section \ref{sec:formalization} introduces concepts relevant to our approach. Section \ref{sec:approach} presents the problem statement and the approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents a more detailed discussion of the related work. Section \ref{sec:conclusions} provides conclusions.
+Section \ref{sec:formalization} introduces concepts relevant to our approach and our problem statement. Section \ref{sec:approach} presents our approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications. Section \ref{sec:related_work} presents a more detailed discussion of the related work. Section \ref{sec:conclusions} provides conclusions.
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
@@ -189,7 +187,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
     Green background indicates headerless tables, dark borders indicate maximal type-consistent blocks.
     Most tables only contain type-consistent columns while table~$T_2$ also contains type-consistent rows.
     However, due to the location of the header of~$T_2$ we can infer that it consists of row data.
-    This example was created by combining several Excel sheets from several exercise sessions.
+    This example was created by combining several Excel sheets from several exercise sessions based on~\cite{excel_book}.
     % I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
   }
   \label{fig:main_example}
@@ -236,7 +234,7 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach. Se
       &~\eclookup{\range{T_{5}}{\rangeall}{3}}{\range{T_{5}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}
     \end{align*}}
   \vspace{-18pt}
-  \caption{Constraints learned for the example (left), except \textit{ALLDIFFERENT} (16), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5).
+  \caption{Constraints learned for the example (left), except for \textit{ALLDIFFERENT} (18), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5).
   Constraints marked with $*$ were not present in the original document}
   \label{fig:sol_example}
 \end{subfigure}
@@ -259,15 +257,15 @@ A cell has a {\bf type}, which can be numeric or textual. We further distinguish
 
 A row or a column is \textbf{type-consistent} if all cells in that row or column are of the same base type, i.e. numeric or textual.
 We will use notation $T[a,{:}]$ to refer to the $a$-th row of table $T$ and similarly $T[{:},a]$ for the $a$-th column.
-For example, in Figure~\ref{fig:main_example}, $T_1[1,:] = [1,2,3,4]$ and $T_5[:,1] = ['$Diana Coolen$', 5]$.
-$T_5[:,1]$ is not type-consistent while $T_1[1,:]$ is.
+For example, in Figure~\ref{fig:main_example}, $T_1[1,:] = [1,2,3,4]$ and $T_3[:,1] = ['$Diana Coolen$', 5]$.
+$T_3[1, :]$ is not type-consistent while $T_1[:, 1]$ is.
 %We will write \textbf{vector} to refer to a single row or column when its orientation does not matter.
 
 The most important concept is that of a \textbf{block}. 
 \begin{definition}
-A \textbf{block} has to satisfy three conditions: 1) it contains only entire rows or entire columns of a single headerless table 2) it is contiguous and 3) it is type-consistent.
+A \textbf{block} has to satisfy three conditions: 1)~it contains only entire rows or entire columns of a single headerless table; 2)~it is contiguous; and 3)~it is type-consistent.
 The rows or columns have to be contiguous in the original table meaning that they must visually form a block in the table; and each of the rows/columns has to be of the same type. 
-If it contains only rows we say it has \textit{row-orientation}, if only columns, \textit{column-orientation}. 
+If a block contains only rows we say it has \textit{row-orientation}, if only columns, \textit{column-orientation}. 
 \end{definition}
 
 In line with this definition, we can use the following notation to refer to blocks: $B = T[\rangeto{a}{b},:]$ for a row-oriented block containing rows $a$ to $b$ in table $T$; and similarly $B = T[{:},\rangeto{a}{b}]$ for a column-oriented block.
@@ -293,13 +291,7 @@ A block has the following properties:
 \begin{example}
 Consider the (headerless) table~$T_1$ in Figure~\ref{fig:main_example}.
 Its rows are not type consistent (i.e. they contain both numeric and textual data).
-However, the table can be partitioned into five column-oriented blocks $B_1, B_2, B_3, B_4, B_5$, as shown in the figure ($B_1 = \range{T_1}{\rangeall}{1}$, $B_2 = \range{T_1}{\rangeall}{2}$, $B_3 = \range{T_1}{\rangeall}{\rangeto{3}{8}}$, \dots).
-% {\small
-% B_1 = \range{T_1}{\rangeall}{1},
-% B_2 = \range{T_1}{\rangeall}{2},
-% B_3 = \range{T_1}{\rangeall}{\rangeto{3}{8}},
-% B_4 = \range{T_1}{\rangeall}{9},
-% B_5 = \range{T_1}{\rangeall}{\rangeto{10}{11}}
+However, the table can be partitioned into five column-oriented blocks $\sbl{1}, \sbl{2}, \sbl{3}, \sbl{4}, \sbl{5}$, as shown in the figure ($\sbl{1} = \range{T_1}{\rangeall}{1}$, $\sbl{2} = \range{T_1}{\rangeall}{2}$, $\sbl{3} = \range{T_1}{\rangeall}{\rangeto{3}{8}}$, \dots).
 \end{example}
 
 \begin{definition}
@@ -325,28 +317,28 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
   {\centering
   \begin{tabularx}{\textwidth}{l X X}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ \hline \hline
-    $\ecalldiff{\sg_x}^*$
-      & $\discrete(\sg_x)$
+    $\ecalldiff{\sbl{x}}^*$
+      & $\discrete(\sbl{x})$
       
-      & All values in $\sg_x$ are different. $i \neq j$: $\sg_x[i] \neq \sg_x[j]$
+      & All values in $\sbl{x}$ are different. $i \neq j$: $\sbl{x}[i] \neq \sbl{x}[j]$
       \\[\PADSEP] \hline
 
-    $\ecperm{\sg_x}^*$
-      & $\numeric(\sg_{x})$, $\ecalldiff{\sg_{x}}$
+    $\ecperm{\sbl{x}}^*$
+      & $\numeric(\sbl{x})$, $\ecalldiff{\sbl{x}}$
       
-      & The values in $\sg_{x}$ are a permutation of the numbers $1$ through $\plength(\sg_{x})$.
+      & The values in $\sbl{x}$ are a permutation of the numbers $1$ through $\plength(\sbl{x})$.
       \\ \hline
 
-    \ecseries{\sg_x}
-      & $\integer(\sg_{x})$ and $\ecperm{\sg_{x}}$
+    \ecseries{\sbl{x}}
+      & $\integer(\sbl{x})$ and $\ecperm{\sbl{x}}$
       
-      & $\sg_{x}[1] = 1$ and $\sg_{x}[i] = \sg_{x}[i - 1] + 1$.
+      & $\sbl{x}[1] = 1$ and $\sbl{x}[i] = \sbl{x}[i - 1] + 1$.
       \\[\PADSEP] \hline
 
-    $\ecfkey{\sg_{fk}}{\sg_{pk}}^*$
-      & $\sg_{\mathit{fk}}$ and~$\sg_{pk}$ are $\discrete$; they must have different $\ptable$s but the same $\ptype$; and $\ecalldiff{\sbl{pk}}$
+    $\ecfkey{\sbl{fk}}{\sbl{pk}}^*$
+      & $\sbl{fk}$ and~$\sbl{pk}$ are $\discrete$; they must have different $\ptable$s but the same $\ptype$; and $\ecalldiff{\sbl{pk}}$
 
-      & Every value in~$\sg_{fk}$ also exist in~$\sg_{pk}$ \\[\PADSEP] \hline
+      & Every value in~$\sbl{fk}$ also exist in~$\sbl{pk}$ \\[\PADSEP] \hline
 
     \eclookup{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}
       & $\sbl{fk}$ and $\sbl{pk}$ are $\discrete$; arguments $\{\sbl{fk}, \sbl{r}\}$ and $\{\sbl{pk}, \sbl{val}\}$ within the same set have the same \plength, \ptable and \por; $\sbl{r}$ and~$\sbl{val}$ have the same type; and \ecfkey{\sbl{fk}}{\sbl{pk}}.
@@ -361,72 +353,72 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
       \\[\PADSEP] \hline
 
     \eclookupprod{\sbl{r}}{\sbl{1}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}
-      & Arguments $\{\sg_{r}, \sg_{1}, \sg_{fk}\}$ are $\numeric$, arguments $\{\sg_{pk}, \sg_{val}\}$ are $\discrete$ and within both sets all arguments have the same \plength, \ptable and \por; also \ecfkey{\sg_{fk}}{\sg_{pk}}.
+      & Arguments $\{\sbl{r}, \sbl{1}, \sbl{fk}\}$ are $\numeric$, arguments $\{\sbl{pk}, \sbl{val}\}$ are $\discrete$ and within both sets all arguments have the same \plength, \ptable and \por; also \ecfkey{\sbl{fk}}{\sbl{pk}}.
       
       & $\sbl{r}[i] = \sbl{1}[i] \times \eclookupf{\sbl{fk}}{\sbl{pk}}{\sbl{val}}{}[i]$.
       \\[\PADSEP] \hline
 
-    \ecprod{\sg_r}{\sg_1}{\sg_2}
-      & Arguments $\{\sg_{r}, \sg_{1}, \sg_{2}\}$ are all $\numeric$ and have the same $\plength$
+    \ecprod{\sbl{r}}{\sbl{1}}{\sbl{2}}
+      & Arguments $\{\sbl{r}, \sbl{1}, \sbl{2}\}$ are all $\numeric$ and have the same $\plength$
       
-      & $\sg_{r}[i] = \sg_{1}[i] \times \sg_{2}[i]$.
+      & $\sbl{r}[i] = \sbl{1}[i] \times \sbl{2}[i]$.
       \\[\PADSEP] \hline
 
-    \ecdiff{\sg_r}{\sg_1}{\sg_2}
-      & Arguments $\{\sg_{r}, \sg_{1}, \sg_{2}\}$ are all $\numeric$ and have the same $\plength$ and $ \por$
+    \ecdiff{\sbl{r}}{\sbl{1}}{\sbl{2}}
+      & Arguments $\{\sbl{r}, \sbl{1}, \sbl{2}\}$ are all $\numeric$ and have the same $\plength$ and $ \por$
       
-      & $\sg_{r}[i] = \sg_{1}[i] - \sg_{2}[i]$.
+      & $\sbl{r}[i] = \sbl{1}[i] - \sbl{2}[i]$.
       \\[\PADSEP] \hline
 
-    $\eccalc{\sg_r}{\frac{\sg_1 - \sg_2}{\sg_2}}$
-      & \textit{Same as \ecdiff{\sg_r}{\sg_1}{\sg_2}}
+    $\eccalc{\sbl{r}}{\frac{\sbl{1} - \sbl{2}}{\sbl{2}}}$
+      & \textit{Same as \ecdiff{\sbl{r}}{\sbl{1}}{\sbl{2}}}
 
-      & $\sg_{r}[i] = (\sg_{1}[i] - \sg_{2}[i]) / \sg_{2}[i]$.
+      & $\sbl{r}[i] = (\sbl{1}[i] - \sbl{2}[i]) / \sbl{2}[i]$.
       \\[\PADSEP] \hline
 
-    \ecproj{\sg_r}{\mathbf{\sg_x}}
-      & Arguments $\{\sg_{r}, \mathbf{\sg_x}\}$ all have the same $\plength$, $\por$, $\ptable$ and $\ptype$; $\mathbf{\sg_x}$ contains at least~2 vectors; and $\sg_r = \mathit{SUM}_{\por(\mathbf{\sg_x})}(\mathbf{\sg_x})$
+    \ecproj{\sbl{r}}{\bsbl{x}}
+      & Arguments $\{\sbl{r}, \bsbl{x}\}$ all have the same $\plength$, $\por$, $\ptable$ and $\ptype$; $\bsbl{x}$ contains at least~2 vectors; and $\sbl{r} = \textit{SUM}_{\por(\bsbl{x})}(\bsbl{x})$
       
-      & At every position~$i$ in $1$ through $\plength(\sg_{r})$ there is exactly one vector~$v$ in $\mathbf{\sg_x}$ such that $v[i]$ is a non-blank value, then $v[i] = \sg_{r}[i]$.
+      & At every position~$i$ in $1$ through $\plength(\sbl{r})$ there is exactly one vector~$v$ in $\bsbl{x}$ such that $v[i]$ is a non-blank value, then $v[i] = \sbl{r}[i]$.
       \\[\PADSEP] \hline
 
-    \ecrank{\sg_r}{\sg_x}
-      & $\integer(\sg_{r})$; $\numeric(\sg_{x})$; and $\plength(\sg_{r}) = \plength(\sg_{x})$
+    \ecrank{\sbl{r}}{\sbl{x}}
+      & $\integer(\sbl{r})$; $\numeric(\sbl{x})$; and $\plength(\sbl{r}) = \plength(\sbl{x})$
       
-      & The values in $\sg_{r}$ represent the rank (from largest to smallest) of the values in $\sg_{x}$ (including ties)
+      & The values in $\sbl{r}$ represent the rank (from largest to smallest) of the values in $\sbl{x}$ (including ties)
       \\[\PADSEP] \hline
 
-    \ectotal{\sg_r}{\sg_{pos}}{\sg_{neg}}
-      & Arguments $\{\sg_{r}, \sg_{pos}, \sg_{neg}\}$ are all $\numeric$ and all have the same $\plength$, which is at least $2$
+    \ectotal{\sbl{r}}{\sbl{pos}}{\sbl{neg}}
+      & Arguments $\{\sbl{r}, \sbl{pos}, \sbl{neg}\}$ are all $\numeric$ and all have the same $\plength$, which is at least $2$
       
-      & $\sg_{r}[i] = \sg_{r}[i - 1] + \sg_{pos}[i] - \sg_{neg}[i]$.
+      & $\sbl{r}[i] = \sbl{r}[i - 1] + \sbl{pos}[i] - \sbl{neg}[i]$.
       \\[\PADSEP] \hline
 
-    $\ecsumr{\sg_r}{\mathbf{\sg_x}}^\dagger$
-      & $\sg_r$ and $\mathbf{\sg_x}$ are $\numeric$; $\pcols(\mathbf{\sg_x}) \geq 2$; and $\prows(\mathbf{\sg_x}) = \plength(\sg_r)$
+    $\ecsumr{\sbl{r}}{\bsbl{x}}^\dagger$
+      & $\sbl{r}$ and $\bsbl{x}$ are $\numeric$; $\pcols(\bsbl{x}) \geq 2$; and $\prows(\bsbl{x}) = \plength(\sbl{r})$
       
-      & $B_r[i] = \sum_{j = 1}^{\pcols(\bsbl{x})} \mathit{row}(i, \bsbl{x})[j]$
+      & $\sbl{r}[i] = \sum_{j = 1}^{\pcols(\bsbl{x})} \textit{row}(i, \bsbl{x})[j]$
       \\[\PADSEP] \hline
 
-    $\ecsumc{\sg_r}{\mathbf{\sg_x}}^\dagger$
-      & $\sg_r$ and $\mathbf{\sg_x}$ are $\numeric$; $\prows(\mathbf{\sg_x}) \geq 2$; and $\pcols(\mathbf{\sg_x}) = \plength(\sg_r)$
+    $\ecsumc{\sbl{r}}{\bsbl{x}}^\dagger$
+      & $\sbl{r}$ and $\bsbl{x}$ are $\numeric$; $\prows(\bsbl{x}) \geq 2$; and $\pcols(\bsbl{x}) = \plength(\sbl{r})$
       
-      & $B_r[i] = \sum_{j = 1}^{\prows(\bsbl{x})} \mathit{column}(i, \bsbl{x})[j]$
+      & $\sbl{r}[i] = \sum_{j = 1}^{\prows(\bsbl{x})} \textit{column}(i, \bsbl{x})[j]$
       \\[\PADSEP] \hline
 
-    $\ecsumif{\sg_r}{\sg_{fk}}{\sg_{pk}}{\sg_{val}}^\dagger$
-      & $\sg_{fk}, \sg_{pk}$ are $\discrete$; $\sg_{r}, \sg_{val}$ are $\numeric$; within the sets $\{\sg_{val}, \sg_{fk}\}$ and $\{\sg_{pk}, \sg_{r}\}$ arguments have the same $\plength$ and $\por$; $\sg_{fk}$ and $\sg_{val}$ have the same $\ptable$; $\sg_{fk}$ and $\sg_{pk}$ must have different $\ptable$s but the same $\ptype$; and \ecalldiff{\sg_{pk}}
+    $\ecsumif{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}^\dagger$
+      & $\sbl{fk}, \sbl{pk}$ are $\discrete$; $\sbl{r}, \sbl{val}$ are $\numeric$; within the sets $\{\sbl{val}, \sbl{fk}\}$ and $\{\sbl{pk}, \sbl{r}\}$ arguments have the same $\plength$ and $\por$; $\sbl{fk}$ and $\sbl{val}$ have the same $\ptable$; $\sbl{fk}$ and $\sbl{pk}$ must have different $\ptable$s but the same $\ptype$; and \ecalldiff{\sbl{pk}}
       
-      & \[ B_r[i] = \sum_{j=1}^{\plength(B_{\textit{val}})} \begin{cases}
-          \sg_{val}[j] & \text{if } \sg_{fk}[j] = \sg_{pk}[i] \\
+      & \[ \sbl{r}[i] = \sum_{j=1}^{\plength(\sbl{val})} \begin{cases}
+          \sbl{val}[j] & \text{if } \sbl{fk}[j] = \sbl{pk}[i] \\
           0 & \text{otherwise}
         \end{cases}
       \] \\[\PADSEP] \hline
       
-    \ecsumprod{\sg_r}{\sg_1}{\sg_2}
-      & Arguments $\{\sg_r, \sg_1, \sg_2\}$ are $\numeric$; $\plength(\sg_{1}) = \plength(\sg_{2}) \geq 2$; and $\prows(\sg_{r}) = \pcols(\sg_{r}) = 1$
+    \ecsumprod{\sbl{r}}{\sbl{1}}{\sbl{2}}
+      & Arguments $\{\sbl{r}, \sbl{1}, \sbl{2}\}$ are $\numeric$; $\plength(\sbl{1}) = \plength(\sbl{2}) \geq 2$; and $\prows(\sbl{r}) = \pcols(\sbl{r}) = 1$
       
-      & $\sg_{r}[1] = \sum_{j = 1}^{\plength(\sg_{1})} \sg_{1}[j] \times \sg_{2}[j]$.
+      & $\sbl{r}[1] = \sum_{j = 1}^{\plength(\sbl{1})} \sbl{1}[j] \times \sbl{2}[j]$.
   \end{tabularx}}
 
 \end{table*}
@@ -441,10 +433,10 @@ A \template $s$ is a triple $t = \textit{(\CName, \CSignature, \CFunction)}$:
 %Let us elaborate on this:
 \begin{itemize}
 \item
-\textit{\CName}  specifies the syntactic form of the constraint $s(B_1, ...,B_n)$, that is, the name of the template together
-with $n$ abstract arguments $B_i$.
-Thus a constraint is viewed as a relation or predicate of arity $n$ in first order logic.
-Note that a function $B_r=f(B_1,...,B_n)$ can be represented with the $(n{+}1)$-ary predicate $s_f(B_r,B_1,...,B_n)$.
+\textit{\CName}  specifies the syntactic form of the constraint $s(\sbl{1}, ...,\sbl{n})$, that is, the name of the template together
+with $n$ abstract arguments $\sbl{i}$.
+Thus, a constraint is viewed as a relation or predicate of arity $n$ in first order logic.
+Note that a function $\sbl{r}=f(\sbl{1},...,\sbl{n})$ can be represented with the $(n{+}1)$-ary predicate $s_f(\sbl{r},\sbl{1},...,\sbl{n})$.
 Each argument will have to be instantiated with a block.
 % the list of its variables $v_1,\dots,v_n$.  In ILP terminology, it is known as vocabulary.
 
@@ -464,24 +456,24 @@ The constraint templates implemented in \sname are defined in Table~\ref{table:c
 A non-trivial example is, for example, the constraint template for the row-based sum:
 
 \begin{itemize}
-  \item \CName: $\ecsumr{\sg_r}{\mathbf{\sg_x}}$, for arguments $\sg_r$ and $\mathbf{\sg_x}$.
+  \item \CName: $\ecsumr{\sbl{r}}{\bsbl{x}}$, for arguments $\sbl{r}$ and $\bsbl{x}$.
   
-  \item \CSignature: $\sg_r$ has to be a single vector ($\textit{size}=1$) while $\mathbf{\sg_x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font.
+  \item \CSignature: $\sbl{r}$ has to be a single vector ($\textit{size}=1$) while $\bsbl{x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font.
   Both blocks have to be numeric.
-  This constraint is orientation-specific, so it requires that the number of rows in $\mathbf{\sg_x}$ equals the length of $\sg_r$.
+  This constraint is orientation-specific, so it requires that the number of rows in $\bsbl{x}$ equals the length of $\sbl{r}$.
   Moreover, we add to the bias that the number of columns to sum over is at least~$2$.
   
-  \item \CFunction: each value in the vector $\sg_{r}$ is obtained by summing over the corresponding row in $\mathbf{\sg_x}$.
-  %For example, $B_r = [12, 7]$ and $\mathbf{\sg_x}$ consists of columns: $[5, 15]$, $[7, -8]$.
+  \item \CFunction: each value in the vector $\sbl{r}$ is obtained by summing over the corresponding row in $\bsbl{x}$.
+  %For example, $\sbl{r} = [12, 7]$ and $\bsbl{x}$ consists of columns: $[5, 15]$, $[7, -8]$.
 \end{itemize}
-$SUM$ is an aggregate constraint, and a similar constraint is available for aggregate operators $MIN$, $MAX$, $AVERAGE$, $PRODUCT$ and $COUNT$. The \textit{conditional} aggregate variant $SUMIF$ only ranges over those cells that satisfy a condition on a related cell in that table, e.g. $\range{T_1}{\rangeall}{10}$ and the data in $T_5$ for matching salesperson names.
+\textit{SUM} is an aggregate constraint, and a similar constraint is available for aggregate operators \textit{MIN}, \textit{MAX}, \textit{AVERAGE}, \textit{PRODUCT} and \textit{COUNT}. The \textit{conditional} aggregate variant \textit{SUMIF} only ranges over those cells that satisfy a condition on a related cell in that table, e.g. $\range{T_1}{\rangeall}{10}$ and the data in $T_5$ for matching salesperson names.
 \end{example}
 
 
 It is helpful to see the analogy of constraint templates with first order logic (FOL) and constraint satisfaction.
-From a FOL perspective, a constraint of the form $\ecrank{B_r}{B_x}$ can be seen as a predicate $\textit{RANK}(B_r, B_x)$ where \textit{RANK} is the name of the predicate and its arguments~$B_r$ and~$B_x$ are terms, which can be seen as either uninstantiated variables or as concrete values.
+From a FOL perspective, a constraint of the form $\ecrank{\sbl{r}}{\sbl{x}}$ can be seen as a predicate $\textit{RANK}(\sbl{r}, \sbl{x})$ where \textit{RANK} is the name of the predicate and its arguments~$\sbl{r}$ and~$\sbl{x}$ are terms, which can be seen as either uninstantiated variables or as concrete values.
 This also holds in our setting, where an instantiation of a variable corresponds to a concrete block.
-For example, for the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $B_r$ is the $8$th vector in $T_1$: $B_r = \range{T_1}{\rangeall}{8} = [2,1,3,4]$ and the value of $B_x$ is the $7$th vector: $B_x = \range{T_1}{\rangeall}{7} = [1514, 1551, 691, 392]$.
+For example, for the spreadsheet in Figure~\ref{fig:main_example}, when we write $\ecrank{\range{T_1}{\rangeall}{8}}{\range{T_1}{\rangeall}{7}}$, then the value of $\sbl{r}$ is the $8$th vector in $T_1$: $\sbl{r} = \range{T_1}{\rangeall}{8} = [2,1,3,4]$ and the value of $\sbl{x}$ is the $7$th vector: $\sbl{x} = \range{T_1}{\rangeall}{7} = [1514, 1551, 691, 392]$.
 
 %When looking into constraints like \textit{$B$ = RANK($A$)}, it is helpful to see the analogy with both first order logic (FOL) and with constraint satisfaction problems.
 %From a FOL perspective, the name of the constraint ($\mathit{RANK}$) is just the predicate, and the arguments $B$ and $A$ are the terms, which can be seen as either uninstantiated variables or as values (concrete groups with values).
@@ -491,12 +483,12 @@ For example, for the spreadsheet in Figure~\ref{fig:main_example}, when we write
 %So, $T$ is viewed as table variable here, with the effect that  ${\range{T}{\rangeall}{8}}$ is a group variable.
 
 With this interpretation, we can speak about the signature and definition of a constraint template being \textit{satisfied}.
-We say that a signature (definition) of a constraint template~$s$ with $n$ arguments is satisfied by the blocks $(B_1, ..., B_n)$ if $\sigc(B_1, ..., B_n)$ (respectively $\defc(B_1, ..., B_n)$) is satisfied.
-Likewise, the template is satisfied if both the signature and definition are satisfied; in logic programming, we would define the predicate~$s$ using a Prolog like clause: $s(B_1, ..., B_n) \leftarrow \sigc(B_1, ..., B_n) \wedge \defc(B_1, ..., B_n)$.
+We say that a signature (definition) of a constraint template~$s$ with $n$ arguments is satisfied by the blocks $(\sbl{1}, ..., \sbl{n})$ if $\sigc(\sbl{1}, ..., \sbl{n})$ (respectively $\defc(\sbl{1}, ..., \sbl{n})$) is satisfied.
+Likewise, the template is satisfied if both the signature and definition are satisfied; in logic programming, we would define the predicate~$s$ using a Prolog like clause: $s(\sbl{1}, ..., \sbl{n}) \leftarrow \sigc(\sbl{1}, ..., \sbl{n}) \wedge \defc(\sbl{1}, ..., \sbl{n})$.
 Under this interpretation, the term constraint and constraint template can be used interchangeably.
 
 \begin{definition}
-A \textbf{valid argument assignment} of a constraint $s$ is a tuple of blocks $(B_1, ..., B_n)$ such that $s(B_1, ..., B_n)$ is satisfied, that is, both the signature and the definition of the corresponding constraint template are satisfied by the assignment of $(B_1, ..., B_n)$ to the arguments.
+A \textbf{valid argument assignment} of a constraint template~$s$ is a tuple of blocks $(\sbl{1}, ..., \sbl{n})$ such that $s(\sbl{1}, ..., \sbl{n})$ is satisfied, that is, both the signature and the definition of the corresponding constraint template are satisfied by the assignment of $(\sbl{1}, ..., \sbl{n})$ to the arguments.
 \end{definition}
 
 
@@ -512,7 +504,7 @@ The inverse problem is, given only an instantiation of the cells, to find the co
 We define the inverse problem, that is the {\bf Tabular Constraint Learning Problem}, as follows:
 %
 \begin{definition} \textit{Tabular Constraint Learning.}\label{def:problem_statement}\\
-{\bf Given} a set of instantiated blocks~${\cal B}$ over tables~${\cal T}$ and a set of {\template}s ${\cal S}$: {\bf find} all constraints $s(B'_1, ..., B'_n)$ where $s \in {\cal S}$, $\forall i: B_i' \sqsubseteq B_i \in {\cal B}$ and $(B'_1, ..., B'_n)$ is a satisfied argument assignment of the template~$s$.
+{\bf Given} a set of instantiated blocks~${\cal B}$ over tables~${\cal T}$ and a set of {\template}s ${\cal S}$: {\bf find} all constraints $s(\ssbl{1}, ..., \ssbl{n})$ where $s \in {\cal S}$, $\forall i: \sbl{i}' \sqsubseteq \sbl{i} \in {\cal B}$ and $(\ssbl{1}, ..., \ssbl{n})$ is a satisfied argument assignment of the template~$s$.
 \end{definition}
 % Let us now define what it means for a constraint from \template to hold in general. Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $t^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
 % \sergey{moved from formalization END}
@@ -531,17 +523,19 @@ Figure~\ref{fig:sol_example} shows the solution to the tabular constraint learni
 
 \subsubsection{Dependencies}
 \label{sec:form:dependencies}
-In Table~\ref{table:constraints} one can see that for some constraints we used the predicate of another constraint in its signature, e.g. for \textit{PERMUTATION}. This expresses a dependency of the constraint on that other constraint. This can be interpreted as follows: the signature of the constraint consists of its own signature plus the signature of the depending constraint, and its definition of its own definition plus the definition of the depending constraint.
-In FOL, we can see that one constraint entails the other, for example if $\ecperm{\sg_x}$ holds for a block $\sg_x$, then $\ecalldiff{\sg_{x}}$ also holds.
+In Table~\ref{table:constraints} one can see that for some constraints we used the predicate of another constraint in its signature, e.g. for \textit{PERMUTATION}.
+This expresses a dependency of the constraint on that other \textit{base} constraint.
+This can be interpreted as follows: the signature of the constraint consists of its own signature plus the signature of the base constraint, and its definition of its own definition plus the definition of the base constraint.
+In FOL, we can see that one constraint entails the other, for example if $\ecperm{\sbl{x}}$ holds for a block $\sbl{x}$, then $\ecalldiff{\sbl{x}}$ also holds.
 
-Apart from easing the specification of the signature and definition, in Section~\ref{sec:approach} we will see how such dependencies can be used to speed up the search for constraints.
+In Section~\ref{sec:approach} we will see how, apart from easing the specification of the signature and definition, such dependencies can be used to speed up the search for constraints.
 
 \subsubsection{Redundancies}
 \label{sec:form:redundancies}
-Depending on the application, some constraints in the solution to the tabular constraint learning problem may be considered \textit{redundant}. This is because constraints may be logically equivalent or may be implied by other constraints, e.g. if you know $\ecperm{B_x}$, $\ecalldiff{B_x}$ is redundant.
+Depending on the application, some constraints in the solution to the tabular constraint learning problem may be considered \textit{redundant}. This is because constraints may be logically equivalent or may be implied by other constraints, e.g. if you know $\ecperm{\sbl{x}}$, $\ecalldiff{\sbl{x}}$ is redundant.
 
-Within the same constraint, there can be equivalent argument assignments if the order of some of the arguments does not matter. For example for the product constraint, $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecprod{\sg_r}{\sg_2}{\sg_1}$ so one can be considered redundant to the other.
-Two different constraints can also be logically equivalent, due to their nature e.g. for addition/subtraction and product/division: $\ecprod{\sg_r}{\sg_1}{\sg_2} \equiv \ecdiv{\sg_1}{\sg_r}{\sg_2}$.
+Within the same constraint, there can be equivalent argument assignments if the order of some of the arguments does not matter. For example for the product constraint, $\ecprod{\sbl{r}}{\sbl{1}}{\sbl{2}} \equiv \ecprod{\sbl{r}}{\sbl{2}}{\sbl{1}}$ so one can be considered redundant to the other.
+Two different constraints can also be logically equivalent, due to their nature e.g. for addition / subtraction and product / division: $\ecprod{\sbl{r}}{\sbl{1}}{\sbl{2}} \equiv \ecdiv{\sbl{1}}{\sbl{r}}{\sbl{2}}$.
 
 Finally, when the data has rows or columns that contain \textit{exactly} the same values, then any constraint with such a vector in its argument assignment will also have an argument assignment with the other equivalent vectors.
 
@@ -613,8 +607,8 @@ Our proposed methodology contains the following steps:
 \item Partition the tables into contiguous, type-consistent \textit{superblocks}
 \item Generate for each constraint template all valid argument assignments in two steps:
 \begin{enumerate}
-\item For each constraint template~$s$, generate all assignments $(B_1, \ldots ,B_n)$ where each $B_i$ is a superblock and the $B_i$ are \textit{compatible} (defined below) with the signature of~$s$. 
-\item For each generated assignment $(B_1, \ldots ,B_n)$ in 3a), find all valid constraints $s(B'_1, \ldots, B'_n)$ such that for all $i$ holds $B'_i \sqsubseteq B_i$ and the signature and definition of~$s$ are satisfied.
+\item For each constraint template~$s$, generate all assignments $(\sbl{1}, \ldots ,\sbl{n})$ where each~$\sbl{i}$ is a superblock and the~$\sbl{i}$ are \textit{compatible} (defined below) with the signature of~$s$. 
+\item For each generated assignment $(\sbl{1}, \ldots ,\sbl{n})$ in 3a), find all valid constraints $s(\ssbl{1}, \ldots, \ssbl{n})$ such that for all $i$ holds $\ssbl{i} \sqsubseteq \sbl{i}$ and the signature and definition of~$s$ are satisfied.
 \end{enumerate}
 \end{enumerate}
 
@@ -622,16 +616,16 @@ The core of our method is step 3. In principle, one could use a generate-and-tes
 
 Instead, we divide this step into two parts: in step 3a, we will not reason over individual (sub)blocks and their data, but rather over the properties of the superblocks.
 % and what combination of superblocks may lead to a valid argument assignment.\\
-Consider table~$T_1$ in Figure~\ref{fig:main_example} and the $\mathit{SUM}_{row}$ constraint template.
+Consider table~$T_1$ in Figure~\ref{fig:main_example} and the $\textit{SUM}_{row}$ constraint template.
 Instead of considering all possible subblocks of $T_1$, we first reason over the properties of the superblocks.
-For example, $B_2$ and $B_4$ are not numeric so they can be immediately discarded.
-Superblocks~$B_1, B_3$ and $B_5$ are valid candidates for $B_r$, however, since they all have length~4, $\mathbf{B_x}$ needs at least 4~columns which is only satisfied by $B_3$.
-So the assignments generated in step 3a would be $(B_1, B_3), (B_3, B_3), (B_5, B_3)$.
+For example, $\sbl{2}$ and $\sbl{4}$ are not numeric so they can be immediately discarded.
+Superblocks~$\sbl{1}, \sbl{3}$ and $\sbl{5}$ are valid candidates for~$\sbl{r}$, however, since they all have length~4, $\mathbf{\sbl{x}}$ needs at least 4~columns which is only satisfied by $\sbl{3}$.
+So the assignments generated in step 3a would be $(\sbl{1}, \sbl{3}), (\sbl{3}, \sbl{3}), (\sbl{5}, \sbl{3})$.
 
-In step 3b, we start from an assignment $(B_1, \ldots, B_n)$ with superblocks $B_i$, and generate and test all possible (sub)block assignments to arguments using the properties and actual data of the blocks. As we only have to consider the blocks $B'_i \sqsubseteq B_i$ contained in each superblock, this is typically much easier. For the above example and $(B_5, B_3)$, each of the vectors of $B_5$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks of $B_3$ for the right-hand side and verify the signature (e.g. at least size $4$) and test whether for each row the definition is satisfied. %In practice, this can be optimized further.
+In step 3b, we start from an assignment $(\sbl{1}, \ldots, \sbl{n})$ with superblocks $\sbl{i}$, and generate and test all possible (sub)block assignments to arguments using the properties and actual data of the blocks. As we only have to consider the blocks $\ssbl{i} \sqsubseteq \sbl{i}$ contained in each superblock, this is typically much easier. For the above example and $(\sbl{5}, \sbl{3})$, each of the vectors of $\sbl{5}$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks of $\sbl{3}$ for the right-hand side and verify the signature (e.g. at least size $4$) and test whether for each row the definition is satisfied. %In practice, this can be optimized further.
 
-We now describe in more detail how headerless tables are extracted (step 1, Section~\ref{sec:table_extraction}) and how superblocks are generated from them (step 2, Section~\ref{sec:make_groups}), how the candidate superblock assignments are generated (step 3a, Section~\ref{sec:algo:super}) and how the actual assignments are extracted from that (step 3b, Section~\ref{sec:algo:subgr}).
-In Section~\ref{sec:opts} we describe a number of optimizations designed to speed up the algorithm.
+We now describe in more detail how headerless tables are extracted (step 1, Section~\ref{sec:table_extraction}) and how superblocks are generated from them (step 2, Section~\ref{sec:make_groups}), how the candidate superblock assignments are generated (step~3a, Section~\ref{sec:algo:super}) and how the actual assignments are extracted from that (step~3b, Section~\ref{sec:algo:subgr}).
+In Section~\ref{sec:opts} we describe a number of optimizations designed to improve the algorithm.
 
 
 
@@ -663,7 +657,7 @@ The sheet is then processed row by row, splitting each row into ranges of non-em
 Headers can be detected, for example, by checking if the first row or column contains only textual values. If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
 
 \paragraph{Visual}
-The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool.% (Figure~\ref{fig:visual_tool})
+The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool.
 Users select tables excluding the header and optionally specify an orientation.
 The tool then generates the specification of the tables automatically.
 
@@ -703,10 +697,10 @@ This separation of checking the \textit{properties} of superblock assignments fr
       \ForAll{$s~\mathbf{in}~\temps$} \label{algo:tcl:for}
         %\State $n \gets$ number of arguments of template $s$
         \State $A \gets \generategroups(s, \blocks)$  \label{algo:tcl:super}
-        \ForAll{$(B_1, \dots, B_n) \in A$}
-        \State{$A' \gets \findassignment(s, (B_1,\dots,B_n))$}
-        \ForAll{$(B_1',\dots,B_n') \in A'$}
-            \State $C \gets C \cup \{ c_s(B_1', \dots, B_n') \}$
+        \ForAll{$(\sbl{1}, \dots, \sbl{n}) \in A$}
+        \State{$A' \gets \findassignment(s, (\sbl{1},\dots,\sbl{n}))$}
+        \ForAll{$(\sbl{1}',\dots,\sbl{n}') \in A'$}
+            \State $C \gets C \cup \{ c_s(\sbl{1}', \dots, \sbl{n}') \}$
           \EndFor
         \EndFor
       \EndFor
@@ -726,10 +720,10 @@ This separation of checking the \textit{properties} of superblock assignments fr
 \
 % Let there be $b$ blocks and let~$s$ have~$n$ arguments, then a simple generate-and-test method would have to test $b^n$ combinations (given that blocks can be repeated), which can grow very rapidly with $b$, depending on $n$.
 
-Given a constraint template~$s$ and the set of all maximal blocks~\blocks, the goal is to find all combinations of maximal blocks that are consistent with the constraint signature.
-An argument assignment $(B_1, ... B_n)$ is \textit{consistent} with the signature of template $s$ if for each block $B_i$ there exists at least one subblock $B_i' \sqsubseteq B_i$ that satisfies the signature.
+Given a constraint template~$s$ and the set of all (maximal) superblocks~\blocks, the goal is to find all combinations of superblocks that are compatible with the constraint signature.
+An argument assignment $(\sbl{1}, ... \sbl{n})$ is \textit{compatible} with the signature of template $s$ if for each block $\sbl{i}$ there exists at least one subblock $\sbl{i}' \sqsubseteq \sbl{i}$ that satisfies the signature.
 
-Furthermore, the choice of one argument can influence the possible candidates blocks for the other arguments, for example, if they must have the same length.
+The choice of one argument can influence the possible candidate blocks for the other arguments, for example, if they must have the same length.
 Instead of writing specialized code to generate and test the superblock assignments, we make use of the built-in reasoning mechanisms of constraint satisfaction solvers.
 
 A Constraint Satisfaction Problem (CSP) is a triple $(V,D,C)$ where $V$ is a set of \textit{variables}, $D$ the domain of possible values each variable can take and $C$ the set of constraints over $V$ that must be satisfied.
@@ -740,18 +734,7 @@ Each variable can be assigned each of the maximal blocks in \blocks, so the doma
 %For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that a group~$G \in \groups$ is selected if there is at least one subgroup~$G' \subseteq G$ that satisfies the \CSignature.
 
 To reason over the blocks, we add to the constraint program a set of background facts that contain the properties of each block, namely its type, table, orientation, size, length and number of rows and columns.
-%The actual constraints correspond to the requirements defined in the signature, such as whether arguments are of a certain type, have certain dependencies or have to be equal length or orientation, etc.
-%
-% \tias{More detailed description of the properties commented out, feel free to put in}
-%Translation:
-%\begin{description}
-%  \item[Type] Require group that has supertype (e.g. integer => require numeric group, because subgroup might be integer)
-%  \item[Length] Require group to have exact length (subgroups have the same length)
-%  \item[Vectors / columns / rows] Require group to have at least the amount of vectors, columns, rows required
-%  \item[Dependency] Fix dependent variables, for every assignment construct CSP that attempts to find values for the other variables
-%  \item[Same length / table / orientation] Require groups to gave the same length table ...
-%\end{description}
-%
+
 \begin{table}[t]
   \caption{Translation of signature requirements to superblock constraints. The following need not be relaxed: $\plength(B) = x$, $\por(B) = x$, $\ptable(B) = x$ and $\psize(B) \geq x$.}
   \label{tbl:translation}
@@ -765,20 +748,13 @@ To reason over the blocks, we add to the constraint program a set of background 
     & $\mathit{if}~\por(B) = \mathit{row}: \prows(B) \geq x$
   \end{tabularx}
 \end{table}
-%
-The actual constraints must enforce that a superblock assignment is \textit{consistent} with the requirements defined in the signature.
-%
-%In order for our approach to be complete, the signature constraints can not always be enforced directly on a block.
-%If a block matches the signature it is a valid candidate, however, if it does not there might exist subblocks that still satisfy the signature.
-%\begin{example}
-%  Consider, for example, the constraint template \ecseries{x} and a superblock candidate~$B$ for~$x$ containing both integer and floating point values.
-%  While the signature of the template requires~$x$ to be integer we cannot discard~$B$ since there might be subblocks~$B' \sqsubseteq B$ that only contain integer values and satisfy the signature.
-%\end{example}
+
+The actual constraints must enforce that a superblock assignment is \textit{compatible} with the requirements defined in the signature.
 
 Table~\ref{tbl:translation} shows how the conversion from requirements of the signature to CSP constraints works:
-Requirements on the lengths, orientations and tables of blocks can be directly enforced since they are invariant under block containment($\sqsubseteq$).
+Requirements on the lengths, orientations and tables of blocks can be directly enforced since they are invariant under block containment~($\sqsubseteq$).
 Typing requirements need to be relaxed to check only for base types (numeric and textual).
-Minimum sizes can be directly enforced, but exact size requirements are relaxed to minimum sizes, since blocks with two many vectors contain subblocks of the required size.
+Minimum sizes can be directly enforced, but exact size requirements are relaxed to minimum sizes, since blocks with too many vectors contain subblocks of the required (smaller) size.
 Finally, restrictions on the number of rows or columns behave as length or size constraints based on the orientation of the block they are applied to.
 Subgroups of row-oriented (column-oriented) blocks will always have the same number of columns (rows), however, the number of rows (columns) might decrease.
 
@@ -788,9 +764,9 @@ These solutions correspond to the valid superblock assignments for constraint te
 \begin{example}
 %Br and Bx are numeric; rows(Bx) ⇤ 2; and columns(Bx ) = length(Br )
 
-  Consider the constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$, then the generated CSP will contain two variables $V_r, V_x$ corresponding to arguments~$\sg_r$ and~$\mathbf{\sg_x}$.
+  Consider the constraint template $\ecsumr{\sbl{r}}{\bsbl{x}}$, then the generated CSP will contain two variables $V_r, V_x$ corresponding to arguments~$\sbl{r}$ and~$\bsbl{x}$.
   Given maximal blocks~\blocks, the domain of these variables are $D(V_r) = D(V_x) = \{ 1, \dots, |\blocks| \}$.
-  Finally, the signature of $\ecsumr{\sg_r}{\mathbf{\sg_x}}$ (see Table~\ref{table:constraints}) will be translated into constraints:
+  Finally, the signature of $\ecsumr{\sbl{r}}{\bsbl{x}}$ (see Table~\ref{table:constraints}) will be translated into constraints:
   \begin{align*}
     & \numeric(V_r) \land \numeric(V_x) \land \pcols(V_x) \geq 2 \\
     & (\por(V_x) = \mathit{column}) \Rightarrow (\prows(V_x) \geq \plength(V_r)) \\
@@ -805,14 +781,14 @@ These solutions correspond to the valid superblock assignments for constraint te
 
 \subsubsection{Generating subblock assignments (Step 3b)}
 \label{sec:algo:subgr}
-Given a superblock assignment $(B_1, \dots, B_n)$ from the previous step, the goal is to discover valid \textit{subassignments}, i.e. assignments of subblocks $(B'_1, \dots, B'_n)$ (for all $i$, $B'_i \subseteq B_i$) that satisfy both the signature and the definition of template~$s$.
+Given a superblock assignment $(\sbl{1}, \dots, \sbl{n})$ from the previous step, the goal is to discover valid \textit{subassignments}, i.e. assignments of subblocks $(\ssbl{1}, \dots, \ssbl{n})$ (for all $i$, $\ssbl{i} \sqsubseteq \sbl{i}$) that satisfy both the signature and the definition of template~$s$.
 
 %While the previous step reasoned about the \textit{properties} of blocks, in this step we will also reason about the actual \textit{content} of the blocks, that is, the data.
 \begin{example}
-  Consider the sum-over-rows constraint template $\ecsumr{\sg_r}{\mathbf{\sg_x}}$.
-  An example superblock assignment from Figure~\ref{fig:main_example} is $(B_r, \mathbf{\sg_x}) = (\range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{\rangeto{3}{8}})$.
-  Note that this assignment does not satisfy the signature yet because $\sg_r$ contains more than one vector.
-  This step aims to generate subassignments $(B_r' \sqsubseteq B_r, \mathbf{B_x}' \sqsubseteq \mathbf{B_x})$ that do satisfy the signature and test whether they satisfy the definition:
+  Consider the sum-over-rows constraint template $\ecsumr{\sbl{r}}{\bsbl{x}}$.
+  An example superblock assignment from Figure~\ref{fig:main_example} is $(\sbl{r}, \bsbl{x}) = (\range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{\rangeto{3}{8}})$.
+  Note that this assignment does not satisfy the signature yet because $\sbl{r}$ contains more than one vector.
+  This step aims to generate subassignments $(\sbl{r}' \sqsubseteq \sbl{r}, \mathbf{\sbl{x}}' \sqsubseteq \mathbf{\sbl{x}})$ that do satisfy the signature and test whether they satisfy the definition:
   $\forall i, \sbl{r}[i] = \sum_{j = 1}^{length(\bsbl{x})} \mathit{row}(i, \bsbl{x})[j]$.
   In Figure~\ref{fig:main_example} there is exactly one such subassignment: $(\range{T_1}{\rangeall}{7}, \range{T_1}{\rangeall}{\rangeto{3}{6}})$.
 \end{example}
@@ -822,7 +798,7 @@ However, few CSP solvers support floating point numbers, which are prevalent in 
 Furthermore, in a CSP approach we would have to \textit{ground} out the definition for each of the corresponding elements in the vectors.
 This is inefficient, as already such blocks may not satisfy the signature or the first elements in the data may not satisfy the definition.
 
-On the other hand, a simple generate-and-test will usually suffice.
+On the other hand, a simple generate-and-test approach, as illustrated in Algorithm~\ref{algo:gen-test-subblocks}, will usually suffice.
 %However, the actual implementation is specified for every constraint template separately, allowing different methods to be used based on the type of template.
 %For this reason, the \sname system uses generate-and-test to implement $\findassignment$ for most constraint templates.
 Given a superblock assignment, all disjoint subassignments are generated taking into account the required size, columns or rows.
@@ -831,12 +807,12 @@ For every (disjoint) subassignment the exact signature (e.g. subtypes will not h
 \begin{algorithm}[tbh]
   \begin{algorithmic}
     \footnotesize
-    \Procedure{Subassignments}{$s$, $(B_1, \dots, B_n)$}
+    \Procedure{Subassignments}{$s$, $(\sbl{1}, \dots, \sbl{n})$}
     \State $n \gets$ number of arguments of template $s$
     \State $A_{sub} \gets \emptyset$
-    \ForAll{$(B_1', \dots, B_n') \textbf{ where } \forall i: B_i' \sqsubseteq B_i  \land \textit{disjoint}_{j \neq i}(B_i', B_j')$}
-      \If{$\mathit{Sig}_s(B_1',\dots,B_n') \land \mathit{Def}_s(B_1',\dots,B_n')$}
-        \State $A_{sub} \gets A_{sub} \cup \{ (B_1', \dots, B_n') \}$
+    \ForAll{$(\sbl{1}', \dots, \sbl{n}') \textbf{ where } \forall i: \sbl{i}' \sqsubseteq \sbl{i}  \land \textit{disjoint}_{j \neq i}(\sbl{i}', \sbl{j}')$}
+      \If{$\textit{Sig}_s(\sbl{1}',\dots,\sbl{n}') \land \textit{Def}_s(\sbl{1}',\dots,\sbl{n}')$}
+        \State $A_{sub} \gets A_{sub} \cup \{ (\sbl{1}', \dots, \sbl{n}') \}$
       \EndIf
     \EndFor
 \Return $A_{sub}$
@@ -889,12 +865,12 @@ For every (disjoint) subassignment the exact signature (e.g. subtypes will not h
 
 
 \subsection{Optimizations} \label{sec:opts}
-This section discusses various design decisions and optimizations aimed at improving the speed and extensibility of our system as well as to eliminate redundant constraints.
+This section discusses various design decisions and optimizations aimed at improving the speed, the extensibility of our system and the elimination of redundant constraints.
 
 \subsubsection{Template dependencies}
 As discussed in Section~\ref{sec:form:dependencies}, some constraint templates depend on others by including templates they depend on in their signature (see Table~\ref{table:constraints}).
 
-In Inductive Logic Programming, one often exploits implications between constraints to structure the search space \cite{luc_book}.
+In Inductive Logic Programming, one often exploits implications between constraints to structure the search space~\cite{luc_book}.
 Our approach uses the dependencies between templates to define a dependency graph.
 We assume that signatures do not contain equivalences or loops, and hence the resulting graph is a directed acyclic graph (DAG).
 Figure~\ref{fig:learning_order} shows the dependency graph extracted from the signatures in Table~\ref{table:constraints}. 
@@ -911,21 +887,16 @@ Constraint templates that have no dependencies are omitted.
 Using the dependency graph~(\dependencies) we can reorder the templates such that a template occurs after any template it depends on.
 Concretely, in Algorithm~\ref{algo:tcl} line \ref{algo:tcl:for} the input templates~$\temps$ are handled following an ordering that agrees with the partial ordering imposed by~\dependencies (e.g. \textit{ALLDIFFERENT} before \textit{FOREIGNKEY}).
 When using this ordering, templates later in the ordering can use the learned constraints of the templates they depend on.
-This is made possible by adding, on line \ref{algo:tcl:super}, the set of learned constraints $C$ to the argument of \generategroups.
+To enable this reuse of constraints, the set of learned constraints $C$ is added to the argument of \generategroups on line \ref{algo:tcl:super}.
 
-This is used to speed up the \generategroups step. For constraint templates where some arguments are also part of a constraint that it depends on, it is not needed to search for superblocks and subblocks from scratch. Instead, one can start from all and only the actual argument assignments of the depending constraint, and only search matching superblocks for the remaining arguments.
+The previously learned constraints are used to speed up the \generategroups step. For constraint templates where some arguments are also part of a constraint that it depends on, it is not needed to search for superblocks and subblocks from scratch. Instead, one can start from all and only the actual argument assignments of the base constraint, and only search matching superblocks for the remaining arguments.
 
 \begin{example}
-  Consider $\ecfkey{B_{fk}}{B_{pk}}$, which states that every value in $B_{fk}$ also exists in $B_{pk}$; its signature includes $\ecalldiff{B_{pk}}$. There are 16 \textit{ALLDIFFERENT} constraints to be found in Figure~\ref{fig:main_example}, hence, the \generategroups only needs to check which superblocks for $B_{pk}$ are compatible (different table, same type) with these 16 assignments to $B_{fk}$.
+  Consider $\ecfkey{\sbl{fk}}{\sbl{pk}}$, which states that every value in $\sbl{fk}$ also exists in $\sbl{pk}$; its signature includes $\ecalldiff{\sbl{pk}}$. There are 18 \textit{ALLDIFFERENT} constraints to be found in Figure~\ref{fig:main_example}, hence, the \generategroups only needs to check which superblocks for $\sbl{fk}$ are compatible (different table, same type) with these 18 assignments to $\sbl{pk}$.
 \end{example}
 
-%Instead of generating assignments for~$B_{pk}$ using the given blocks~$\blocks$, we will only consider (sub)blocks~$P = \{ B' | \ecalldiff{B'} \in C \}$.
-%$P$~can be seen as a set of partial assignments in which the argument $B_{pk}$ has been fixed.
 Instead of generating one CSP to find all assignments, a CSP is generated for every known assignment of the depending constraint (and variables involved), which then searches for all assignments completing this partial assignment.
-The procedure to generate CSPs remains the same otherwise. %, except that the known subassignment(s) are added as extra blocks that can only be assigned to their corresponding variable.
-
-%This approach has the additional benefit of ensuring that the (sub)blocks assigned to the dependent arguments already satisfy both the signature and definition of the template it depends on.
-%Therefore, the implementation of $\findassignment$ does not have to take these blocks into account.
+The procedure to generate CSPs remains the same otherwise.
 
 
 
@@ -945,21 +916,21 @@ The procedure to generate CSPs remains the same otherwise. %, except that the kn
 
 \subsubsection{Redundancy}
 We consider two types of redundancy that we aim to eliminate during search.
-As noted in Section~\ref{sec:form:dependencies}, for some constraint templates there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example, $\ecprod{B_R'}{B_1'}{B_2'} \Leftrightarrow \ecprod{B_R'}{B_2'}{B_1'}$.
+As noted in Section~\ref{sec:form:dependencies}, for some constraint templates there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example, $\ecprod{\sbl{R}'}{\sbl{1}'}{\sbl{2}'} \Leftrightarrow \ecprod{\sbl{R}'}{\sbl{2}'}{\sbl{1}'}$.
 Such duplicates are avoided by defining a \textit{canonical} form for these constraints.
 In practice, we define an arbitrary but fixed block ordering and require those blocks that are interchangeable to adhere to this ordering.
-Moreover, among the semantically equivalent constraints product (\ecprod{B_R'}{B_1'}{B_2'}) and division (\eccalc{B_1'}{B_R' / B_2'}) we only added product, as well as only difference (\ecdiff{B_r}{B_1}{B_2}) and not sum (\eccalc{B_1}{B_r + B_2}). However, division and sum could easily be added, as could it be added explicitly in post-processing based on the matching product and difference constraints.
+Moreover, among the semantically equivalent constraints product (\ecprod{\sbl{R}'}{\sbl{1}'}{\sbl{2}'}) and division (\eccalc{\sbl{1}'}{\sbl{R}' / \sbl{2}'}) we only added product, as well as only difference (\ecdiff{\sbl{r}}{\sbl{1}}{\sbl{2}}) and not sum (\eccalc{\sbl{1}}{\sbl{r} + \sbl{2}}). However, division and sum could easily be added, as they could be added explicitly in post-processing based on the matching product and difference constraints.
 
 
 A last type of redundancy we chose to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
-For example, consider the constraint \ecsumc{B_r}{B[1{:}n]} where $B[k{:}n]$ consists of only zeros, then \ecsumc{B_r}{B[1{:}j]} will be true for all $k - 1 \leq j \leq n$.
+For example, consider the constraint $\ecsumc{\sbl{r}}{\range{T}{\rangeall}{\rangeto{1}{n}}}$ where $\range{T}{\rangeall}{\rangeto{k}{n}}$ consists of only zeros, then $\ecsumc{\sbl{r}}{\range{T}{\rangeall}{\rangeto{1}{j}}}$ will be true for all $k - 1 \leq j \leq n$.
 In \sname we have, therefore, chosen to only consider \textit{maximal} subblocks.
 
 In some cases a maximal subblock might falsely include irrelevant columns.
-Consider $B_1 = [[200, 300], [200, 150], [1, 2]]$ and $B_2 = [200, 300]$, then \sname will find the constraint $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$.
-Should the target constraint be $\eccalc{B_2}{\mathit{MAX}(B_1[1{:}2])}$, then the last vector of~$B_1$ must be split off into a separate block.
+Consider superblock $\bsbl{x} = \range{T}{\rangeall}{\rangeto{1}{3}} = [[200, 300], [200, 150], [1, 2]]$ and $\sbl{r} = [200, 300]$, then \sname will find the constraint $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{\rangeto{1}{3}})}$.
+Should the target constraint be $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{\rangeto{1}{2}})}$, then $\range{T}{\rangeall}{3}$ must be split off into a separate block.
 
-Alternatively, we can output all valid assignments instead of only maximal subblocks, e.g. $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1])}$, $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}2])}$ and $\eccalc{B_2[1]}{\mathit{MAX}(B_1[1{:}3])}$, however, this might produce many redundant constraints including constraints that accidentally cover too little data.
+Alternatively, we can output all valid assignments instead of only maximal subblocks, e.g. $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{1})}$, $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{\rangeto{1}{2}})}$ and $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{\rangeto{1}{3}})}$, however, this might produce many redundant constraints including constraints that accidentally cover too little data.
 
 
 
@@ -1037,7 +1008,7 @@ In order to quantify the results and generalize our findings we also evaluate ou
 \subsection{Method}
 \label{sec:evalualtion:method}
 In order to obtain a benchmark of spreadsheets we looked at three sources:
-1)~spreadsheets from an exercise session for teaching Excel; 2)~spreadsheets from tutorials online; and 3)~publicly available \textit{data} spreadsheets such as real-world crime statistics or financial reports\footnote{(attached to to the submitted paper)}.
+1)~spreadsheets from an exercise session for teaching Excel based on~\cite{excel_book}; 2)~spreadsheets from tutorials online; and 3)~publicly available \textit{data} spreadsheets such as real-world crime statistics or financial reports\footnote{(benchmark attached to to the submitted paper)}.
 All spreadsheets were converted to CSV and the table definitions are fixed.
 Group definitions are only specified if the spreadsheet contains ambiguous \textit{None} values. 
 
@@ -1061,10 +1032,10 @@ All experiments were run using Python 3.5.1 on a Macbook Pro, Intel Core i7 2.3~
 \subsection{Case study}
 Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
 \sname takes a few seconds to find the constraints in Figure~\ref{fig:sol_example} (excluding structural constraints).
-These include 5 spurious $\mathit{RANK}$ constraints, e.g. $\ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}$, that are true by accident.
+These include 5 spurious $\textit{RANK}$ constraints, e.g. $\ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}$, that are true by accident.
 Moreover, there is 1 \textit{LOOKUP} constraint that was not present in the original spreadsheet (looking up ID based on Salesperson).
 
-For this example our primary goal of finding all original constraints is achieved, the recall (i.e. $\frac{\text{intended discovered}}{\text{intended}}$) is~$1.0$.
+For this example our primary goal of finding all original constraints is achieved, the recall (i.e. $\frac{\text{intended discovered}}{\text{all intended}}$) is~$1.0$.
 The implementation also returns 6 additional constraints, therefore, our precision (i.e. $\frac{\text{intended discovered}}{\text{all discovered}}$) is $12/18 = 0.67$, which is rather low compared to, for example, the spreadsheets in the benchmark.
 The low precision can be explained by the many short vectors which increases the chance for constraints to be true by accident.
 
@@ -1074,7 +1045,7 @@ The low precision can be explained by the many short vectors which increases the
 
 \subsection{Benchmark}
 Table~\ref{tbl:category_overview} gives an overview of the spreadsheets in the different categories and summarizes the results of our experiments.
-Notice that for the data category the average number of tables and cells is higher while the number of intended constraints is lower compared to the other categories.
+Notice that for the data category the average number of cells is higher while the number of intended constraints and tables is lower compared to the other categories.
 
 {\setlength{\tabcolsep}{0.33em}
 \begin{table}[]
@@ -1130,11 +1101,11 @@ While most spreadsheets can be analyzed very quickly, running times can go up to
 
 
 To illustrate that using dependencies to find constraints incrementally can increase the efficiency, we ran the benchmarks using foreign keys as a base constraint to find conditional aggregates.
-The total running times per category are decreased by 6\% (exercises), 30\% (tutorials) and~3\% (data) showing the strong effect of this dependency.
+The total running times per category are decreased by 6\% (exercises), 30\% (tutorials) and~3\% (data), showing the strong effect of this dependency.
 However, the assumption that conditional aggregates are defined for all keys in the foreign key column is too strong in practice.
 
-Of the 32 constraint templates that are supported (including equality), the slowest by far is fuzzy lookup using about 36\% of the running time.
-It is followed by product ($\pm 5\%$), relative difference ($\pm 5\%$) and various row-aggregates ($3.5\% - 4\%$).
+Of the 32 supported constraint templates (including equality), the slowest by far is fuzzy lookup using $\pm 36\%$ of the running time.
+It is followed by product ($\pm 5\%$), relative difference ($\pm 5\%$) and various row-aggregates (each $3.5\% - 4\%$).
 
 \begin{figure}[t]
   \centering
@@ -1147,7 +1118,7 @@ It is followed by product ($\pm 5\%$), relative difference ($\pm 5\%$) and vario
 \subsection{Testing the limits}
 On many spreadsheets that adhere to the bias of tables, continuous blocks and vectors \sname achieves good results.
 However, factors such as incompatible formatting, bad spreadsheet design and rounding issues can lead to decreased recall, many additional constraints and long running times due to an exponential blow-up of candidate constraints.
-For example, we tested a spreadsheet (``exps\_tias'') with 6~tables, 531~cells and many duplicate columns across tables.
+For example, we tested a spreadsheet (``exps'') with 6~tables, 531~cells and many duplicate columns across tables.
 While we obtained a recall of~$1.0$, the algorithm ran for $14.30s$ and the overall precision was~$0.52$ and only~$0.11$ when ignoring equalities.
 By using a (heuristic) post-processing step the precision for this example could be increased.
 The running time can be improved by implementing additional optimizations.
@@ -1168,7 +1139,7 @@ In this section, we illustrate how various motivating applications could be real
 Autocompletion can be seen as using knowledge derived from a snapshot of spreadsheet data to predict new values before they are written by the user.
 A snapshot~($D_0$) is used to learn constraints and these are combined with new data~($\Delta D$) that the user has added.
 Using~$\Delta D$ we can keep track of which vectors have changed and which vectors are now \textit{incomplete}.
-\textit{Functional} constraints, such as $\ecsumc{B_r}{\mathbf{B_x}}$, are able to compute a result~($B_r$) based on its input~($\mathbf{B_x}$).
+\textit{Functional} constraints, such as $\ecsumc{\sbl{r}}{\mathbf{\sbl{x}}}$, are able to compute a result~($\sbl{r}$) based on its input~($\mathbf{\sbl{x}}$).
 If all vectors in the input blocks have changed and the output vector is incomplete, the constraint can compute the resulting value(s).
 
 Consider Figure \ref{fig:autocompletion_example} containing two tables.
@@ -1212,7 +1183,8 @@ The second type of error detection is \textit{offline} and attempts to detect er
 % Our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
 % A possible approach to detect such missing or wrong values is to look at a sample of the table, e.g. trying to leave out each row, and compare the constraints learned on this sample with the constraints learned on the whole table.
   %The sample needs to be large enough such that we have enough confidence that the constraints are correct. For example, in Figure \ref{fig:fbi} all but one row satisfy the constraint, which is a strong indication that there is a constraint violation.
-If we define the sample to be the snapshot data and the other row(s) to be the additional input~$\Delta D$, this task can be formulated as online error detection and dealt with in the same way.
+This task can be formulated as online error detection by repeatedly partitioning the spreadsheet into a snapshot~$D_i$ and ``input'' $\Delta D_i$ (e.g. leave out each row and consider it as $\Delta D_i$) to detect conflicts.
+
 %Of course, generating large enough samples and rows (columns) to be added can be done in multiple ways.
 %In the limited case of detecting single errors one can leave out every row (column), consider the remaining data to be the sample and
 %and the left out row (column) to be new input.
@@ -1250,9 +1222,10 @@ Our goal is to automatically identify constraints in a spreadsheet.
 We have presented and evaluated our approach, implemented as the system \sname, that is able to learn many different constraints in tabular data.
 The resulting method has high recall, produces limited number of redundant constraints and is sufficiently efficient for normal and interactive use.
 
-The approach is designed to find constraints that hold over entire columns and rows. In future work we plan to extend this to learn arbitrary nested constraints (e.g. $B_r = (B_1 + B_2) / B_3$), as well as constraints over only a subset of the vectors. This may give rise to more redundant and spurious constraints, which was not problematic up to this point.
+The approach is designed to find constraints that hold over entire columns and rows. In future work we plan to extend this to learn arbitrary nested constraints (e.g. $\sbl{r} = (\sbl{1} + \sbl{2}) / \sbl{3}$), as well as constraints over only a subset of the vectors. This may give rise to more redundant and spurious constraints, which was not problematic up to this point.
 
-One other line of work, which can also mitigate redundant and spurious constraints, is to integrate the approach an interactive setting, where users can receive and provide feedback; more similar to an active learning setting. Other ways to handle redundant constraints include the (heuristic) filtering or post-processing of the constraint set.
+Two promising ways to mitigate redundant and spurious constraints are heuristic filtering or post-processing of the constraint set and the integration of our approach in an interactive setting where users can receive and provide feedback.
+The latter is more similar to an active learning setting.
 
 A final direction is that the current approach assumes noise-free data (but see the part on error correction); in inductive logic programming there has been much work on how to handle noisy data, while in constraint satisfaction a popular alternative is to consider \textit{soft} constraints that can be violated (at a cost). 
 This could extend the approach to new application domains, beyond traditional spreadsheets.
