@@ -59,8 +59,9 @@ def task(csv_file, groups_file, constraints=None):
     return LearningTask(csv_file, groups_file, get_manager(), constraints)
 
 
-def main(csv_file, groups_file, verbose, silent=False, constraints=None):
-    print("I AM BEING RUN")
+def main(csv_file, groups_file, verbose, silent=False, constraints=None, only_total_time=False):
+    if only_total_time:
+        silent = True
     manager = get_manager()
     groups = list(get_groups_tables(csv_file, groups_file))
 
@@ -112,8 +113,11 @@ def main(csv_file, groups_file, verbose, silent=False, constraints=None):
         if (len(solutions.get_solutions(constraint)) > 0 or verbose) and not silent:
             print()
 
-    if verbose and not silent or True: # TODO:
-        print("Total: {0:.3f} (Assign: {1:.3f}, Solve: {2:.3f}, Add: {3:.3f})".format(time.time() - t_origin, assign, solve, add))
+    total_time = time.time() - t_origin
+    if verbose and not silent: #or True: # TODO:
+        print("Total: {0:.3f} (Assign: {1:.3f}, Solve: {2:.3f}, Add: {3:.3f})".format(total_time, assign, solve, add))
+
+    print("{0:.3f}".format(total_time))
 
     return solutions
 
@@ -134,6 +138,7 @@ def arg_parser():
     p.add_argument('csv_file')
     p.add_argument('-g', '--groups_file', default=None)
     p.add_argument('-v', '--verbose', action="store_true")
+    p.add_argument('-t', '--only_total_time', action="store_true")
     return p
 
 
