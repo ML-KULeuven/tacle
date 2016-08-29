@@ -2,6 +2,7 @@ class Solutions:
     def __init__(self):
         self.solutions = {}
         self.properties = {}
+        self.canon_map = dict()
 
     def add(self, constraint, solutions):
         solutions_l = list(solutions)
@@ -21,6 +22,9 @@ class Solutions:
     @staticmethod
     def _to_tuple(constraint, solution):
         return tuple(solution[v.name] for v in constraint.variables)
+
+    def set_canon(self, canon_map):
+        self.canon_map = canon_map
 
                   
 

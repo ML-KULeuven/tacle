@@ -13,6 +13,7 @@ from parse.parser import get_groups_tables
 
 def get_constraint_list():
     constraint_list = [
+        Equal(),
         # EqualGroup(),
         Permutation(),
         Series(),
@@ -28,7 +29,6 @@ def get_constraint_list():
         Diff(),
         PercentualDiff(),
         SumProduct(),
-        Equal(),
     ]
     constraint_list += Aggregate.instances()
     constraint_list += ConditionalAggregate.instances()

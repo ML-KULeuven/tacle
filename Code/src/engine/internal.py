@@ -97,10 +97,18 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return self._generate_test_vectors(assignments, [c.x], test_set)
 
         def rank(c: Rank, assignments, solutions):
-            def is_rank(y, x):
-                return (numpy.array(rank_data(x)) == y).all()
+            def is_rank(y_v, x_v):
+                # Calculate rank values for x and compare, fail fast
+                y, x = to_data(y_v, x_v)
+                ranked = rank_data(x)
+                for i in range(0, len(ranked)):
+                    if ranked[i] != y[i]:
+                        return False
 
-            return self._generate_test_vectors(assignments, [c.y, c.x], is_rank)
+                # Check if not equal
+                return not found_equal(y_v, x_v, solutions)
+
+            return self._generate_test_vectors(assignments, [c.y, c.x], lambda *args: True, is_rank)
 
         def foreign_keys(constraint, assignments, solutions):
             solutions = []
@@ -163,7 +171,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 return len(collection) - 1
 
             def test_equal(ok_v, ov_v, fk_v, fv_v):
-                ok, ov, fk, fv = (vec.get_vector(1) for vec in (ok_v, ov_v, fk_v, fv_v))
+                # Test if vectors are equal
+                if found_equal(ok_v, fk_v, solutions) and found_equal(ov_v, fv_v, solutions)\
+                        and found_equal(ok_v, ov_v, solutions):
+                    return False
+
+                ok, ov, fk, fv = to_data(ok_v, ov_v, fk_v, fv_v)
                 exact = True
                 for i in range(len(fk)):
                     index = find_fuzzy(fk[i], ok)
@@ -307,9 +320,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         def product(c: Product, assignments, solutions):
             keys = [c.result, c.first, c.second]
 
+            cache = set()
+
             def is_product(r_v, o1_v, o2_v):
                 if not ordered(o1_v, o2_v):
                     return False
+
                 r, o1, o2 = (v.get_vector(1) for v in (r_v, o1_v, o2_v))
                 for i in range(0, len(r)):
                     if r_v > o2_v:
@@ -321,6 +337,9 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     res = smart_round(actual, expected)
                     if not equal(expected, res):
                         return False
+
+                # Caching relies on the order of the assignments being the same as the group ordering
+                cache.add((r_v, o1_v, o2_v))
                 return True
 
             return self._generate_test_vectors(assignments, keys, lambda *args: True, is_product)
@@ -393,13 +412,30 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return solutions
 
         def equality(c: Equal, assignments, _):
-            def test(x, y):
+            equal_map = dict()
+
+            def test(x_v, y_v):
+                # Only compare in order
+                if not ordered(x_v, y_v):
+                    return False
+
+                # Check transitivity (both are equal to a third)
+                if x_v in equal_map and y_v in equal_map and equal_map[x_v] == equal_map[y_v]:
+                    return True
+
+                # Test element-wise, fail fast
+                x, y = to_data(x_v, y_v)
                 for i in range(0, len(x)):
                     if not equal(x[i], y[i]):
                         return False
+
+                # Equal vectors, update cache:
+                if y_v in equal_map:
+                    raise RuntimeError("Violated assumption")
+                equal_map[y_v] = x_v
                 return True
 
-            return self._generate_test_vectors(assignments, [c.first, c.second], test, ordered)
+            return self._generate_test_vectors(assignments, [c.first, c.second], lambda *args: True, test)
 
         def equal_group(c: EqualGroup, assignments, solutions: Solutions):
             result = []
@@ -528,6 +564,11 @@ def equal_groups(solutions, solution):
     equal_c = Equal()
     sols = [{equal_c.first.name: v1, equal_c.second.name: v2} for (v1, v2) in sols]
     return all(solutions.has_solution(equal_c, sol) for sol in sols)
+
+
+def to_data(*args):
+    for arg in args:
+        yield arg.get_vector(1)
 
 
 def complete(vector):
