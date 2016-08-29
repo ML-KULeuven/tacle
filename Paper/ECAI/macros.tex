@@ -1,0 +1,75 @@
+\newcommand{\PADSEP}{-7pt}
+\newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
+\newcommand{\samuel}[1]{\textcolor{green}{{\sc Samuel:} #1}\xspace}
+\newcommand{\tias}[1]{\textcolor{blue}{{\sc Tias:} #1}\xspace}
+\newcommand{\luc}[1]{\textcolor{red}{{\sc Luc:} #1}\xspace}
+
+\newcommand{\constraints}{\ensuremath{\mathcal{T}}\xspace}
+\newcommand{\format}[1]{\textit{#1}\xspace}
+\newcommand{\generategroups}{\format{SuperblockAssignments}}
+\newcommand{\extractgroups}{\format{extractGroups}}
+\newcommand{\extracttables}{\format{extractTables}}
+\newcommand{\learnconstraints}{\format{LearnConstraints}}
+\newcommand{\findassignment}{\format{Subassignments}}
+\newcommand{\postprocess}{\format{pruneRedundant}}
+\newcommand{\constrainttorder}{\format{templateOrder}}
+\newcommand{\template}{\format{constraint template}}
+\newcommand{\sname}{\format{TaCLe}}
+
+
+\newcommand{\CName}{Syntax\xspace}
+\newcommand{\CSignature}{Signature\xspace}
+\newcommand{\CFunction}{Definition\xspace}
+\newcommand{\dependencies}{\ensuremath{\mathcal{D}}\xspace}
+\newcommand{\groups}{\ensuremath{\mathcal{B}}\xspace}
+\newcommand{\blocks}{\ensuremath{\mathcal{B}}\xspace}
+
+\newcommand{\range}[3]{\ensuremath{#1[#2,#3]}}
+\newcommand{\rangeto}[2]{#1{:}#2}
+\newcommand{\rangeall}{:}
+
+\newcommand{\eccalc}[2]{\ensuremath{#1 = #2}}
+\newcommand{\ecrank}[2]{\eccalc{#1}{\textit{RANK}(#2)}}
+\newcommand{\ecfkey}[2]{\ensuremath{\textit{FOREIGNKEY}(#1,#2)}}
+\newcommand{\ecalldiff}[1]{\ensuremath{\textit{ALLDIFFERENT}(#1)}}
+\newcommand{\eclookupf}[4]{\ensuremath{\textit{LOOKUP}_{\textit{#4}}(#1, #2, #3)}}
+\newcommand{\eclookup}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{}}}
+\newcommand{\eclookupprod}[5]{\eccalc{#1}{#2 \times \eclookupf{#3}{#4}{#5}{}}}
+\newcommand{\eclookupfuzzy}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{fuzzy}}}
+\newcommand{\ecperm}[1]{\ensuremath{\textit{PERMUTATION}(#1)}}
+\newcommand{\ecseries}[1]{\ensuremath{\textit{SERIES}(#1)}}
+\newcommand{\ecprod}[3]{\eccalc{#1}{#2 \times #3}}
+\newcommand{\ecdiv}[3]{\eccalc{#1}{{#2} / {#3}}}
+\newcommand{\ecdiff}[3]{\eccalc{#1}{#2 - #3}}
+\newcommand{\ectotal}[3]{\eccalc{#1}{\textit{PREV}(#1) + #2 - #3}}
+\newcommand{\ecproj}[2]{\eccalc{#1}{\textit{PROJECT}(#2)}}
+\newcommand{\ecaggc}[3]{\eccalc{#2}{\textit{#1\textsubscript{col}}(#3)}}
+\newcommand{\ecaggr}[3]{\eccalc{#2}{\textit{#1\textsubscript{row}}(#3)}}
+\newcommand{\ecsumc}[2]{\eccalc{#1}{\textit{SUM\textsubscript{col}}(#2)}}
+\newcommand{\ecsumr}[2]{\eccalc{#1}{\textit{SUM\textsubscript{row}}(#2)}}
+\newcommand{\ecaggif}[5]{\eccalc{#2}{\textit{#1IF}(#3, #4, #5)}}
+\newcommand{\ecsumif}[4]{\eccalc{#1}{\textit{SUMIF}(#2, #3, #4)}}
+\newcommand{\ecsumprod}[3]{\eccalc{#1}{\textit{SUMPRODUCT}(#2, #3)}}
+
+\newcommand{\numeric}{\format{numeric}}
+\newcommand{\textual}{\format{textual}}
+\newcommand{\integer}{\format{integer}}
+\newcommand{\discrete}{\format{discrete}}
+\newcommand{\plength}{\format{length}}
+\newcommand{\psize}{\format{size}}
+\newcommand{\ptype}{\format{type}}
+\newcommand{\ptable}{\format{table}}
+\newcommand{\por}{\format{orientation}}
+\newcommand{\prows}{\format{rows}}
+\newcommand{\pcols}{\format{columns}}
+\newcommand{\nat}{\mathcal{N}}
+
+\newcommand{\sbs}{B}
+\newcommand{\sbl}[1]{\ensuremath{\sbs_{\textit{#1}}}}
+\newcommand{\ssbl}[1]{\ensuremath{\sbs'_{\textit{#1}}}}
+\newcommand{\bsbl}[1]{\ensuremath{\mathbf{\sbs_{\textit{#1}}}}}
+
+
+
+\renewcommand{\arraystretch}{1.5}
+
