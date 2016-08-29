@@ -20,15 +20,18 @@ class MaxRange:
         self._find(start, end, size, limit, last)
 
     def _find(self, start, end, size, limit, last):
-        if last - start < size:
-            pass
-        elif end - start < size or end <= limit:
-            self._find(start + 1, last, size, max(start + size, limit), last)
-        else:
-            if self._test(start, end):
-                self._find(start + 1, last, size, end, last)
+        while True:
+            if last - start < size:
+                return
+            elif end - start < size or end <= limit:
+                start += 1
+                end = last
+                limit = max(start + size, limit)
             else:
-                self._find(start, end - 1, size, limit, last)
+                if self._test(start, end):
+                    start += 1
+                else:
+                    end -= 1
 
 
 # TODO Sum IF with Nones
