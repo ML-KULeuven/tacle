@@ -29,6 +29,7 @@ def get_constraint_list():
         Diff(),
         PercentualDiff(),
         SumProduct(),
+        Ordered(),
     ]
     constraint_list += Aggregate.instances()
     constraint_list += ConditionalAggregate.instances()

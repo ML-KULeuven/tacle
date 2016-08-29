@@ -204,6 +204,16 @@ class AllDifferent(Constraint):
         super().__init__("all-different", "ALLDIFFERENT({X})", Source(variables), filters)
 
 
+class Ordered(Constraint):
+    x = Variable("X", types=numeric)
+
+    def __init__(self):
+        variables = [self.x]
+        source = Source(variables)
+        filters = [NotPartial(variables)]
+        super().__init__("ordered", "ORDERED({X})", source, filters)
+
+
 class Rank(Constraint):
     x = Variable("X", vector=True, types=numeric)
     y = Variable("Y", vector=True, types=integer)
@@ -250,7 +260,7 @@ class FuzzyLookup(Constraint):
 
     def __init__(self):
         variables = [self.o_key, self.o_value, self.f_key, self.f_value]
-        source = Source(variables)
+        source = ConstraintSource(variables, Ordered(), {Ordered.x.name: self.o_key.name})
         filters = [SameType([self.o_value, self.f_value]), NotPartial(variables),
                    SameLength([self.f_key, self.f_value]), SameLength([self.o_key, self.o_value]),
                    SameTable([self.f_key, self.f_value]), SameTable([self.o_key, self.o_value]),

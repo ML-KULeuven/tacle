@@ -141,6 +141,7 @@ class Group:
         from core.constraint import blank_filter
         self._is_partial = not numpy.all(numpy.vectorize(blank_filter(self._data)[1])(self._data))
         self._subgroups = dict()
+        self._hash = None
 
     @property
     def is_partial(self):
@@ -247,7 +248,9 @@ class Group:
         return self.subgroup(Bounds(l))
 
     def __hash__(self):
-        return hash((self.table, self.row, self.bounds))
+        if self._hash is None:
+            self._hash = hash((self.table, self.row, self.bounds))
+        return self._hash
 
     def __ne__(self, other):
         return not self == other

@@ -60,6 +60,7 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(Diff())
         self.add_constraint(PercentualDiff())
         self.add_constraint(SumProduct())
+        self.add_constraint(Ordered())
 
     def add_constraint(self, constraint: Constraint):
         self._constraints.add(constraint)
@@ -207,6 +208,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 vectors = {g: g.get_vector(1) for g in [ok, r, fk, v]}
 
                 for g in [ok, r, v]:
+                    # FIXME avoid all call
                     if g not in partial_cache:
                         partial_cache[g] = all(numpy.vectorize(blank_filter(vectors[g])[1])(vectors[g]))
                     if not partial_cache[g]:
@@ -434,8 +436,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
                 # Equal vectors, update cache:
                 if y_v in equal_map:
-                    raise RuntimeError("Violated assumption")
-                equal_map[y_v] = x_v
+                    found = equal_map[y_v]
+                    minimal, maximal = (x_v, found) if x_v < found else (found, x_v)
+                    equal_map[y_v] = minimal
+                    equal_map[maximal] = minimal
+                else:
+                    equal_map[y_v] = x_v
                 return True
 
             return self._generate_test_vectors(assignments, [c.first, c.second], lambda *args: True, test)
@@ -455,6 +461,15 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 max_range = MaxRange(test)
                 max_range.find(0, x.vectors(), 2)
             return result
+
+        def ordered_constraint(c: Ordered, assignments, solutions):
+            def test_ordering(x):
+                for i in range(1, len(x)):
+                    if x[i] <= x[i - 1]:
+                        return False
+                return True
+
+            return self._generate_test_vectors(assignments, [c.x], test_ordering)
 
         self.add_strategy(Equal(), equality)
         self.add_strategy(EqualGroup(), equal_group)
@@ -476,9 +491,11 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(Diff(), diff)
         self.add_strategy(PercentualDiff(), percent_diff)
         self.add_strategy(SumProduct(), sum_product)
+        self.add_strategy(Ordered(), ordered_constraint)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_vectors, test_groups=None):
+        # FIXME Improve code by avoiding to test overlapping subgroups multiple times
         for assignment in assignments:
             for vectors in itertools.product(*[assignment[k.name] for k in keys]):
                 if not any(g1.overlaps_with(g2) for g1, g2 in itertools.combinations(vectors, 2)) \
@@ -519,7 +536,7 @@ def precision_and_scale(x):
     int_part = int(abs(x))
     magnitude = 1 if int_part == 0 else int(math.log10(int_part)) + 1
     if magnitude >= max_digits:
-        return (magnitude, 0)
+        return magnitude, 0
     frac_part = abs(x) - int_part
     multiplier = 10 ** (max_digits - magnitude)
     frac_digits = multiplier + int(multiplier * frac_part + 0.5)
