@@ -77,9 +77,9 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach and
 % \end{itemize}
 %}
 
-\begin{figure*}[thb]
+\begin{figure}[thb]
 
-  \begin{subfigure}{.66\textwidth}
+  \begin{subfigure}{1\textwidth}
   \begin{center}
     \includegraphics[width=1\textwidth]{figures/Demo2.png}
   \end{center}
@@ -89,59 +89,57 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach and
     Green background indicates headerless tables, dark borders indicate maximal type-consistent blocks.
     Most tables only contain type-consistent columns while table~$T_2$ also contains type-consistent rows.
     However, due to the location of the header of~$T_2$ we can infer that it consists of row data.
-    This example was created by combining several Excel sheets from several exercise sessions based on~\cite{excel_book}.
+    This example was created by combining several Excel sheets from several exercise sessions based on the book MS Excel 2010~\cite{excel_book}.
     % I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
   }
   \label{fig:main_example}
 \end{subfigure}
 \hfill
-\begin{subfigure}{.34\textwidth}
-  {\footnotesize
+\begin{subfigure}{1\textwidth}
+  {\scriptsize
     \begin{align*}
       % Table 1
-      &~\ecseries{\range{T_{1}}{\rangeall}{1}} \\
 %
 %      &~\ecperm{\range{T_{1}}{\rangeall}{1}}, \ecperm{\range{T_{1}}{\rangeall}{8}} \\
 %
-      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{5}}^*\\
-      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{6}}^* \\
-      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{10}}^*\\
-      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}} \\
-      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{3}}^*\\
-      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{4}}^* \\
+      &~\ecseries{\range{T_{1}}{\rangeall}{1}}                                  && \ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{5}}^*     && \ecaggc{\textit{AVERAGE}}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}}  \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{6}}^*     && \ecaggc{\textit{MAX}}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{10}}^*    && \ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}}       && \ecsumc{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{3}}^*     && \range{T_{4}}{\rangeall}{4} = PREV(\range{T_{4}}{\rangeall}{4}) + \range{T_{4}}{\rangeall}{2} - \range{T_{4}}{\rangeall}{3} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{4}}^*    && \eclookup{\range{T_{5}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{3}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}^*\\
 %
-      &~\ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+      &~\ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}}   && \eclookup{\range{T_{5}}{\rangeall}{3}}{\range{T_{5}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}} \\
 %
-      &~\ecaggif{\textit{SUM}}{\range{T_{1}}{\rangeall}{10}}{\range{T_{3}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{3}}{\rangeall}{2}} \\
-%
-      &~\ecaggif{\textit{MAX}}{\range{T_{1}}{\rangeall}{11}}{\range{T_{3}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{3}}{\rangeall}{2}} \\
+      &~\ecaggif{\textit{SUM}}{\range{T_{1}}{\rangeall}{10}}{\range{T_{3}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{3}}{\rangeall}{2}}   && \ecaggif{\textit{MAX}}{\range{T_{1}}{\rangeall}{11}}{\range{T_{3}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{3}}{\rangeall}{2}} 
 %
 	  % Table 2
-      &~\ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%     &~\ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
-      &~\ecaggc{\textit{AVERAGE}}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%     &~\ecaggc{\textit{AVERAGE}}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
-      &~\ecaggc{\textit{MAX}}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}},  \\
+%     &~\ecaggc{\textit{MAX}}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}},  \\
 %
-      &~\ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%     &~\ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
 	  % Table 4
-      &~\ecsumc{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+%     &~\ecsumc{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
 %
-      &~\range{T_{4}}{\rangeall}{4} = PREV(\range{T_{4}}{\rangeall}{4}) + \range{T_{4}}{\rangeall}{2} - \range{T_{4}}{\rangeall}{3} \\
+%     &~\range{T_{4}}{\rangeall}{4} = PREV(\range{T_{4}}{\rangeall}{4}) + \range{T_{4}}{\rangeall}{2} - \range{T_{4}}{\rangeall}{3} \\
 %
     % Table 5
-      &~\eclookup{\range{T_{5}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{3}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}^* \\
+%     &~\eclookup{\range{T_{5}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{3}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}^* \\
 %
-      &~\eclookup{\range{T_{5}}{\rangeall}{3}}{\range{T_{5}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}
+%     &~\eclookup{\range{T_{5}}{\rangeall}{3}}{\range{T_{5}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}
     \end{align*}}
-  \vspace{-18pt}
+  \vspace{-10pt}
   \caption{Constraints learned for the example (left), except for \textit{ALLDIFFERENT} (18), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5).
   Constraints marked with $*$ were not present in the original document}
   \label{fig:sol_example}
 \end{subfigure}
   \caption{Running example}
-\end{figure*}
+\end{figure}
 
 
 \section{Formalization}\label{sec:formalization}
@@ -559,7 +557,7 @@ The sheet is then processed row by row, splitting each row into ranges of non-em
 Headers can be detected, for example, by checking if the first row or column contains only textual values. If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
 
 \paragraph{Visual}
-The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (screenshots are available in the accompanying github repository with meta-data\footnote{\url{https://github.com/for-DSAA2016-review/TaCLe}\label{github-link}}).
+The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (screenshots are available in the accompanying github repository with meta-data\footnote{\url{https://github.com/SergeyParamonov/TaCLe}\label{github-link}}).
 Users select tables excluding the header and optionally specify an orientation.
 The tool then generates the specification of the tables automatically.
 
