@@ -12,6 +12,8 @@
 \maketitle
 
 \begin{abstract}
+  \sergey{Samuel! Add a reference to python-constraint somewhere, including the references list at the end}\\
+  \sergey{Tias, Samuel, Luc, should we even mention miniZinc or ASP here, or is it not relevant?}
 Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
 However, modeling, maintaining and discovering formulas in tabular data and spreadsheets can be time consuming and error-prone.
 In this work, we investigate the automatic discovery of constraints (formulas and relations) in raw tabular data.
@@ -204,18 +206,19 @@ We will sometimes write that $B'$ is a \textit{subblock} of $B$ or that $B$ is a
 An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, which contains the sales numbers of all employees for the four quarters.
 
 
-\begin{table*}[!h]
+\begin{table}[htb]
 \caption{
   Overview of constraint templates implemented in \sname.
   Subgroups in normal font have to be vectors, whereas subgroups in \textbf{bold} may contain more than one vector;
   $\discrete(x)$ is a shortcut for: $\textual(x) \lor \numeric(x)$.
   Templates marked with $*$ are \textit{structural}, i.e. they are not functional and cannot be implemented in most spreadsheet software.
   Templates marked with $\dagger$ are \textit{aggregate} templates, the table shows \textit{SUM} but \sname also supports \textit{MAX}, \textit{MIN}, \textit{AVERAGE}, \textit{PRODUCT} and \textit{COUNT}.
-  %{\small\luc{maybe say s.th. about some fancy constraints: example of a more complex one in the text (what does conditional mean, aggregate ... )}}
+  %{\luc{maybe say s.th. about some fancy constraints: example of a more complex one in the text (what does conditional mean, aggregate ... )}}
 }
 \label{table:constraints}
-  {\centering
-  \begin{tabularx}{\textwidth}{l X X}
+\resizebox{1.0\columnwidth}{!}{%
+  {\normalsize \centering
+  \begin{tabularx}{1.70\textwidth}{l X X}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ \hline \hline
     $\ecalldiff{\sbl{x}}^*$
       & $\discrete(\sbl{x})$
@@ -309,7 +312,7 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
     $\ecsumif{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}^\dagger$
       & $\sbl{fk}, \sbl{pk}$ are $\discrete$; $\sbl{r}, \sbl{val}$ are $\numeric$; within the sets $\{\sbl{val}, \sbl{fk}\}$ and $\{\sbl{pk}, \sbl{r}\}$ arguments have the same $\plength$ and $\por$; $\sbl{fk}$ and $\sbl{val}$ have the same $\ptable$; $\sbl{fk}$ and $\sbl{pk}$ must have different $\ptable$s but the same $\ptype$; and \ecalldiff{\sbl{pk}}
       
-      & \[ \sbl{r}[i] = \sum_{j=1}^{\plength(\sbl{val})} \begin{cases}
+      & \[\sbl{r}[i] = \sum_{j=1}^{\plength(\sbl{val})} \begin{cases}
           \sbl{val}[j] & \text{if } \sbl{fk}[j] = \sbl{pk}[i] \\
           0 & \text{otherwise}
         \end{cases}
@@ -319,9 +322,11 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
       & Arguments $\{\sbl{r}, \sbl{1}, \sbl{2}\}$ are $\numeric$; $\plength(\sbl{1}) = \plength(\sbl{2}) \geq 2$; and $\prows(\sbl{r}) = \pcols(\sbl{r}) = 1$
       
       & $\sbl{r}[1] = \sum_{j = 1}^{\plength(\sbl{1})} \sbl{1}[j] \times \sbl{2}[j]$.
-  \end{tabularx}}
+    \end{tabularx}
+  } % centering small
+} % resizebox
 
-\end{table*}
+\end{table}
 
 \newcommand{\sigc}{\ensuremath{\format{Sig}_s}}
 \newcommand{\defc}{\ensuremath{\format{Def}_s}}
@@ -704,7 +709,7 @@ On the other hand, a simple generate-and-test approach, as illustrated in Algori
 Given a superblock assignment, all disjoint subassignments are generated taking into account the required size, columns or rows.
 For every (disjoint) subassignment the exact signature (e.g. subtypes will not have been checked yet) and definition will be tested and all satisfying subassignments are returned.
 
-\begin{algorithm}[tbh]
+\begin{algorithm}[t]
   \begin{algorithmic}
     \footnotesize
     \Procedure{Subassignments}{$s$, $(\sbl{1}, \dots, \sbl{n})$}
@@ -778,7 +783,7 @@ Constraint templates that have no dependencies are omitted.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.65\linewidth]{figures/constraint_dependency2.pdf}
+  \includegraphics[width=0.50\linewidth]{figures/constraint_dependency2.pdf}
   \caption{Dependency graph of Table~\ref{table:constraints}; an arrow from~$s_1$ to~$s_2$ indicates that $s_2$ depends on~$s_1$ (its signature includes $s_1$).
   }
   \label{fig:learning_order}
@@ -1056,7 +1061,7 @@ The \textit{SUMIF} constraints have enough input to fill the incomplete vectors 
 % \hfill
 % \begin{subfigure}{.29\textwidth}
 \begin{center}
-    \includegraphics[width=0.65\linewidth]{figures/Learning.png}
+    \includegraphics[width=1.0\linewidth]{figures/Learning.png}
   \end{center}
   \caption{Autocompletion works by learning constraint on a snapshot and combining those constraints with new data $\Delta D$.
   The figure shows how, given a new value \textit{West}, we can suggest values for the other cells in that row.}
