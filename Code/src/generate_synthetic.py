@@ -34,10 +34,11 @@ def main():
     files_to_execute = []
     files_to_execute += generate_files(path_to_CSVs, "ones", generate_ones)    #comment this line out to run only on random spreadsheets
     files_to_execute += generate_files(path_to_CSVs, "random", generate_random)
-    for filename in files_to_execute:
-        command = "python3 workflow.py -t {filename}".format(filename=filename)
-        print('executing: "{command}"'.format(command=command))
-        system(command)
+    for i,filename in enumerate(files_to_execute):
+        if i == 5:
+            command = "python3 workflow.py -t {filename}".format(filename=filename)
+            print('executing: "{command}"'.format(command=command))
+            system(command)
     
 
 if __name__ == "__main__":
