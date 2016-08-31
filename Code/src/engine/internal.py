@@ -20,15 +20,18 @@ class MaxRange:
         self._find(start, end, size, limit, last)
 
     def _find(self, start, end, size, limit, last):
-        if last - start < size:
-            pass
-        elif end - start < size or end <= limit:
-            self._find(start + 1, last, size, max(start + size, limit), last)
-        else:
-            if self._test(start, end):
-                self._find(start + 1, last, size, end, last)
+        while True:
+            if last - start < size:
+                return
+            elif end - start < size or end <= limit:
+                start += 1
+                end = last
+                limit = max(start + size, limit)
             else:
-                self._find(start, end - 1, size, limit, last)
+                if self._test(start, end):
+                    start += 1
+                else:
+                    end -= 1
 
 
 # TODO Sum IF with Nones
@@ -57,6 +60,7 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(Diff())
         self.add_constraint(PercentualDiff())
         self.add_constraint(SumProduct())
+        self.add_constraint(Ordered())
 
     def add_constraint(self, constraint: Constraint):
         self._constraints.add(constraint)
@@ -97,10 +101,18 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return self._generate_test_vectors(assignments, [c.x], test_set)
 
         def rank(c: Rank, assignments, solutions):
-            def is_rank(y, x):
-                return (numpy.array(rank_data(x)) == y).all()
+            def is_rank(y_v, x_v):
+                # Calculate rank values for x and compare, fail fast
+                y, x = to_data(y_v, x_v)
+                ranked = rank_data(x)
+                for i in range(0, len(ranked)):
+                    if ranked[i] != y[i]:
+                        return False
 
-            return self._generate_test_vectors(assignments, [c.y, c.x], is_rank)
+                # Check if not equal
+                return not found_equal(y_v, x_v, solutions)
+
+            return self._generate_test_vectors(assignments, [c.y, c.x], lambda *args: True, is_rank)
 
         def foreign_keys(constraint, assignments, solutions):
             solutions = []
@@ -163,7 +175,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 return len(collection) - 1
 
             def test_equal(ok_v, ov_v, fk_v, fv_v):
-                ok, ov, fk, fv = (vec.get_vector(1) for vec in (ok_v, ov_v, fk_v, fv_v))
+                # Test if vectors are equal
+                if found_equal(ok_v, fk_v, solutions) and found_equal(ov_v, fv_v, solutions)\
+                        and found_equal(ok_v, ov_v, solutions):
+                    return False
+
+                ok, ov, fk, fv = to_data(ok_v, ov_v, fk_v, fv_v)
                 exact = True
                 for i in range(len(fk)):
                     index = find_fuzzy(fk[i], ok)
@@ -191,6 +208,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 vectors = {g: g.get_vector(1) for g in [ok, r, fk, v]}
 
                 for g in [ok, r, v]:
+                    # FIXME avoid all call
                     if g not in partial_cache:
                         partial_cache[g] = all(numpy.vectorize(blank_filter(vectors[g])[1])(vectors[g]))
                     if not partial_cache[g]:
@@ -307,9 +325,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         def product(c: Product, assignments, solutions):
             keys = [c.result, c.first, c.second]
 
+            cache = set()
+
             def is_product(r_v, o1_v, o2_v):
                 if not ordered(o1_v, o2_v):
                     return False
+
                 r, o1, o2 = (v.get_vector(1) for v in (r_v, o1_v, o2_v))
                 for i in range(0, len(r)):
                     if r_v > o2_v:
@@ -321,6 +342,9 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     res = smart_round(actual, expected)
                     if not equal(expected, res):
                         return False
+
+                # Caching relies on the order of the assignments being the same as the group ordering
+                cache.add((r_v, o1_v, o2_v))
                 return True
 
             return self._generate_test_vectors(assignments, keys, lambda *args: True, is_product)
@@ -393,13 +417,34 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return solutions
 
         def equality(c: Equal, assignments, _):
-            def test(x, y):
+            equal_map = dict()
+
+            def test(x_v, y_v):
+                # Only compare in order
+                if not ordered(x_v, y_v):
+                    return False
+
+                # Check transitivity (both are equal to a third)
+                if x_v in equal_map and y_v in equal_map and equal_map[x_v] == equal_map[y_v]:
+                    return True
+
+                # Test element-wise, fail fast
+                x, y = to_data(x_v, y_v)
                 for i in range(0, len(x)):
                     if not equal(x[i], y[i]):
                         return False
+
+                # Equal vectors, update cache:
+                if y_v in equal_map:
+                    found = equal_map[y_v]
+                    minimal, maximal = (x_v, found) if x_v < found else (found, x_v)
+                    equal_map[y_v] = minimal
+                    equal_map[maximal] = minimal
+                else:
+                    equal_map[y_v] = x_v
                 return True
 
-            return self._generate_test_vectors(assignments, [c.first, c.second], test, ordered)
+            return self._generate_test_vectors(assignments, [c.first, c.second], lambda *args: True, test)
 
         def equal_group(c: EqualGroup, assignments, solutions: Solutions):
             result = []
@@ -416,6 +461,15 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 max_range = MaxRange(test)
                 max_range.find(0, x.vectors(), 2)
             return result
+
+        def ordered_constraint(c: Ordered, assignments, solutions):
+            def test_ordering(x):
+                for i in range(1, len(x)):
+                    if x[i] <= x[i - 1]:
+                        return False
+                return True
+
+            return self._generate_test_vectors(assignments, [c.x], test_ordering)
 
         self.add_strategy(Equal(), equality)
         self.add_strategy(EqualGroup(), equal_group)
@@ -437,9 +491,11 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(Diff(), diff)
         self.add_strategy(PercentualDiff(), percent_diff)
         self.add_strategy(SumProduct(), sum_product)
+        self.add_strategy(Ordered(), ordered_constraint)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_vectors, test_groups=None):
+        # FIXME Improve code by avoiding to test overlapping subgroups multiple times
         for assignment in assignments:
             for vectors in itertools.product(*[assignment[k.name] for k in keys]):
                 if not any(g1.overlaps_with(g2) for g1, g2 in itertools.combinations(vectors, 2)) \
@@ -480,7 +536,7 @@ def precision_and_scale(x):
     int_part = int(abs(x))
     magnitude = 1 if int_part == 0 else int(math.log10(int_part)) + 1
     if magnitude >= max_digits:
-        return (magnitude, 0)
+        return magnitude, 0
     frac_part = abs(x) - int_part
     multiplier = 10 ** (max_digits - magnitude)
     frac_digits = multiplier + int(multiplier * frac_part + 0.5)
@@ -528,6 +584,11 @@ def equal_groups(solutions, solution):
     equal_c = Equal()
     sols = [{equal_c.first.name: v1, equal_c.second.name: v2} for (v1, v2) in sols]
     return all(solutions.has_solution(equal_c, sol) for sol in sols)
+
+
+def to_data(*args):
+    for arg in args:
+        yield arg.get_vector(1)
 
 
 def complete(vector):
