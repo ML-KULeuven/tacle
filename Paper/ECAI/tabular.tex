@@ -1,116 +1,19 @@
-\documentclass{IEEEtran}
-
-\usepackage{times}
-\usepackage{graphicx}
-\usepackage{latexsym}
-\usepackage{xspace}
-\usepackage{hyperref}
-\usepackage{amssymb}
-\usepackage{algorithm}
-\usepackage[noend]{algpseudocode}
-\usepackage[numbers]{natbib}
-\usepackage{notoccite}
-\usepackage{fixltx2e}
-\usepackage{framed}
-\usepackage{amsmath}
-\usepackage{tabularx}
-\usepackage[margin=0.1cm]{subcaption}
-\usepackage[inline]{enumitem}
-\usepackage{footmisc}
-
-\usepackage[dvipsnames]{xcolor}
-\newcommand{\PADSEP}{-7pt}
-\newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
-\newcommand{\samuel}[1]{\textcolor{green}{{\sc Samuel:} #1}\xspace}
-\newcommand{\tias}[1]{\textcolor{blue}{{\sc Tias:} #1}\xspace}
-\newcommand{\luc}[1]{\textcolor{red}{{\sc Luc:} #1}\xspace}
-
-\newcommand{\constraints}{\ensuremath{\mathcal{T}}\xspace}
-\newcommand{\format}[1]{\textit{#1}\xspace}
-\newcommand{\generategroups}{\format{SuperblockAssignments}}
-\newcommand{\extractgroups}{\format{extractGroups}}
-\newcommand{\extracttables}{\format{extractTables}}
-\newcommand{\learnconstraints}{\format{LearnConstraints}}
-\newcommand{\findassignment}{\format{Subassignments}}
-\newcommand{\postprocess}{\format{pruneRedundant}}
-\newcommand{\constrainttorder}{\format{templateOrder}}
-\newcommand{\template}{\format{constraint template}}
-\newcommand{\sname}{\format{TaCLe}}
-
-
-\newcommand{\CName}{Syntax\xspace}
-\newcommand{\CSignature}{Signature\xspace}
-\newcommand{\CFunction}{Definition\xspace}
-\newcommand{\dependencies}{\ensuremath{\mathcal{D}}\xspace}
-\newcommand{\groups}{\ensuremath{\mathcal{B}}\xspace}
-\newcommand{\blocks}{\ensuremath{\mathcal{B}}\xspace}
-
-\newcommand{\range}[3]{\ensuremath{#1[#2,#3]}}
-\newcommand{\rangeto}[2]{#1{:}#2}
-\newcommand{\rangeall}{:}
-
-\newcommand{\eccalc}[2]{\ensuremath{#1 = #2}}
-\newcommand{\ecrank}[2]{\eccalc{#1}{\textit{RANK}(#2)}}
-\newcommand{\ecfkey}[2]{\ensuremath{\textit{FOREIGNKEY}(#1,#2)}}
-\newcommand{\ecalldiff}[1]{\ensuremath{\textit{ALLDIFFERENT}(#1)}}
-\newcommand{\eclookupf}[4]{\ensuremath{\textit{LOOKUP}_{\textit{#4}}(#1, #2, #3)}}
-\newcommand{\eclookup}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{}}}
-\newcommand{\eclookupprod}[5]{\eccalc{#1}{#2 \times \eclookupf{#3}{#4}{#5}{}}}
-\newcommand{\eclookupfuzzy}[4]{\eccalc{#1}{\eclookupf{#2}{#3}{#4}{fuzzy}}}
-\newcommand{\ecperm}[1]{\ensuremath{\textit{PERMUTATION}(#1)}}
-\newcommand{\ecseries}[1]{\ensuremath{\textit{SERIES}(#1)}}
-\newcommand{\ecprod}[3]{\eccalc{#1}{#2 \times #3}}
-\newcommand{\ecdiv}[3]{\eccalc{#1}{{#2} / {#3}}}
-\newcommand{\ecdiff}[3]{\eccalc{#1}{#2 - #3}}
-\newcommand{\ectotal}[3]{\eccalc{#1}{\textit{PREV}(#1) + #2 - #3}}
-\newcommand{\ecproj}[2]{\eccalc{#1}{\textit{PROJECT}(#2)}}
-\newcommand{\ecaggc}[3]{\eccalc{#2}{\textit{#1\textsubscript{col}}(#3)}}
-\newcommand{\ecaggr}[3]{\eccalc{#2}{\textit{#1\textsubscript{row}}(#3)}}
-\newcommand{\ecsumc}[2]{\eccalc{#1}{\textit{SUM\textsubscript{col}}(#2)}}
-\newcommand{\ecsumr}[2]{\eccalc{#1}{\textit{SUM\textsubscript{row}}(#2)}}
-\newcommand{\ecaggif}[5]{\eccalc{#2}{\textit{#1IF}(#3, #4, #5)}}
-\newcommand{\ecsumif}[4]{\eccalc{#1}{\textit{SUMIF}(#2, #3, #4)}}
-\newcommand{\ecsumprod}[3]{\eccalc{#1}{\textit{SUMPRODUCT}(#2, #3)}}
-
-\newcommand{\numeric}{\format{numeric}}
-\newcommand{\textual}{\format{textual}}
-\newcommand{\integer}{\format{integer}}
-\newcommand{\discrete}{\format{discrete}}
-\newcommand{\plength}{\format{length}}
-\newcommand{\psize}{\format{size}}
-\newcommand{\ptype}{\format{type}}
-\newcommand{\ptable}{\format{table}}
-\newcommand{\por}{\format{orientation}}
-\newcommand{\prows}{\format{rows}}
-\newcommand{\pcols}{\format{columns}}
-\newcommand{\nat}{\mathcal{N}}
-
-\newcommand{\sbs}{B}
-\newcommand{\sbl}[1]{\ensuremath{\sbs_{\textit{#1}}}}
-\newcommand{\ssbl}[1]{\ensuremath{\sbs'_{\textit{#1}}}}
-\newcommand{\bsbl}[1]{\ensuremath{\mathbf{\sbs_{\textit{#1}}}}}
-
-
-
-\renewcommand{\arraystretch}{1.5}
-
-\usepackage{amsthm} % incompatible with ACM
-\theoremstyle{definition}
-\newtheorem{definition}{Definition}
-\newtheorem{example}{Example}
-%\newdef{definition}{Definition} % ACM specific
-
+\input{journal_header}
+\input{packages}
+\input{macros}
 
 \begin{document}
 
 \title{Learning constraints in spreadsheets and tabular data}
 % see http://www.acm.org/binaries/content/assets/publications/article-templates/sig-alternate-sample.tex
 
-%\author{Name1 Surname1 \and Name2 Surname2 \and Name3 Surname3 \institute{----------------------} }
+\author{Name1 Surname1 \and Name2 Surname2 \and Name3 Surname3 \institute{----------------------} }
 
 \maketitle
 
 \begin{abstract}
+  \sergey{Samuel! Add a reference to python-constraint somewhere, including the references list at the end}\\
+  \sergey{Tias, Samuel, Luc, should we even mention miniZinc or ASP here, or is it not relevant?}
 Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
 However, modeling, maintaining and discovering formulas in tabular data and spreadsheets can be time consuming and error-prone.
 In this work, we investigate the automatic discovery of constraints (formulas and relations) in raw tabular data.
@@ -176,9 +79,9 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach and
 % \end{itemize}
 %}
 
-\begin{figure*}[thb]
+\begin{figure}[thb]
 
-  \begin{subfigure}{.66\textwidth}
+  \begin{subfigure}{1\textwidth}
   \begin{center}
     \includegraphics[width=1\textwidth]{figures/Demo2.png}
   \end{center}
@@ -188,59 +91,57 @@ Section \ref{sec:formalization} introduces concepts relevant to our approach and
     Green background indicates headerless tables, dark borders indicate maximal type-consistent blocks.
     Most tables only contain type-consistent columns while table~$T_2$ also contains type-consistent rows.
     However, due to the location of the header of~$T_2$ we can infer that it consists of row data.
-    This example was created by combining several Excel sheets from several exercise sessions based on~\cite{excel_book}.
+    This example was created by combining several Excel sheets from several exercise sessions based on the book MS Excel 2010~\cite{excel_book}.
     % I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
   }
   \label{fig:main_example}
 \end{subfigure}
 \hfill
-\begin{subfigure}{.34\textwidth}
-  {\footnotesize
+\begin{subfigure}{1\textwidth}
+  {\scriptsize
     \begin{align*}
       % Table 1
-      &~\ecseries{\range{T_{1}}{\rangeall}{1}} \\
 %
 %      &~\ecperm{\range{T_{1}}{\rangeall}{1}}, \ecperm{\range{T_{1}}{\rangeall}{8}} \\
 %
-      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{5}}^*\\
-      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{6}}^* \\
-      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{10}}^*\\
-      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}} \\
-      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{3}}^*\\
-      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{4}}^* \\
+      &~\ecseries{\range{T_{1}}{\rangeall}{1}}                                  && \ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{5}}^*     && \ecaggc{\textit{AVERAGE}}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}}  \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{6}}^*     && \ecaggc{\textit{MAX}}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{10}}^*    && \ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{7}}       && \ecsumc{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{3}}^*     && \range{T_{4}}{\rangeall}{4} = PREV(\range{T_{4}}{\rangeall}{4}) + \range{T_{4}}{\rangeall}{2} - \range{T_{4}}{\rangeall}{3} \\
+      &~\ecrank{\range{T_{1}}{\rangeall}{8}}{\range{T_{1}}{\rangeall}{4}}^*    && \eclookup{\range{T_{5}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{3}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}^*\\
 %
-      &~\ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+      &~\ecsumr{\range{T_{1}}{\rangeall}{7}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}}   && \eclookup{\range{T_{5}}{\rangeall}{3}}{\range{T_{5}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}} \\
 %
-      &~\ecaggif{\textit{SUM}}{\range{T_{1}}{\rangeall}{10}}{\range{T_{3}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{3}}{\rangeall}{2}} \\
-%
-      &~\ecaggif{\textit{MAX}}{\range{T_{1}}{\rangeall}{11}}{\range{T_{3}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{3}}{\rangeall}{2}} \\
+      &~\ecaggif{\textit{SUM}}{\range{T_{1}}{\rangeall}{10}}{\range{T_{3}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{3}}{\rangeall}{2}}   && \ecaggif{\textit{MAX}}{\range{T_{1}}{\rangeall}{11}}{\range{T_{3}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{3}}{\rangeall}{2}} 
 %
 	  % Table 2
-      &~\ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%     &~\ecsumc{\range{T_{2}}{1}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
-      &~\ecaggc{\textit{AVERAGE}}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%     &~\ecaggc{\textit{AVERAGE}}{\range{T_{2}}{2}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
-      &~\ecaggc{\textit{MAX}}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}},  \\
+%     &~\ecaggc{\textit{MAX}}{\range{T_{2}}{3}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}},  \\
 %
-      &~\ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
+%     &~\ecaggc{\textit{MIN}}{\range{T_{2}}{4}{\rangeall}}{\range{T_{1}}{\rangeall}{\rangeto{3}{7}}} \\
 %
 	  % Table 4
-      &~\ecsumc{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
+%     &~\ecsumc{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{\rangeto{3}{6}}} \\
 %
-      &~\range{T_{4}}{\rangeall}{4} = PREV(\range{T_{4}}{\rangeall}{4}) + \range{T_{4}}{\rangeall}{2} - \range{T_{4}}{\rangeall}{3} \\
+%     &~\range{T_{4}}{\rangeall}{4} = PREV(\range{T_{4}}{\rangeall}{4}) + \range{T_{4}}{\rangeall}{2} - \range{T_{4}}{\rangeall}{3} \\
 %
     % Table 5
-      &~\eclookup{\range{T_{5}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{3}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}^* \\
+%     &~\eclookup{\range{T_{5}}{\rangeall}{2}}{\range{T_{5}}{\rangeall}{3}}{\range{T_{1}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}^* \\
 %
-      &~\eclookup{\range{T_{5}}{\rangeall}{3}}{\range{T_{5}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}
+%     &~\eclookup{\range{T_{5}}{\rangeall}{3}}{\range{T_{5}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}
     \end{align*}}
-  \vspace{-18pt}
+  \vspace{-10pt}
   \caption{Constraints learned for the example (left), except for \textit{ALLDIFFERENT} (18), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5).
   Constraints marked with $*$ were not present in the original document}
   \label{fig:sol_example}
 \end{subfigure}
   \caption{Running example}
-\end{figure*}
+\end{figure}
 
 
 \section{Formalization}\label{sec:formalization}
@@ -305,18 +206,19 @@ We will sometimes write that $B'$ is a \textit{subblock} of $B$ or that $B$ is a
 An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\rangeto{3}{8}] $, which contains the sales numbers of all employees for the four quarters.
 
 
-\begin{table*}[!h]
+\begin{table}[htb]
 \caption{
   Overview of constraint templates implemented in \sname.
   Subgroups in normal font have to be vectors, whereas subgroups in \textbf{bold} may contain more than one vector;
   $\discrete(x)$ is a shortcut for: $\textual(x) \lor \numeric(x)$.
   Templates marked with $*$ are \textit{structural}, i.e. they are not functional and cannot be implemented in most spreadsheet software.
   Templates marked with $\dagger$ are \textit{aggregate} templates, the table shows \textit{SUM} but \sname also supports \textit{MAX}, \textit{MIN}, \textit{AVERAGE}, \textit{PRODUCT} and \textit{COUNT}.
-  %{\small\luc{maybe say s.th. about some fancy constraints: example of a more complex one in the text (what does conditional mean, aggregate ... )}}
+  %{\luc{maybe say s.th. about some fancy constraints: example of a more complex one in the text (what does conditional mean, aggregate ... )}}
 }
 \label{table:constraints}
-  {\centering
-  \begin{tabularx}{\textwidth}{l X X}
+\resizebox{1.0\columnwidth}{!}{%
+  {\normalsize \centering
+  \begin{tabularx}{1.70\textwidth}{l X X}
     \textbf{\CName} & \textbf{\CSignature} & \textbf{\CFunction}\\ \hline \hline
     $\ecalldiff{\sbl{x}}^*$
       & $\discrete(\sbl{x})$
@@ -410,7 +312,7 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
     $\ecsumif{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}^\dagger$
       & $\sbl{fk}, \sbl{pk}$ are $\discrete$; $\sbl{r}, \sbl{val}$ are $\numeric$; within the sets $\{\sbl{val}, \sbl{fk}\}$ and $\{\sbl{pk}, \sbl{r}\}$ arguments have the same $\plength$ and $\por$; $\sbl{fk}$ and $\sbl{val}$ have the same $\ptable$; $\sbl{fk}$ and $\sbl{pk}$ must have different $\ptable$s but the same $\ptype$; and \ecalldiff{\sbl{pk}}
       
-      & \[ \sbl{r}[i] = \sum_{j=1}^{\plength(\sbl{val})} \begin{cases}
+      & \[\sbl{r}[i] = \sum_{j=1}^{\plength(\sbl{val})} \begin{cases}
           \sbl{val}[j] & \text{if } \sbl{fk}[j] = \sbl{pk}[i] \\
           0 & \text{otherwise}
         \end{cases}
@@ -420,9 +322,11 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
       & Arguments $\{\sbl{r}, \sbl{1}, \sbl{2}\}$ are $\numeric$; $\plength(\sbl{1}) = \plength(\sbl{2}) \geq 2$; and $\prows(\sbl{r}) = \pcols(\sbl{r}) = 1$
       
       & $\sbl{r}[1] = \sum_{j = 1}^{\plength(\sbl{1})} \sbl{1}[j] \times \sbl{2}[j]$.
-  \end{tabularx}}
+    \end{tabularx}
+  } % centering small
+} % resizebox
 
-\end{table*}
+\end{table}
 
 \newcommand{\sigc}{\ensuremath{\format{Sig}_s}}
 \newcommand{\defc}{\ensuremath{\format{Def}_s}}
@@ -658,7 +562,7 @@ The sheet is then processed row by row, splitting each row into ranges of non-em
 Headers can be detected, for example, by checking if the first row or column contains only textual values. If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
 
 \paragraph{Visual}
-The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (screenshots are available in the accompanying github repository with meta-data\footnote{\url{https://github.com/for-DSAA2016-review/TaCLe}\label{github-link}}).
+The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (screenshots are available in the accompanying github repository with meta-data\footnote{\url{https://github.com/SergeyParamonov/TaCLe}\label{github-link}}).
 Users select tables excluding the header and optionally specify an orientation.
 The tool then generates the specification of the tables automatically.
 
@@ -805,7 +709,7 @@ On the other hand, a simple generate-and-test approach, as illustrated in Algori
 Given a superblock assignment, all disjoint subassignments are generated taking into account the required size, columns or rows.
 For every (disjoint) subassignment the exact signature (e.g. subtypes will not have been checked yet) and definition will be tested and all satisfying subassignments are returned.
 
-\begin{algorithm}[tbh]
+\begin{algorithm}[t]
   \begin{algorithmic}
     \footnotesize
     \Procedure{Subassignments}{$s$, $(\sbl{1}, \dots, \sbl{n})$}
@@ -879,7 +783,7 @@ Constraint templates that have no dependencies are omitted.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.65\linewidth]{figures/constraint_dependency2.pdf}
+  \includegraphics[width=0.50\linewidth]{figures/constraint_dependency2.pdf}
   \caption{Dependency graph of Table~\ref{table:constraints}; an arrow from~$s_1$ to~$s_2$ indicates that $s_2$ depends on~$s_1$ (its signature includes $s_1$).
   }
   \label{fig:learning_order}
@@ -1157,7 +1061,7 @@ The \textit{SUMIF} constraints have enough input to fill the incomplete vectors 
 % \hfill
 % \begin{subfigure}{.29\textwidth}
 \begin{center}
-    \includegraphics[width=0.65\linewidth]{figures/Learning.png}
+    \includegraphics[width=1.0\linewidth]{figures/Learning.png}
   \end{center}
   \caption{Autocompletion works by learning constraint on a snapshot and combining those constraints with new data $\Delta D$.
   The figure shows how, given a new value \textit{West}, we can suggest values for the other cells in that row.}
@@ -1204,11 +1108,13 @@ in spreadsheets are often different from those in databases.
 Second, there exist a number of algorithms in the constraint programming community that induce constraint (programs)
 from one or more examples and questions. Two well-known approaches include ModelSeeker \cite{modelseeker} and Quacq \cite{Quacq}.
 The former starts from a single example in the form of a vector of values and then exhaustively looks for the most specific constraints from a large constraint library that hold in the vector. To this aim, it cleverly enumerates different de-vectorized tables; for instance, if the initial vector was of dimension $1 \times 20$, it would consider rearrangements of size $2 \times 10$, $4 \times 5$, $5 \times 4$, … and Modelseeker would then look for both column, row  and even diagonal constraints. Key differences are that we assume given spreadsheets with \textit{multiple} tables; and that ModelSeeker's constraints are restricted to integer values and often typical for constraint programming community, e.g. aimed at combinatorial optimization and scheduling. Conacq \cite{Conacq} acquires a conjunction of constraints using techniques inspired on Mitchell's version spaces to process examples; its successor Quacq uses active learning to query the user regarding satisfiability. Each of the examples/queries is processed for each constraint, hence an important issue is how fast the algorithm converges to the entire solution set (e.g. for Sudoku).
-The focus is again on integer variables and typical combinatorial optimisation constraints.
+The focus is again on integer variables and typical combinatorial optimisation constraints.  \sergey{that's where I added a new reference, needs to be checked and might need to be moved in the right place}. It also connects with the approach of inducing constraints and functions by generalizing given formulas in a spreadsheet \cite{Isakowitz}, where one abstracts present formulas by introducing parameters in the place of particular cell references. The key difference here that we start not from existing formulas but from the data directly.
 %As the conjunction for typical constraint programming problems (such as Sudoku) can be quite large, a key problem is to cope with redundant constraints. As Modelseeker, these systems focus on the types of constraints in combinatorial optimization but unlike ModelSeeker and our approach, they do not assume the variables are organized in tabular form.
 
 
 Third, our work borrows from the seminal work of Gulwani et al. \cite{flashfill} on program synthesis for tabular data, which is incorporated in Microsoft’s Excel. In FlashFill, the end-user might work on a table containing the surnames (column A) and names (column B) of politicians. The first row might contain the values A1 = ``Blair'' and B1 = ``Tony'', and the user might then enter in cell C1 the value ``T.B.''. At that point FlashFill generates a program that produces the output ``T.B.'' for the inputs ``Blair'' and ``Tony'', and also applies it to the other politicians (rows) in the table. While it might need an extra example to deal with names such as ``Van Rompuy, Herman'' and determine whether it should output ``H.V.'' or ``H.V.R.'', FlashFill learns correct programs from very few examples. Flashfill has been extended to e.g. FlashExtract \cite{flashextract} to produce a set of tables starting from an unstructured document (a txt or HTML file) with a set of examples marked for extraction. However, unlike our approach, Flashfill requires the user to identify explicitly the desired inputs/outputs from the function as well as to provide explicitly some positive and sometimes also negative examples.  In contrast, our approach is unsupervised, although it would be interesting to study whether it could be improved through user interaction and through user examples.  Another interesting open issue (for all of these techniques with the exception of logical and relational learning) is how to deal with possibly incomplete or noisy data.
+
+\sergey{added database dependency discovery; have a look at it} Fourth, our work is motivated by the functional dependency discover in databases \cite{flach_dependency_discovery}. Most of the discovery techniques rely on the database schema that does not directly apply in our case. Some techniques work directly on the data \cite{tane_dependency_discovery} and, contrary to our work, are focused on pure functional dependencies that are not typical constraints of a spreadsheet that might hold over multiple tables and on a mixture of columns and rows.
 
 Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabular}, two recent probabilistic modeling languages that have been specifically designed for dealing with relational data in tabular form and that can, as FlashFill, also automatically fill out missing values in a table.  However, unlike the other mentioned approaches, it is based on an underlying probabilistic graphical model that performs probabilistic inference rather than identify ``hard'' constraints.
 
@@ -1229,7 +1135,7 @@ This could extend the approach to new application domains, beyond traditional sp
 
 
 \bibliographystyle{plain}
-{\footnotesize
+{
   \bibliography{references}}
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
