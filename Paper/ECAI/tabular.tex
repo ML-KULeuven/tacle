@@ -55,7 +55,7 @@ very few examples.
 Our approach contrasts with these in that it focuses on learning both column- and row-constraints across tables on integer, floating point as well as textual data.
 
 This paper is organized as follows.
-Section \ref{sec:formalization} introduces concepts relevant to our approach and our problem statement. Section \ref{sec:related_work} presents a more detailed discussion of the related work. Section \ref{sec:approach} presents our approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications.  Section \ref{sec:conclusions} provides conclusions.
+Section \ref{sec:related_work} presents a detailed discussion of the related work. Section \ref{sec:formalization} introduces concepts relevant to our approach and our problem statement.  Section \ref{sec:approach} presents our approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications.  Section \ref{sec:conclusions} provides conclusions.
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
@@ -584,7 +584,7 @@ The sheet is then processed row by row, splitting each row into ranges of non-em
 Headers can be detected, for example, by checking if the first row or column contains only textual values. If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
 
 \paragraph{Visual}
-The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (screenshots are available in the accompanying github repository with meta-data\footnote{\url{https://github.com/SergeyParamonov/TaCLe}\label{github-link}}).
+\sergey{Luc, can you check if the supplementary material at github is understandable for people? Do we have to add anything there like write that code would be available after?} The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (screenshots are available in the accompanying github repository with meta-data\footnote{\url{https://github.com/SergeyParamonov/TaCLe}\label{github-link}}).
 Users select tables excluding the header and optionally specify an orientation.
 The tool then generates the specification of the tables automatically.
 
