@@ -1,6 +1,8 @@
-What is the main claim of the paper? Why is this an important contribution to the machine learning/data mining literature?
+* What is the main claim of the paper? Why is this an important contribution to the machine learning/data mining literature?
 --
-What is the evidence provided to support claims? Be precise.
+* What is the evidence provided to support claims? Be precise.
 --
-Report 3-5 most closely related contributions in the past 7 years (authored by researchers outside the authors’ research group) and briefly state the relation of the submission to them.
+* Report 3-5 most closely related contributions in the past 7 years (authored by researchers outside the authors’ research group) and briefly state the relation of the submission to them.
 --
+* Have you published parts of your paper before, for instance in a conference? If so, give details of your previous paper(s) and a precise statement detailing how your paper provides a significant contribution beyond the previous paper(s).
+No.
