@@ -1,3 +1,4 @@
+import functools
 import itertools
 
 import math
@@ -531,6 +532,7 @@ def equal(x, y, scale=False):
         return x == y
 
 
+@functools.lru_cache(maxsize=None)
 def precision_and_scale(x):
     max_digits = 14
     int_part = int(abs(x))
