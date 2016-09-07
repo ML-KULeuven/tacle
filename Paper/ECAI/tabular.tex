@@ -4,23 +4,21 @@
 
 \begin{document}
 
-\title{Learning constraints in spreadsheets and tabular data}
+\title{Discovering constraints in spreadsheets and tabular data}
 % see http://www.acm.org/binaries/content/assets/publications/article-templates/sig-alternate-sample.tex
 
-\author{Name1 Surname1 \and Name2 Surname2 \and Name3 Surname3 \institute{----------------------} }
+\author{} % \institute{----------------------} }
 
 \maketitle
 
 \begin{abstract}
-  \sergey{Samuel! Add a reference to python-constraint somewhere, including the references list at the end}\\
 Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
-However, modeling, maintaining and discovering formulas in tabular data and spreadsheets can be time consuming and error-prone.
-In this work, we investigate the automatic discovery of constraints (formulas and relations) in raw tabular data.
-We see multiple promising applications for this technique, e.g. in rediscovering constraints, auto-completion and error checking.
-Our method takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
-Common spreadsheet functions are represented as predicates whose arguments must satisfy a number of constraints.
-Constraint learning techniques are used to identify the predicates that hold between blocks of rows and columns of the tables.
-We show that our approach is able to accurately discover constraints in spreadsheets from various sources.
+However, writing, maintaining and identifying good formulas for tabular data and spreadsheets can be time consuming and error-prone.
+In this work, we investigate the automatic discovery of constraints (formulas and relations) in raw tabular data in an unsupervised way.
+Common spreadsheet formulas are represented as predicates whose arguments must satisfy the inherent properties of the function. The challenge is to discover these without user information or training examples. % Knowledge discovery
+We propose a two-stage generate and test method where the first stage uses constraint solving techniques to efficiently reduce candidates in a generic way based on the function signature. 
+Our approach to this knowledge discovery task takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
+We show that we are able to accurately discover constraints in spreadsheets from various sources.
 \end{abstract}
 
 \section{Introduction}
@@ -48,6 +46,14 @@ To answer this question we contribute a general-purpose method and system, named
 It operates directly on (headerless) tables of a spreadsheet in an unsupervised setting, that is, it reasons on raw tabular data directly with no example constraint instantiations given. %, and discovers column- and row-wise constraints.
 We demonstrate the utility of our approach in an experimental evaluation.
 Moreover, we sketch additional application scenario's such as autocompletion and error detection.
+
+Our contributions are as follows:
+\begin{itemize}
+\item we define the tabular constraint learning problem, where the goal is to learn constraints (functions and relations) that range over entire rows or columns. This is an unsupervised learning problem;
+\item we propose a 2-stage generate and test method that reasons for each candidate constraint over the maximally contiguous submatrices in the first stage, and only in the second stage looks at individual rows and columns and their content;
+\item furthermore, in the first stage we use a constraint solver to efficiently enumerate all tuples of submatrices compatible with the candidate constraint its arguments, using backtracking search and forward checking;
+\item experiments on a range of publicly available spreadsheets show that the system is able to extract constraints with high precision and recall in an unsupervised manner. 
+\end{itemize}
 
 The approach that we introduce borrows techniques from logical and relational learning \cite{luc_book}, where the discovery of clausal constraints has been studied in inductive logic programming \cite{claudien,lallouet}; and from constraint learning,  where several approaches to learning sets of constraints have been developed in a constraint programming setting \cite{Quacq,Conacq,modelseeker};
 and from mining in databases, where inductive techniques have been applied to discover constraints (such as functional and multi-valued dependencies) in relational databases \cite{savnik}.  It also builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from
@@ -949,7 +955,7 @@ Constraints that are currently outside of the scope of this system are, for exam
 We focus on \textit{functional} constraints that could be used as formulas in spreadsheets, ignoring the structural constraints \textit{ALLDIFFERENT}, \textit{FOREIGNKEY} and \textit{PERMUTATION}.
 Moreover, we included detected equalities as intended constraints (in 5~spreadsheets).
 All experiments were run using Python 3.5.1 on a Macbook Pro, Intel Core i7 2.3~GHz with 16GB RAM.
-
+\sergey{Samuel! Add a reference to python-constraint, including the references list at the end}\\
 
 
 
