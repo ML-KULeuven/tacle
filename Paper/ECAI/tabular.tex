@@ -1024,6 +1024,7 @@ While most spreadsheets can be analyzed very quickly, running times can go up to
 %Using the dependencies to find constraints incrementally cuts down large parts of the search trees, especially for constraints that have many arguments.
 %Essentially, one obtains a more specialized search without much effort.
 
+\samuel{fail-fast?}
 Of the 32 supported constraint templates (including equality), the slowest by far is fuzzy lookup using $\pm 36\%$ of the running time.
 It is followed by product ($\pm 5\%$), relative difference ($\pm 5\%$) and various row-aggregates (each $3.5\% - 4\%$).
 
@@ -1045,8 +1046,18 @@ While we obtained a recall of~$1.0$, the algorithm ran for $14.30s$ and the over
 %The running time can be improved by implementing additional optimizations.
 
 
+\subsection{Runtime analysis}
+There are multiple factors that impact the running time of \sname: the number of vectors, the size of the vectors, the number of vectors per block, the type of cells, the number of tables and the number of constraints that are in the data.
+Moreover, the running time depends on the number of the constraint templates implemented in the system and their arity.
 
+For most constraint templates the time required to check whether a subassignment satisfies the template is linear in the size of the subassignment (the number of subblocks and their size).
+For a constraint with arity~$n$, and a subassignment consisting of $n$~blocks with $m$~vectors of size~$k$, the worst case complexity becomes $O(n * m * k)$.
+However, in practice, most subassignments will not satisfy the constraint template.
+Since our implementation tries to account for this by failing fast, the amortized time is constant in the size of the vectors~$k$, unless $k$~is very large or many constraints hold in the data.
+For templates requiring their arguments to be single vectors $m$~is~$1$, and the total complexity for checking a subassignment becomes~$O(n) \simeq O(1)$ (since $n$ is typically small). 
 
+The benchmark experiments show that the number of cells in a spreadsheet only has a limited effect on the runtime.
+Since the implementation is tailored to fail fast when testing constraints, the runtime is in practice 
 
 
 \section{Applications}\label{sec:applications}
