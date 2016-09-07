@@ -22,21 +22,29 @@ We show that we are able to accurately discover constraints in spreadsheets from
 \end{abstract}
 
 \section{Introduction}
+% relevance of formulas and spreadsheets
 Millions of people across the world use spreadsheets every day.
 The tabular representation of the data is often intuitive, and the programming of functions in individual cells is quickly learned.
 However, large and complex sheets (possibly with multiple tables and relations between them) can be hard to handle.
-Many end-users lack the understanding of the underlying structures and dependencies in such sheets and the data they contain.
+Many end-users lack the understanding of the underlying structures and relations in such sheets and the data they contain.
 This is especially the case when spreadsheets have been exported from other software such as Enterprise Resource Planning (ERP) systems.
 In this case, often a comma-separated values (CSV) format is used meaning that all formulas are lost, including inter-sheet formulas and relations.
 %This limited understanding is especially the case with spreadsheets exported from other software such as ERP packages. In this case,
 Even in manually created spreadsheets, it can be challenging to be consistent and correct with formulas across big tables.
-For example the influential Reinhart-Rogoff economical paper ``Growth in a Time of Debt'' had some of its claims contested~\cite{flaw_excel}, after an investigation of the used Excel sheets was shown to contain mistakes in formulae.
+For example the influential Reinhart-Rogoff economical paper ``Growth in a Time of Debt''\tias{[ADD CITE TO THIS PAPER]} had some of its claims contested~\cite{flaw_excel}, after an investigation of the used Excel sheets was shown to contain mistakes in formulae.
 
-In this paper,  we investigate whether learning techniques can be used to infer constraints (formulas and other relations) from raw spreadsheet data.
+% why learn them
+Such issues and mistakes could be overcome through the development of intelligent user-assisting tools. A core aspect of such tools would be the ability to automatically discover what constraints and formulae are present in a spreadsheet. This is the problem we study in this paper. We see multiple promising applications that can build on this, such as rediscovery constraints when importing raw data, auto-suggestion of formula's during spreadsheet use, automatic auto-completion of rows or columns, and consistency and error checking.
+
+% why difficult
+In this paper,  we investigate whether knowledge discovery techniques can be used to infer constraints (formulas and other relations) from raw spreadsheet data.
+From a machine learning point of view this is an unconventional problem because 
+
 This is a new and unconventional machine learning problem.
 Consider the example in Figure~\ref{fig:main_example}, where header names such as \textbf{Total} and \textbf{Rank} already suggest the usage of spreadsheet operations such as \textit{SUM} or \textit{RANK}.
 Looking at the first row in table~$T_2$ and the data in table~$T_1$, it is clear that the values in this row were computed by summing the values in the corresponding columns (\textbf{1st Quarter} through \textbf{Total}) of $T_1$.
 Examining $T_1$ also shows that computations are not only performed column-wise but row-wise as well: the cells in the column \textbf{Total} are obtained by summing the rows of the previous four columns.
+
 This provides a flavor of how this problem is different from standard mining and learning settings, where the data is just in rows and variables are in columns. Here everything is mixed. The data is relational on the one hand, since we have multiple tables with relationships between them (e.g. foreign-keys). On the other hand, the data is most often mixed, e.g. textual and numeric. %, since people tend to use spreadsheets for financial and accounting computations.
 Therefore, understanding and learning constraints in tabular data is a novel and challenging problem for machine learning.
 
@@ -47,6 +55,7 @@ It operates directly on (headerless) tables of a spreadsheet in an unsupervised 
 We demonstrate the utility of our approach in an experimental evaluation.
 Moreover, we sketch additional application scenario's such as autocompletion and error detection.
 
+% contribs
 Our contributions are as follows:
 \begin{itemize}
 \item we define the tabular constraint learning problem, where the goal is to learn constraints (functions and relations) that range over entire rows or columns. This is an unsupervised learning problem;
