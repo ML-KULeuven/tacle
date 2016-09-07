@@ -94,27 +94,32 @@ def clear_folder(path):
             print(e)
 
 
-def generate_experiments(default_power=3, min_power=0, max_power=6, block_power=5, gtype=GType.int):
-    # Build increments
+def generate_experiments():
+    # Configuration
+    gtype = GType.int
     default = 2 ** 3
-    increments = list(2 ** p for p in range(min_power, max_power + 1))
+    block_power = 5
+    number_power = 6
+    size_power = 12
+
+    increment = lambda p_min, p_max: list(2 ** p for p in range(p_min, p_max + 1))
 
     # Vary number of vectors
     cat_1 = []
-    for cols in increments:
+    for cols in increment(0, number_power):
         rows = default
         cat_1.append(SpeedTestId(cols, rows, [cols], [gtype] * cols))
 
     # Vary vector size
     cat_2 = []
-    for rows in increments:
+    for rows in increment(0, size_power):
         cols = default
         cat_2.append(SpeedTestId(cols, rows, [cols], [gtype] * cols))
 
     # Vary block sizes
     cat_3 = []
     vectors = 2 ** block_power
-    for block_size in reversed(increments):
+    for block_size in reversed(increment(0, block_power)):
         if block_size <= vectors:
             cols = vectors
             rows = default
@@ -136,7 +141,7 @@ def setup_experiments(experiments):
 def main():
     # ID: cols, rows, blocks, int | str | float
 
-    categories = generate_experiments(default_power=3, max_power=5)
+    categories = generate_experiments()
     experiments = set(itertools.chain(*categories))
 
     runs = 1
