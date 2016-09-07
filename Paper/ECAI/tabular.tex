@@ -986,7 +986,7 @@ Notice that for the data category the average number of cells is higher while th
     \textbf{\begin{tabular}[c]{@{}l@{}}Intended\\[-4.5pt] Constraints\end{tabular}} & 34 & 3.78 & 52 & 2.48 & 6 & 1.50 \\ \hline \hline
 \textbf{Recall} & 0.85 & 0.83 & 0.88 & 0.87 & 1.00 & 1.00 \\ \hline
 \textbf{\begin{tabular}[c]{@{}l@{}}Recall\\[-4.5pt] Supported\end{tabular}} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\ \hline
-\textbf{Precision} & 0.97 & 0.98 & 0.70 & 0.91 & 1.00 & 1.00 \\ \hline
+\textbf{Precision} & 0.94 & 0.96 & 0.70 & 0.91 & 1.00 & 1.00 \\ \hline
 \textbf{Speed (s)} & 1.62 & 0.18 & 1.76 & 0.08 & 0.81 & 0.20
 \end{tabular}
 \end{table}}
@@ -1001,7 +1001,7 @@ The intended constraints not discovered correspond to constraints not supported 
 
 \subsubsection*{Q2. How precise is \sname?}
 Across all spreadsheets \sname achieves a precision of~$0.79~(81/102)$.
-While the average precision per spreadsheet is over $0.90$ for all categories, the overall precision is much higher for the exercises and data categories ($0.97$ and $1.00$) than for the tutorials category ($0.70$).
+While the average precision per spreadsheet is over $0.90$ for all categories, the overall precision is much higher for the exercises and data categories ($0.94$ and $1.00$) than for the tutorials category ($0.70$).
 Examining the tutorial spreadsheets confirms that there are a few spreadsheets that have a high number of additional constraints.
 A qualitative analysis of these spreadsheets shows that their lower precision is caused by duplicate data or multiple ways to calculate the same vectors.
 For these spreadsheets the precision could be increased by post-processing the constraints to detect implications or heuristically selecting one among multiple ways to compute the same vector.
