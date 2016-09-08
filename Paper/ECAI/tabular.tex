@@ -1059,12 +1059,22 @@ Moreover, the running time depends on the number of the constraint templates imp
 For most constraint templates the time required to check whether a subassignment satisfies the template is linear in the size of the subassignment (the number of subblocks and their size).
 For a constraint with arity~$n$, and a subassignment consisting of $n$~blocks with $m$~vectors of size~$k$, the worst case complexity becomes $O(n * m * k)$.
 However, in practice, most subassignments will not satisfy the constraint template.
-Since our implementation tries to account for this by failing fast, the amortized time is constant in the size of the vectors~$k$, unless $k$~is very large or many constraints hold in the data.
+Since our implementation tries to account for this by failing fast, the amortized time is constant in the size of the vectors~$k$, unless $k$~is very large\footnote{Specifically, if $k$ is much larger than the number of candidate subassignments} or many constraints hold in the data.
 For templates requiring their arguments to be single vectors $m$~is~$1$, and the total complexity for checking a subassignment becomes~$O(n) \simeq O(1)$ (since $n$ is typically small). 
 
 The benchmark experiments show that the number of cells in a spreadsheet has a very limited impact on the running time.
-Synthetic experiments with random integers and strings show that increasing the size of the vectors has a neglegible impact on the performance.
+Synthetic experiments with random integers and strings show that increasing the size of the vectors has a negligible impact on the performance for most templates.
 
+Aggregate constraints, e.g. sum or max, have an argument that takes subblocks of varying sizes.
+Therefore, the size of the blocks in the spreadsheet influences the runtime of these constraints.
+For a block of size~$m$ there are $\frac{m(m + 1)}{2} = O(m^2)$ subblocks, thus, if a spreadsheet has smaller sized blocks, the search for aggregate constraints will be faster.
+
+Synthetic experiments with random integers confirm that splitting a constant number of vectors into smaller blocks improves the performance of the aggregate constraint search.
+
+These experiments, however, also show that the running time for various non-aggregate constraints increases as the size of blocks becomes very small.
+Since these constraints have single vector arguments the block size should not have a strong effect.
+However, in practice, for very small blocks to the superblock assignment phase has to generate a very large number of combinations, while for larger blocks this work is done mostly during the subassignment generation phase.
+Since this last phase is more adept at generating these combinations, shifting this workload to the assignment phase slows down the algorithm.
 
 
 \section{Applications}\label{sec:applications}
