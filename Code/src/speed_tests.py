@@ -12,28 +12,30 @@ from core.group import GType
 
 
 class SpeedTestId:
-    def __init__(self, cols, rows, blocks, types):
+    def __init__(self, cols, rows, blocks, types, tables):
         self.cols = cols
         self.rows = rows
         self.blocks = blocks
         self.types = types
+        self.tables = tables
 
     def __hash__(self, *args, **kwargs):
-        return hash((self.cols, self.rows, tuple(self.blocks), tuple(self.types)))
+        return hash((self.cols, self.rows, tuple(self.blocks), tuple(self.types), self.tables))
 
     def __eq__(self, other):
         if not isinstance(other, SpeedTestId):
             return False
         return self.cols == other.cols and self.rows == other.rows and self.blocks == other.blocks \
-            and self.types == other.types
+            and self.types == other.types and self.tables == other.tables
 
     def __repr__(self):
-        return "c{} r{} b{}".format(self.cols, self.rows, self.blocks)
+        return "c{} r{} b{} t{}".format(self.cols, self.rows, self.blocks, self.tables)
 
     @property
     def name(self):
         assert(all(b == self.blocks[0] for b in self.blocks))
-        return "c{}_r{}_b{}".format(self.cols, self.rows, "{}x{}".format(len(self.blocks), self.blocks[0]))
+        blocks = "{}x{}".format(len(self.blocks), self.blocks[0])
+        return "c{}_r{}_b{}_t{}".format(self.cols, self.rows, blocks, self.tables)
 
 
 def generate_random(test_id: SpeedTestId):
@@ -49,7 +51,8 @@ def generate_random(test_id: SpeedTestId):
         else:
             raise RuntimeError("Unexpected column type {}".format(column_type))
 
-    return list(list(str(column_data[col][row]) for col in range(test_id.cols)) for row in range(test_id.rows))
+    return list(list(str(column_data[col][row]) for col in range(test_id.cols) for _ in range(test_id.tables))
+                for row in range(test_id.rows))
 
 
 def generate_file(path, data_function, test_id: SpeedTestId, prefix):
@@ -68,17 +71,20 @@ def generate_file(path, data_function, test_id: SpeedTestId, prefix):
 
 def generate_blocks(test_id: SpeedTestId):
     content = dict()
-
     # Generate tables
-    bounds = [1, test_id.rows, 1, test_id.cols]
-    content["Tables"] = [{"Name": "T1", "Bounds": bounds, "Orientation": "Column"}]
+    tables = []
+    for table in range(test_id.tables):
+        bounds = [1, test_id.rows, test_id.cols * table + 1, test_id.cols * (table + 1)]
+        tables.append({"Name": "T{}".format(table + 1), "Bounds": bounds, "Orientation": "Column"})
+    content["Tables"] = tables
 
     # Generate groups
-    index = 1
     blocks = []
-    for block_size in test_id.blocks:
-        blocks.append({"Table": "T1", "Bounds": [":", index, index + block_size - 1]})
-        index += block_size
+    for table in range(test_id.tables):
+        index = 1
+        for block_size in test_id.blocks:
+            blocks.append({"Table": "T{}".format(table + 1), "Bounds": [":", index, index + block_size - 1]})
+            index += block_size
     content["Groups"] = blocks
     return content
 
@@ -101,6 +107,7 @@ def generate_experiments():
     block_power = 5
     number_power = 6
     size_power = 12
+    tables = 2
 
     increment = lambda p_min, p_max: list(2 ** p for p in range(p_min, p_max + 1))
 
@@ -108,13 +115,13 @@ def generate_experiments():
     cat_1 = []
     for cols in increment(0, number_power):
         rows = default
-        cat_1.append(SpeedTestId(cols, rows, [cols], [gtype] * cols))
+        cat_1.append(SpeedTestId(cols, rows, [cols], [gtype] * cols, tables))
 
     # Vary vector size
     cat_2 = []
     for rows in increment(0, size_power):
         cols = default
-        cat_2.append(SpeedTestId(cols, rows, [cols], [gtype] * cols))
+        cat_2.append(SpeedTestId(cols, rows, [cols], [gtype] * cols, tables))
 
     # Vary block sizes
     cat_3 = []
@@ -123,7 +130,7 @@ def generate_experiments():
         if block_size <= vectors:
             cols = vectors
             rows = default
-            cat_3.append(SpeedTestId(cols, rows, [block_size] * int(vectors / block_size), [gtype] * cols))
+            cat_3.append(SpeedTestId(cols, rows, [block_size] * int(vectors / block_size), [gtype] * cols, tables))
 
     return [cat_1, cat_2, cat_3]
 
@@ -144,7 +151,7 @@ def main():
     categories = generate_experiments()
     experiments = set(itertools.chain(*categories))
 
-    runs = 1
+    runs = 3
     tasks = {test_id: [] for test_id in experiments}
     path = "../experiments"
     log_file_path = os.path.join(path, "{}.log".format(time.strftime("%Y%m%d_%H%M%S")))
