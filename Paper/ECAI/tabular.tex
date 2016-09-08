@@ -89,9 +89,9 @@ Section \ref{sec:related_work} presents a detailed discussion of the related wor
 \sname combines ideas from several existing approaches and different fields of research.
 
 First, it borrows techniques from logical and relational learning \cite{luc_book}, as it finds
-constraints in multiple relations (or tables). However, unlike typical logical and relational learning
+constraints in multiple relations (or tables). Unlike typical logical and relational learning
 approaches, it focuses on data in spreadsheets and constraints on columns or rows in the sheets.
-Furthermore, it derives a set of simple ``atomic'' constraints rather than a set of rules that each consist of multiple literals as in clausal discovery \cite{claudien,lallouet}. Nevertheless, several ideas from logical and relational learning
+Furthermore, it derives a set of simple ``atomic'' constraints rather than a set of rules that each consist of a conjunction of literals as in clausal discovery \cite{claudien,lallouet}. Nevertheless, several ideas from logical and relational learning
 proved to be useful, such as the use of a canonical form, a refinement graph, and pruning for redundancy. \sergey{that's where I added a new reference, needs to be checked and might need to be moved in the right place}. It also connects with the logical generalization of given formulas in a spreadsheet \cite{Isakowitz}, where one abstracts present formulas by introducing parameters in the place of particular cell references. The key difference here that we start not from existing formulas but from the data directly.
 
 
@@ -1063,14 +1063,20 @@ For a constraint with arity~$n$, and a subassignment consisting of $n$~blocks wi
 However, in practice, most subassignments will not satisfy the constraint template.
 Since our implementation tries to account for this by failing fast, the amortized time is constant in the size of the vectors~$k$, unless $k$~is very large\footnote{Specifically, if $k$ is much larger than the number of candidate subassignments} or many constraints hold in the data.
 For templates requiring their arguments to be single vectors $m$~is~$1$, and the total complexity for checking a subassignment becomes~$O(n) \simeq O(1)$ (since $n$ is typically small). 
-
 The benchmark experiments show that the number of cells in a spreadsheet has a very limited impact on the running time.
 Synthetic experiments with random integers and strings show that increasing the size of the vectors has a negligible impact on the performance for most templates.
 
-Aggregate constraints, e.g. sum or max, have an argument that takes subblocks of varying sizes.
-Therefore, the size of the blocks in the spreadsheet influences the runtime of these constraints.
-For a block of size~$m$ there are $\frac{m(m + 1)}{2} = O(m^2)$ subblocks, thus, if a spreadsheet has smaller sized blocks, the search for aggregate constraints will be faster.
+On the contrary, the number of vectors in a spreadsheet have a significant impact on the running time.
+Many constraints take single vector arguments, therefore, the number of subassignments to be tested depends on the number of vectors in the spreadsheets and the arity of the constraint.
+For a constraint template with arity~$n$ and $v$~vectors there are $n^v$ subassignments (or $\frac{n!}{(n - v)!}$ if the arguments have to be different).
+As the number of vectors in a spreadsheet increases, the running time will quickly be dominated by constraints with a large arity.
+This effect is noticeable in our synthetic experiments when the number of (equally sized) vectors is increased.
+However, in our benchmark experiments there will be various factors that limit the rapid increase in running time because the assignment step can disqualify entire blocks that do not match the signature requirements, i.e. blocks of vectors with different lengths for the product constraint.
 
+Aggregate constraints, e.g. sum or max, have an argument that takes subblocks of varying sizes.
+Therefore, the size of the blocks in the spreadsheet also influences the runtime of these constraints.
+For a block of size~$m$ there are $\frac{m(m + 1)}{2}$ or $O(m^2)$ subblocks, thus, if a spreadsheet has more but smaller sized blocks, the search for aggregate constraints will be faster.
+Consider, for example, $v$~vectors distributed over $b$~blocks of size $v/b$, the number of subblock candidates then is $O(b * v^2 / b^2) = O(v^2 / b)$.
 Synthetic experiments with random integers confirm that splitting a constant number of vectors into smaller blocks improves the performance of the aggregate constraint search.
 
 These experiments, however, also show that the running time for various non-aggregate constraints increases as the size of blocks becomes very small.
