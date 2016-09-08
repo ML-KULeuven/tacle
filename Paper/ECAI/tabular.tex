@@ -92,19 +92,19 @@ First, it borrows techniques from logical and relational learning \cite{luc_book
 constraints in multiple relations (or tables). Unlike typical logical and relational learning
 approaches, it focuses on data in spreadsheets and constraints on columns or rows in the sheets.
 Furthermore, it derives a set of simple ``atomic'' constraints rather than a set of rules that each consist of a conjunction of literals as in clausal discovery \cite{claudien,lallouet}. Nevertheless, several ideas from logical and relational learning
-proved to be useful, such as the use of a canonical form, a refinement graph, and pruning for redundancy. \sergey{that's where I added a new reference, needs to be checked and might need to be moved in the right place}. It also connects with the logical generalization of given formulas in a spreadsheet \cite{Isakowitz}, where one abstracts present formulas by introducing parameters in the place of particular cell references. The key difference here that we start not from existing formulas but from the data directly.
+proved to be useful, such as the use of a canonical form, a refinement graph, and pruning for redundancy. It also connects with the logical generalization of given formulas in a spreadsheet \cite{Isakowitz}, where one abstracts present formulas by introducing parameters in the place of particular cell references. The key difference here that we start not from existing formulas but from the data directly.
 
 
 Second, there exist a number of algorithms in the constraint programming community that induce constraint (programs)
 from one or more examples and questions. Two well-known approaches include ModelSeeker \cite{modelseeker} and Quacq \cite{Quacq}.
 The former starts from a single example in the form of a vector of values and then exhaustively looks for the most specific constraints from a large constraint library that hold in the vector. To this aim, it cleverly enumerates different de-vectorized tables; for instance, if the initial vector was of dimension $1 \times 20$, it would consider rearrangements of size $2 \times 10$, $4 \times 5$, $5 \times 4$, … and Modelseeker would then look for both column, row  and even diagonal constraints. Key differences are that we assume given spreadsheets with \textit{multiple} tables; and that ModelSeeker's constraints are restricted to integer values and often typical for constraint programming community, e.g. aimed at combinatorial optimization and scheduling. Conacq \cite{Conacq} acquires a conjunction of constraints using techniques inspired on Mitchell's version spaces to process examples; its successor Quacq uses active learning to query the user regarding satisfiability. Each of the examples/queries is processed for each constraint, hence an important issue is how fast the algorithm converges to the entire solution set (e.g. for Sudoku).
-The focus is again on integer variables and typical combinatorial optimisation constraints.  \sergey{added equation discover here, check if that's the right place for it and if it is in fact good enough description} In a similar spirit the field of equation discovery \cite{equation_discovery} focuses, guided by  heuristics based on the structure of physical equations and unit measures, on the discovery of physical formulas over numbers and times series.
+The focus is again on integer variables and typical combinatorial optimisation constraints. In a similar spirit the field of equation discovery \cite{equation_discovery} focuses, guided by  heuristics based on the structure of physical equations and unit measures, on the discovery of physical formulas over numbers and times series.
 However, they focus specifically on physical data, while we consider numbers in general and different types of spreadsheet constraints.  %As the conjunction for typical constraint programming problems (such as Sudoku) can be quite large, a key problem is to cope with redundant constraints. As Modelseeker, these systems focus on the types of constraints in combinatorial optimization but unlike ModelSeeker and our approach, they do not assume the variables are organized in tabular form.
 
 
 Third, our work borrows from the seminal work of Gulwani et al. \cite{flashfill} on program synthesis for tabular data, which is incorporated in Microsoft’s Excel. In FlashFill, the end-user might work on a table containing the surnames (column A) and names (column B) of politicians. The first row might contain the values A1 = ``Blair'' and B1 = ``Tony'', and the user might then enter in cell C1 the value ``T.B.''. At that point FlashFill generates a program that produces the output ``T.B.'' for the inputs ``Blair'' and ``Tony'', and also applies it to the other politicians (rows) in the table. While it might need an extra example to deal with names such as ``Van Rompuy, Herman'' and determine whether it should output ``H.V.'' or ``H.V.R.'', FlashFill learns correct programs from very few examples. Flashfill has been extended to e.g. FlashExtract \cite{flashextract} to produce a set of tables starting from an unstructured document (a txt or HTML file) with a set of examples marked for extraction. However, unlike our approach, Flashfill requires the user to identify explicitly the desired inputs/outputs from the function as well as to provide explicitly some positive and sometimes also negative examples.  In contrast, our approach is unsupervised, although it would be interesting to study whether it could be improved through user interaction and through user examples.  Another interesting open issue (for all of these techniques with the exception of logical and relational learning) is how to deal with possibly incomplete or noisy data.
 
-\sergey{extended database dependency discovery section; have a look at it} Fourth, also related to this line of research is the work on deriving constraints in databases such as functional and multi-valued dependencies \cite{savnik, Mannila-Raiha} although that line of research has focused on more specialized techniques for specific types of constraints. Many of of the discovery techniques rely on the database schema that does not directly apply in our case \cite{flach_dependency_discovery}. Some techniques work directly on the data \cite{tane_dependency_discovery} and focus on classical functional dependencies between attributes, while the constraints and formulas used in spreadsheets are often different from those in databases.
+Fourth, also related to this line of research is the work on deriving constraints in databases such as functional and multi-valued dependencies \cite{savnik, Mannila-Raiha} although that line of research has focused on more specialized techniques for specific types of constraints. Many of of the discovery techniques rely on the database schema that does not directly apply in our case \cite{flach_dependency_discovery}. Some techniques work directly on the data \cite{tane_dependency_discovery} and focus on classical functional dependencies between attributes, while the constraints and formulas used in spreadsheets are often different from those in databases.
 
 Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabular}, two recent probabilistic modeling languages that have been specifically designed for dealing with relational data in tabular form and that can, as FlashFill, also automatically fill out missing values in a table.  However, unlike the other mentioned approaches, it is based on an underlying probabilistic graphical model that performs probabilistic inference rather than identify ``hard'' constraints.
 
@@ -442,7 +442,6 @@ We define the inverse problem, that is the {\bf Tabular Constraint Learning Prob
 {\bf Given} a set of instantiated blocks~${\cal B}$ over tables~${\cal T}$ and a set of {\template}s ${\cal S}$: {\bf find} all constraints $s(\ssbl{1}, ..., \ssbl{n})$ where $s \in {\cal S}$, $\forall i: \sbl{i}' \sqsubseteq \sbl{i} \in {\cal B}$ and $(\ssbl{1}, ..., \ssbl{n})$ is a satisfied argument assignment of the template~$s$.
 \end{definition}
 % Let us now define what it means for a constraint from \template to hold in general. Let $t$ be a \template, $S$ be a mapping from variables to the subgroups of \groups, and $C$ be the constraint $t^S$, then $C$ \textit{holds} iff all constraints in $\text{\CSignature}^S$ and $\text{\CFunction}^S$ of $C$ hold.
-% \sergey{moved from formalization END}
 
 %Here we formalize the statement in terms of \template and group assignments as follows:
 %   \begin{tabular}{ll}
@@ -887,8 +886,6 @@ While conditional aggregates use generate-and-test, they employ similar optimiza
 
 % Extending the system with a new constraint template amounts to \tias{TODO: samuel, explain how to define syntax; signature-for-groupgen; signature-for-def; definition}
 
-% \sergey{under question now, might worth deleting} \\
-% \sergey{example new template: vr = floor(v), float(v), int(vr), len(v)=len(vr), v,vr are single vectors?}
 
 % \begin{equation}
 %   \forall i{:}~ v_r[i] \leq v[i] < v_r[i] + 0.5
@@ -923,7 +920,6 @@ While conditional aggregates use generate-and-test, they employ similar optimiza
 
 % \samuel{Move next to subgroup satisfaction search}
 % \section{Declarative modeling}
-% \sergey{We need to fit ASP, Minizinc and all that here, I mean it is supposed to be an important point after all}
 
 \newcommand{\runtotal}{16.12}
 \newcommand{\runtotalstd}{0.62}
