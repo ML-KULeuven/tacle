@@ -1073,8 +1073,8 @@ Synthetic experiments with random integers confirm that splitting a constant num
 
 These experiments, however, also show that the running time for various non-aggregate constraints increases as the size of blocks becomes very small.
 Since these constraints have single vector arguments the block size should not have a strong effect.
-However, in practice, for very small blocks to the superblock assignment phase has to generate a very large number of combinations, while for larger blocks this work is done mostly during the subassignment generation phase.
-Since this last phase is more adept at generating these combinations, shifting this workload to the assignment phase slows down the algorithm.
+However, in practice, for very small blocks the superblock assignment phase has to generate a very large number of combinations, while for larger blocks this work is done mostly during the subassignment generation phase.
+Since the implementation of that last phase is more adept at generating these combinations, shifting this workload to the assignment phase slows down the algorithm.
 
 
 \section{Applications}\label{sec:applications}
