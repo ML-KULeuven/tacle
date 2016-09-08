@@ -2,9 +2,10 @@
 \input{packages}
 \input{macros}
 
+
 \begin{document}
 
-\title{Discovering constraints in spreadsheets and tabular data}
+\title{Learning \wat \sergey{here should be learning and not discovering, right?} constraints in spreadsheets and tabular data}
 % see http://www.acm.org/binaries/content/assets/publications/article-templates/sig-alternate-sample.tex
 
 \author{} % \institute{----------------------} }
@@ -15,9 +16,9 @@
 Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
 However, writing, maintaining and identifying good formulas for tabular data and spreadsheets can be time consuming and error-prone.
 In this work, we investigate the automatic discovery of constraints (formulas and relations) in raw tabular data in an unsupervised way.
-Common spreadsheet formulas are represented as predicates whose arguments must satisfy the inherent properties of the function. The challenge is to discover these without user information or training examples. % Knowledge discovery
+Common spreadsheet formulas are represented as predicates whose arguments must satisfy the inherent properties of the function \wat \sergey{predicates but properties of a function? sounds fine?}. The challenge is to discover these without user information or training examples. % Knowledge discovery
 We propose a two-stage generate and test method where the first stage uses constraint solving techniques to efficiently reduce candidates in a generic way based on the function signature. 
-Our approach to this knowledge discovery task takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
+Our approach to this knowledge discovery \wat task takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
 We show that we are able to accurately discover constraints in spreadsheets from various sources.
 \end{abstract}
 
@@ -37,7 +38,7 @@ For example the influential Reinhart-Rogoff economical paper ``Growth in a Time 
 Such issues and mistakes could be overcome through the development of intelligent user-assisting tools. A core aspect of such tools would be the ability to automatically discover what constraints and formulae are present in a spreadsheet. This is the problem we study in this paper. We see multiple promising applications that can build on this, such as rediscovery constraints when importing raw data, auto-suggestion of formula's during spreadsheet use, automatic auto-completion of rows or columns, and consistency and error checking. In spirit, this builds on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from very few examples.
 
 % why difficult
-In this paper,  we investigate whether knowledge discovery techniques can be used to learn constraints (formulas and other relations) in spreadsheet data in an unsupervised way.
+In this paper,  we investigate whether knowledge discovery \wat techniques can be used to learn constraints (formulas and other relations) in spreadsheet data in an unsupervised way.
 From a machine learning point of view this is an unconventional problem because the data is in tabular form, but the constraints we wish to learn can involve both rows and columns of the table. Being unsupervised there is no labeled information either, although for every possible function one can verify whether a certain input satisfies the definition.
 %Unlike in other knowledge discovery tasks, such as pattern mining~\cite{}, there are many different types of formula and constraints we wish to discover, each with their own signature (number and properties of arguments) and definition.
 From a data mining point of view, the data is relational on the one hand, since we can have multiple tables with relationships between them, but also of mixed textual and numeric types. More closely related is clausal discovery~\cite{claudien,lallouet}, learning CSP constraints \cite{Quacq,Conacq,modelseeker} and dependency discovery in databases \cite{savnik}. But an important difference remains that we want to learn constraints on both columns and rows over integer, floating point as well as textual data.
@@ -88,9 +89,9 @@ Section \ref{sec:related_work} presents a detailed discussion of the related wor
 \sname combines ideas from several existing approaches and different fields of research.
 
 First, it borrows techniques from logical and relational learning \cite{luc_book}, as it finds
-constraints in multiple relations (or tables). However, unlike typical logical and relational learning
+constraints in multiple relations (or tables). Unlike typical logical and relational learning
 approaches, it focuses on data in spreadsheets and constraints on columns or rows in the sheets.
-Furthermore, it derives a set of simple ``atomic'' constraints rather than a set of rules that each consist of multiple literals as in clausal discovery \cite{claudien,lallouet}. Nevertheless, several ideas from logical and relational learning
+Furthermore, it derives a set of simple ``atomic'' constraints rather than a set of rules that each consist of a conjunction of literals as in clausal discovery \cite{claudien,lallouet}. Nevertheless, several ideas from logical and relational learning
 proved to be useful, such as the use of a canonical form, a refinement graph, and pruning for redundancy. \sergey{that's where I added a new reference, needs to be checked and might need to be moved in the right place}. It also connects with the logical generalization of given formulas in a spreadsheet \cite{Isakowitz}, where one abstracts present formulas by introducing parameters in the place of particular cell references. The key difference here that we start not from existing formulas but from the data directly.
 
 
