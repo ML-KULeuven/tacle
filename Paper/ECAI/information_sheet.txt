@@ -2,10 +2,10 @@
 It is possible to discover or reconstruct constraints in flat tabular spreadsheet data. We propose a general-purpose method and system, named TaCLe (from: Tabular Constraint Learner) for discovering row-wise and column-wise constraints. 
 
 Our contributions are as follows:
-– we define the tabular constraint learning problem, where the goal is to learn constraints (functions and relations) that range over entire rows or columns in an unsupervised way;
-– we propose a 2-stage generate and test method that reasons for each candidate constraint over maximally contiguous blocks in the first stage, and only in the second stage looks at individual rows and columns and their content;
-– furthermore, in the first stage we use a constraint solver to efficiently enumerate all combinations of maximal blocks compatible with the candidate constraint’s argument, using backtracking search and forward checking;
-– experiments on different publicly available spreadsheets show that the system is able to extract constraints with high precision and recall.
+- we define the tabular constraint learning problem, where the goal is to learn constraints (functions and relations) that range over entire rows or columns in an unsupervised way;
+- we propose a 2-stage generate and test method that reasons for each candidate constraint over maximally contiguous blocks in the first stage, and only in the second stage looks at individual rows and columns and their content;
+- furthermore, in the first stage we use a constraint solver to efficiently enumerate all combinations of maximal blocks compatible with the candidate constraint’s argument, using backtracking search and forward checking;
+- experiments on different publicly available spreadsheets show that the system is able to extract constraints with high precision and recall.
 
 --
 * What is the evidence provided to support claims? Be precise.
