@@ -41,17 +41,18 @@ class SpeedTestId:
 def generate_random(test_id: SpeedTestId):
     column_data = []
 
-    for column_type in test_id.types:
-        if column_type == GType.int:
-            column_data.append(np.random.randint(1, 1000, test_id.rows))
-        elif column_type == GType.string:
-            letter = lambda: random.choice(string.ascii_lowercase)
-            word = lambda: ''.join(letter() for _ in range(np.random.randint(5, 15)))
-            column_data.append([word() for _ in range(test_id.rows)])
-        else:
-            raise RuntimeError("Unexpected column type {}".format(column_type))
+    for table in range(test_id.tables):
+        for column_type in test_id.types:
+            if column_type == GType.int:
+                column_data.append(np.random.randint(1, 100, test_id.rows))
+            elif column_type == GType.string:
+                letter = lambda: random.choice(string.ascii_lowercase)
+                word = lambda: ''.join(letter() for _ in range(np.random.randint(5, 15)))
+                column_data.append([word() for _ in range(test_id.rows)])
+            else:
+                raise RuntimeError("Unexpected column type {}".format(column_type))
 
-    return list(list(str(column_data[col][row]) for col in range(test_id.cols) for _ in range(test_id.tables))
+    return list(list(str(column_data[col][row]) for col in range(test_id.cols * test_id.tables))
                 for row in range(test_id.rows))
 
 
@@ -104,8 +105,8 @@ def generate_experiments():
     # Configuration
     gtype = GType.int
     default = 2 ** 3
-    block_power = 5
-    number_power = 6
+    block_power = 4
+    number_power = 5
     size_power = 12
     tables = 2
 
@@ -132,7 +133,7 @@ def generate_experiments():
             rows = default
             cat_3.append(SpeedTestId(cols, rows, [block_size] * int(vectors / block_size), [gtype] * cols, tables))
 
-    return [cat_1, cat_2, cat_3]
+    return [cat_2]
 
 
 def setup_experiments(experiments):
@@ -151,7 +152,7 @@ def main():
     categories = generate_experiments()
     experiments = set(itertools.chain(*categories))
 
-    runs = 3
+    runs = 1
     tasks = {test_id: [] for test_id in experiments}
     path = "../experiments"
     log_file_path = os.path.join(path, "{}.log".format(time.strftime("%Y%m%d_%H%M%S")))
