@@ -1,8 +1,20 @@
 * What is the main claim of the paper? Why is this an important contribution to the machine learning/data mining literature?
+It is possible to discover or reconstruct constraints in flat tabular spreadsheet data. We propose a general-purpose method and system, named TaCLe (from: Tabular Constraint Learner) for discovering row-wise and column-wise constraints. 
+
+Our contributions are as follows:
+- we define the tabular constraint learning problem, where the goal is to learn constraints (functions and relations) that range over entire rows or columns in an unsupervised way;
+- we propose a 2-stage generate and test method that reasons for each candidate constraint over maximally contiguous blocks in the first stage, and only in the second stage looks at individual rows and columns and their content;
+- furthermore, in the first stage we use a constraint solver to efficiently enumerate all combinations of maximal blocks compatible with the candidate constraint’s argument, using backtracking search and forward checking;
+- experiments on different publicly available spreadsheets show that the system is able to extract constraints with high precision and recall.
+
 --
 * What is the evidence provided to support claims? Be precise.
+We have provided theoretical as well as experimental evidence. In Section 4 "Approach to Tabular Constraint Learning", we have presented theoretical analysis and a number of optimizations demonstrating how the algorithm reduces the search space and effectively navigates it using the two step procedure for candidate generation. In Section 5 "Evaluation", we have presented experimental evaluation of the TaCLe system on the collected dataset of Excel documents (with a link to a github repository with the data and screenshots of the system) as well the runtime analysis on the syntactic data demonstrating how different factors such as the length of vectors or the number of vectors affect the runtime. The experiments demonstrate that the system has high precision and recall of learned constraint, while keeping runtime within reasonable bounds.
 --
 * Report 3-5 most closely related contributions in the past 7 years (authored by researchers outside the authors’ research group) and briefly state the relation of the submission to them.
+1) Flashfill [8] (POPL, 2011) and Flashextract [13] (PLDI, 2014) by Sumit Gulwani et al. The former learns a string transformation function from a very few examples in an Excel spreadsheet, the latter learns a function extracting particular parts from a textual file such as xls, html or txt, given a set of marked examples. Both of them work in the supervised manner learning a string transformation function from a document with a set of examples. In our case, we work with unlabeled data in an unsupervised manner, we can have multiple tables with relationships between them with mixed textual and numeric data, contrary to both systems where columns are variables and rows are data points, in our work columns and row can be variables and data points.
+2) Model-seeker [1]  (CP, 2012) by Nicolas Beldiceanu and Helmut Simonis. The Model seeker system is designed to find several types of numeric constraints that are common for constraint programming community such as scheduling or combinatorial optimization. We consider both numerical and textual constraint with a focus on spreadsheet formulas that are different from what typically studied in constraint programming literature.
+3) Toward a logical/physical theory of spreadsheet modeling (TOIS, 1995) by Tomas Isakowitz et al. [11]. They have studied generalization of the formulas present in an Excel document and the development of a logical model of spreadsheets. The key difference is that they generalize existing formulas, while we learn them directly from the data.
 --
 * Have you published parts of your paper before, for instance in a conference? If so, give details of your previous paper(s) and a precise statement detailing how your paper provides a significant contribution beyond the previous paper(s).
 No.
