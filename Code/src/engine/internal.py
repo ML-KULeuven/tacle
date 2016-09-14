@@ -105,6 +105,13 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             def is_rank(y_v, x_v):
                 # Calculate rank values for x and compare, fail fast
                 y, x = to_data(y_v, x_v)
+
+                # Fail-fast test:
+                cutoff = min(len(y), 5)
+                for i in range(cutoff):
+                    if y[i] < 1 or y[i] > len(x):
+                        return False
+
                 ranked = rank_data(x)
                 for i in range(0, len(ranked)):
                     if ranked[i] != y[i]:
