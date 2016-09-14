@@ -1,6 +1,8 @@
 import json
 import random
 import string
+from collections import OrderedDict
+
 import numpy as np
 import time
 
@@ -8,7 +10,9 @@ import workflow
 import os
 import itertools
 
+from core.constraint import Rank, Aggregate
 from core.group import GType
+from runtime_rendering import ScatterData
 
 
 class TableSpec:
@@ -42,6 +46,23 @@ class TableSpec:
         self.block_types.append((size, b_type))
         return self
 
+    @staticmethod
+    def parse(input_string):
+        _, row_string, blocks_string = input_string.split("-")
+        rows = int(row_string[1:])
+        type_string = blocks_string[0]
+        if type_string == "i":
+            b_type = GType.int
+        elif type_string == "s":
+            b_type = GType.string
+        else:
+            raise RuntimeError("Unexpected type: {}".format(type_string))
+        block_count, block_size = (int(s) for s in blocks_string[1:].split("x"))
+        table = TableSpec(rows)
+        for _ in range(block_count):
+            table.add_block(block_size, b_type)
+        return table
+
 
 class SpeedTestId:
     def __init__(self, tables):
@@ -61,6 +82,16 @@ class SpeedTestId:
     @property
     def name(self):
         return "_".join("T-{}".format(table.name) for table in self.tables)
+
+    @staticmethod
+    def parse(input_string):
+        table_parts = input_string.split("_")
+        return SpeedTestId(list(TableSpec.parse(table_part) for table_part in table_parts))
+
+
+def get_constraints():
+    from core.learning import ordered_constraints
+    return ordered_constraints(workflow.get_constraint_list())
 
 
 def generate_random(test_id: SpeedTestId):
@@ -170,7 +201,7 @@ def generate_experiments():
                 table.add_block(block_size, gtype)
             cat_3.append(SpeedTestId([table, TableSpec(rows).add_block(min_table, gtype)]))
 
-    return [cat_3]
+    return [cat_1, cat_2, cat_3]
 
 
 def setup_experiments(experiments):
@@ -183,49 +214,131 @@ def setup_experiments(experiments):
     return paths
 
 
-def print_table(categories, tasks):
-    print()
-    print("Test", "Total", *[c for c in tasks[categories[0][0]][0].constraints], sep="\t")
+def tasks_to_table(categories, tasks):
+    tables = []
     for category in categories:
+        table = OrderedDict()
         for test_id in category:
-            row = [test_id.name]
             results = tasks[test_id]
-            numbers = [list(task.total_time() for task in results)]
+            numbers = OrderedDict()
+            numbers["total"] = list(task.total_time() for task in results)
             for c in results[0].constraints:
-                numbers.append(list(task.time(c) for task in results))
-            for data_points in numbers:
-                row.append("{avg:.3f}".format(avg=np.average(data_points), std=np.std(data_points)))
+                numbers[c] = list(task.time(c) for task in results)
+            table[test_id] = numbers
+        tables.append(table)
+    return tables
+
+
+def runs_to_table(categories, runs):
+    tables = []
+    for category in categories:
+        table = OrderedDict()
+        for test_id in category:
+            results = runs[test_id]
+            series = OrderedDict()
+            series["total"] = results[0]
+            for c, values in zip(get_constraints(), results[1:]):
+                series[c] = values
+            table[test_id] = series
+        tables.append(table)
+    return tables
+
+
+def import_log_file(log_file):
+    runs = dict()
+    with open(log_file, "r") as file:
+        for line in file:
+            if line[0:3] != "Run":
+                line = line.rstrip("\n")
+                run, name, *rest = line.split("\t")
+                test_id = SpeedTestId.parse(name)
+                if int(run) == 0:
+                    runs[test_id] = [[] for _ in range(len(rest))]
+                for i, value in enumerate(rest):
+                    runs[test_id][i].append(float(value))
+    return runs
+
+
+def print_tables(tables):
+    for table in tables:
+        print("Test", "Total", *get_constraints(), sep="\t")
+        for test_id in table:
+            row = [test_id.name]
+            for times in table[test_id].values():
+                row.append("{avg:.3f}".format(avg=np.average(times), std=np.std(times)))
             print(*row, sep="\t")
         print()
 
 
+def draw_figures(tables):
+    scatter_1 = ScatterData("Number of vectors", list(test_id.tables[0].cols for test_id in tables[0]))
+    scatter_1.add_data("All constraints", list(np.average(series["total"]) for series in tables[0].values()))
+    scatter_1.x_lim((10**0, 10**4))
+    scatter_1.y_lim((10**-2, 10**2))
+
+    scatter_2 = ScatterData("Vector size", list(test_id.tables[0].rows for test_id in tables[1]))
+    total_run_times = list(np.average(series["total"]) for series in tables[1].values())
+    rank_run_times = list(np.average(series[Rank()]) for series in tables[1].values())
+    no_rank_run_times = list(total - rank for total, rank in zip(total_run_times, rank_run_times))
+    scatter_2.add_data("All constraints", total_run_times)
+    scatter_2.add_data("Without RANK", no_rank_run_times)
+    scatter_2.x_lim((10**0, 10**4))
+    scatter_2.y_lim((10**-2, 10**2))
+
+    number_of_blocks = list(len(test_id.tables[0].block_types) for test_id in tables[2])
+    scatter_3 = ScatterData("Block size (aggregates)", number_of_blocks)
+    total_times = list(np.average(series["total"]) for series in tables[2].values())
+    aggregates = list(sum(np.average(series[c]) for c in Aggregate.instances()) for series in tables[2].values())
+    scatter_3.add_data("All constraints", total_times)
+    scatter_3.add_data("Aggregate constraints", aggregates)
+    scatter_3.x_lim((10**0, 10**4))
+    scatter_3.y_lim((10**-2, 10**2))
+
+    scatter_4 = ScatterData("Block size (non-aggregates)", number_of_blocks)
+    non_aggregates = list(total - aggregate for total, aggregate in zip(total_times, aggregates))
+    scatter_4.add_data("All constraints", total_times)
+    scatter_4.add_data("Vector constraints", non_aggregates)
+    scatter_4.x_lim((10**0, 10**4))
+    scatter_4.y_lim((10**-2, 10**2))
+
+    from runtime_rendering import plot
+    path = "../experiments"
+    plot(os.path.join(path, "scatter_plots.pdf"), scatter_1, scatter_2, scatter_3, scatter_4)
+
+
+def get_tables(categories, import_file=None, runs=1):
+    path = "../experiments"
+    if import_file is None:
+        experiments = set(itertools.chain(*categories))
+        tasks = {test_id: [] for test_id in experiments}
+        log_file_path = os.path.join(path, "{}.log".format(time.strftime("%Y%m%d_%H%M%S")))
+
+        with open(log_file_path, "w") as log_file:
+            for run in range(runs):
+                paths = setup_experiments(experiments)
+                for test_id, (csv_path, blocks_path) in paths.items():
+                    task = workflow.task(csv_path, blocks_path)
+                    task.run()
+                    tasks[test_id].append(task)
+                    constraint_times = [task.time(c) for c in task.constraints]
+                    print(run, test_id.name, task.total_time())
+                    print("Run", "Name", "Total time", *[str(c) for c in task.constraints], file=log_file, sep="\t")
+                    print(run, test_id.name, task.total_time(), *constraint_times, file=log_file, sep="\t")
+            log_file.close()
+
+        print("Log file", log_file_path)
+        tables = tasks_to_table(categories, tasks)
+    else:
+        log_file_path = os.path.join(path, import_file)
+        tables = runs_to_table(categories, import_log_file(log_file_path))
+    return tables
+
+
 def main():
     # ID: cols, rows, blocks, int | str | float
-
-    categories = generate_experiments()
-    experiments = set(itertools.chain(*categories))
-
-    runs = 1
-    tasks = {test_id: [] for test_id in experiments}
-    path = "../experiments"
-    log_file_path = os.path.join(path, "{}.log".format(time.strftime("%Y%m%d_%H%M%S")))
-
-    with open(log_file_path, "w") as log_file:
-        for run in range(runs):
-            paths = setup_experiments(experiments)
-            for test_id, (csv_path, blocks_path) in paths.items():
-                task = workflow.task(csv_path, blocks_path)
-                task.run()
-                # print("Test", *["{}".format(str(c)) for c in task.constraints], sep="\t")
-                # print(test_id.name(), *["{:.3f}".format(task.time(c)) for c in task.constraints], sep="\t")
-                # print()
-                tasks[test_id].append(task)
-                constraint_times = [task.time(c) for c in task.constraints]
-                print(run, test_id.name, task.total_time())
-                print(run, test_id.name, task.total_time(), *constraint_times, file=log_file, sep="\t")
-        log_file.close()
-
-    print_table(categories, tasks)
+    tables = get_tables(generate_experiments(), import_file="20160914_130908.log")
+    print_tables(tables)
+    draw_figures(tables)
 
 
 if __name__ == "__main__":
