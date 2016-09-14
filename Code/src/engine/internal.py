@@ -1,3 +1,4 @@
+import functools
 import itertools
 
 import math
@@ -104,6 +105,13 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             def is_rank(y_v, x_v):
                 # Calculate rank values for x and compare, fail fast
                 y, x = to_data(y_v, x_v)
+
+                # Fail-fast test:
+                cutoff = min(len(y), 5)
+                for i in range(cutoff):
+                    if y[i] < 1 or y[i] > len(x):
+                        return False
+
                 ranked = rank_data(x)
                 for i in range(0, len(ranked)):
                     if ranked[i] != y[i]:
@@ -325,7 +333,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         def product(c: Product, assignments, solutions):
             keys = [c.result, c.first, c.second]
 
-            cache = set()
+            # cache = set()
 
             def is_product(r_v, o1_v, o2_v):
                 if not ordered(o1_v, o2_v):
@@ -344,7 +352,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         return False
 
                 # Caching relies on the order of the assignments being the same as the group ordering
-                cache.add((r_v, o1_v, o2_v))
+                # cache.add((r_v, o1_v, o2_v))
                 return True
 
             return self._generate_test_vectors(assignments, keys, lambda *args: True, is_product)
@@ -531,6 +539,7 @@ def equal(x, y, scale=False):
         return x == y
 
 
+@functools.lru_cache(maxsize=None)
 def precision_and_scale(x):
     max_digits = 14
     int_part = int(abs(x))
