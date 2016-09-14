@@ -201,7 +201,7 @@ def generate_experiments():
                 table.add_block(block_size, gtype)
             cat_3.append(SpeedTestId([table, TableSpec(rows).add_block(min_table, gtype)]))
 
-    return [cat_1, cat_2, cat_3]
+    return {"cat1": cat_1, "cat2": cat_2, "cat3": cat_3}
 
 
 def setup_experiments(experiments):
@@ -215,8 +215,8 @@ def setup_experiments(experiments):
 
 
 def tasks_to_table(categories, tasks):
-    tables = []
-    for category in categories:
+    tables = OrderedDict()
+    for c_name, category in categories.items():
         table = OrderedDict()
         for test_id in category:
             results = tasks[test_id]
@@ -225,13 +225,13 @@ def tasks_to_table(categories, tasks):
             for c in results[0].constraints:
                 numbers[c] = list(task.time(c) for task in results)
             table[test_id] = numbers
-        tables.append(table)
+        tables[c_name] = table
     return tables
 
 
 def runs_to_table(categories, runs):
-    tables = []
-    for category in categories:
+    tables = OrderedDict()
+    for c_name, category in categories.items():
         table = OrderedDict()
         for test_id in category:
             results = runs[test_id]
@@ -240,7 +240,7 @@ def runs_to_table(categories, runs):
             for c, values in zip(get_constraints(), results[1:]):
                 series[c] = values
             table[test_id] = series
-        tables.append(table)
+        tables[c_name] = table
     return tables
 
 
@@ -260,7 +260,8 @@ def import_log_file(log_file):
 
 
 def print_tables(tables):
-    for table in tables:
+    for c_name, table in tables.items():
+        print(c_name)
         print("Test", "Total", *get_constraints(), sep="\t")
         for test_id in table:
             row = [test_id.name]
@@ -271,45 +272,58 @@ def print_tables(tables):
 
 
 def draw_figures(tables):
-    scatter_1 = ScatterData("Number of vectors", list(test_id.tables[0].cols for test_id in tables[0]))
-    scatter_1.add_data("All constraints", list(np.average(series["total"]) for series in tables[0].values()))
-    scatter_1.x_lim((10**0, 10**4))
-    scatter_1.y_lim((10**-2, 10**2))
+    scatters = []
 
-    scatter_2 = ScatterData("Vector size", list(test_id.tables[0].rows for test_id in tables[1]))
-    total_run_times = list(np.average(series["total"]) for series in tables[1].values())
-    rank_run_times = list(np.average(series[Rank()]) for series in tables[1].values())
-    no_rank_run_times = list(total - rank for total, rank in zip(total_run_times, rank_run_times))
-    scatter_2.add_data("All constraints", total_run_times)
-    scatter_2.add_data("Without RANK", no_rank_run_times)
-    scatter_2.x_lim((10**0, 10**4))
-    scatter_2.y_lim((10**-2, 10**2))
+    if "cat1" in tables:
+        table = tables["cat1"]
+        scatter_1 = ScatterData("Number of vectors", list(test_id.tables[0].cols for test_id in table))
+        scatter_1.add_data("All constraints", list(np.average(series["total"]) for series in table.values()))
+        scatter_1.x_lim((10**0, 10**4))
+        scatter_1.y_lim((10**-2, 10**2))
+        scatters.append(scatter_1)
 
-    number_of_blocks = list(len(test_id.tables[0].block_types) for test_id in tables[2])
-    scatter_3 = ScatterData("Block size (aggregates)", number_of_blocks)
-    total_times = list(np.average(series["total"]) for series in tables[2].values())
-    aggregates = list(sum(np.average(series[c]) for c in Aggregate.instances()) for series in tables[2].values())
-    scatter_3.add_data("All constraints", total_times)
-    scatter_3.add_data("Aggregate constraints", aggregates)
-    scatter_3.x_lim((10**0, 10**4))
-    scatter_3.y_lim((10**-2, 10**2))
+    if "cat2" in tables:
+        table = tables["cat2"]
+        scatter_2 = ScatterData("Vector size", list(test_id.tables[0].rows for test_id in table))
+        total_run_times = list(np.average(series["total"]) for series in table.values())
+        rank_run_times = list(np.average(series[Rank()]) for series in table.values())
+        no_rank_run_times = list(total - rank for total, rank in zip(total_run_times, rank_run_times))
+        scatter_2.add_data("All constraints", total_run_times)
+        scatter_2.add_data("Without RANK", no_rank_run_times)
+        scatter_2.x_lim((10**0, 10**4))
+        scatter_2.y_lim((10**-2, 10**2))
+        scatters.append(scatter_2)
 
-    scatter_4 = ScatterData("Block size (non-aggregates)", number_of_blocks)
-    non_aggregates = list(total - aggregate for total, aggregate in zip(total_times, aggregates))
-    scatter_4.add_data("All constraints", total_times)
-    scatter_4.add_data("Vector constraints", non_aggregates)
-    scatter_4.x_lim((10**0, 10**4))
-    scatter_4.y_lim((10**-2, 10**2))
+    if "cat3" in tables:
+        table = tables["cat3"]
+
+        number_of_blocks = list(len(test_id.tables[0].block_types) for test_id in table)
+        scatter_3 = ScatterData("Block size (aggregates)", number_of_blocks)
+        total_times = list(np.average(series["total"]) for series in table.values())
+        aggregates = list(sum(np.average(series[c]) for c in Aggregate.instances()) for series in table.values())
+        scatter_3.add_data("All constraints", total_times)
+        scatter_3.add_data("Aggregate constraints", aggregates)
+        scatter_3.x_lim((10**0, 10**4))
+        scatter_3.y_lim((10**-2, 10**2))
+        scatters.append(scatter_3)
+
+        scatter_4 = ScatterData("Block size (non-aggregates)", number_of_blocks)
+        non_aggregates = list(total - aggregate for total, aggregate in zip(total_times, aggregates))
+        scatter_4.add_data("All constraints", total_times)
+        scatter_4.add_data("Vector constraints", non_aggregates)
+        scatter_4.x_lim((10**0, 10**4))
+        scatter_4.y_lim((10**-2, 10**2))
+        scatters.append(scatter_4)
 
     from runtime_rendering import plot
     path = "../experiments"
-    plot(os.path.join(path, "scatter_plots.pdf"), scatter_1, scatter_2, scatter_3, scatter_4)
+    plot(os.path.join(path, "scatter_plots.pdf"), *scatters)
 
 
 def get_tables(categories, import_file=None, runs=1):
     path = "../experiments"
     if import_file is None:
-        experiments = set(itertools.chain(*categories))
+        experiments = set(itertools.chain(*categories.values()))
         tasks = {test_id: [] for test_id in experiments}
         log_file_path = os.path.join(path, "{}.log".format(time.strftime("%Y%m%d_%H%M%S")))
 
@@ -336,7 +350,7 @@ def get_tables(categories, import_file=None, runs=1):
 
 def main():
     # ID: cols, rows, blocks, int | str | float
-    tables = get_tables(generate_experiments(), import_file="20160914_130908.log")
+    tables = get_tables(generate_experiments(), import_file="20160914_141603.log")
     print_tables(tables)
     draw_figures(tables)
 
