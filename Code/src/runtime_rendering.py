@@ -1,40 +1,70 @@
 import matplotlib.pyplot as plt
-
-number_vectors = [("Runtime",
-                   [0.013, 0.028, 0.171, 2.475, 37.709, 637.579])]
-vector_size = [("Runtime",
-                [2.738, 2.727, 2.475, 2.475, 2.373, 1.603, 0.899, 0.375, 0.408, 0.479, 0.589, 0.837, 1.253]),
-               ("Runtime without RANK",
-                [2.735, 2.724, 2.471, 2.47, 2.367, 1.595, 0.883, 0.348, 0.358, 0.373, 0.385, 0.446, 0.5])]
-number_blocks = [("Runtime aggregate constraints",
-                  [1.66, 0.783, 0.291, 0.167, 0.046]),
-                 ("Runtime non-aggregate constraints",
-                  [36.051, 37.729, 37.974, 48.377, 90.721])]
+import numpy
 
 
-def x(length):
-    return [2 ** power for power in range(length)]
-
-
-def plot(data):
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    # fig.set_size_inches(8, 2)  TODO Check out
-
+class ScatterData:
     colors = ["black", "green"]
-    plots = []
-    for i in range(len(data)):
-        title, times = data[i]
-        plots.append(ax.scatter(x(len(times)), times, color=colors[i]))
-        ax.plot(x(len(times)), times, color=colors[i])
+    markers = ["o", "v"]
 
-    ax.legend(plots, (title for title, _ in data), loc="lower left")
+    def __init__(self, title, x_data):
+        self.title = title
+        self.x = x_data
+        self.data = []
+        self.limits = None, None
 
-    ax.set_yscale('log')
-    ax.set_xscale('log')
+    def add_data(self, name, data):
+        self.data.append((name, data))
+        return self
 
-    plt.show()
+    @property
+    def size(self):
+        return len(self.data)
 
-plot(number_vectors)
-plot(vector_size)
-plot(number_blocks)
+    def x_lim(self, limits):
+        self.limits = limits, self.limits[1]
+
+    def y_lim(self, limits):
+        self.limits = self.limits[0], limits
+
+    def render(self, ax, lines=True, log_x=True, log_y=True):
+        plots = []
+        for i in range(self.size):
+            title, times = self.data[i]
+            x_data = self.x(times) if callable(self.x) else self.x
+            plots.append(ax.scatter(x_data, times, color=self.colors[i], marker=self.markers[i], s=40))
+            if lines:
+                ax.plot(x_data, times, color=self.colors[i])
+
+        ax.legend(plots, (title for title, _ in self.data), loc="lower right")
+
+        if log_x:
+            ax.set_xscale('log')
+        if log_y:
+            ax.set_yscale('log')
+
+        x_lim, y_lim = self.limits
+        if x_lim is not None:
+            ax.set_xlim(x_lim)
+        if y_lim is not None:
+            ax.set_ylim(y_lim)
+
+        ax.set_ylabel("Runtime")
+        ax.set_xlabel(self.title)
+
+
+def plot(file, *args):
+    fig = plt.figure()
+    fig.set_size_inches(12, 12)
+
+    subplots = len(args)
+    cols = numpy.ceil(numpy.sqrt(subplots))
+    rows = numpy.ceil(subplots / cols)
+
+    for i in range(subplots):
+        ax = fig.add_subplot(cols, rows, i + 1)
+        args[i].render(ax)
+
+    if file is None:
+        plt.show()
+    else:
+        plt.savefig(file, format="pdf")
