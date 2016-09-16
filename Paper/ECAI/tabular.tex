@@ -16,10 +16,10 @@
 \begin{abstract}
 Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
 However, writing, maintaining and identifying good formulas for tabular data and spreadsheets can be time consuming and error-prone.
-In this work, we investigate the automatic discovery of constraints (formulas and relations) in raw tabular data in an unsupervised way.
-Common spreadsheet formulas are represented using predicates and expressions whose arguments must satisfy the inherent properties of the function. The challenge is to discover these without user information or labeled examples. 
-We propose a two-stage generate and test method where the first stage uses constraint solving techniques to efficiently reduce candidates in a generic way based on the function signature. 
-Our approach to this knowledge discovery task takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
+In this work, we investigate the automatic learning of constraints (formulas and relations) in raw tabular data in an unsupervised way.
+We represent common spreadsheet formulas and relations through predicates and expressions whose arguments must satisfy the inherent properties of the formula/relation. The challenge is to automatically infer the set of constraints that is present in the data, without user information or labeled examples. 
+We propose a two-stage generate and test method where the first stage uses constraint solving techniques to efficiently reduce the number of candidates in a generic way, based on the predicate signatures. 
+Our approach takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
 We show that we are able to accurately discover constraints in spreadsheets from various sources.
 \end{abstract}
 
@@ -32,29 +32,30 @@ Many end-users lack the understanding of the underlying structures and relations
 This is especially the case when spreadsheets have been exported from other software such as Enterprise Resource Planning (ERP) systems.
 In this case, often a comma-separated values (CSV) format is used meaning that all formulas are lost, including inter-sheet formulas and relations.
 %This limited understanding is especially the case with spreadsheets exported from other software such as ERP packages. In this case,
-Even in manually created spreadsheets, it can be challenging to be consistent and correct with formulas across big tables.
+Even in manually created spreadsheets, it can be challenging to be consistent and correct with formulas across all tables.
 For example the influential Reinhart-Rogoff economical paper ``Growth in a Time of Debt'' \cite{growth_in_time_of_debt} had some of its claims contested~\cite{flaw_excel}, after an investigation of the used Excel sheets was shown to contain mistakes in formulae.
 
 % why learn them
-Such issues and mistakes could be overcome through the development of intelligent user-assisting tools. A core aspect of such tools would be the ability to automatically discover what constraints and formulae are present in a spreadsheet. This is the problem we study in this paper. We discuss multiple promising applications that can build on this, such as rediscovery of constraints when importing raw data, auto-suggestion of formula's during spreadsheet use, automatic auto-completion of rows or columns, and consistency and error checking. Our techniques build on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from very few examples.
+Such issues and mistakes could be overcome through the development of intelligent user-assisting tools. A core aspect of such tools would be the ability to automatically discover what constraints and formulae are present in a spreadsheet. This is the problem we study in this paper. There are multiple applications that could build on this, such as rediscovery of constraints when importing raw data, auto-suggestion of formula's during spreadsheet use, automatic auto-completion of rows or columns, and consistency and error checking.
 
 % why difficult
 In this paper,  we investigate whether machine learning and knowledge discovery techniques can be used to learn constraints (formulas and other relations) in spreadsheet data in an unsupervised way.
 From a machine learning point of view this is an unconventional problem because the data is in tabular form, but the constraints we wish to learn can involve both rows and columns of the table. Being unsupervised there is no labeled information either, although for every possible function one can verify whether a certain input satisfies the definition.
 %Unlike in other knowledge discovery tasks, such as pattern mining~\cite{}, there are many different types of formula and constraints we wish to discover, each with their own signature (number and properties of arguments) and definition.
 From a data mining point of view, the data is relational on the one hand, since we can have multiple tables with relationships between them, but also of mixed textual and numeric types. More closely related is clausal discovery~\cite{claudien,lallouet}, learning CSP constraints \cite{Quacq,Conacq,modelseeker} and dependency discovery in databases \cite{savnik}. But an important difference remains that we want to learn constraints on both columns and rows over integer, floating point as well as textual data.
+Our inspiration comes from work on program synthesis, in particular Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from very few examples.
 
 
 % Moved up
-The question that we ask in this paper is: is it possible to discover or reconstruct constraints in flat tabular spreadsheet data? The main challenge is the number of combinations of rows and columns that need to be tried as input to the constraints.
+The question that we ask in this paper is: is it possible to learn the set of constraints present in a spreadsheet, from just flat tabular spreadsheet data? The main challenge is the number of possible constraints and combinations of rows and columns that need to be tried as input to the constraints.
 To answer this challenge we propose a general-purpose method and system, named \sname (from: Tabular Constraint Learner, pronounced ``tackle''), for discovering row-wise and column-wise constraints.
 %
 % contribs
 Our contributions are as follows:
 \begin{itemize}
-\item we define the tabular constraint learning problem, where the goal is to learn constraints (functions and relations) that range over entire rows or columns in an unsupervised way;
-\item we propose a 2-stage generate and test method that reasons for each candidate constraint over maximally contiguous blocks in the first stage, and only in the second stage looks at individual rows and columns and their content;
-\item furthermore, in the first stage we use a constraint solver to efficiently enumerate all combinations of maximal blocks compatible with the candidate constraint's argument, using backtracking search and forward checking;
+\item we define the tabular constraint learning problem, where the goal is to constraints that range over entire rows or columns in an unsupervised way;
+\item we propose an effective 2-stage generate and test method where the first stage reasons only over properties of contiguous blocks of rows/columns, and the second stage continues to investigate individual rows and columns and their content;
+\item furthermore, in the first stage we use a constraint solver to efficiently enumerate all combinations of maximally contiguous blocks compatible with the candidate constraint's argument; %, using backtracking search and forward checking;
 \item experiments on different publicly available spreadsheets show that the system is able to extract constraints with high precision and recall. 
 \end{itemize}
 
@@ -93,21 +94,22 @@ First, it borrows techniques from logical and relational learning \cite{luc_book
 constraints in multiple relations (or tables). Unlike typical logical and relational learning
 approaches, it focuses on data in spreadsheets and constraints on columns or rows in the sheets.
 Furthermore, it derives a set of simple ``atomic'' constraints rather than a set of rules that each consist of a conjunction of literals as in clausal discovery \cite{claudien,lallouet}. Nevertheless, several ideas from logical and relational learning
-proved to be useful, such as the use of a canonical form, a refinement graph, and pruning for redundancy. It also connects with the logical generalization of given formulas in a spreadsheet \cite{Isakowitz}, where one abstracts present formulas by introducing parameters in the place of particular cell references. The key difference here is that we start not from existing formulas but from the data directly.
+proved to be useful, such as the use of a canonical form, a refinement graph, and pruning for redundancy. It also connects with the logical generalization of given formulas in a spreadsheet \cite{Isakowitz}, where one abstracts present formulas by introducing parameters in the place of particular cell references. The key difference here is that we start not from existing formulas but from the data directly. \tias{I disagree, we start from the formula and then match it on the data, rewrite}
 
 
-Second, there exist a number of algorithms in the constraint programming community that induce constraint (programs)
-from one or more examples and questions. Two well-known approaches include ModelSeeker \cite{modelseeker} and Quacq \cite{Quacq}.
+Second, there exist a number of algorithms in the constraint programming community that induce constraints from one or more examples and questions. Two well-known approaches include ModelSeeker \cite{modelseeker} and Quacq \cite{Quacq}.
 The former starts from a single example in the form of a vector of values and then exhaustively looks for the most specific constraints from a large constraint library that hold in the vector. To this aim, it cleverly enumerates different de-vectorized tables; for instance, if the initial vector was of dimension $1 \times 20$, it would consider rearrangements of size $2 \times 10$, $4 \times 5$, $5 \times 4$, … and Modelseeker would then look for both column, row  and even diagonal constraints. Key differences are that we assume given spreadsheets with \textit{multiple} tables; and that ModelSeeker's constraints are restricted to integer values and often typical for constraint programming community, e.g. aimed at combinatorial optimization and scheduling. Conacq \cite{Conacq} acquires a conjunction of constraints using techniques inspired on Mitchell's version spaces to process examples; its successor Quacq uses active learning to query the user regarding satisfiability. Each of the examples/queries is processed for each constraint, hence an important issue is how fast the algorithm converges to the entire solution set (e.g. for Sudoku).
 The focus is again on integer variables and typical combinatorial optimisation constraints. In a similar spirit the field of equation discovery \cite{equation_discovery} focuses, guided by  heuristics based on the structure of physical equations and unit measures, on the discovery of physical formulas over numbers and times series.
-However, they focus specifically on physical data, while we consider numbers in general and different types of spreadsheet constraints.  %As the conjunction for typical constraint programming problems (such as Sudoku) can be quite large, a key problem is to cope with redundant constraints. As Modelseeker, these systems focus on the types of constraints in combinatorial optimization but unlike ModelSeeker and our approach, they do not assume the variables are organized in tabular form.
+However, they focus specifically on physical data, while we consider numbers in general and different types of spreadsheet constraints.
+\tias{Last sentence too vague, what is specific about physical data? btw, it is supervised, e.g. input-output and we are general? Also, it is 'one' conjunction of functions, e.g. one equation, or not? Please rewrite more precisely}
+%As the conjunction for typical constraint programming problems (such as Sudoku) can be quite large, a key problem is to cope with redundant constraints. As Modelseeker, these systems focus on the types of constraints in combinatorial optimization but unlike ModelSeeker and our approach, they do not assume the variables are organized in tabular form.
 
 
-Third, our work borrows from the seminal work of Gulwani et al. \cite{flashfill} on program synthesis for tabular data, which is incorporated in Microsoft’s Excel. In FlashFill, the end-user might work on a table containing the surnames (column A) and names (column B) of politicians. The first row might contain the values A1 = ``Blair'' and B1 = ``Tony'', and the user might then enter in cell C1 the value ``T.B.''. At that point FlashFill generates a program that produces the output ``T.B.'' for the inputs ``Blair'' and ``Tony'', and also applies it to the other politicians (rows) in the table. While it might need an extra example to deal with names such as ``Van Rompuy, Herman'' and determine whether it should output ``H.V.'' or ``H.V.R.'', FlashFill learns correct programs from very few examples. Flashfill has been extended to e.g. FlashExtract \cite{flashextract} to produce a set of tables starting from an unstructured document (a txt or HTML file) with a set of examples marked for extraction. However, unlike our approach, Flashfill requires the user to identify explicitly the desired inputs/outputs from the function as well as to provide explicitly some positive and sometimes also negative examples.  In contrast, our approach is unsupervised, although it would be interesting to study whether it could be improved through user interaction and through user examples.  Another interesting open issue (for all of these techniques with the exception of logical and relational learning) is how to deal with possibly incomplete or noisy data.
+Third, our work borrows from the seminal work of Gulwani et al. \cite{flashfill} on program synthesis for tabular data, which is incorporated in Microsoft’s Excel. In FlashFill, the end-user might work on a table containing the surnames (column A) and names (column B) of politicians. The first row might contain the values A1 = ``Blair'' and B1 = ``Tony'', and the user might then enter in cell C1 the value ``T.B.''. At that point FlashFill generates a program that produces the output ``T.B.'' for the inputs ``Blair'' and ``Tony'', and also applies it to the other politicians (rows) in the table. While it might need an extra example to deal with names such as ``Van Rompuy'', ``Herman'' and determine whether it should output ``H.V.'' or ``H.V.R.'', FlashFill learns correct programs from very few examples. Flashfill has been extended to e.g. FlashExtract \cite{flashextract} to produce a set of tables starting from an unstructured document (a txt or HTML file) with a set of examples marked for extraction. However, unlike our approach, Flashfill requires the user to identify explicitly the desired inputs/outputs from the function as well as to provide explicitly some positive and sometimes also negative examples.  In contrast, our approach is unsupervised, although it would be interesting to study whether it could be improved through user interaction and through user examples.  Another interesting open issue (for all of these techniques with the exception of logical and relational learning) is how to deal with possibly incomplete or noisy data.
 
-Fourth, also related to this line of research is the work on deriving constraints in databases such as functional and multi-valued dependencies \cite{savnik, Mannila-Raiha} although that line of research has focused on more specialized techniques for specific types of constraints. Many of of the discovery techniques rely on the database schema that does not directly apply in our case \cite{flach_dependency_discovery}. Some techniques work directly on the data \cite{tane_dependency_discovery} and focus on classical functional dependencies between attributes, while the constraints and formulas used in spreadsheets are often different from those in databases.
+Fourth, also related to this line of research is the work on deriving constraints in databases such as functional and multi-valued dependencies \cite{savnik, Mannila-Raiha} although that line of research has focused on more specialized techniques for specific types of constraints. Many of of the discovery techniques rely on the database schema~\cite{flach_dependency_discovery}, which is not available in our case. Techniques that work directly on the data have been investigated for the discovery of functional dependencies between attributes~\cite{tane_dependency_discovery}. The constraints and formulas we wish to learn go beyond that, including arithmetic, conditional arithmetic and \textit{fuzzy} lookups, for example.
 
-Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabular}, two recent probabilistic modeling languages that have been specifically designed for dealing with relational data in tabular form and that can, as FlashFill, also automatically fill out missing values in a table.  However, unlike the other mentioned approaches, it is based on an underlying probabilistic graphical model that performs probabilistic inference rather than identify ``hard'' constraints.
+Finally, worth mentioning is BayesDB \cite{BayesDB} and Tabular \cite{tabular}, two recent probabilistic modeling languages that have been specifically designed for dealing with relational data in tabular form and that can, as FlashFill, also automatically fill out missing values in a table.  However, unlike the other mentioned approaches, it is based on an underlying probabilistic graphical model that performs probabilistic inference rather than identify ``hard'' constraints.
 
 
 \begin{figure}[thb]
@@ -120,9 +122,9 @@ Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabula
   \caption{
     Example spreadsheet (black words and numbers only).
     Green background indicates headerless tables, dark borders indicate maximal type-consistent blocks.
-    Most tables only contain type-consistent columns while table~$T_2$ also contains type-consistent rows.
-    However, due to the location of the header of~$T_2$ we can infer that it consists of row data.
-    This example was created by combining several Excel sheets from several exercise sessions based on the book MS Excel 2010~\cite{excel_book}.
+    Most tables only contain type-consistent columns while table~$T_2$ also contains type-consistent rows (though its header indicates that it consists of row data).
+%    However, due to the location of the header of~$T_2$ we can infer that it consists of row data.
+    This example combines several Excel sheets based on exercise sessions in the book ``MS Excel 2010''~\cite{excel_book}.
     % I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
   }
   \label{fig:main_example}
@@ -167,8 +169,8 @@ Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabula
 %     &~\eclookup{\range{T_{5}}{\rangeall}{3}}{\range{T_{5}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}
     \end{align*}}
   \vspace{-10pt}
-  \caption{Constraints learned for the example (top), except for \textit{ALLDIFFERENT} (18), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5).
-  Constraints marked with $*$ were not present in the original document}
+  \caption{Constraints learned for the tables above, except for \textit{ALLDIFFERENT} (18), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5) constraints.
+  Constraints marked with $*$ were not present in the original sheets.}
   \label{fig:sol_example}
 \end{subfigure}
   \caption{Running example}
@@ -176,7 +178,7 @@ Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabula
 
 
 \section{Formalization}\label{sec:formalization}
-Our goal is to automatically discover constraints between the rows and the columns of tables in a spreadsheet. This is applicable not just to data from spreadsheets, but to any data in tabular form, hence the name.
+Our goal is to automatically learn the constraints present between rows and/or columns in a spreadsheet. This is applicable not just to data from spreadsheets, but to any data in tabular form, hence the name.
 
 %An example spreadsheet with tables is given in Figure~\ref{fig:main_example}, we will use this as running example throughout the paper.
 
