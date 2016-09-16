@@ -276,7 +276,7 @@ def draw_figures(tables):
 
     if "cat1" in tables:
         table = tables["cat1"]
-        scatter_1 = ScatterData("Number of vectors", list(test_id.tables[0].cols for test_id in table))
+        scatter_1 = ScatterData("(a) Number of vectors", list(test_id.tables[0].cols for test_id in table))
         scatter_1.add_data("All constraints", list(np.average(series["total"]) for series in table.values()))
         scatter_1.x_lim((10**0, 10**4))
         scatter_1.y_lim((10**-2, 10**2))
@@ -284,7 +284,7 @@ def draw_figures(tables):
 
     if "cat2" in tables:
         table = tables["cat2"]
-        scatter_2 = ScatterData("Vector size", list(test_id.tables[0].rows for test_id in table))
+        scatter_2 = ScatterData("(b) Vector size", list(test_id.tables[0].rows for test_id in table))
         total_run_times = list(np.average(series["total"]) for series in table.values())
         rank_run_times = list(np.average(series[Rank()]) for series in table.values())
         no_rank_run_times = list(total - rank for total, rank in zip(total_run_times, rank_run_times))
@@ -298,7 +298,7 @@ def draw_figures(tables):
         table = tables["cat3"]
 
         number_of_blocks = list(len(test_id.tables[0].block_types) for test_id in table)
-        scatter_3 = ScatterData("Block size (aggregates)", number_of_blocks)
+        scatter_3 = ScatterData("(c) Number of blocks (aggregates)", number_of_blocks)
         total_times = list(np.average(series["total"]) for series in table.values())
         aggregates = list(sum(np.average(series[c]) for c in Aggregate.instances()) for series in table.values())
         scatter_3.add_data("All constraints", total_times)
@@ -307,7 +307,7 @@ def draw_figures(tables):
         scatter_3.y_lim((10**-2, 10**2))
         scatters.append(scatter_3)
 
-        scatter_4 = ScatterData("Block size (non-aggregates)", number_of_blocks)
+        scatter_4 = ScatterData("(d) Number of blocks (non-aggregates)", number_of_blocks)
         non_aggregates = list(total - aggregate for total, aggregate in zip(total_times, aggregates))
         scatter_4.add_data("All constraints", total_times)
         scatter_4.add_data("Vector constraints", non_aggregates)
