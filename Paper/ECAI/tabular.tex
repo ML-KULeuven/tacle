@@ -8,7 +8,8 @@
 \title{Learning constraints in spreadsheets and tabular data}
 % see http://www.acm.org/binaries/content/assets/publications/article-templates/sig-alternate-sample.tex
 
-\author{Samuel Kolb \and Sergey Paramonov \and Thias Guns \and Luc De Raedt} % \institute{KULeuven}
+\author{Samuel Kolb \and Sergey Paramonov \and Tias Guns \and Luc De Raedt}
+\institute{KULeuven}
 
 \maketitle
 
@@ -956,10 +957,7 @@ Constraints that are currently outside of the scope of this system are, for exam
 We focus on \textit{functional} constraints that could be used as formulas in spreadsheets, ignoring the structural constraints \textit{ALLDIFFERENT}, \textit{FOREIGNKEY} and \textit{PERMUTATION}.
 Moreover, we included detected equalities as intended constraints (in 5~spreadsheets).
 All experiments were run using Python 3.5.1 on a Macbook Pro, Intel Core i7 2.3~GHz with 16GB RAM.
-\sergey{Samuel! Add a reference to python-constraint, including the references list at the end}\\
-
-
-
+The constraint solver that is used by the superblock assignment phase is python-constraint\cite{python_constraint}.
 
 
 
