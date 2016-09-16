@@ -1050,9 +1050,26 @@ While we obtained a recall of~$1.0$, the algorithm ran for $14.30s$ and the over
 %The running time can be improved by implementing additional optimizations.
 
 
+
+
 \subsection{Runtime analysis}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=1\linewidth]{figures/scatter_plots.pdf}
+  \caption{Loglog plots of the experiments with synthetic (random) data. In plot~$a$ the number of vectors is increased; in plot~$b$ the size of the vectors is increased; and in plots~$c$ and~$d$ the number of blocks is increased.}
+  \label{fig:runtime_analysis}
+\end{figure}
+
 There are multiple factors that impact the running time of \sname: the number of vectors, the size of the vectors, the number of vectors per block, the type of cells, the number of tables and the number of constraints that are in the data.
 Moreover, the running time depends on the number of the constraint templates implemented in the system and their arity.
+
+In this section the impact on the running time is analyzed of 1)~the number of vectors; 2)~the size of the vectors; and 3)~the size of the blocks.
+This analysis is supported by a set of experiments we have run on synthetic spreadsheets.
+These spreadsheets contains random integers\footnote{For strings and floats the results are similar but the running times are typically much lower.} and are made up of two tables.
+For one table the number of vectors ($2$) and block size ($2$) is fixed, while for the other table these properties are varied.
+Moreover, the size of vectors (for both tables) can be adapted, while the default is~$8$.
+The running times for various configurations are plotted in Figure~\ref{fig:runtime_analysis}.
 
 For most constraint templates the time required to check whether a subassignment satisfies the template is linear in the size of the subassignment (the number of subblocks and their size).
 For a constraint with arity~$n$, and a subassignment consisting of $n$~blocks with $m$~vectors of size~$k$, the worst case complexity becomes $O(n * m * k)$.
@@ -1060,25 +1077,26 @@ However, in practice, most subassignments will not satisfy the constraint templa
 Since our implementation tries to account for this by failing fast, the amortized time is constant in the size of the vectors~$k$, unless $k$~is very large\footnote{Specifically, if $k$ is much larger than the number of candidate subassignments} or many constraints hold in the data.
 For templates requiring their arguments to be single vectors $m$~is~$1$, and the total complexity for checking a subassignment becomes~$O(n) \simeq O(1)$ (since $n$ is typically small). 
 The benchmark experiments show that the number of cells in a spreadsheet has a very limited impact on the running time.
-Synthetic experiments with random integers and strings show that increasing the size of the vectors has a negligible impact on the performance for most templates.
+As shown in Figure~\ref{fig:runtime_analysis}b, the synthetic experiments confirm that increasing the size of the vectors has a negligible impact on the performance for most template.
+Most of the increase in running time can be attributed to the RANK constraint which is less suited for failing fast.
 
 On the contrary, the number of vectors in a spreadsheet have a significant impact on the running time.
 Many constraints take single vector arguments, therefore, the number of subassignments to be tested depends on the number of vectors in the spreadsheets and the arity of the constraint.
 For a constraint template with arity~$n$ and $v$~vectors there are $n^v$ subassignments (or $\frac{n!}{(n - v)!}$ if the arguments have to be different).
-As the number of vectors in a spreadsheet increases, the running time will quickly be dominated by constraints with a large arity.
-This effect is noticeable in our synthetic experiments when the number of (equally sized) vectors is increased.
+As the number of vectors in a spreadsheet increases, the running time will quickly be dominated by constraints with a larger arity.
+This effect is noticeable in our synthetic experiments when the number of (equally sized) vectors is increased (Figure~\ref{fig:runtime_analysis}a)
 However, in our benchmark experiments there will be various factors that limit the rapid increase in running time because the assignment step can disqualify entire blocks that do not match the signature requirements, i.e. blocks of vectors with different lengths for the product constraint.
 
 Aggregate constraints, e.g. sum or max, have an argument that takes subblocks of varying sizes.
 Therefore, the size of the blocks in the spreadsheet also influences the runtime of these constraints.
 For a block of size~$m$ there are $\frac{m(m + 1)}{2}$ or $O(m^2)$ subblocks, thus, if a spreadsheet has more but smaller sized blocks, the search for aggregate constraints will be faster.
 Consider, for example, $v$~vectors distributed over $b$~blocks of size $v/b$, the number of subblock candidates then is $O(b * v^2 / b^2) = O(v^2 / b)$.
-Synthetic experiments with random integers confirm that splitting a constant number of vectors into smaller blocks improves the performance of the aggregate constraint search.
+The synthetic experiments confirm that splitting a constant number of vectors into more, smaller blocks improves the performance of the aggregate constraint search (Figure~\ref{fig:runtime_analysis}c).
 
-These experiments, however, also show that the running time for various non-aggregate constraints increases as the size of blocks becomes very small.
-Since these constraints have single vector arguments the block size should not have a strong effect.
+These experiments, however, also show that the running time for various non-aggregate constraints increases as the size of blocks becomes very small ($1$ or $2$).
+Since these constraints have single vector arguments, the block size should not have a strong effect.
 However, in practice, for very small blocks the superblock assignment phase has to generate a very large number of combinations, while for larger blocks this work is done mostly during the subassignment generation phase.
-Since the implementation of that last phase is more adept at generating these combinations, shifting this workload to the assignment phase slows down the algorithm.
+Since the implementation of that last phase is more adept at generating these combinations and does not need to check for constraints of all these combinations, shifting this workload to the assignment phase slows down the algorithm.
 
 
 \section{Applications}\label{sec:applications}
