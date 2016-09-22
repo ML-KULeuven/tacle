@@ -16,10 +16,10 @@
 \begin{abstract}
 Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
 However, writing, maintaining and identifying good formulas for tabular data and spreadsheets can be time consuming and error-prone.
-In this work, we investigate the automatic discovery of constraints (formulas and relations) in raw tabular data in an unsupervised way.
-Common spreadsheet formulas are represented using predicates and expressions whose arguments must satisfy the inherent properties of the function. The challenge is to discover these without user information or labeled examples. 
-We propose a two-stage generate and test method where the first stage uses constraint solving techniques to efficiently reduce candidates in a generic way based on the function signature. 
-Our approach to this knowledge discovery task takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
+In this work, we investigate the automatic learning of constraints (formulas and relations) in raw tabular data in an unsupervised way.
+We represent common spreadsheet formulas and relations through predicates and expressions whose arguments must satisfy the inherent properties of the formula/relation. The challenge is to automatically infer the set of constraints that is present in the data, without user information or labeled examples. 
+We propose a two-stage generate and test method where the first stage uses constraint solving techniques to efficiently reduce the number of candidates in a generic way, based on the predicate signatures. 
+Our approach takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
 We show that we are able to accurately discover constraints in spreadsheets from various sources.
 \end{abstract}
 
@@ -32,29 +32,30 @@ Many end-users lack the understanding of the underlying structures and relations
 This is especially the case when spreadsheets have been exported from other software such as Enterprise Resource Planning (ERP) systems.
 In this case, often a comma-separated values (CSV) format is used meaning that all formulas are lost, including inter-sheet formulas and relations.
 %This limited understanding is especially the case with spreadsheets exported from other software such as ERP packages. In this case,
-Even in manually created spreadsheets, it can be challenging to be consistent and correct with formulas across big tables.
+Even in manually created spreadsheets, it can be challenging to be consistent and correct with formulas across all tables.
 For example the influential Reinhart-Rogoff economical paper ``Growth in a Time of Debt'' \cite{growth_in_time_of_debt} had some of its claims contested~\cite{flaw_excel}, after an investigation of the used Excel sheets was shown to contain mistakes in formulae.
 
 % why learn them
-Such issues and mistakes could be overcome through the development of intelligent user-assisting tools. A core aspect of such tools would be the ability to automatically discover what constraints and formulae are present in a spreadsheet. This is the problem we study in this paper. We discuss multiple promising applications that can build on this, such as rediscovery of constraints when importing raw data, auto-suggestion of formula's during spreadsheet use, automatic auto-completion of rows or columns, and consistency and error checking. Our techniques build on work on program synthesis, in particular, on Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from very few examples.
+Such issues and mistakes could be overcome through the development of intelligent user-assisting tools. A core aspect of such tools would be the ability to automatically discover what constraints and formulae are present in a spreadsheet. This is the problem we study in this paper. There are multiple applications that could build on this, such as rediscovery of constraints when importing raw data, auto-suggestion of formula's during spreadsheet use, automatic auto-completion of rows or columns, and consistency and error checking.
 
 % why difficult
 In this paper,  we investigate whether machine learning and knowledge discovery techniques can be used to learn constraints (formulas and other relations) in spreadsheet data in an unsupervised way.
 From a machine learning point of view this is an unconventional problem because the data is in tabular form, but the constraints we wish to learn can involve both rows and columns of the table. Being unsupervised there is no labeled information either, although for every possible function one can verify whether a certain input satisfies the definition.
 %Unlike in other knowledge discovery tasks, such as pattern mining~\cite{}, there are many different types of formula and constraints we wish to discover, each with their own signature (number and properties of arguments) and definition.
 From a data mining point of view, the data is relational on the one hand, since we can have multiple tables with relationships between them, but also of mixed textual and numeric types. More closely related is clausal discovery~\cite{claudien,lallouet}, learning CSP constraints \cite{Quacq,Conacq,modelseeker} and dependency discovery in databases \cite{savnik}. But an important difference remains that we want to learn constraints on both columns and rows over integer, floating point as well as textual data.
+Our inspiration comes from work on program synthesis, in particular Flashfill \cite{flashfill}, where the definition of a function (over textual cells only) is learned in spreadsheet data from very few examples.
 
 
 % Moved up
-The question that we ask in this paper is: is it possible to discover or reconstruct constraints in flat tabular spreadsheet data? The main challenge is the number of combinations of rows and columns that need to be tried as input to the constraints.
+The question that we ask in this paper is: is it possible to learn the set of constraints present in a spreadsheet, from just flat tabular spreadsheet data? The main challenge is the number of possible constraints and combinations of rows and columns that need to be tried as input to the constraints.
 To answer this challenge we propose a general-purpose method and system, named \sname (from: Tabular Constraint Learner, pronounced ``tackle''), for discovering row-wise and column-wise constraints.
 %
 % contribs
 Our contributions are as follows:
 \begin{itemize}
-\item we define the tabular constraint learning problem, where the goal is to learn constraints (functions and relations) that range over entire rows or columns in an unsupervised way;
-\item we propose a 2-stage generate and test method that reasons for each candidate constraint over maximally contiguous blocks in the first stage, and only in the second stage looks at individual rows and columns and their content;
-\item furthermore, in the first stage we use a constraint solver to efficiently enumerate all combinations of maximal blocks compatible with the candidate constraint's argument, using backtracking search and forward checking;
+\item we define the tabular constraint learning problem, where the goal is to constraints that range over entire rows or columns in an unsupervised way;
+\item we propose an effective 2-stage generate and test method where the first stage reasons only over properties of contiguous blocks of rows/columns, and the second stage continues to investigate individual rows and columns and their content;
+\item furthermore, in the first stage we use a constraint solver to efficiently enumerate all combinations of maximally contiguous blocks compatible with the candidate constraint's argument; %, using backtracking search and forward checking;
 \item experiments on different publicly available spreadsheets show that the system is able to extract constraints with high precision and recall. 
 \end{itemize}
 
@@ -93,21 +94,23 @@ First, it borrows techniques from logical and relational learning \cite{luc_book
 constraints in multiple relations (or tables). Unlike typical logical and relational learning
 approaches, it focuses on data in spreadsheets and constraints on columns or rows in the sheets.
 Furthermore, it derives a set of simple ``atomic'' constraints rather than a set of rules that each consist of a conjunction of literals as in clausal discovery \cite{claudien,lallouet}. Nevertheless, several ideas from logical and relational learning
-proved to be useful, such as the use of a canonical form, a refinement graph, and pruning for redundancy. It also connects with the logical generalization of given formulas in a spreadsheet \cite{Isakowitz}, where one abstracts present formulas by introducing parameters in the place of particular cell references. The key difference here is that we start not from existing formulas but from the data directly.
+proved to be useful, such as the use of a canonical form, a refinement graph, and pruning for redundancy. It also connects with the logical generalization of given formulas in a spreadsheet \cite{Isakowitz}, where one abstracts present formulas by introducing parameters in the place of particular cell references. The key difference here is that we discover constraints (formulas) in the data, we do not have or use any prior information on the formulas in a spreadsheet.
 
 
-Second, there exist a number of algorithms in the constraint programming community that induce constraint (programs)
-from one or more examples and questions. Two well-known approaches include ModelSeeker \cite{modelseeker} and Quacq \cite{Quacq}.
-The former starts from a single example in the form of a vector of values and then exhaustively looks for the most specific constraints from a large constraint library that hold in the vector. To this aim, it cleverly enumerates different de-vectorized tables; for instance, if the initial vector was of dimension $1 \times 20$, it would consider rearrangements of size $2 \times 10$, $4 \times 5$, $5 \times 4$, … and Modelseeker would then look for both column, row  and even diagonal constraints. Key differences are that we assume given spreadsheets with \textit{multiple} tables; and that ModelSeeker's constraints are restricted to integer values and often typical for constraint programming community, e.g. aimed at combinatorial optimization and scheduling. Conacq \cite{Conacq} acquires a conjunction of constraints using techniques inspired on Mitchell's version spaces to process examples; its successor Quacq uses active learning to query the user regarding satisfiability. Each of the examples/queries is processed for each constraint, hence an important issue is how fast the algorithm converges to the entire solution set (e.g. for Sudoku).
+Second, there exist a number of algorithms in the constraint programming community that induce constraints from one or more examples and questions. Two well-known approaches include ModelSeeker \cite{modelseeker} and Quacq \cite{Quacq}.
+The former starts from a single example in the form of a vector of values and then exhaustively looks for the most specific constraints from a large constraint library that hold in the vector. To this aim, it cleverly enumerates different de-vectorized tables; for instance, if the initial vector was of dimension $1 \times 20$, it would consider rearrangements of size $2 \times 10$, $4 \times 5$, $5 \times 4$, $\dots$ and Modelseeker would then look for both column, row  and even diagonal constraints. Key differences are that we assume given spreadsheets with \textit{multiple} tables; and that ModelSeeker's constraints are restricted to integer values and often typical for constraint programming community, e.g. aimed at combinatorial optimization and scheduling. Conacq \cite{Conacq} acquires a conjunction of constraints using techniques inspired on Mitchell's version spaces to process examples; its successor Quacq uses active learning to query the user regarding satisfiability. Each of the examples/queries is processed for each constraint, hence an important issue is how fast the algorithm converges to the entire solution set (e.g. for Sudoku).
 The focus is again on integer variables and typical combinatorial optimisation constraints. In a similar spirit the field of equation discovery \cite{equation_discovery} focuses, guided by  heuristics based on the structure of physical equations and unit measures, on the discovery of physical formulas over numbers and times series.
-However, they focus specifically on physical data, while we consider numbers in general and different types of spreadsheet constraints.  %As the conjunction for typical constraint programming problems (such as Sudoku) can be quite large, a key problem is to cope with redundant constraints. As Modelseeker, these systems focus on the types of constraints in combinatorial optimization but unlike ModelSeeker and our approach, they do not assume the variables are organized in tabular form.
+However, they focus specifically on noisy physical data and formulas, e.g. a single variable can take values from a series of measurements to get a regression parameter estimate or they apply specific data transformation such as numerical calculation of time and partial derivatives, i.e. the method works with approximations; the equation structures are heavily biased towards parameter estimation, while we focus on discovery of different types of spreadsheet constraints which is an exact constraint satisfaction problem.
+\sergey{rewritten, Samuel, does it sound fine now?}
+\tias{Last sentence too vague, what is specific about physical data? btw, it is supervised, e.g. input-output and we are general? Also, it is 'one' conjunction of functions, e.g. one equation, or not? Please rewrite more precisely}
+%As the conjunction for typical constraint programming problems (such as Sudoku) can be quite large, a key problem is to cope with redundant constraints. As Modelseeker, these systems focus on the types of constraints in combinatorial optimization but unlike ModelSeeker and our approach, they do not assume the variables are organized in tabular form.
 
 
-Third, our work borrows from the seminal work of Gulwani et al. \cite{flashfill} on program synthesis for tabular data, which is incorporated in Microsoft’s Excel. In FlashFill, the end-user might work on a table containing the surnames (column A) and names (column B) of politicians. The first row might contain the values A1 = ``Blair'' and B1 = ``Tony'', and the user might then enter in cell C1 the value ``T.B.''. At that point FlashFill generates a program that produces the output ``T.B.'' for the inputs ``Blair'' and ``Tony'', and also applies it to the other politicians (rows) in the table. While it might need an extra example to deal with names such as ``Van Rompuy, Herman'' and determine whether it should output ``H.V.'' or ``H.V.R.'', FlashFill learns correct programs from very few examples. Flashfill has been extended to e.g. FlashExtract \cite{flashextract} to produce a set of tables starting from an unstructured document (a txt or HTML file) with a set of examples marked for extraction. However, unlike our approach, Flashfill requires the user to identify explicitly the desired inputs/outputs from the function as well as to provide explicitly some positive and sometimes also negative examples.  In contrast, our approach is unsupervised, although it would be interesting to study whether it could be improved through user interaction and through user examples.  Another interesting open issue (for all of these techniques with the exception of logical and relational learning) is how to deal with possibly incomplete or noisy data.
+Third, our work borrows from the seminal work of Gulwani et al. \cite{flashfill} on program synthesis for tabular data, which is incorporated in Microsoft’s Excel. In FlashFill, the end-user might work on a table containing the surnames (column A) and names (column B) of politicians. The first row might contain the values A1 = ``Blair'' and B1 = ``Tony'', and the user might then enter in cell C1 the value ``T.B.''. At that point FlashFill generates a program that produces the output ``T.B.'' for the inputs ``Blair'' and ``Tony'', and also applies it to the other politicians (rows) in the table. While it might need an extra example to deal with names such as ``Van Rompuy'', ``Herman'' and determine whether it should output ``H.V.'' or ``H.V.R.'', FlashFill learns correct programs from very few examples. Flashfill has been extended to e.g. FlashExtract \cite{flashextract} to produce a set of tables starting from an unstructured document (a txt or HTML file) with a set of examples marked for extraction. However, unlike our approach, Flashfill requires the user to identify explicitly the desired inputs/outputs from the function as well as to provide explicitly some positive and sometimes also negative examples.  In contrast, our approach is unsupervised, although it would be interesting to study whether it could be improved through user interaction and through user examples.  Another interesting open issue (for all of these techniques with the exception of logical and relational learning) is how to deal with possibly incomplete or noisy data.
 
-Fourth, also related to this line of research is the work on deriving constraints in databases such as functional and multi-valued dependencies \cite{savnik, Mannila-Raiha} although that line of research has focused on more specialized techniques for specific types of constraints. Many of of the discovery techniques rely on the database schema that does not directly apply in our case \cite{flach_dependency_discovery}. Some techniques work directly on the data \cite{tane_dependency_discovery} and focus on classical functional dependencies between attributes, while the constraints and formulas used in spreadsheets are often different from those in databases.
+Fourth, also related to this line of research is the work on deriving constraints in databases such as functional and multi-valued dependencies \cite{savnik, Mannila-Raiha} although that line of research has focused on more specialized techniques for specific types of constraints. Many of of the discovery techniques rely on the database schema~\cite{flach_dependency_discovery}, which is not available in our case. Techniques that work directly on the data have been investigated for the discovery of functional dependencies between attributes~\cite{tane_dependency_discovery}. The constraints and formulas we wish to learn go beyond that, including arithmetic, conditional arithmetic and \textit{fuzzy} lookups, for example.
 
-Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabular}, two recent probabilistic modeling languages that have been specifically designed for dealing with relational data in tabular form and that can, as FlashFill, also automatically fill out missing values in a table.  However, unlike the other mentioned approaches, it is based on an underlying probabilistic graphical model that performs probabilistic inference rather than identify ``hard'' constraints.
+Finally, worth mentioning is BayesDB \cite{BayesDB} and Tabular \cite{tabular}, two recent probabilistic modeling languages that have been specifically designed for dealing with relational data in tabular form and that can, as FlashFill, also automatically fill out missing values in a table.  However, unlike the other mentioned approaches, it is based on an underlying probabilistic graphical model that performs probabilistic inference rather than identify ``hard'' constraints.
 
 
 \begin{figure}[thb]
@@ -120,9 +123,9 @@ Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabula
   \caption{
     Example spreadsheet (black words and numbers only).
     Green background indicates headerless tables, dark borders indicate maximal type-consistent blocks.
-    Most tables only contain type-consistent columns while table~$T_2$ also contains type-consistent rows.
-    However, due to the location of the header of~$T_2$ we can infer that it consists of row data.
-    This example was created by combining several Excel sheets from several exercise sessions based on the book MS Excel 2010~\cite{excel_book}.
+    Most tables only contain type-consistent columns while table~$T_2$ also contains type-consistent rows (though its header indicates that it consists of row data).
+%    However, due to the location of the header of~$T_2$ we can infer that it consists of row data.
+    This example combines several Excel sheets based on exercise sessions in the book ``MS Excel 2010''~\cite{excel_book}.
     % I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
   }
   \label{fig:main_example}
@@ -167,8 +170,8 @@ Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabula
 %     &~\eclookup{\range{T_{5}}{\rangeall}{3}}{\range{T_{5}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}
     \end{align*}}
   \vspace{-10pt}
-  \caption{Constraints learned for the example (top), except for \textit{ALLDIFFERENT} (18), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5).
-  Constraints marked with $*$ were not present in the original document}
+  \caption{Constraints learned for the tables above, except for \textit{ALLDIFFERENT} (18), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5) constraints.
+  Constraints marked with $*$ were not present in the original spreadsheets.}
   \label{fig:sol_example}
 \end{subfigure}
   \caption{Running example}
@@ -176,7 +179,7 @@ Finally, there are the works on  BayesDB \cite{BayesDB} and Tabular \cite{tabula
 
 
 \section{Formalization}\label{sec:formalization}
-Our goal is to automatically discover constraints between the rows and the columns of tables in a spreadsheet. This is applicable not just to data from spreadsheets, but to any data in tabular form, hence the name.
+Our goal is to automatically learn the constraints present between rows and/or columns in a spreadsheet. This is applicable not just to data from spreadsheets, but to any data in tabular form, hence the name.
 
 %An example spreadsheet with tables is given in Figure~\ref{fig:main_example}, we will use this as running example throughout the paper.
 
@@ -872,7 +875,7 @@ Alternatively, we can output all valid assignments instead of only maximal subbl
 
 
 
-\subsubsection{Constraints}
+\subsubsection{Constraints} \label{sec:which_cons}
 The constraints that are currently supported in our system are shown in Table~\ref{table:constraints}.
 We included most formulas that we encountered in tutorial spreadsheets including the popular \textit{SUM} and \textit{LOOKUP} constraints\footnote{\href{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}}.
 We also added three structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUTATION} and \textit{FOREIGNKEY}) so that they can be used in the signature of other constraint templates; they are also popular in constraint satisfaction~\cite{modelseeker}.
@@ -935,48 +938,105 @@ Based on the assumptions that most subassignments will not satisfy a constraint 
 
 \section{Evaluation}\label{sec:evaluation}
 In this section we experimentally validate our approach.
-We studied three main questions concerning the recall (\textit{Q1}), precision (\textit{Q2}) and speed (\textit{Q3}) of our algorithm.
+We first explain the experimental setup and illustrate it on the example in Figure~\ref{fig:main_example}, we then investigate the effectiveness of our method on generated spreadsheets, after which we evaluate our method on spreadsheets from various sources.
 
-First, our implementation is illustrated using a case study on the spreadsheet corresponding to the example introduced in Figure~\ref{fig:main_example}.
-In order to quantify the results and generalize our findings we also evaluate our algorithm on a benchmark of 34 spreadsheets that we assembled from various sources.
-
-\subsection{Method}
+\paragraph{Experimental setup}
 \label{sec:evalualtion:method}
-In order to obtain a benchmark of spreadsheets we looked at three sources:
-1)~spreadsheets from an exercise session for teaching Excel based on~\cite{excel_book}; 2)~spreadsheets from tutorials online; and 3)~publicly available \textit{data} spreadsheets such as real-world crime statistics or financial reports (available at the same repository\footref{github-link}).
-All spreadsheets were converted to CSV and the table definitions are fixed.
-Group definitions are only specified if the spreadsheet contains ambiguous \textit{None} values. 
+All spreadsheets used in the experiments are in CSV format, and for each we have ran the table extraction tool once (using a combination of the rather primitive automatic detection + visual verification that the tables are meaningful (e.g. merge split-up tables because of None values, or remove headers of all-textual tables). \\ % split of weird sentence
+Group definitions are only specified if the spreadsheet contains ambiguous \textit{None} values. \tias{What does this mean, 'group definitons'?? Is this 'block detection' (Sec 4.2), if so, how do we explain this process??} 
 
-For every spreadsheet we specified a ground-truth of constraints, i.e. the \textbf{intended} constraints that are expected to be (re-)discovered.
-These were determined using the formulas (if present), context and headers in the original spreadsheets.
-We encoded all intended constraints using our representation (in canonical form).
-Not all intended constraints are currently supported by \sname, therefore, we sometimes consider the subset of \textbf{supported} constraints.
-Constraints that are currently outside of the scope of this system are, for example, nested mathematical or logical formulas.
+All spreadsheets also have a set of ground-truth of constraints, we call these the \textbf{intended} constraints that are expected to be (re-)discovered.
+These were determined by us using the formulas of the original sheet (if present), the headers in the sheet as well as general context if need. \tias{last part too vague!! Give example of where 'context' was needed/used. If nowhere, cut that part of sentence}.
+In the following experiments, we focus on spreadsheets specifically and hence only include \textit{functional} constraints, constraints that can be expressed as formulas. We ignoring structural constraints such as \textit{ALLDIFFERENT}, \textit{FOREIGNKEY} and \textit{PERMUTATION}. All constraints are stored in their canonical form. 5 spreadsheets contained rows or columns that were entirely identical, and any intended constraint involving one such vector was also added for the equivalent vectors.
 
+Section~\ref{sec:which_cons} discusses the 32 constraints currently supported by \sname \tias{It does, right? Should also contain '32' number}. Some of the intended constraints are currently outside of the scope of \sname however, more specifically nested mathematical or nested logical formulas. We denote by \textbf{supported} constraints the subset of intended constraints that the system can find in theory.
 
-We focus on \textit{functional} constraints that could be used as formulas in spreadsheets, ignoring the structural constraints \textit{ALLDIFFERENT}, \textit{FOREIGNKEY} and \textit{PERMUTATION}.
-Moreover, we included detected equalities as intended constraints (in 5~spreadsheets).
+We will use recall and precision to measure how well our tool is performing. Recall is the fraction of intended constraints actually discovered by the system: $\frac{\text{intended discovered}}{\text{all intended}}$, while precision is the fraction of constraints found by the system that are indeed intended: $\frac{\text{intended discovered}}{\text{all discovered}}$.
+
 All experiments were run using Python 3.5.1 on a Macbook Pro, Intel Core i7 2.3~GHz with 16GB RAM.
-The constraint solver that is used by the superblock assignment phase is python-constraint\cite{python_constraint}.
+The constraint solver that is used by the superblock assignment phase (Step 3a) is python-constraint\cite{python_constraint}.
 
 
 
-\subsection{Case study}
-Let us illustrate our implementation using the example presented in Figure~\ref{fig:main_example}.
-\sname takes a few seconds to find the constraints in Figure~\ref{fig:sol_example} (excluding structural constraints).
+\subsection{Results on the running example}
+For the example presented in Figure~\ref{fig:main_example},
+\sname takes a few seconds to find the constraints listed in Figure~\ref{fig:sol_example}.
 These include 5 spurious $\textit{RANK}$ constraints, e.g. $\ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}$, that are true by accident.
 Moreover, there is 1 \textit{LOOKUP} constraint that was not intended in the original spreadsheet (looking up ID based on Salesperson) and which is symmetric to the intended one (Salesperson based on ID).
 
-For this example our primary goal of rediscovering all intended constraints is achieved, the recall (i.e. $\frac{\text{intended discovered}}{\text{all intended}}$) is~$1.0$.
-The implementation also returns 6 additional constraints, therefore, our precision (i.e. $\frac{\text{intended discovered}}{\text{all discovered}}$) is $12/18 = 0.67$, which is mostly due to the spurious RANK constraints.
-This spreadsheet contains many short vectors which increases the chance for constraints to be true by accident.
+Hence, for this example we achieve a recall of 100\% (all intended constraints are discovered) and a precision of $12/18 = 67\%$. All intended constraints are supported. The recall is as good as we hoped, but the precision is rather low. This is mostly due to the spurious RANK constraints. We note that the tables are quite short, which increases the chance of a constraint like 'RANK' to be true by chance; we expect less spurious constraints on larger datasets.
+
+We now investigate three main questions that influence the quality of the solutions found by a constraint learning method:
+\begin{itemize}
+\item Q1: it may fail to find intended constraints if it takes too much time to find them; what are the factors that influence the runtime of the method most?
+\item Q2: it may fail to find intended constraints because it does not support such constraints; how does or method perform on real spreadsheets?
+\item Q3: it may find non-intended constraints; how many and what type of non-intended constraints are found on real spreadsheets?
+\end{itemize}
+We first investigate Q1 on generated spreadsheets, and Q2 and Q3 on a collection of real spreadsheets.
+
+
+\subsection{Effectiveness on generated data}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=1\linewidth]{figures/scatter_plots.pdf}
+  \caption{Loglog plots of the experiments with synthetic (random) data. In plot~$a$ the number of vectors is increased; in plot~$b$ the size of the vectors is increased; and in plots~$c$ and~$d$ the number of blocks is increased.}
+  \label{fig:runtime_analysis}
+\end{figure}
+
+There are multiple factors that can impact the running time of \sname: the number of vectors, the length of the vectors, the number of vectors per block, the type of cells, the number of tables and the number of constraints that are in the data.
+Moreover, the running time depends on the number of the constraint templates implemented in the system and their arity.
+
+In this section the impact on the running time is analyzed of 1)~the number of vectors; 2)~the length of the vectors; and 3)~the size of the blocks. \tias{Why only these and not the other? Motivated/explain, or also measure their effect ; )}
+
+Recall that our method uses a 2-phase approach where in the first phase, the superblock assignments are generated (Section ...) and in the second phase, the subblock assignments are generated (Section ...).
+
+\paragraph{Spreadsheet generation}
+We do this analysis on a set of synthetically generated spreadsheets.
+The spreadsheets contains random integers\footnote{For strings and floats the results are similar but the running times are typically much lower.} and are made up of two tables.
+For one table the number of vectors and block size is fixed to two, while for the other table these properties are varied.
+Moreover, the length of the vectors (for both tables) can be adapted, while the default is~$8$.
+%The running times for various configurations are plotted in Figure~\ref{fig:runtime_analysis}. % no such general pointer, specific pointers only
+
+\paragraph{Theoretical analysis of runtime, this does not belong in experiments}\tias{move to technical section}
+For most constraint templates the time required to check whether a subassignment satisfies the template is linear in the size of the subassignment (the number of subblocks and their size).
+For a constraint with arity~$n$, and a subassignment consisting of $n$~blocks with $m$~vectors of length~$k$, the worst case complexity becomes $O(n * m * k)$.
+However, in practice, most subassignments will not satisfy the constraint template.
+Since our implementation tries to account for this by failing fast\tias{explain more precisely what you mean with 'failing fast'}, the amortized time is constant in the length of the vectors~$k$, unless $k$~is very large\footnote{Specifically, if $k$ is much larger than the number of candidate subassignments} or many constraints hold in the data.
+For templates requiring their arguments to be single vectors $m$~is~$1$, and the total complexity for checking a subassignment becomes~$O(n) \simeq O(1)$ (since $n$ is typically small).
+
+\paragraph{Effect of length of vectors}
+%The benchmark experiments show that the number of cells in a spreadsheet has a very limited impact on the running time.
+As can be seen in Figure~\ref{fig:runtime_analysis}b\tias{This is the first figure discussed so must be a}, increasing the length of the vectors has a negligible impact on the performance for most template. Most of the increase in running time can be attributed to the RANK constraint which is less suited for failing fast \tias{Too vague, 'less suited', be precise}; the runtime for detecting all constraints except RANK is shown in green to highlight this.
+
+\paragraph{Effect of number of vectors}
+On the contrary, the number of vectors in a spreadsheet can have a significant impact on the running time.
+Many constraints take single vector arguments, therefore, the number of subassignments \tias{unclear, this is about phase 2, the number to test, or the actual testing of each? explain and relate to Sec 4.3.2 what aspect you are discussing here} to be tested depends on the number of vectors in the spreadsheets and the arity of the constraint.
+For a constraint template with arity~$n$ and $v$~vectors there are $n^v$ subassignments (or $\frac{n!}{(n - v)!}$ if the arguments have to be different). \tias{Better move to 4.3.2? or have there too anyway, no new facts in 'experiment' section}
+As the number of vectors in a spreadsheet increases, the running time will quickly be dominated by constraints with a larger arity.
+This effect is noticeable in our synthetic experiments when the number of (equally sized) vectors \tias{more details about equal sized: is this a strict requirement for this to happen? I assume this is worst case and does not happen that much in practice? (the next sentences half hint at that, be more explicit)} is increased (Figure~\ref{fig:runtime_analysis}a).
+In practice, in our benchmark experiments, the assignment step of our algorithm is able to limit this rapid increase in running time for larger numbers of vectors \tias{How? explain, if you explain in the next sentence then start it with 'This is because' or alike, reads better}.
+The superblock assignment phase is able to disqualify entire blocks that do not match the signature requirements, i.e. blocks of vectors with different lengths for the product constraint.
+
+Aggregate constraints, e.g. sum or max, have an argument that takes subblocks of varying sizes.
+Therefore, the size of the blocks \tias{in what phase? the max. contigiuous? be more precise} in the spreadsheet also influences the runtime of these constraints.
+For a block of size~$m$ there are $\frac{m(m + 1)}{2}$ or $O(m^2)$ subblocks, thus, if a spreadsheet has more but smaller sized blocks, the search for aggregate constraints will be faster.
+Consider, for example, $v$~vectors distributed over $b$~blocks of size $v/b$, the number of subblock candidates then is $O(b * v^2 / b^2) = O(v^2 / b)$.
+The \tias{explain what THE experiment is, and how you set it up} synthetic experiments confirm that splitting a constant number of vectors into more, smaller blocks improves the performance of the aggregate constraint search (Figure~\ref{fig:runtime_analysis}c, green line).
+
+These experiments, however, also show that the running time for various non-aggregate constraints increases as the size of blocks becomes small.
+Since these constraints have single vector arguments, the block size should not have a strong effect.
+However, in practice, when there are many small blocks, the superblock assignment phase has to generate a very large number of combinations, while for larger blocks this work is done mostly during the subassignment generation phase.
+Since the implementation of that last phase is more adept at generating these combinations and does not need to check for constraints on all these combinations, shifting this workload to the assignment \tias{more precise: to superblock?} phase slows down the algorithm. \tias{Point to figure to support this (actually, move that line into 4c??); also, if this is true, you are basically saying that the CP-based first phase is worse then the second phase? That kind-of demotivates the idea of using CP in first phase... What do you really want to share with the reader?}
 
 
 
+\subsection{Effectiveness on real spreadsheets}
+In order to obtain a benchmark of spreadsheets we looked at three sources:
+1)~spreadsheets from an exercise session for teaching Excel based on~\cite{excel_book}; 2)~spreadsheets from tutorials online; and 3)~publicly available \textit{data} spreadsheets such as real-world crime statistics or financial reports (available at the same repository\footref{github-link}).
 
-\subsection{Benchmark}
 Table~\ref{tbl:category_overview} gives an overview of the spreadsheets in the different categories and summarizes the results of our experiments.
-Notice that for the data category the average number of cells is higher while the number of intended constraints and tables is lower compared to the other categories.
+Notice that for the data category the average number of cells is higher while the number of intended constraints and tables is lower compared to the other categories. \tias{Weird here because purpose unclear, point to this when discussing some result for which this is important}
 
 {\setlength{\tabcolsep}{0.33em}
 \begin{table}[]
@@ -992,33 +1052,15 @@ Notice that for the data category the average number of cells is higher while th
 \textbf{Recall} & 0.85 & 0.83 & 0.88 & 0.87 & 1.00 & 1.00 \\ \hline
 \textbf{\begin{tabular}[c]{@{}l@{}}Recall\\[-4.5pt] Supported\end{tabular}} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\ \hline
 \textbf{Precision} & 0.94 & 0.96 & 0.70 & 0.91 & 1.00 & 1.00 \\ \hline
-\textbf{Speed (s)} & 1.62 & 0.18 & 1.76 & 0.08 & 0.81 & 0.20
+\textbf{Runtime (s)} & 1.62 & 0.18 & 1.76 & 0.08 & 0.81 & 0.20
 \end{tabular}
 \end{table}}
 
-\subsubsection*{Q1. How many intended constraints are found by \sname?}
-The overall recall achieved by \sname is~$0.88~(81/92)$. The overall and average recall per category is also high, as shown in Table~\ref{tbl:category_overview}.
-The intended constraints not discovered correspond to constraints not supported by the system (supported recall is 1).
-
-
-
-
-
-\subsubsection*{Q2. How precise is \sname?}
-Across all spreadsheets \sname achieves a precision of~$0.79~(81/102)$.
-While the average precision per spreadsheet is over $0.90$ for all categories, the overall precision is much higher for the exercises and data categories ($0.94$ and $1.00$) than for the tutorials category ($0.70$).
-Examining the tutorial spreadsheets confirms that there are a few spreadsheets that have a high number of additional constraints.
-A qualitative analysis of these spreadsheets shows that their lower precision is caused by duplicate data or multiple ways to calculate the same vectors.
-For these spreadsheets the precision could be increased by post-processing the constraints to detect implications or heuristically selecting one among multiple ways to compute the same vector.
-
-
-
-
-
-\subsubsection*{Q3. How fast is \sname?}
+\paragraph{Q1: Effectiveness}
+Our first questions, Q1, is about the inability to find intended constraints due to excessive runtime. As Table~\ref{tbl:category_overview} (last row) shows, the runtime of our method on these spreadsheets is always fast.  
 The average runtime across all spreadsheets is $0.13s$.
 Across categories the average running times fluctuate in the range between $0.09s$ to $0.22s$.
-While most spreadsheets can be analyzed very quickly, running times can go up to around $1s$ for others.
+While most spreadsheets can be analyzed very quickly, running times can go up to around $1s$ for others. ... \tias{Explain by relating to previous section of synthetic data}
 
 % Most of the execution time in these cases goes towards searching either aggregate constraints or conditional aggregates.
 % The search for aggregates will be slow on spreadsheets containing larger groups of numeric data.
@@ -1029,10 +1071,10 @@ While most spreadsheets can be analyzed very quickly, running times can go up to
 %Using the dependencies to find constraints incrementally cuts down large parts of the search trees, especially for constraints that have many arguments.
 %Essentially, one obtains a more specialized search without much effort.
 
-Of the 32 supported constraint templates (including equality), the slowest by far is fuzzy lookup using $\pm 36\%$ of the running time.
+Looking at the runtime per constraint template individually (including equality\tias{what does this mean?}), the slowest by far is fuzzy lookup using $\pm 36\%$ of the running time.
 It is followed by product ($\pm 5\%$), relative difference ($\pm 5\%$) and various row-aggregates (each $3.5\% - 4\%$).
 
-To illustrate that using dependencies to find constraints incrementally can increase the efficiency, we ran the benchmarks using FOREIGNKEY instead of ALLDIFFERENT as base constraint to find conditional aggregates such as SUMIF. This assumption is too strong in practice, not all keys have to be used in the conditions. However, the total running times per category are decreased by 6\% (exercises), 30\% (tutorials) and~3\% (data), showing the strong effect of the use of dependencies.
+Our method uses dependencies to increase efficiency by finding constraints incrementally. To illustrate the effect this can have, we ran the benchmarks using FOREIGNKEY instead of ALLDIFFERENT as base constraint to find conditional aggregates such as SUMIF. This is a stronger assumption, and a too strong in practice as not all keys have to be used in the conditions. However, the total running times per category are decreased by 6\% (exercises), 30\% (tutorials) and~3\% (data). This shows that the use of dependencies can have a strong effect on running times by sharing the computation and pruning done for one constraint with another.
 
 \begin{figure}[t]
   \centering
@@ -1042,62 +1084,34 @@ To illustrate that using dependencies to find constraints incrementally can incr
   \label{fig:comparison}
 \end{figure}
 
-\subsection{Testing the limits}
-Our algorithm relies on a correct table and group detection step, and we noticed that exported CSV files can make this more difficult in case of rounding errors due to low-precision formatting as well as misformatting of strings so they are interpreted as numbers.
-Automatically generated sheets can also contain many duplicate (equal) rows or columns, which are a source of increased runtime and decreased recall for our algorithm. For example, we tested a spreadsheet (``exps'') with 6~tables, 531~cells and many duplicate columns across tables.
-While we obtained a recall of~$1.0$, the algorithm ran for $14.30s$ and the overall precision was~$0.52$ and only~$0.11$ when counting constraints with equal columns separately.
-%By using a (heuristic) post-processing step the precision for this example could be increased.
-%The running time can be improved by implementing additional optimizations.
+
+\paragraph{Q2: Intended and supported constraints}
+%\item Q2: it may fail to find intended constraints because it does not support such constraints; how does or method perform on real spreadsheets?
+The overall recall achieved by \sname is~$0.88~(81/92)$. The overall and average recall per category is also high, as shown in Table~\ref{tbl:category_overview}.
+The intended constraints not discovered correspond to constraints not supported by the system (supported recall is 1). \tias{Rewrite and go into more detail about all supported found, some intended not support, which ones, what category, just some more details}
+
+
+\paragraph{Q3: precision}
+%\item Q3: it may find non-intended constraints; how many and what type of non-intended constraints are found on real spreadsheets?
+The final question, Q3, is about the amount and type of non-intended constraints found.
+Across all spreadsheets \sname achieves a precision of~$0.79~(81/102)$.
+While the average precision per spreadsheet is over $0.90$ for all categories, the overall precision is much higher for the exercises and data categories ($0.94$ and $1.00$) than for the tutorials category ($0.70$).
+
+Examining the tutorial spreadsheets confirms that there are a few spreadsheets that have a high number of additional constraints. This is caused by duplicate data or multiple ways to calculate the same vectors. \tias{More details or examples; we copy intended constraints for equivalent/duplicate vectors, so not an issue?}
+For these spreadsheets the precision could be increased by post-processing the constraints to detect implications or heuristically selecting one among multiple ways to compute the same vector.
 
 
 
 
-\subsection{Runtime analysis}
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=1\linewidth]{figures/scatter_plots.pdf}
-  \caption{Loglog plots of the experiments with synthetic (random) data. In plot~$a$ the number of vectors is increased; in plot~$b$ the size of the vectors is increased; and in plots~$c$ and~$d$ the number of blocks is increased.}
-  \label{fig:runtime_analysis}
-\end{figure}
+%\subsection{Testing the limits}
+%Our algorithm relies on a correct table and group detection step, and we noticed that exported CSV files can make this more difficult in case of rounding errors due to low-precision formatting as well as misformatting of strings so they are interpreted as numbers.
+%Automatically generated sheets can also contain many duplicate (equal) rows or columns, which are a source of increased runtime and decreased recall for our algorithm. For example, we tested a spreadsheet (``exps'') with 6~tables, 531~cells and many duplicate columns across tables.
+%While we obtained a recall of~$1.0$, the algorithm ran for $14.30s$ and the overall precision was~$0.52$ and only~$0.11$ when counting constraints with equal columns separately.
+%%By using a (heuristic) post-processing step the precision for this example could be increased.
+%%The running time can be improved by implementing additional optimizations.
 
-There are multiple factors that impact the running time of \sname: the number of vectors, the length of the vectors, the number of vectors per block, the type of cells, the number of tables and the number of constraints that are in the data.
-Moreover, the running time depends on the number of the constraint templates implemented in the system and their arity.
 
-In this section the impact on the running time is analyzed of 1)~the number of vectors; 2)~the length of the vectors; and 3)~the size of the blocks.
-This analysis is supported by a set of experiments we have run on synthetic spreadsheets.
-These spreadsheets contains random integers\footnote{For strings and floats the results are similar but the running times are typically much lower.} and are made up of two tables.
-For one table the number of vectors ($2$) and block size ($2$) is fixed, while for the other table these properties are varied.
-Moreover, the length of the vectors (for both tables) can be adapted, while the default is~$8$.
-The running times for various configurations are plotted in Figure~\ref{fig:runtime_analysis}.
-
-For most constraint templates the time required to check whether a subassignment satisfies the template is linear in the size of the subassignment (the number of subblocks and their size).
-For a constraint with arity~$n$, and a subassignment consisting of $n$~blocks with $m$~vectors of length~$k$, the worst case complexity becomes $O(n * m * k)$.
-However, in practice, most subassignments will not satisfy the constraint template.
-Since our implementation tries to account for this by failing fast, the amortized time is constant in the length of the vectors~$k$, unless $k$~is very large\footnote{Specifically, if $k$ is much larger than the number of candidate subassignments} or many constraints hold in the data.
-For templates requiring their arguments to be single vectors $m$~is~$1$, and the total complexity for checking a subassignment becomes~$O(n) \simeq O(1)$ (since $n$ is typically small). 
-The benchmark experiments show that the number of cells in a spreadsheet has a very limited impact on the running time.
-As shown in Figure~\ref{fig:runtime_analysis}b, the synthetic experiments confirm that increasing the length of the vectors has a negligible impact on the performance for most template.
-Most of the increase in running time can be attributed to the RANK constraint which is less suited for failing fast.
-
-On the contrary, the number of vectors in a spreadsheet have a significant impact on the running time.
-Many constraints take single vector arguments, therefore, the number of subassignments to be tested depends on the number of vectors in the spreadsheets and the arity of the constraint.
-For a constraint template with arity~$n$ and $v$~vectors there are $n^v$ subassignments (or $\frac{n!}{(n - v)!}$ if the arguments have to be different).
-As the number of vectors in a spreadsheet increases, the running time will quickly be dominated by constraints with a larger arity.
-This effect is noticeable in our synthetic experiments when the number of (equally sized) vectors is increased (Figure~\ref{fig:runtime_analysis}a).
-In practice, in our benchmark experiments, the assignment step of our algorithm is able to limit this rapid increase in running time for larger numbers of vectors.
-The superblock assignment phase is able to disqualify entire blocks that do not match the signature requirements, i.e. blocks of vectors with different lengths for the product constraint.
-
-Aggregate constraints, e.g. sum or max, have an argument that takes subblocks of varying sizes.
-Therefore, the size of the blocks in the spreadsheet also influences the runtime of these constraints.
-For a block of size~$m$ there are $\frac{m(m + 1)}{2}$ or $O(m^2)$ subblocks, thus, if a spreadsheet has more but smaller sized blocks, the search for aggregate constraints will be faster.
-Consider, for example, $v$~vectors distributed over $b$~blocks of size $v/b$, the number of subblock candidates then is $O(b * v^2 / b^2) = O(v^2 / b)$.
-The synthetic experiments confirm that splitting a constant number of vectors into more, smaller blocks improves the performance of the aggregate constraint search (Figure~\ref{fig:runtime_analysis}c).
-
-These experiments, however, also show that the running time for various non-aggregate constraints increases as the size of blocks becomes small.
-Since these constraints have single vector arguments, the block size should not have a strong effect.
-However, in practice, when there are many small blocks, the superblock assignment phase has to generate a very large number of combinations, while for larger blocks this work is done mostly during the subassignment generation phase.
-Since the implementation of that last phase is more adept at generating these combinations and does not need to check for constraints on all these combinations, shifting this workload to the assignment phase slows down the algorithm.
 
 
 \section{Applications}\label{sec:applications}
