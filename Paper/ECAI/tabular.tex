@@ -170,7 +170,7 @@ Finally, worth mentioning is BayesDB \cite{BayesDB} and Tabular \cite{tabular}, 
 %     &~\eclookup{\range{T_{5}}{\rangeall}{3}}{\range{T_{5}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}
     \end{align*}}
   \vspace{-10pt}
-  \caption{Constraints learned for the tables above, except for \textit{ALLDIFFERENT} (18), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5) constraints.
+  \caption{Constraints learned for the tables above, except for \textit{ALLDIFFERENT} (18), \textit{PERMUTATION} (2), \textit{FOREIGNKEY} (5) and \textit{ORDERED} (6) constraints.
   Constraints marked with $*$ were not present in the original spreadsheets.}
   \label{fig:sol_example}
 \end{subfigure}
@@ -266,6 +266,12 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
       & The values in $\sbl{x}$ are a permutation of the numbers $1$ through $\plength(\sbl{x})$.
       \\ \hline
 
+    \ecordered{\sbl{x}}
+      & $\numeric(\sbl{x})$
+      
+      & $i < j$: $\sbl{x}[i] \leq \sbl{x}[j]$.
+      \\[\PADSEP] \hline
+
     \ecseries{\sbl{x}}
       & $\integer(\sbl{x})$ and $\ecperm{\sbl{x}}$
       
@@ -284,7 +290,7 @@ An example of block containment is $T_1[:,\rangeto{3}{6}] \sqsubseteq T_1[:,\ran
       \\[\PADSEP] \hline
 
     \eclookupfuzzy{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}}
-      & \textit{Same as lookup}
+      & \textit{Same as lookup}; except $\ecordered{\sbl{pk}}$ instead of \ecfkey{\sbl{fk}}{\sbl{pk}}
       
       & $\sbl{r}[i] = \sbl{val}[j]$ where $\sbl{pk}[j] \leq \sbl{fk}[i]$, $j$~maximal
       \\[\PADSEP] \hline
@@ -817,7 +823,7 @@ Constraint templates that have no dependencies are omitted.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.50\linewidth]{figures/constraint_dependency2.pdf}
+  \includegraphics[width=0.60\linewidth]{figures/constraint_dependency.pdf}
   \caption{Dependency graph of Table~\ref{table:constraints}; an arrow from~$s_1$ to~$s_2$ indicates that $s_2$ depends on~$s_1$ (its signature includes $s_1$).
   }
   \label{fig:learning_order}
@@ -876,7 +882,7 @@ Alternatively, we can output all valid assignments instead of only maximal subbl
 
 
 \subsubsection{Constraints} \label{sec:which_cons}
-The \samuel{count} constraints that are currently supported in our system are shown in Table~\ref{table:constraints}.
+The 33 constraints that are currently supported in our system are shown in Table~\ref{table:constraints}.
 We included most formulas that we encountered in tutorial spreadsheets including the popular \textit{SUM} and \textit{LOOKUP} constraints\footnote{\href{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}}.
 We also added three structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUTATION} and \textit{FOREIGNKEY}) so that they can be used in the signature of other constraint templates; they are also popular in constraint satisfaction~\cite{modelseeker}.
 
@@ -963,9 +969,9 @@ Blocks are detected automatically using our block detection algorithm (Section~\
 
 All spreadsheets also have a set of ground-truth of constraints, we call these the \textbf{intended} constraints, that are expected to be (re-)discovered.
 These were determined by us using either the formulas of the original sheet (if present), or inferring them based on, for example, the header names in the sheet.
-In the following experiments, we focus on spreadsheets specifically and hence only include \textit{functional} constraints, constraints that can be expressed as formulas. We ignoring structural constraints such as \textit{ALLDIFFERENT}, \textit{FOREIGNKEY} and \textit{PERMUTATION}. All constraints are stored in their canonical form. 5 spreadsheets contained rows or columns that were entirely identical, and any intended constraint involving one such vector was also added for the equivalent vectors. \samuel{They are usually not copied}
+In the following experiments, we focus on spreadsheets specifically and hence only include \textit{functional} constraints, constraints that can be expressed as formulas. We ignoring structural constraints such as \textit{ALLDIFFERENT}, \textit{FOREIGNKEY}, \textit{PERMUTATION} and \textit{ORDERED}. All constraints are stored in their canonical form. 5 spreadsheets contained rows or columns that were entirely identical, and any intended constraint involving one such vector was also added for the equivalent vectors. \samuel{They are usually not copied}
 
-Section~\ref{sec:which_cons} discusses the 32 constraints currently supported by \sname \tias{It does, right? Should also contain '32' number}\sam{I will recount at the end}. Some of the intended constraints are currently outside of the scope of \sname however, more specifically nested mathematical or nested logical formulas. We denote by \textbf{supported} constraints the subset of intended constraints that the system can find in theory.
+Section~\ref{sec:which_cons} discusses the 33 constraints currently supported by \sname. Some of the intended constraints are currently outside of the scope of \sname however, more specifically nested mathematical or nested logical formulas. We denote by \textbf{supported} constraints the subset of intended constraints that the system can find in theory.
 
 We will use recall and precision to measure how well our tool is performing. Recall is the fraction of intended constraints actually discovered by the system: $\frac{\text{intended discovered}}{\text{all intended}}$, while precision is the fraction of constraints found by the system that are indeed intended: $\frac{\text{intended discovered}}{\text{all discovered}}$.
 
@@ -995,7 +1001,7 @@ We first investigate Q1 on generated spreadsheets, and Q2 and Q3 on a collection
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=1\linewidth]{figures/scatter_plots.pdf}
+  \includegraphics[width=0.8\linewidth]{figures/scatter_plots.pdf}
   \caption{Loglog plots of the experiments with synthetic (random) data. In plot~$a$ the number of vectors is increased; in plot~$b$ the size of the vectors is increased; and in plot~$c$ the number of blocks is increased (the block size is decreased).}
   \label{fig:runtime_analysis}
 \end{figure}
@@ -1124,7 +1130,7 @@ Our benchmark experiments show that our algorithm is able to perform well in pra
 Looking at the runtime per constraint template individually, the slowest by far is fuzzy lookup using $\pm 21\%$ of the running time.
 It is followed by product ($\pm 7\%$), relative difference ($\pm 6\%$), running total ($\pm 5\%$), difference ($\pm 5\%$) and various row-aggregates (each $5\% - 3\%$).
 
-Our method uses dependencies to increase efficiency by finding constraints incrementally. To illustrate the effect this can have, we ran the benchmarks using FOREIGNKEY instead of ALLDIFFERENT as base constraint to find conditional aggregates such as SUMIF. This is a stronger assumption, and a too strong in practice as not all keys have to be used in the conditions. However, the total running times per category are decreased by 6\% (exercises), 30\% (tutorials) and~3\% (data). This shows that the use of dependencies can have a strong effect on running times by sharing the computation and pruning done for one constraint with another.\sam{Check numbers}
+Our method uses dependencies to increase efficiency by finding constraints incrementally. To illustrate the effect this can have, we ran the benchmarks using FOREIGNKEY instead of ALLDIFFERENT as base constraint to find conditional aggregates such as SUMIF. This is a stronger assumption, and a too strong in practice as not all keys have to be used in the conditions. However, the total running times per category are decreased by 6\% (exercises), 30\% (tutorials) and~3\% (data). This shows that the use of dependencies can have a strong effect on running times by sharing the computation and pruning done for one constraint with another.\sam{Check numbers} % (0.83 + 1.03 + 0.99) = 2.85 / (1.34 + 1.46 + 0.46) = 3.3  / (0.99 + 0.98 + 0.44) = 2.41
 
 \begin{figure}[t]
   \centering
@@ -1141,6 +1147,10 @@ The overall recall achieved by \sname is~$0.88~(81/92)$.
 When looking at the recall per category, \sname is able to consistently obtain high values for both overall and average recall, as shown in Table~\ref{tbl:category_overview}.
 The intended constraints not discovered correspond to constraints that are not supported by the system (supported recall is 1).
 Therefore, \sname is able to find all constraints for supported constraint templates, which confirms that our bias (signature) is not too restrictive.
+
+% The intended constraints not discovered correspond to constraints that are not supported by the system (supported recall is 0.99), except for one intended \textit{SUMIF} constraint.
+% The supported recall value mostly confirms that our bias (signature) is not too restrictive and is able to find constraints for supported constraint templates.
+% By changing the signature of \textit{SUMIF} to allow \sbl{pk}
 
 The intended constraints that are not discovered correspond with nested constraints (e.g. $R = \frac{W}{(L/100)^2}$), variants of supported constraints (e.g. series that do not start at 1) or more complex versions of supported constraints (e.g. conditional aggregates that automatically infer the condition).
 
