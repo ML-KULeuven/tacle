@@ -803,7 +803,7 @@ For every (disjoint) subassignment the exact signature (e.g. subtypes will not h
 
 
 \subsection{Optimizations} \label{sec:opts}
-This section discusses various design decisions and optimizations aimed at improving the speed, the extensibility of our system and the elimination of redundant constraints.
+This section discusses various design decisions and optimizations aimed at improving the extensibility and effectiveness of our method, as well as reducing the redundancy in the output.
 
 \subsubsection{Template dependencies}
 As discussed in Section~\ref{sec:form:dependencies}, some constraint templates depend on others by including templates they depend on in their signature (see Table~\ref{table:constraints}).
@@ -833,7 +833,7 @@ The previously learned constraints are used to speed up the \generategroups step
   Consider $\ecfkey{\sbl{fk}}{\sbl{pk}}$, which states that every value in $\sbl{fk}$ also exists in $\sbl{pk}$; its signature includes $\ecalldiff{\sbl{pk}}$. There are 18 \textit{ALLDIFFERENT} constraints to be found in Figure~\ref{fig:main_example}, hence, the \generategroups only needs to check which superblocks for $\sbl{fk}$ are compatible (different table, same type) with these 18 assignments to $\sbl{pk}$.
 \end{example}
 
-Instead of generating one CSP to find all assignments, a CSP is generated for every known assignment of the depending constraint (and variables involved), which then searches for all assignments completing this partial assignment.
+In this case, instead of generating one CSP to find all assignments, a CSP is generated for every known assignment of the depending constraint (and variables involved), which then searches for all assignments completing this partial assignment.
 The procedure to generate CSPs remains the same otherwise.
 
 
@@ -857,18 +857,18 @@ We consider two types of redundancy that we aim to eliminate during search.
 As noted in Section~\ref{sec:form:dependencies}, for some constraint templates there are \textit{symmetries} over the arguments that lead to trivially equivalent solutions, for example, $\ecprod{\sbl{R}'}{\sbl{1}'}{\sbl{2}'} \Leftrightarrow \ecprod{\sbl{R}'}{\sbl{2}'}{\sbl{1}'}$.
 Such duplicates are avoided by defining a \textit{canonical} form for these constraints.
 In practice, we define an arbitrary but fixed block ordering and require those blocks that are interchangeable to adhere to this ordering.
-Moreover, among the semantically equivalent constraints product (\ecprod{\sbl{R}'}{\sbl{1}'}{\sbl{2}'}) and division (\eccalc{\sbl{1}'}{\sbl{R}' / \sbl{2}'}) we only added product, as well as only difference (\ecdiff{\sbl{r}}{\sbl{1}}{\sbl{2}}) and not sum (\eccalc{\sbl{1}}{\sbl{r} + \sbl{2}}). However, division and sum could easily be added, as they could be added explicitly in post-processing based on the matching product and difference constraints.
+Moreover, among the semantically equivalent constraints product (\ecprod{\sbl{R}'}{\sbl{1}'}{\sbl{2}'}) and division (\eccalc{\sbl{1}'}{\sbl{R}' / \sbl{2}'}) we only added product, as well as only difference (\ecdiff{\sbl{r}}{\sbl{1}}{\sbl{2}}) and not sum (\eccalc{\sbl{1}}{\sbl{r} + \sbl{2}}). However, division and sum could easily be added, and they could equivalently be added in post-processing based on the matching product and difference constraints.
 
 
-A last type of redundancy we chose to reduce is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
+A last type of redundancy we chose to avoid during search is that there may be multiple \textit{overlapping} subblocks that satisfy the definition of a constraint template.
 For example, consider the constraint $\ecsumc{\sbl{r}}{\range{T}{\rangeall}{\rangeto{1}{n}}}$ where $\range{T}{\rangeall}{\rangeto{k}{n}}$ consists of only zeros, then $\ecsumc{\sbl{r}}{\range{T}{\rangeall}{\rangeto{1}{j}}}$ will be true for all $k - 1 \leq j \leq n$.
 In \sname we have, therefore, chosen to only consider \textit{maximal} subblocks.
 
 In some cases a maximal subblock might falsely include irrelevant columns.
 Consider superblock $\bsbl{x} = \range{T}{\rangeall}{\rangeto{1}{3}} = [[200, 300], [200, 150], [1, 2]]$ and $\sbl{r} = [200, 300]$, then \sname will find the constraint $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{\rangeto{1}{3}})}$.
-Should the target constraint be $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{\rangeto{1}{2}})}$, then $\range{T}{\rangeall}{3}$ must be split off into a separate block.
+Should the target constraint be $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{\rangeto{1}{2}})}$, then \sname is only able to find exactly that constraint if $\range{T}{\rangeall}{3}$ is split off into a separate block in the block detection phase.
 
-Alternatively, we can output all valid assignments instead of only maximal subblocks, e.g. $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{1})}$, $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{\rangeto{1}{2}})}$ and $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{\rangeto{1}{3}})}$, however, this might produce many redundant constraints including constraints that accidentally cover too little data.
+%Alternatively, we can output all valid assignments instead of only maximal subblocks, e.g. $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{1})}$, $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{\rangeto{1}{2}})}$ and $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangeall}{\rangeto{1}{3}})}$, however, this might produce many redundant constraints including constraints that accidentally cover too little data.
 
 
 
