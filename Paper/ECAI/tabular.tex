@@ -17,7 +17,7 @@
 Spreadsheets, CSV (comma separated value) files and other tabular data representations are in wide use today.
 However, writing, maintaining and identifying good formulas for tabular data and spreadsheets can be time consuming and error-prone.
 In this work, we investigate the automatic learning of constraints (formulas and relations) in raw tabular data in an unsupervised way.
-We represent common spreadsheet formulas and relations through predicates and expressions whose arguments must satisfy the inherent properties of the formula/relation. The challenge is to automatically infer the set of constraints that is present in the data, without user information or labeled examples. 
+We represent common spreadsheet formulas and relations through predicates and expressions whose arguments must satisfy the inherent properties of the formula/relation. The challenge is to automatically infer the set of constraints that is present in the data, without labeled examples or user feedback. 
 We propose a two-stage generate and test method where the first stage uses constraint solving techniques to efficiently reduce the number of candidates in a generic way, based on the predicate signatures. 
 Our approach takes inspiration from inductive logic programming, constraint learning and constraint satisfaction.
 We show that we are able to accurately discover constraints in spreadsheets from various sources.
@@ -53,7 +53,7 @@ To answer this challenge we propose a general-purpose method and system, named \
 % contribs
 Our contributions are as follows:
 \begin{itemize}
-\item we define the tabular constraint learning problem, where the goal is to constraints that range over entire rows or columns in an unsupervised way;
+\item we define the tabular constraint learning problem, where the goal is to find constraints that range over entire rows or columns in an unsupervised way;
 \item we propose an effective 2-stage generate and test method where the first stage reasons only over properties of contiguous blocks of rows/columns, and the second stage continues to investigate individual rows and columns and their content;
 \item furthermore, in the first stage we use a constraint solver to efficiently enumerate all combinations of maximally contiguous blocks compatible with the candidate constraint's argument; %, using backtracking search and forward checking;
 \item experiments on different publicly available spreadsheets show that the system is able to extract constraints with high precision and recall. 
@@ -65,7 +65,7 @@ Our contributions are as follows:
 
 
 This paper is organized as follows.
-Section \ref{sec:related_work} presents a detailed discussion of the related work. Section \ref{sec:formalization} introduces concepts relevant to our approach and our problem statement.  Section \ref{sec:approach} presents our approach. Section \ref{sec:evaluation} presents the evaluation of the approach. Section \ref{sec:applications} shows how our system can be used for applications.  Section \ref{sec:conclusions} provides conclusions.
+Section \ref{sec:related_work} discusses related work. Section \ref{sec:formalization} introduces the relevant concepts and defines the problem formally while Section \ref{sec:approach} presents our approach. This is evaluated in Section \ref{sec:evaluation} after which we show two applications of how our system could be used in Section \ref{sec:applications}, and we conclude in Section \ref{sec:conclusions}.
 
 %Due to the complexity of numeric computations in spreadsheets, people often fail to grasp the properties of the data, which leads to the so called Spreadsheet risk\footnote{\url{https://en.wikipedia.org/wiki/Spreadsheet\#Spreadsheet_risk}} and even caused major flaw in the famous economics papers \cite{flaw_excel} and billion-losses in the financial industry \cite{spreadsheet_risk_loss}. Tabular constraint learning provides a potential cure by indicating learned constraint violations and suggest possible fixes.
 
@@ -92,17 +92,15 @@ Section \ref{sec:related_work} presents a detailed discussion of the related wor
 
 First, it borrows techniques from logical and relational learning \cite{luc_book}, as it finds
 constraints in multiple relations (or tables). Unlike typical logical and relational learning
-approaches, it focuses on data in spreadsheets and constraints on columns or rows in the sheets.
+approaches, it focuses on data in spreadsheets and constraints involving columns and rows in the sheets.
 Furthermore, it derives a set of simple ``atomic'' constraints rather than a set of rules that each consist of a conjunction of literals as in clausal discovery \cite{claudien,lallouet}. Nevertheless, several ideas from logical and relational learning
 proved to be useful, such as the use of a canonical form, a refinement graph, and pruning for redundancy. It also connects with the logical generalization of given formulas in a spreadsheet \cite{Isakowitz}, where one abstracts present formulas by introducing parameters in the place of particular cell references. The key difference here is that we discover constraints (formulas) in the data, we do not have or use any prior information on the formulas in a spreadsheet.
 
 
 Second, there exist a number of algorithms in the constraint programming community that induce constraints from one or more examples and questions. Two well-known approaches include ModelSeeker \cite{modelseeker} and Quacq \cite{Quacq}.
-The former starts from a single example in the form of a vector of values and then exhaustively looks for the most specific constraints from a large constraint library that hold in the vector. To this aim, it cleverly enumerates different de-vectorized tables; for instance, if the initial vector was of dimension $1 \times 20$, it would consider rearrangements of size $2 \times 10$, $4 \times 5$, $5 \times 4$, $\dots$ and Modelseeker would then look for both column, row  and even diagonal constraints. Key differences are that we assume given spreadsheets with \textit{multiple} tables; and that ModelSeeker's constraints are restricted to integer values and often typical for constraint programming community, e.g. aimed at combinatorial optimization and scheduling. Conacq \cite{Conacq} acquires a conjunction of constraints using techniques inspired on Mitchell's version spaces to process examples; its successor Quacq uses active learning to query the user regarding satisfiability. Each of the examples/queries is processed for each constraint, hence an important issue is how fast the algorithm converges to the entire solution set (e.g. for Sudoku).
+The former starts from a single example in the form of a vector of values and then exhaustively looks for the most specific constraints that hold given a large constraint library. To this aim, it cleverly enumerates different de-vectorized tables; for instance, if the initial vector was of dimension $1 \times 20$, it would consider rearrangements of size $2 \times 10$, $4 \times 5$, $5 \times 4$, $\dots$ and Modelseeker would then look for both column, row  and even diagonal constraints. Key differences with our work are that we assume given spreadsheets with \textit{multiple} tables; and that ModelSeeker's constraints are restricted to integer values and constraints that are typical for the constraint programming community, e.g. aimed at combinatorial optimization and scheduling. Conacq \cite{Conacq} acquires a conjunction of constraints using techniques inspired by Mitchell's version space algorithm to process examples; its successor Quacq uses active learning to query the user regarding satisfiability. Each of the examples/queries is processed for each constraint, hence an important issue is how fast the algorithm converges to the entire solution set (e.g. for Sudoku).
 The focus is again on integer variables and typical combinatorial optimisation constraints. In a similar spirit the field of equation discovery \cite{equation_discovery} focuses, guided by  heuristics based on the structure of physical equations and unit measures, on the discovery of physical formulas over numbers and times series.
-However, they focus specifically on noisy physical data and formulas, e.g. a single variable can take values from a series of measurements to get a regression parameter estimate or they apply specific data transformation such as numerical calculation of time and partial derivatives, i.e. the method works with approximations; the equation structures are heavily biased towards parameter estimation, while we focus on discovery of different types of spreadsheet constraints which is an exact constraint satisfaction problem.
-\sergey{rewritten, Samuel, does it sound fine now?}
-\tias{Last sentence too vague, what is specific about physical data? btw, it is supervised, e.g. input-output and we are general? Also, it is 'one' conjunction of functions, e.g. one equation, or not? Please rewrite more precisely}
+However, they focus specifically on noisy physical data and formulas, e.g. a single variable can take values from a series of measurements to get a regression parameter estimate or they apply specific data transformation such as numerical calculation of time and partial derivatives. In other words, the method works with approximations and the equation structures are heavily biased towards parameter estimation, while our goal is to discover hard constraints that hold over a subset of the rows and columns.
 %As the conjunction for typical constraint programming problems (such as Sudoku) can be quite large, a key problem is to cope with redundant constraints. As Modelseeker, these systems focus on the types of constraints in combinatorial optimization but unlike ModelSeeker and our approach, they do not assume the variables are organized in tabular form.
 
 
@@ -125,7 +123,7 @@ Finally, worth mentioning is BayesDB \cite{BayesDB} and Tabular \cite{tabular}, 
     Green background indicates headerless tables, dark borders indicate maximal type-consistent blocks.
     Most tables only contain type-consistent columns while table~$T_2$ also contains type-consistent rows (though its header indicates that it consists of row data).
 %    However, due to the location of the header of~$T_2$ we can infer that it consists of row data.
-    This example combines several Excel sheets based on exercise sessions in the book ``MS Excel 2010''~\cite{excel_book}.
+    This example combines several Excel sheets based on exercises in the book ``MS Excel 2010''~\cite{excel_book}.
     % I guess you want to save space by having everything in one figure, but it might be useful to have a smaller figure on the first page just to explain this example in a bit more detail (or use a smaller example here); it's quite overwhelming now}
   }
   \label{fig:main_example}
@@ -170,7 +168,7 @@ Finally, worth mentioning is BayesDB \cite{BayesDB} and Tabular \cite{tabular}, 
 %     &~\eclookup{\range{T_{5}}{\rangeall}{3}}{\range{T_{5}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}
     \end{align*}}
   \vspace{-10pt}
-  \caption{Constraints learned for the tables above, except for \textit{ALLDIFFERENT} (18), \textit{PERMUTATION} (2) and \textit{FOREIGNKEY} (5) constraints.
+  \caption{Constraints learned for the tables above, except 18 \textit{ALLDIFFERENT}, 2 \textit{PERMUTATION} and 5 \textit{FOREIGNKEY} constraints not shown.
   Constraints marked with $*$ were not present in the original spreadsheets.}
   \label{fig:sol_example}
 \end{subfigure}
