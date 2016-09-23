@@ -766,7 +766,12 @@ On the other hand, a simple generate-and-test approach, as illustrated in Algori
 Given a superblock assignment, all disjoint subassignments are generated taking into account the required size, columns or rows.
 For every (disjoint) subassignment the exact signature (e.g. subtypes will not have been checked yet) and definition will be tested and all satisfying subassignments are returned.
 
-\tias{todo me: check that more here}
+
+Based on the assumptions that most subassignments will not satisfy the definition of the constraint template, the implementation of the definition check is geared to \textit{fail-fast} when possible. Specifically, the entries of every subblock are fetched one by one, and as soon as one does not hold failure is returned. In many cases, the first entry will already not satisfy the definition (e.g. if $\sbl{r}[0] \neq \sbl{1}[0] \times \sbl{2}[0]$ then $\sbl{r} = \sbl{1} \times \sbl{2}$ does not hold).
+As a result, many subassignments can be discared by looking at just one or a few entries, and considering all subassignments that will be checked, the runtime of the checks will typically not be influenced much by the length of the vectors.
+\tias{Moved the discussion from 4.4.3 to here, where it better fits. Plus, I find the O(1) claim too strong! O() is worst-case time complexity, not average case}
+%the time to check if a subassignment satisfies a constraint definition with a fail-fast implementation requires constant time\footnote{If the number of entries to look at is bounded by a constant, the vector lengths are smaller than the number of subassignments to test ($a$) and the time to test subassignments that satisfy the constraint is $O(a)$, then the time to test a subassignment is amortized $O(1)$} in most cases and does not depend on the length of the vectors.
+
 
 
 % \begin{verbatim}
@@ -883,16 +888,13 @@ Should the target constraint be $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangea
 \subsubsection{Constraints} \label{sec:which_cons}
 The 33 constraints that are currently supported in our system are shown in Table~\ref{table:constraints}.
 We included most formulas that we encountered in tutorial spreadsheets including the popular \textit{SUM} and \textit{LOOKUP} constraints\footnote{\href{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}}.
-We also added three structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUTATION} and \textit{FOREIGNKEY}) so that they can be used in the signature of other constraint templates; they are also popular in constraint satisfaction~\cite{modelseeker}.
+We also added four structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUTATION}, \textit{ORDER} and \textit{FOREIGNKEY}) so that they can be used in the signature of other constraint templates; they are also popular in constraint satisfaction~\cite{modelseeker}.
 
-For \textit{FOREIGNKEY}, \textit{LOOKUP}, aggregates and \textit{PROJECT} we use custom, optimized methods to find subassignments.
-Instead of the more generic generate-and-test implementation, we use, for example, caching, maximal range-finding and partial tests.
-While conditional aggregates use generate-and-test, they employ similar optimizations in their test method.
 
-Based on the assumptions that most subassignments will not satisfy a constraint template, the implementations are geared to \textit{fail-fast} when possible.
-Specifically, the tests try to prove that a subassignment does not satisfy a constraint template as fast as possible.
-For example, it can be often shown that a constraint does not hold by only looking first entries of every subblock (e.g. if $\sbl{r}[0] \neq \sbl{1}[0] \times \sbl{2}[0]$ then $\sbl{r} = \sbl{1} \times \sbl{2}$ does not hold).
-As a result, the time to check if a subassignment satisfies a constraint templates with a fail-fast implementation requires constant time\footnote{If the number of entries to look at is bounded by a constant, the vector lengths are smaller than the number of subassignments to test ($a$) and the time to test subassignments that satisfy the constraint is $O(a)$, then the time to test a subassignment is amortized $O(1)$} in most cases and does not depend on the length of the vectors.
+\tias{Just below this comment I commented out the paragraph that FK,Lookup,proj have optimized methods becuase it does not properly explain what is used instead. That creates confusion and makes our method not reproducible. Leave out until it is rewritten with sufficient information.}
+%As an optimization, for \textit{FOREIGNKEY}, \textit{LOOKUP}, aggregates and \textit{PROJECT} we use custom methods to find subassignments.
+%Instead of the more generic generate-and-test implementation, we use, for example, caching, maximal range-finding and partial tests. \tias{Really, this is unacceptably vague. I have no clue what you mean with that, meaning that our research is not reproducable and hence not scientific}
+%While conditional aggregates use generate-and-test, they employ similar optimizations in their test method.
 
 
 %\paragraph{Theoretical analysis of runtime, this does not belong in experiments}\tias{move to technical section}\sam{Has to be moved yet to 'Constraints' section, explaining fail-fast}
@@ -960,15 +962,15 @@ We first explain the experimental setup and illustrate it on the example in Figu
 
 \paragraph{Experimental setup}
 \label{sec:evalualtion:method}
-All spreadsheets used in the experiments are in CSV format, and for each we have ran the table extraction tool once (using a combination of the rather primitive automatic detection + visual verification that the tables are meaningful (e.g. merge split-up tables because of None values, or remove headers of all-textual tables).
-\samuel{Should we not say just with the visual tool?}
-Blocks are detected automatically using our block detection algorithm (Section~\ref{sec:make_groups}) except for spreadsheets that contain \textit{None} values or (partially) numeric headers, in which case the blocks are specified manually.
+All spreadsheets used in the experiments are in CSV format, and for each we have ran the table extraction tool once using the visual tool. Manual intervention of the simple automatic detection was needed only in the case of None values (to merge split-up tables cause by the None's) and to remove all-textual headers of all-textual tables.%(using a combination of the rather primitive automatic detection + visual verification that the tables are meaningful (e.g. merge split-up tables because of None values, or remove headers of all-textual tables).
+%\samuel{Should we not say just with the visual tool?} \tias{Rewrote a bit, I like the amount of detail as it provides insight into the limitations}
+Blocks are then detected automatically using the block detection algorithm (Section~\ref{sec:make_groups}). Manual intervention was required for tables that contain \textit{None} values, as well as for (partially) numeric headers. \tias{This does not make sense to me: headers are removed before block detection; should this be part of manual intervention of table extraction tool??}
 
 % Group definitions are only specified if the spreadsheet contains ambiguous \textit{None} values. \tias{What does this mean, 'group definitons'?? Is this 'block detection' (Sec 4.2), if so, how do we explain this process??} 
 
 All spreadsheets also have a set of ground-truth of constraints, we call these the \textbf{intended} constraints, that are expected to be (re-)discovered.
 These were determined by us using either the formulas of the original sheet (if present), or inferring them based on, for example, the header names in the sheet.
-In the following experiments, we focus on spreadsheets specifically and hence only include \textit{functional} constraints, constraints that can be expressed as formulas. We ignoring structural constraints such as \textit{ALLDIFFERENT}, \textit{FOREIGNKEY}, \textit{PERMUTATION} and \textit{ORDERED}. All constraints are stored in their canonical form. 5 spreadsheets contained rows or columns that were entirely identical, and any intended constraint involving one such vector was also added for the equivalent vectors. \samuel{They are usually not copied}
+In the following experiments, we focus on spreadsheets specifically and hence only include \textit{functional} constraints, constraints that can be expressed as formulas. We ignoring structural constraints such as \textit{ALLDIFFERENT}, \textit{FOREIGNKEY}, \textit{PERMUTATION} and \textit{ORDERED}. All constraints are stored in their canonical form. 5 spreadsheets contained rows or columns that were entirely identical, and any intended constraint involving one such vector was also added for the equivalent vectors. \samuel{They are usually not copied} \tias{'usually' is not acceptable in a scientific paper. Why would you sometimes do it and sometimes not? Preferably always or never copy, and if not specify when and why exactly you deviate.}
 
 Section~\ref{sec:which_cons} discusses the 33 constraints currently supported by \sname. Some of the intended constraints are currently outside of the scope of \sname however, more specifically nested mathematical or nested logical formulas. We denote by \textbf{supported} constraints the subset of intended constraints that the system can find in theory.
 
@@ -985,7 +987,7 @@ For the example presented in Figure~\ref{fig:main_example},
 These include 5 spurious $\textit{RANK}$ constraints, e.g. $\ecrank{\range{T_1}{\rangeall}{1}}{\range{T_1}{\rangeall}{5}}$, that are true by accident.
 Moreover, there is 1 \textit{LOOKUP} constraint that was not intended in the original spreadsheet (looking up ID based on Salesperson) and which is symmetric to the intended one (Salesperson based on ID).
 
-Hence, for this example we achieve a recall of 100\% (all intended constraints are discovered) and a precision of $12/18 = 67\%$. All intended constraints are supported. The recall is as good as we hoped, but the precision is rather low. This is mostly due to the spurious RANK constraints. We note that the tables are quite short, which increases the chance of a constraint like \textit{RANK} to be true by chance; we expect less spurious constraints on larger datasets.
+Hence, for this example we achieve a recall of 100\% (all intended constraints are discovered) and a precision of $12/18 = 67\%$. All intended constraints are supported. The recall is perfect, but the precision is rather low. This is mostly due to the spurious RANK constraints. We note that the tables are quite short, which increases the chance of a constraint like \textit{RANK} to be true by chance; we expect less spurious constraints on larger datasets.
 
 We now investigate three main questions that influence the quality of the solutions found by a constraint learning method:
 \begin{itemize}
@@ -1005,37 +1007,33 @@ We first investigate Q1 on generated spreadsheets, and Q2 and Q3 on a collection
   \label{fig:runtime_analysis}
 \end{figure}
 
-In this section the impact on the running time is analyzed of 1)~the number of vectors; 2)~the length of the vectors; and 3)~the size of the blocks.
+
+In this section we investigate the factors that influence the runtime of our method the most; we do this by investigating the impact on the running time of 1)~the number of vectors; 2)~the length of the vectors; and 3)~the size of the blocks.
 This analysis is accomplished by testing our system on generated spreadsheets.
 
-Recall that our method uses a 2-phase approach where in the first phase, the superblock assignments are generated (Section~\ref{sec:algo:super} and in the second phase, the subblock assignments are generated (Section~\ref{sec:algo:subgr}).
+\paragraph{Spreadsheet generation.}
+%For our analysis, we perform multiple experiments on synthetically generated spreadsheets.
+The generated sheets should trigger the checking of many different constraints, both in the first phase (superblock assignment) and in the second phase (subblock assignment), in order to clearly study the effect on the constraint checking. As many constraints require numeric or discrete data, we will use integers in the generated sheets as these are both numeric and discrete.
 
-\paragraph{Spreadsheet generation}
-For our analysis, we perform multiple experiments on synthetically generated spreadsheets.
+We generate spreadsheets with random data. The result is that there are no intended constraints in the data. This is reasonable, as even in real data most constraints that are checked will not hold. Additionally, for vectors in random data the \textit{ALLDIFFERENT} constraint is likely to hold, which is a requirement for many other constraint templates.
 
-Many constraints require either numeric or discrete data, therefore, the type of cells also has an impact on the running time.
-Since integers fulfill both of those typing restrictions, the generated spreadsheets contain only integer data.
-
-One of the assumptions guiding the implementation is that most of the possible constraints are false.
-To simulate this setting, the generated spreadsheets contain random data.
-There will be few constraints that hold on these spreadsheets, however, random data is likely to produce vectors that fulfill the \textit{ALLDIFFERENT} constraint, which is a requirement for many other constraint templates.
-
-In order to also analyse constraints that require their arguments to be picked from different tables, the spreadsheets are made up of two tables.
-For one table the number of vectors and block size is fixed to two, while for the other table these properties are varied.
-The number of vectors and the block size in the experiments are only reported for the adaptable table.
-The length of the vectors can also be adapted and applies to both tables.
-Unless otherwise mentioned, the adaptable table consists of one block containing all its vectors and by default the number of vectors and vector length are both~$8$.
+The generates spreadsheets contain two tables, as a number of constraints require that their arguments are picked from different tables. For one table the number of vectors and block size is fixed to two, while for the other table these properties are varied according to the experimental setup.
+The reported number of vectors and the block size in the experiments refer to those of the second table. The length of the vectors can also be adapted and applies to both tables (this is a required property of many constraints).
+Unless otherwise mentioned, the adaptable table consists of one block of $8$ vectors of length $8$ (and hence 2 vectors of length $8$ in the 'fixed' table).
 %The running times for various configurations are plotted in Figure~\ref{fig:runtime_analysis}. % no such general pointer, specific pointers only
+
+
+%Recall that our method uses a 2-phase approach where in the first phase, the superblock assignments are generated (Section~\ref{sec:algo:super} and in the second phase, the subblock assignments are generated (Section~\ref{sec:algo:subgr}).
 
 \paragraph{Effect of number of vectors}
 Figure~\ref{fig:runtime_analysis}a shows the results of our experiments, in which \sname was run on generated spreadsheets containing an increasing number of (equally sized) vectors.
 As shown in the figure, the number of vectors in a spreadsheet can have a significant impact on the running time.
 
-This behavior is to be expected when not many superblock assignments can be discarded in phase~1, for example, when all vectors have the same type and size.
-In this case, for a constraint template that requires $n$~single vector arguments and a spreadsheet with $v$~vectors, up to $\frac{v!}{(v - n)!}$ subassignments are generated throughout the algorithm.
+This behavior is to be expected when few superblock assignments can be discarded in the first phase, for example, when all vectors have the same type and size as we artificially enforced in this experiment.
+In this case, for a constraint template that requires $n$~single vector arguments and a spreadsheet with $v$~vectors, up to $\frac{v!}{(v - n)!}$ subassignments are generated and checked by the algorithm.
 
 Typically, we expect the number of generated subassignments to be much smaller in real world spreadsheets and, therefore, the running time to be less sensitive to the number of vectors.
-This is because in phase~1 entire blocks can be disqualified that do not match the signature requirements, e.g. blocks of vectors with different lengths for the product constraint.
+This is because in the first phase entire blocks can be disqualified that do not match the signature requirements, e.g. blocks of vectors with different lengths. % for the product constraint.
 % \tias{Better move to 4.3.2? or have there too anyway, no new facts in 'experiment' section}\samuel{?}
 
 
@@ -1057,32 +1055,37 @@ Our experiments satisfy the assumption that the large majority of possible subas
 Therefore, the results confirm that our implementation is able to severely limit the impact of the length of vectors.
 
 Most of the increase in running time can be attributed to the \textit{RANK} constraint.
-The implementation is not always able to detect subassignments that do not satisfy \textit{RANK} quickly and often has to fall back to analyzing an entire vector.
+The implementation is often not able to quickly detect that subassignments do not satisfy \textit{RANK}, meaning that it will have to analyze many if not all entries in the vector.
 
 \paragraph{Effect of block size}
-To measure the effect of changing the block size, the number of vectors is set to~$32$ and the vectors are split into varying number of blocks (up to ~$32$).
+To measure the effect of changing the block size, the number of vectors is set to~$32$ and the vectors are explicitly split into varying number of blocks/tables (up to ~$32$).
 Figure~\ref{fig:runtime_analysis}c shows the running times of \sname for various settings.
 As the blocks become smaller, the total running time first decreases before increasing again.
 Looking at the running times for aggregate constraints and non-aggregate constraints  separately reveals that they are affected differently by the block size.
 For aggregate constraints (green line) the running time decreases with the block size, while for non-aggregate constraints (red line) the running time first stays more or less constant but then increases more strongly as the size of the blocks becomes small.
 
-Aggregate constraints, e.g. sum or max, have an argument that takes subblocks of varying sizes.
-Contrary to non aggregate constraints, which only have single vector argument, superblock assignments from phase~1 are not split into single vectors subassignments in phase~2.
-Instead, for an argument with variable size, the system tries to find any subblock of the given superblock that satisfies the constraint.
-Since, for a superblock of size~$m$, the number of subblocks is $O(m^2)$ \samuel{ref?}, the search for aggregate constraints will be faster if there are more but smaller blocks\footnote{Consider, for example, $v$~vectors distributed over $b$~blocks of size $v/b$, the number of subblock candidates then is $O(b * v^2 / b^2) = O(v^2 / b)$}.
+Aggregate constraints, e.g. sum or max, have an argument that allows subblocks of varying sizes while non-aggregates only allow single vector arguments. Hence, for aggregate constraints our method will try to find any subblock in the given superblock that satisfies the constraint.
+Since a superblock of size~$m$ has $m(m+1)/2$ contiguous subblocks, the search for aggregate constraints becomes faster if there are more but smaller blocks\footnote{Consider, for example, $v$~vectors distributed over $b$~blocks of size $v/b$, the number of subblock candidates then is $O(b * v^2 / b^2) = O(v^2 / b)$}.
 
 Non-aggregate constraints have only single vector arguments.
-Therefore, the total number of subassignments generated by the algorithm is not influenced by the block size.
-By splitting a set of vectors into many blocks, however, there will be a larger number of superblocks in phase~1 and, therefore, a larger number of superblock assignments have to be generated.
-Recall that in phase~1 the algorithm additionally tests block level properties for every superblock assignment.
-In the generated spreadsheets these tests can only disqualify few or no superblock assignments, therefore, it will be faster to group the same vectors into larger super blocks, generate fewer superblock assignments to test and split these into single vector subassignments in phase~2.
+%Therefore, the total number of subassignments generated by the algorithm is not influenced by the block size.
+By splitting a set of vectors into many blocks, however, there will be a larger number of superblocks given as input to the first phase. 
+%Recall that in phase~1 the algorithm additionally tests block level properties for every superblock assignment.
+In the generated spreadsheets, the first phase, which looks at properties of superblocks alone, can disqualify few or no superblock assignments, leading to some increase in runtime as more blocks are added.
+%therefore, it will be faster to group the same vectors into larger super blocks, generate fewer superblock assignments to test and split these into single vector subassignments in phase~2.
 
-Splitting unrelated vectors into smaller subblocks can decrease the running time for some spreadsheets by reducing the workload for aggregate constraints.
-However, the two phase approach is also well suited to operate on large blocks and eliminate superblock assignments that are not compatible with constraint template signatures. \samuel{Does this conclusion sound sound?}
+%\tias{I'm cutting this paragraph, in an unsupervised method you do not control the number of blocks and will hence not 'split unrelated vectors'; that would be supervised.}
+%Splitting unrelated vectors into smaller subblocks can decrease the running time for some spreadsheets by reducing the workload for aggregate constraints.
+%However, the two phase approach is also well suited to operate on large blocks and eliminate superblock assignments that are not compatible with constraint template signatures. \samuel{Does this conclusion sound sound?}
 
 % \tias{Point to figure to support this (actually, move that line into 4c??); also, if this is true, you are basically saying that the CP-based first phase is worse then the second phase? That kind-of demotivates the idea of using CP in first phase... What do you really want to share with the reader?}
 
+$ $
 
+\noindent 
+These experiments with generated data have given us a better understanding of what effect the properties of vectors and blocks can have on runtime and hence on the ability of the algorithm to finish within reasonable time. We next investigate the behaviour of our method on real spreadsheets.
+
+\tias{I'm up to this point}
 
 \subsection{Effectiveness on real spreadsheets}
 In order to test our approach on real data we assembled a benchmark of spreadsheets from three sources:
