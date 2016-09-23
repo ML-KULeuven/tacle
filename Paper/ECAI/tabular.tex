@@ -552,7 +552,7 @@ Our proposed methodology contains the following steps:
 \item Generate for each constraint template all valid argument assignments in two steps:
 \begin{enumerate}
 \item For each constraint template~$s$, generate all assignments $(\sbl{1}, \ldots ,\sbl{n})$ where each~$\sbl{i}$ is a superblock and the~$\sbl{i}$ are \textit{compatible} (defined below) with the signature of~$s$. 
-\item For each generated assignment $(\sbl{1}, \ldots ,\sbl{n})$ in 3a), find all valid constraints $s(\ssbl{1}, \ldots, \ssbl{n})$ such that for all $i$ holds $\ssbl{i} \sqsubseteq \sbl{i}$ and the signature and definition of~$s$ are satisfied.
+\item For each assignment $(\sbl{1}, \ldots ,\sbl{n})$ generated in 3a), find all constraints $s(\ssbl{1}, \ldots, \ssbl{n})$ such that for all $i$ holds $\ssbl{i} \sqsubseteq \sbl{i}$ and the signature and definition of~$s$ are satisfied.
 \end{enumerate}
 \end{enumerate}
 
