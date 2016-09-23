@@ -181,7 +181,7 @@ Our goal is to automatically learn the constraints present between rows and/or c
 
 %An example spreadsheet with tables is given in Figure~\ref{fig:main_example}, we will use this as running example throughout the paper.
 
-We first introduce some terminology and the concept of a \template, after which we define the problem and make some additional considerations.
+We first introduce some terminology and the concept of a \template, after which we define the problem and discuss some additional considerations.
 
 \subsection{Terminology}
 Spreadsheets and tabular data may conceptually consist of multiple tables, such as in Figure~\ref{fig:main_example}. Note that a table can contain a header; however, we wish to reason over entire rows and columns of data, and hence we will consider \textbf{headerless tables} only.
@@ -197,7 +197,7 @@ $T_3[1, :]$ is not type-consistent while $T_1[:, 1]$ is.
 
 The most important concept is that of a \textbf{block}. 
 \begin{definition}
-A \textbf{block} has to satisfy three conditions: 1)~it contains only entire rows or entire columns of a single headerless table; 2)~it is contiguous; and 3)~it is type-consistent.
+A \textbf{block} has to satisfy three conditions: 1)~it contains entire rows or entire columns of a single headerless table; 2)~it is contiguous; and 3)~it is type-consistent.
 The rows or columns have to be contiguous in the original table meaning that they must visually form a block in the table; and each of the rows/columns has to be of the same type. 
 If a block contains only rows we say it has \textit{row-orientation}, if only columns, \textit{column-orientation}. 
 \end{definition}
@@ -208,14 +208,14 @@ We will refer to the \textit{vectors} of a block when we wish to refer to its ro
 
 A block has the following properties:
 \begin{itemize}
-\item \textit{type}: a block is type-consistent, so it has one type
-\item \textit{table}: the table that the block belongs to
-\item \textit{orientation}: either row-oriented or column-oriented
-\item \textit{size}: the number of vectors a block contains
-\item \textit{length}: the length of its vectors; as all vectors are from the same table, they always have the same length.
+\item \textit{type}: a block is type-consistent, so it has one type;
+\item \textit{table}: the table that the block belongs to;
+\item \textit{orientation}: either row-oriented or column-oriented;
+\item \textit{size}: the number of vectors a block contains;
+\item \textit{length}: the length of its vectors; as all vectors are from the same table, they always have the same length;
 \item \textit{rows}: the number of rows in the block
-(in row-oriented blocks this is equivalent to the size)
-\item \textit{columns}: the number of columns in the block (in row-oriented blocks this is equivalent to the length)
+(in row-oriented blocks this is equivalent to the size);
+\item \textit{columns}: the number of columns in the block (in row-oriented blocks this is equivalent to the length).
 \end{itemize}
 
 %We call a group $G$ \textit{numeric} (\textit{textual}, etc), written as \textit{numeric(G)}, if all its vectors contain numeric (textual, etc) elements.
@@ -379,8 +379,8 @@ Each argument will have to be instantiated with a block.
 
 \item \textit{\CSignature} defines the requirements that the arguments of the predicate must satisfy.
 This can concern properties of individual blocks as well as relations between properties of arguments, for example that the corresponding blocks must belong to the same table or have equal length.
-In terms of logical and relational learning \cite{luc_book}, the \CSignature is known as the {\em bias} of the learner, it specifies when the arguments of a constraint are well-formed.
-We can capture this bias for a template~$s$ using a predicate $\sigc$.
+In terms of logical and relational learning \cite{luc_book}, the \CSignature is known as the {\em bias} of the learner, it specifies (a conjunction of) the properties that the arguments must have for the constraint to be well-formed.
+We denote this bias for a template~$s$ using the predicate $\sigc$.
 \item \textit{\CFunction} is the actual definition of the constraint that specifies when the constraint holds.
 Given an assignment of blocks to its arguments, it can be used to verify whether the constraint is satisfied or not by the actual data present in the blocks. %holds, in practice this will be a function that can be called when
 %the arguments are full instantiated to decide whether the constraint is satisfied or not.
@@ -395,10 +395,10 @@ A non-trivial example is, for example, the constraint template for the row-based
 \begin{itemize}
   \item \CName: $\ecsumr{\sbl{r}}{\bsbl{x}}$, for arguments $\sbl{r}$ and $\bsbl{x}$.
   
-  \item \CSignature: $\sbl{r}$ has to be a single vector ($\textit{size}=1$) while $\bsbl{x}$ can be a block ($\textit{size}>=1$), which can be derived from the use of a normal or \textbf{bold} font.
+  \item \CSignature: $\sbl{r}$ has to be a single vector ($\textit{size}=1$) while $\bsbl{x}$ can be a block ($\textit{size} \geq 1$), which can be derived from the use of a normal or \textbf{bold} font.
   Both blocks have to be numeric.
   This constraint is orientation-specific, so it requires that the number of rows in $\bsbl{x}$ equals the length of $\sbl{r}$.
-  Moreover, we add to the bias that the number of columns to sum over is at least~$2$.
+  Moreover, the bias specifies that the number of columns to sum over is at least~$2$ (to avoid $\bsbl{x}$ being a single column).
   
   \item \CFunction: each value in the vector $\sbl{r}$ is obtained by summing over the corresponding row in $\bsbl{x}$.
   %For example, $\sbl{r} = [12, 7]$ and $\bsbl{x}$ consists of columns: $[5, 15]$, $[7, -8]$.
@@ -477,7 +477,7 @@ Finally, when the data has rows or columns that contain \textit{exactly} the sam
 
 Dealing with redundancy is often application-dependent.
 Therefore, in Section~\ref{sec:approach} we first explain our generic method for finding all constraints, before describing some optimizations that avoid obvious equivalences (Section~\ref{sec:opts}).
-Later, we will investigate the impact of redundancy in the experiments.
+In the experiments we will investigate the impact of redundancy further.
 
 %More formally, a constraint $c_1(G_1, ... G_n)$ \textit{implies} another constraint~$c_2(G'_1, ..., G'_m)$ whenever
 %the  following statement holds: $$\forall G_i, G'_j : c_1(G_1, ... G_n) \rightarrow c_2(G'_1, ... G'_m).$$
@@ -544,7 +544,7 @@ Our proposed methodology contains the following steps:
 \item Generate for each constraint template all valid argument assignments in two steps:
 \begin{enumerate}
 \item For each constraint template~$s$, generate all assignments $(\sbl{1}, \ldots ,\sbl{n})$ where each~$\sbl{i}$ is a superblock and the~$\sbl{i}$ are \textit{compatible} (defined below) with the signature of~$s$. 
-\item For each generated assignment $(\sbl{1}, \ldots ,\sbl{n})$ in 3a), find all valid constraints $s(\ssbl{1}, \ldots, \ssbl{n})$ such that for all $i$ holds $\ssbl{i} \sqsubseteq \sbl{i}$ and the signature and definition of~$s$ are satisfied.
+\item For each generated assignment $(\sbl{1}, \ldots ,\sbl{n})$, find all valid constraints $s(\ssbl{1}, \ldots, \ssbl{n})$ such that $\ssbl{i} \sqsubseteq \sbl{i}$ holds for all $i$ and the signature and definition of~$s$ are satisfied.
 \end{enumerate}
 \end{enumerate}
 
@@ -556,12 +556,12 @@ Consider table~$T_1$ in Figure~\ref{fig:main_example} and the $\textit{SUM}_{row
 Instead of considering all possible subblocks of $T_1$, we first reason over the properties of the superblocks.
 For example, $\sbl{2}$ and $\sbl{4}$ are not numeric so they can be immediately discarded.
 Superblocks~$\sbl{1}, \sbl{3}$ and $\sbl{5}$ are valid candidates for~$\sbl{r}$, however, since they all have length~4, $\mathbf{\sbl{x}}$ needs at least 4~columns which is only satisfied by $\sbl{3}$.
-So the assignments generated in step 3a would be $(\sbl{1}, \sbl{3}), (\sbl{3}, \sbl{3}), (\sbl{5}, \sbl{3})$.
+So the assignments generated for $\textit{SUM}_{row}$ in step 3a would be $(\sbl{1}, \sbl{3}), (\sbl{3}, \sbl{3}), (\sbl{5}, \sbl{3})$.
 
-In step 3b, we start from an assignment $(\sbl{1}, \ldots, \sbl{n})$ with superblocks $\sbl{i}$, and generate and test all possible (sub)block assignments to arguments using the properties and actual data of the blocks. As we only have to consider the blocks $\ssbl{i} \sqsubseteq \sbl{i}$ contained in each superblock, this is typically much easier. For the above example and $(\sbl{5}, \sbl{3})$, each of the vectors of $\sbl{5}$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks of $\sbl{3}$ for the right-hand side and verify the signature (e.g. at least size $4$) and test whether for each row the definition is satisfied. %In practice, this can be optimized further.
+In step 3b, we start from an assignment $(\sbl{1}, \ldots, \sbl{n})$ with superblocks $\sbl{i}$ and generate and test all possible (sub)block assignments to the arguments, using the properties and actual data of the blocks. As we only have to consider the blocks $\ssbl{i} \sqsubseteq \sbl{i}$ contained in each superblock, this is typically much easier then the previous step. For $\textit{SUM}_{row}$ in the above example and assignment $(\sbl{5}, \sbl{3})$, each of the vectors of $\sbl{5}$ will be considered as candidate for the left-hand side, and one can enumerate all subblocks of $\sbl{3}$ for the right-hand side and verify the signature (e.g. at least size $4$) and test whether for each row the definition is satisfied. %In practice, this can be optimized further.
 
 We now describe in more detail how headerless tables are extracted (step 1, Section~\ref{sec:table_extraction}) and how superblocks are generated from them (step 2, Section~\ref{sec:make_groups}), how the candidate superblock assignments are generated (step~3a, Section~\ref{sec:algo:super}) and how the actual assignments are extracted from that (step~3b, Section~\ref{sec:algo:subgr}).
-In Section~\ref{sec:opts} we describe a number of optimizations designed to improve the algorithm.
+In Section~\ref{sec:opts} we describe a number of optimizations designed to improve the effectiveness algorithm.
 
 
 
