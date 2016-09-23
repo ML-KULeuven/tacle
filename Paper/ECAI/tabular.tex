@@ -957,9 +957,7 @@ We first explain the experimental setup and illustrate it on the example in Figu
 \label{sec:evalualtion:method}
 All spreadsheets used in the experiments are in CSV format, and for each we have ran the table extraction tool once (using a combination of the rather primitive automatic detection + visual verification that the tables are meaningful (e.g. merge split-up tables because of None values, or remove headers of all-textual tables).
 \samuel{Should we not say just with the visual tool?}
- \\ % split of weird sentence
-Blocks are detected automatically using our block detection algorithm (Section~\ref{sec:make_groups}) unless a spreadsheet contains ambiguous \textit{None} values.
-For those ambiguous cases the blocks are specified manually. \samuel{I have yet to make this more precise}
+Blocks are detected automatically using our block detection algorithm (Section~\ref{sec:make_groups}) except for spreadsheets that contain \textit{None} values or (partially) numeric headers, in which case the blocks are specified manually.
 
 % Group definitions are only specified if the spreadsheet contains ambiguous \textit{None} values. \tias{What does this mean, 'group definitons'?? Is this 'block detection' (Sec 4.2), if so, how do we explain this process??} 
 
@@ -998,7 +996,7 @@ We first investigate Q1 on generated spreadsheets, and Q2 and Q3 on a collection
 \begin{figure}[t]
   \centering
   \includegraphics[width=1\linewidth]{figures/scatter_plots.pdf}
-  \caption{Loglog plots of the experiments with synthetic (random) data. In plot~$a$ the number of vectors is increased; in plot~$b$ the size of the vectors is increased; and in plots~$c$ and~$d$ the number of blocks is increased.}
+  \caption{Loglog plots of the experiments with synthetic (random) data. In plot~$a$ the number of vectors is increased; in plot~$b$ the size of the vectors is increased; and in plot~$c$ the number of blocks is increased (the block size is decreased).}
   \label{fig:runtime_analysis}
 \end{figure}
 
@@ -1034,7 +1032,6 @@ In this case, for a constraint template that requires $n$~single vector argument
 Typically, we expect the number of generated subassignments to be much smaller in real world spreadsheets and, therefore, the running time to be less sensitive to the number of vectors.
 This is because in phase~1 entire blocks can be disqualified that do not match the signature requirements, e.g. blocks of vectors with different lengths for the product constraint.
 % \tias{Better move to 4.3.2? or have there too anyway, no new facts in 'experiment' section}\samuel{?}
-\samuel{=> benchmark}
 
 
 % Many constraints take single vector arguments, therefore, the total number of subassignments that are generated in the second phase of the algorithm depends on the number of vectors in the spreadsheet and the arity of the constraint.
@@ -1050,7 +1047,7 @@ This is because in phase~1 entire blocks can be disqualified that do not match t
 To measure the effect that the length of the vectors has on the running time, we ran our system on spreadsheets in which the length of the vectors was gradually increased.
 Figure~\ref{fig:runtime_analysis}b summarizes our results and shows that the length of the vectors has a small impact on the performance for most templates.
 
-As discussed in \samuel{???}, our implementation attempts to detect as fast as possible if a subassignments does not satisfy a constraint template.
+As discussed in Section~\ref{sec:which_cons}, our implementation attempts to detect as fast as possible if a subassignments does not satisfy a constraint template.
 Our experiments satisfy the assumption that the large majority of possible subassignments do not satisfy most constraints.
 Therefore, the results confirm that our implementation is able to severely limit the impact of the length of vectors.
 
@@ -1062,7 +1059,7 @@ To measure the effect of changing the block size, the number of vectors is set t
 Figure~\ref{fig:runtime_analysis}c shows the running times of \sname for various settings.
 As the blocks become smaller, the total running time first decreases before increasing again.
 Looking at the running times for aggregate constraints and non-aggregate constraints  separately reveals that they are affected differently by the block size.
-For aggregate constraints (\samuel{xxx line}) the running time decreases with the block size, while for non-aggregate constraints (\samuel{yyy line}) the running time first stays more or less constant but then increases more strongly as the size of the blocks becomes very small.
+For aggregate constraints (green line) the running time decreases with the block size, while for non-aggregate constraints (red line) the running time first stays more or less constant but then increases more strongly as the size of the blocks becomes small.
 
 Aggregate constraints, e.g. sum or max, have an argument that takes subblocks of varying sizes.
 Contrary to non aggregate constraints, which only have single vector argument, superblock assignments from phase~1 are not split into single vectors subassignments in phase~2.
@@ -1113,7 +1110,7 @@ The average runtime across all spreadsheets is $0.13s$.
 Across categories the average running times fluctuate in the range between $0.08s$ to $0.20s$.
 While most spreadsheets can be processed very quickly, running times can go up to around $0.85s$ for others.
 In the previous section we analyzed the effect of various factors that can help explain runtime behavior.
-Our benchmark experiments show that our algorithm is able to perform well in practice, even for larger spreadsheets∞m.
+Our benchmark experiments show that our algorithm is able to perform well in practice, even for larger spreadsheets.
 
 % Most of the execution time in these cases goes towards searching either aggregate constraints or conditional aggregates.
 % The search for aggregates will be slow on spreadsheets containing larger groups of numeric data.
