@@ -579,7 +579,7 @@ Many spreadsheets contain headers that provide hints at where the table(s) in th
 %   \label{fig:visual_tool}
 % \end{figure}
 
-Instead, we assume tables are specified by means of their coordinates within a spreadsheet and optionally a fixed orientation of each table. The orientation can be used to indicate that a table should be interpreted as having only rows or only columns.
+Instead, our algorithm will assume tables are specified by means of their coordinates within a spreadsheet and optionally a fixed orientation of each table. The orientation can be used to indicate that a table should be interpreted as having only rows or only columns.
 
 We developed two simple prototypes to help with the specification of the tables:
 %This information can be provided manually or generated automatically.
@@ -593,7 +593,7 @@ The sheet is then processed row by row, splitting each row into ranges of non-em
 Headers can be detected, for example, by checking if the first row or column contains only textual values. If a header row (column) is detected, it is removed from the table and the orientation of the table is fixed to columns (rows), otherwise, we assume there is no header and the orientation is not fixed.
 
 \paragraph{Visual}
-The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we propose a second approach which allows users to indicate tables using a visual tool (screenshots are available in the accompanying github repository with meta-data\footnote{\url{https://github.com/SergeyParamonov/TaCLe}\label{github-link}}).
+The above assumptions do not hold for many tables. However, since the specification of tables is usually easy for humans, we employ a second approach which allows users to indicate tables using a visual tool (screenshots are available in the accompanying github repository with meta-data\footnote{\url{https://github.com/SergeyParamonov/TaCLe}\label{github-link}}).
 Users select tables excluding the header and optionally specify an orientation.
 The tool then generates the specification of the tables automatically.
 
@@ -605,7 +605,7 @@ The tool then generates the specification of the tables automatically.
 %A spreadsheet may contain multiple tables, and a table in turn will contain multiple (type-consistent) blocks.
 The goal of the block detection step is to partition tables into maximally type-consistent (all-numeric or all-textual) blocks.
 %We generate blocks automatically, partitioning tables into maximal type-consistent blocks.
-First, we preprocess the spreadsheet data so that currency values and percentual values are transformed into their corresponding numeric (i.e. integer or floating point) representation (e.g. $2.75 \$$ as $2.75$ or $85\%$ as~$0.85$).
+First, we preprocess the spreadsheet data so that currency values and percentual values are transformed into their corresponding numeric (i.e. integer or floating point) representation (e.g. $2.75 \$$ as $2.75$ and $85\%$ as~$0.85$).
 Then, each table is partitioned into maximal type-consistent blocks.
 
 To find row-blocks, each row is treated as a vector and must be type-consistent; similarly for columns and column-blocks. Then, adjacent vectors that are of the same type are merged to obtain the maximally type-consistent superblocks.
@@ -664,14 +664,14 @@ Instead of writing specialized code to generate and test the superblock assignme
 
 A Constraint Satisfaction Problem (CSP) is a triple $(V,D,C)$ where $V$ is a set of \textit{variables}, $D$ the domain of possible values each variable can take and $C$ the set of constraints over $V$ that must be satisfied.
 In our case, we define one variable $V_i$ for each argument of a constraint template.
-Each variable can be assigned each of the maximal blocks in \blocks, so the domain of the variables consists of $|\{\blocks\}|$ block identifiers.
+Each variable can be assigned to one of the superblocks in \blocks, so the domain of the variables consists of $|\blocks|$ block identifiers.
 
 %Finding candidate groups for a \template~$t$ can be seen as a Constraint Satisfaction Problem (CSP) dependent on the \CSignature of~$t$.
 %For every argument in~$t$ we consider all groups~\groups (or all candidates from a more general constraint) and prune these candidate groups using their types and other requirements imposed by the templates \CSignature, such that a group~$G \in \groups$ is selected if there is at least one subgroup~$G' \subseteq G$ that satisfies the \CSignature.
 
-To reason over the blocks, we add to the constraint program a set of background facts that contain the properties of each block, namely its type, table, orientation, size, length and number of rows and columns.
+To reason over the blocks, we add to the constraint program a set of background facts that contain the properties of each superblock, namely its type, table, orientation, size, length and number of rows and columns.
 
-\begin{table}[tbh]
+\begin{table}[t]
   \caption{Translation of signature requirements to superblock constraints. The following need not be relaxed: $\plength(B) = x$, $\por(B) = x$, $\ptable(B) = x$ and $\psize(B) \geq x$.}
   \label{tbl:translation}
   \begin{tabularx}{\linewidth}{lX}
@@ -686,13 +686,13 @@ To reason over the blocks, we add to the constraint program a set of background 
 \end{table}
 
 The actual constraints must enforce that a superblock assignment is \textit{compatible} with the requirements defined in the signature.
-
+%
 Table~\ref{tbl:translation} shows how the conversion from requirements of the signature to CSP constraints works:
 Requirements on the lengths, orientations and tables of blocks can be directly enforced since they are invariant under block containment~($\sqsubseteq$).
 Typing requirements need to be relaxed to check only for base types (numeric and textual).
 Minimum sizes can be directly enforced, but exact size requirements are relaxed to minimum sizes, since blocks with too many vectors contain subblocks of the required (smaller) size.
 Finally, restrictions on the number of rows or columns behave as length or size constraints based on the orientation of the block they are applied to.
-Subgroups of row-oriented (column-oriented) blocks will always have the same number of columns (rows), however, the number of rows (columns) might decrease.
+%Subgroups of row-oriented (column-oriented) blocks will always have the same number of columns (rows), however, the number of rows (columns) might decrease.
 
 The $\generategroups(\textit{s,\blocks})$ method will use these conversion rules to construct a CSP and query a solver for all solutions.
 These solutions correspond to the valid superblock assignments for constraint template~$s$.
@@ -722,8 +722,8 @@ Given a superblock assignment $(\sbl{1}, \dots, \sbl{n})$ from the previous step
 
 %While the previous step reasoned about the \textit{properties} of blocks, in this step we will also reason about the actual \textit{content} of the blocks, that is, the data.
 \begin{example}
-  Consider the sum-over-rows constraint template $\ecsumr{\sbl{r}}{\bsbl{x}}$.
-  An example superblock assignment from Figure~\ref{fig:main_example} is $(\sbl{r}, \bsbl{x}) = (\range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{\rangeto{3}{8}})$.
+  Consider the sum-over-rows template $\ecsumr{\sbl{r}}{\bsbl{x}}$ again;
+  an example superblock assignment from Figure~\ref{fig:main_example} is $(\sbl{r}, \bsbl{x}) = (\range{T_1}{\rangeall}{\rangeto{3}{8}}, \range{T_1}{\rangeall}{\rangeto{3}{8}})$.
   Note that this assignment does not satisfy the signature yet because $\sbl{r}$ contains more than one vector.
   This step aims to generate subassignments $(\sbl{r}' \sqsubseteq \sbl{r}, \mathbf{\sbl{x}}' \sqsubseteq \mathbf{\sbl{x}})$ that do satisfy the signature and test whether they satisfy the definition:
   $\forall i, \sbl{r}[i] = \sum_{j = 1}^{length(\bsbl{x})} \mathit{row}(i, \bsbl{x})[j]$.
@@ -733,7 +733,7 @@ Given a superblock assignment $(\sbl{1}, \dots, \sbl{n})$ from the previous step
 In this step, we could also formulate the problem as a CSP. %However, the search space is much smaller, e.g. $O(nm^2)$ with $n$ the number of arguments of the template and $m$ the size of the largest block.
 However, few CSP solvers support floating point numbers, which are prevalent in spreadsheets.
 Furthermore, in a CSP approach we would have to \textit{ground} out the definition for each of the corresponding elements in the vectors.
-This is inefficient, as already such blocks may not satisfy the signature or the first elements in the data may not satisfy the definition.
+This is inefficient, as such blocks may not even satisfy the signature or just the first element in the data may already not satisfy the definition.
 
 \begin{algorithm}[tbh]
   \begin{algorithmic}
@@ -760,6 +760,7 @@ On the other hand, a simple generate-and-test approach, as illustrated in Algori
 Given a superblock assignment, all disjoint subassignments are generated taking into account the required size, columns or rows.
 For every (disjoint) subassignment the exact signature (e.g. subtypes will not have been checked yet) and definition will be tested and all satisfying subassignments are returned.
 
+\tias{todo me: check that more here}
 
 
 % \begin{verbatim}
