@@ -894,14 +894,14 @@ We also added four structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUT
 
 For \textit{LOOKUP}, aggregates and \textit{PROJECT} we use optimized implementations to find subassignments instead of generic generate-and-test.
 
-Given a superblock assignment, the implementation for \textit{LOOKUP} first generates candidate vectors for \sbl{pk} and \sbl{val}, then generates a datastructure that allows it to quickly look up keys, afterwards it generates candidate vectors for the remaining arguments and, finally, checks which subassignments are valid.
+Given a superblock assignment, the implementation for \eclookup{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}} first generates candidate vectors for \sbl{pk} and \sbl{val}, then populates a hash table that allows it to quickly look up keys, afterwards it generates candidate vectors for the remaining arguments and, finally, checks which subassignments are valid.
 
 For aggregates and project, a custom implementation is used that tries to find maximal subblocks that satisfy the constraint templates.
 Instead of generating all possible subblocks, given a superblock assignment, these implementations start from a superblock and repeatedly generate and test smaller subblocks.
 Therefore, once a match is found, all smaller subblocks do not need to be considered anymore.
 
 Finally, for \textit{FOREIGNKEY} and conditional aggregates, generate-and-test is used, but in combination with caches that store intermediate results and a preparation step to populate some of the caches.
-For example, for conditional aggregates, superblock assignments are analyzed to find overlapping vectors.
+For example, for conditional aggregates, superblock assignments are analyzed to find vectors with overlapping values.
 These results are then cached and used to quickly reject subassignments where there is no overlap between \sbl{pk} and \sbl{fk}.
 
 %tias{Just below this comment I commented out the paragraph that FK,Lookup,proj have optimized methods becuase it does not properly explain what is used instead. That creates confusion and makes our method not reproducible. Leave out until it is rewritten with sufficient information.}
@@ -1058,14 +1058,14 @@ In this case, for a constraint template that requires $n$~single vector argument
 
 Typically, we expect the number of generated subassignments to be much smaller in real world spreadsheets and, therefore, the running time to be less sensitive to the number of vectors.
 This is because in the first phase entire blocks can be disqualified that do not match the signature requirements, e.g. blocks of vectors with different lengths. % for the product constraint.
-% \tias{Better move to 4.3.2? or have there too anyway, no new facts in 'experiment' section}\samuel{?}
+% tias{Better move to 4.3.2? or have there too anyway, no new facts in 'experiment' section}samuel{?}
 
 
 % Many constraints take single vector arguments, therefore, the total number of subassignments that are generated in the second phase of the algorithm depends on the number of vectors in the spreadsheet and the arity of the constraint.
 
-% \tias{unclear, this is about phase 2, the number to test, or the actual testing of each? explain and relate to Sec 4.3.2 what aspect you are discussing here} to be tested depends on the number of vectors in the spreadsheets and the arity of the constraint.
+% tias{unclear, this is about phase 2, the number to test, or the actual testing of each? explain and relate to Sec 4.3.2 what aspect you are discussing here} to be tested depends on the number of vectors in the spreadsheets and the arity of the constraint.
 
-% For a constraint template with arity~$n$ and $v$~vectors there are $n^v$ subassignments (or $\frac{n!}{(n - v)!}$ if the arguments have to be different). \tias{Better move to 4.3.2? or have there too anyway, no new facts in 'experiment' section}
+% For a constraint template with arity~$n$ and $v$~vectors there are $n^v$ subassignments (or $\frac{n!}{(n - v)!}$ if the arguments have to be different). tias{Better move to 4.3.2? or have there too anyway, no new facts in 'experiment' section}
 % As the number of vectors in a spreadsheet increases, the running time will quickly be dominated by constraints with a larger arity.
 % This effect is noticeable in our synthetic experiments when the number of (equally sized) vectors \tias{more details about equal sized: is this a strict requirement for this to happen? I assume this is worst case and does not happen that much in practice? (the next sentences half hint at that, be more explicit)} is increased (Figure~\ref{fig:runtime_analysis}a).
 
@@ -1096,13 +1096,13 @@ Non-aggregate constraints have only single vector arguments.
 By splitting a set of vectors into many blocks, however, there will be a larger number of superblocks given as input to the first phase. 
 %Recall that in phase~1 the algorithm additionally tests block level properties for every superblock assignment.
 In the generated spreadsheets, the first phase, which looks at properties of superblocks alone, can disqualify few or no superblock assignments, leading to some increase in runtime as more blocks are added.
-%therefore, it will be faster to group the same vectors into larger super blocks, generate fewer superblock assignments to test and split these into single vector subassignments in phase~2.
+%therefore, it will be faster to group the same vectors into larger super blocks, generate fewer superblock assignments to test and split these into single vector subassignments in phase~2.\sam{Not sure}
 
-%\tias{I'm cutting this paragraph, in an unsupervised method you do not control the number of blocks and will hence not 'split unrelated vectors'; that would be supervised.}
+%tias{I'm cutting this paragraph, in an unsupervised method you do not control the number of blocks and will hence not 'split unrelated vectors'; that would be supervised.}
 %Splitting unrelated vectors into smaller subblocks can decrease the running time for some spreadsheets by reducing the workload for aggregate constraints.
-%However, the two phase approach is also well suited to operate on large blocks and eliminate superblock assignments that are not compatible with constraint template signatures. \samuel{Does this conclusion sound sound?}
+%However, the two phase approach is also well suited to operate on large blocks and eliminate superblock assignments that are not compatible with constraint template signatures. samuel{Does this conclusion sound sound?}
 
-% \tias{Point to figure to support this (actually, move that line into 4c??); also, if this is true, you are basically saying that the CP-based first phase is worse then the second phase? That kind-of demotivates the idea of using CP in first phase... What do you really want to share with the reader?}
+% tias{Point to figure to support this (actually, move that line into 4c??); also, if this is true, you are basically saying that the CP-based first phase is worse then the second phase? That kind-of demotivates the idea of using CP in first phase... What do you really want to share with the reader?}
 
 $ $
 
@@ -1115,7 +1115,7 @@ In order to test our approach on real data we assembled a benchmark of spreadshe
 1)~spreadsheets from an exercise session for teaching Excel based on~\cite{excel_book}; 2)~spreadsheets from tutorials online; and 3)~publicly available \textit{data} spreadsheets such as real-world crime statistics or financial reports (available at the same repository\footref{github-link}).
 
 Table~\ref{tbl:category_overview} gives an overview of the spreadsheets in the different categories and summarizes the results of our experiments.
-% Notice that for the data category the average number of cells is higher while the number of intended constraints and tables is lower compared to the other categories. \tias{Weird here because purpose unclear, point to this when discussing some result for which this is important}
+% Notice that for the data category the average number of cells is higher while the number of intended constraints and tables is lower compared to the other categories. tias{Weird here because purpose unclear, point to this when discussing some result for which this is important}
 
 {\setlength{\tabcolsep}{0.33em}
 \begin{table}[]
