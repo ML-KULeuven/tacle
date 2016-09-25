@@ -767,9 +767,11 @@ Given a superblock assignment, all disjoint subassignments are generated taking 
 For every (disjoint) subassignment the exact signature (e.g. subtypes will not have been checked yet) and definition will be tested and all satisfying subassignments are returned.
 
 
-Based on the assumptions that most subassignments will not satisfy the definition of the constraint template, the implementation of the definition check is geared to \textit{fail-fast} when possible. Specifically, the entries of every subblock are fetched one by one, and as soon as one does not hold failure is returned. In many cases, the first entry will already not satisfy the definition (e.g. if $\sbl{r}[0] \neq \sbl{1}[0] \times \sbl{2}[0]$ then $\sbl{r} = \sbl{1} \times \sbl{2}$ does not hold).
+Based on the assumptions that most subassignments will not satisfy the definition of the constraint template, the implementation of the definition check is geared to \textit{fail-fast} when possible.
+Specifically, for many constraints the entries of every subblock are fetched one by one, and as soon as one does not hold failure is returned.
+Often, the first entry will already not satisfy the definition (e.g. if $\sbl{r}[0] \neq \sbl{1}[0] \times \sbl{2}[0]$ then $\sbl{r} = \sbl{1} \times \sbl{2}$ does not hold).
 As a result, many subassignments can be discared by looking at just one or a few entries, and considering all subassignments that will be checked, the runtime of the checks will typically not be influenced much by the length of the vectors.
-\tias{Moved the discussion from 4.4.3 to here, where it better fits. Plus, I find the O(1) claim too strong! O() is worst-case time complexity, not average case}
+%tias{Moved the discussion from 4.4.3 to here, where it better fits. Plus, I find the O(1) claim too strong! O() is worst-case time complexity, not average case}
 %the time to check if a subassignment satisfies a constraint definition with a fail-fast implementation requires constant time\footnote{If the number of entries to look at is bounded by a constant, the vector lengths are smaller than the number of subassignments to test ($a$) and the time to test subassignments that satisfy the constraint is $O(a)$, then the time to test a subassignment is amortized $O(1)$} in most cases and does not depend on the length of the vectors.
 
 
@@ -888,10 +890,21 @@ Should the target constraint be $\eccalc{\sbl{r}}{\textit{MAX}(\range{T}{\rangea
 \subsubsection{Constraints} \label{sec:which_cons}
 The 33 constraints that are currently supported in our system are shown in Table~\ref{table:constraints}.
 We included most formulas that we encountered in tutorial spreadsheets including the popular \textit{SUM} and \textit{LOOKUP} constraints\footnote{\href{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}{https://support.office.com/en-us/article/Excel-functions-by-category-5F91F4E9-7B42-46D2-9BD1-63F26A86C0EB}}.
-We also added four structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUTATION}, \textit{ORDER} and \textit{FOREIGNKEY}) so that they can be used in the signature of other constraint templates; they are also popular in constraint satisfaction~\cite{modelseeker}.
+We also added four structural constraints (\textit{ALLDIFFERENT}, \textit{PERMUTATION}, \textit{ORDERED} and \textit{FOREIGNKEY}) so that they can be used in the signature of other constraint templates; they are also popular in constraint satisfaction~\cite{modelseeker}.
 
+For \textit{LOOKUP}, aggregates and \textit{PROJECT} we use optimized implementations to find subassignments instead of generic generate-and-test.
 
-\tias{Just below this comment I commented out the paragraph that FK,Lookup,proj have optimized methods becuase it does not properly explain what is used instead. That creates confusion and makes our method not reproducible. Leave out until it is rewritten with sufficient information.}
+Given a superblock assignment, the implementation for \textit{LOOKUP} first generates candidate vectors for \sbl{pk} and \sbl{val}, then generates a datastructure that allows it to quickly look up keys, afterwards it generates candidate vectors for the remaining arguments and, finally, checks which subassignments are valid.
+
+For aggregates and project, a custom implementation is used that tries to find maximal subblocks that satisfy the constraint templates.
+Instead of generating all possible subblocks, given a superblock assignment, these implementations start from a superblock and repeatedly generate and test smaller subblocks.
+Therefore, once a match is found, all smaller subblocks do not need to be considered anymore.
+
+Finally, for \textit{FOREIGNKEY} and conditional aggregates, generate-and-test is used, but in combination with caches that store intermediate results and a preparation step to populate some of the caches.
+For example, for conditional aggregates, superblock assignments are analyzed to find overlapping vectors.
+These results are then cached and used to quickly reject subassignments where there is no overlap between \sbl{pk} and \sbl{fk}.
+
+%tias{Just below this comment I commented out the paragraph that FK,Lookup,proj have optimized methods becuase it does not properly explain what is used instead. That creates confusion and makes our method not reproducible. Leave out until it is rewritten with sufficient information.}
 %As an optimization, for \textit{FOREIGNKEY}, \textit{LOOKUP}, aggregates and \textit{PROJECT} we use custom methods to find subassignments.
 %Instead of the more generic generate-and-test implementation, we use, for example, caching, maximal range-finding and partial tests. \tias{Really, this is unacceptably vague. I have no clue what you mean with that, meaning that our research is not reproducable and hence not scientific}
 %While conditional aggregates use generate-and-test, they employ similar optimizations in their test method.
@@ -962,15 +975,26 @@ We first explain the experimental setup and illustrate it on the example in Figu
 
 \paragraph{Experimental setup}
 \label{sec:evalualtion:method}
-All spreadsheets used in the experiments are in CSV format, and for each we have ran the table extraction tool once using the visual tool. Manual intervention of the simple automatic detection was needed only in the case of None values (to merge split-up tables cause by the None's) and to remove all-textual headers of all-textual tables.%(using a combination of the rather primitive automatic detection + visual verification that the tables are meaningful (e.g. merge split-up tables because of None values, or remove headers of all-textual tables).
-%\samuel{Should we not say just with the visual tool?} \tias{Rewrote a bit, I like the amount of detail as it provides insight into the limitations}
-Blocks are then detected automatically using the block detection algorithm (Section~\ref{sec:make_groups}). Manual intervention was required for tables that contain \textit{None} values, as well as for (partially) numeric headers. \tias{This does not make sense to me: headers are removed before block detection; should this be part of manual intervention of table extraction tool??}
+All spreadsheets used in the experiments are in CSV format and for each spreadsheet the tables are specified.
+The tables were obtained by running the table extraction tool (Section~\ref{sec:table_extraction}).
+Manual intervention of the simple automatic detection was needed only in the case of \textit{None} values (e.g. to merge split-up tables cause by the \textit{None}'s) and in cases where the headers are ambiguous (e.g. headers containing textual and numeric cells).
+In these cases the tables specifications were generated using our visual tool.
 
-% Group definitions are only specified if the spreadsheet contains ambiguous \textit{None} values. \tias{What does this mean, 'group definitons'?? Is this 'block detection' (Sec 4.2), if so, how do we explain this process??} 
+%(using a combination of the rather primitive automatic detection + visual verification that the tables are meaningful (e.g. merge split-up tables because of None values, or remove headers of all-textual tables).
+%{Should we not say just with the visual tool?} {Rewrote a bit, I like the amount of detail as it provides insight into the limitations}
+Blocks are then detected automatically using the block detection algorithm (Section~\ref{sec:make_groups}).
+Manual intervention was required for tables that contain \textit{None} values (e.g. if the type of empty cells cannot be inferred).
+
+% Group definitions are only specified if the spreadsheet contains ambiguous \textit{None} values. \{What does this mean, 'group definitons'?? Is this 'block detection' (Sec 4.2), if so, how do we explain this process??} 
 
 All spreadsheets also have a set of ground-truth of constraints, we call these the \textbf{intended} constraints, that are expected to be (re-)discovered.
 These were determined by us using either the formulas of the original sheet (if present), or inferring them based on, for example, the header names in the sheet.
-In the following experiments, we focus on spreadsheets specifically and hence only include \textit{functional} constraints, constraints that can be expressed as formulas. We ignoring structural constraints such as \textit{ALLDIFFERENT}, \textit{FOREIGNKEY}, \textit{PERMUTATION} and \textit{ORDERED}. All constraints are stored in their canonical form. 5 spreadsheets contained rows or columns that were entirely identical, and any intended constraint involving one such vector was also added for the equivalent vectors. \samuel{They are usually not copied} \tias{'usually' is not acceptable in a scientific paper. Why would you sometimes do it and sometimes not? Preferably always or never copy, and if not specify when and why exactly you deviate.}
+In the following experiments, we focus on spreadsheets specifically and hence only include \textit{functional} constraints, constraints that can be expressed as formulas.
+Therefore, we ignore the structural constraints \textit{ALLDIFFERENT}, \textit{FOREIGNKEY}, \textit{PERMUTATION} and \textit{ORDERED}.
+All constraints are stored in their canonical form.
+5 spreadsheets contained rows or columns that were entirely identical in which case results can be computed in multiple ways and there are multiple valid constraints.
+Therefore, the original formulas or the headers and positioning of the cells is used to infer the intended constraint.
+%and any intended constraint involving one such vector was also added for the equivalent vectors. \{They are usually not copied} \{'usually' is not acceptable in a scientific paper. Why would you sometimes do it and sometimes not? Preferably always or never copy, and if not specify when and why exactly you deviate.}
 
 Section~\ref{sec:which_cons} discusses the 33 constraints currently supported by \sname. Some of the intended constraints are currently outside of the scope of \sname however, more specifically nested mathematical or nested logical formulas. We denote by \textbf{supported} constraints the subset of intended constraints that the system can find in theory.
 
@@ -991,11 +1015,11 @@ Hence, for this example we achieve a recall of 100\% (all intended constraints a
 
 We now investigate three main questions that influence the quality of the solutions found by a constraint learning method:
 \begin{itemize}
-\item Q1: it may fail to find intended constraints if it takes too much time to find them; what are the factors that influence the runtime of the method most?
-\item Q2: it may fail to find intended constraints because it does not support such constraints; how does or method perform on real spreadsheets?
-\item Q3: it may find non-intended constraints; how many and what type of non-intended constraints are found on real spreadsheets?
+\item \textit{Q1}: it may fail to find intended constraints if it takes too much time to find them; what are the factors that influence the runtime of the method most?
+\item \textit{Q2}: it may fail to find intended constraints because it does not support such constraints; how does or method perform on real spreadsheets?
+\item \textit{Q3}: it may find non-intended constraints; how many and what type of non-intended constraints are found on real spreadsheets?
 \end{itemize}
-We first investigate Q1 on generated spreadsheets, and Q2 and Q3 on a collection of real spreadsheets.
+We first investigate \textit{Q1} on generated spreadsheets and investigate \textit{Q1}, \textit{Q2} and \textit{Q3} on a collection of real spreadsheets.
 
 
 \subsection{Effectiveness on generated data}
@@ -1107,7 +1131,7 @@ Table~\ref{tbl:category_overview} gives an overview of the spreadsheets in the d
 \textbf{Recall} & 0.88 & 0.85 & 0.88 & 0.87 & 1.00 & 1.00 \\ \hline
 \textbf{\begin{tabular}[c]{@{}l@{}}Recall\\[-4.5pt] Supported\end{tabular}} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\ \hline
 \textbf{Precision} & 0.94 & 0.96 & 0.70 & 0.91 & 1.00 & 1.00 \\ \hline
-\textbf{Runtime (s)} & 0.93 & 0.10 & 0.93 & 0.04 & 0.79 & 0.20
+\textbf{Runtime (s)} & 0.91 & 0.10 & 0.87 & 0.04 & 0.79 & 0.20
 \end{tabular}
 \end{table}}
 
@@ -1115,9 +1139,9 @@ Table~\ref{tbl:category_overview} gives an overview of the spreadsheets in the d
 Our first questions, Q1, is about the inability to find intended constraints due to excessive runtime. As Table~\ref{tbl:category_overview} (last row) shows, the runtime of our method on these spreadsheets is always fast.  
 The average runtime across all spreadsheets is $0.08s$.
 Across categories the average running times fluctuate in the range between $0.04s$ to $0.20s$.
-While most spreadsheets can be processed very quickly, running times can go up to around $0.65s$ for others.
-In the previous section we analyzed the effect of various factors that can help explain runtime behavior. \tias{Add something like 'on data generated to trigger many checks (equal sizes and lengths of many vectors)?? You choose}
-Our benchmark experiments show that our algorithm is able to perform well in practice, even for larger spreadsheets.
+While most spreadsheets can be processed very quickly, running times can go up to around $0.61s$ for others.
+In the previous section we analyzed the effect of various factors that can help explain runtime behavior on data generated to allow many candidate subassignments (e.g. using only vectors of the same type and length).
+Our benchmark experiments show that our algorithm is able to perform well on real spreadsheets, even for larger numbers of vectors.
 
 % Most of the execution time in these cases goes towards searching either aggregate constraints or conditional aggregates.
 % The search for aggregates will be slow on spreadsheets containing larger groups of numeric data.
@@ -1135,7 +1159,7 @@ Our method uses dependencies to increase efficiency by finding constraints incre
 The total running times per category increase by 74\% (exercises), 84\% (tutorials) and~13\% (data).
 This shows that the use of dependencies can have a strong effect on running times by sharing the computation and pruning done for one constraint with another.
  % (0.83 + 1.03 + 0.99) = 2.85 / (1.34 + 1.46 + 0.46) = 3.3  / (0.99 + 0.98 + 0.44) = 2.41
-\tias{Very nice!!!}
+%tias{Very nice!!!}
 
 \begin{figure}[t]
   \centering
@@ -1151,13 +1175,13 @@ This shows that the use of dependencies can have a strong effect on running time
 The overall recall achieved by our system, \sname, is~$0.88~(81/92)$.
 When looking at the recall per category, \sname is able to consistently obtain high values for both overall and average recall, as shown in Table~\ref{tbl:category_overview}.
 The intended constraints not discovered correspond to constraints that are not supported by the system (supported recall is 1).
-Therefore, \sname is able to find all constraints for supported constraint templates, which confirms that our bias (signature) is not too restrictive. \tias{'confirms'? We never write anywhere that we doubt this (and if we did I probably removed it : ///) Alternative could be something like "shows that our method is able to learn all constraints using the bias chosen (the formalism of signature and definition)"?}
+Therefore, \sname is able to find all constraints for supported constraint templates, which shows that our method is able to learn all constraints using the bias chosen (the formalism of signature and definition). %tias{'confirms'? We never write anywhere that we doubt this (and if we did I probably removed it : ///) Alternative could be something like "shows that our method is able to learn all constraints using the bias chosen (the formalism of signature and definition)"?}
 
 % The intended constraints not discovered correspond to constraints that are not supported by the system (supported recall is 0.99), except for one intended \textit{SUMIF} constraint.
 % The supported recall value mostly confirms that our bias (signature) is not too restrictive and is able to find constraints for supported constraint templates.
 % By changing the signature of \textit{SUMIF} to allow \sbl{pk}
 
-The intended constraints that are not discovered correspond with nested constraints (e.g. $R = \frac{W}{(L/100)^2}$), variants of supported constraints (e.g. series that do not start at 1) or more complex versions of supported constraints (e.g. conditional aggregates that automatically infer the condition). \tias{if you can clarify the latter, please do; if too difficult OK but 'automatically infer' sounds.. unusual for Excel}
+The intended constraints that are not discovered correspond with nested constraints (e.g. $R = \frac{W}{(L/100)^2}$), variants of supported constraints (e.g. series that do not start at 1) or more complex versions of supported constraints (e.g. conditional aggregates whose conditions are constant values). %tias{if you can clarify the latter, please do; if too difficult OK but 'automatically infer' sounds.. unusual for Excel}
 
 \paragraph{Q3: Precision}
 %\item Q3: it may find non-intended constraints; how many and what type of non-intended constraints are found on real spreadsheets?
@@ -1166,9 +1190,12 @@ Across all spreadsheets \sname achieves a precision of~$0.79~(81/103)$.
 While the average precision per spreadsheet is high, over $0.90$ in every category, we observe that the overall precision is much higher for the exercises and data categories ($0.94$ and $1.00$) than for the tutorials category ($0.70$).
 
 Examining the tutorial spreadsheets confirms that there are a few spreadsheets that have a high number of additional constraints, e.g. one spreadsheet computes aggregates on inventory data, but copies the data column for every aggregate.
-Since every aggregate can be calculated based on any of the (equal) columns, many of the resulting constraints will be marked as unintended. \tias{rewrite 'many of the..' into 'our method will find all of these; only one in 'true' set, others drive down precision...'}
+Since every aggregate can be calculated based on any of the (equal) columns, our method will find all of these constraints.
+However, for every aggregate only one constraint is \textit{intended}, the others will be considered as redundant and decrease the precision.
 
-Such unintended constraints are the result of multiple ways to calculate the same result, e.g. if there is duplicate data.
+%many of the resulting constraints will be marked as unintended. tias{rewrite 'many of the..' into 'our method will find all of these; only one in 'true' set, others drive down precision...'}
+
+Such redundant or unintended constraints are the result of multiple ways to calculate the same result, e.g. if there is duplicate data as in the example above.
 One way to increase precision for this case is to post-process the constraints to detect equivalences and implications, and heuristically select one among multiple ways to compute the same vector.
 
 
@@ -1230,7 +1257,8 @@ The \textit{SUMIF} constraints have enough input to fill the incomplete vectors 
 We consider two cases of error detection.
 The first setting is the \textit{online} detection of errors and is similar to the autocompletion setting.
 Using snapshots, one can learn the constraints in the previous snapshot and search for \textit{conflict} constraints, which do not agree with newly added data~$\Delta D$.
-Such conflicts can indicate (typing) errors in the data just entered. For example, in case 'Wes' instead of 'West' was added in Figure~\ref{fig:autocompletion_example}.
+Such conflicts can indicate (typing) errors in the data just entered. For example, in case $1572$ was added in Figure~\ref{fig:autocompletion_example} for \textit{Units per region} in the newly added row (\textit{West}).
+
 %Conflict constraints can indicate errors in the input.
 %However, such conflicts can be wrongly caused by spurious constraints.
 %Hence, conflicts should perhaps only be detected if the snapshot data is large enough.
@@ -1241,7 +1269,10 @@ The second setting is \textit{offline} error detection in a static spreadsheet.
 % Our system is able to detect the second sum constraint, however, a missing value prevents the first sum constraint from being learned.
 % A possible approach to detect such missing or wrong values is to look at a sample of the table, e.g. trying to leave out each row, and compare the constraints learned on this sample with the constraints learned on the whole table.
   %The sample needs to be large enough such that we have enough confidence that the constraints are correct. For example, in Figure \ref{fig:fbi} all but one row satisfy the constraint, which is a strong indication that there is a constraint violation.
-Instead of snapshots, one can repeatedly search for conflict constraints between the original spreadsheet and a sheet with a row or column removed. Many schemes can be devised for choosing which row(s) or column(s) are removed. \tias{Expand 'one can repeatedly search' into the actual steps: take spreadsheet, remove row/column, detect constraints and then search for any constraints not present in the full data (can easily be optimized to avoid known constraints btw)}
+Instead of snapshots, one can repeatedly remove one or multiple rows or columns from the spreadsheet, detect constraints ($S$) that hold in the modified data and search for constraints in~$S$ that do not hold on the original spreadsheet (conflict constraints).
+Many schemes can be devised for choosing which row(s) or column(s) are removed.
+
+% between the original spreadsheet and a sheet with a row or column removed. Many schemes can be devised for choosing which row(s) or column(s) are removed. tias{Expand 'one can repeatedly search' into the actual steps: take spreadsheet, remove row/column, detect constraints and then search for any constraints not present in the full data (can easily be optimized to avoid known constraints btw)}
 %This task can be formulated as online error detection by repeatedly partitioning the spreadsheet into a snapshot~$D_i$ and ``input'' $\Delta D_i$ (e.g. leave out each row and consider it as $\Delta D_i$) to detect conflicts.
 
 %Of course, generating large enough samples and rows (columns) to be added can be done in multiple ways.
@@ -1254,7 +1285,7 @@ Instead of snapshots, one can repeatedly search for conflict constraints between
 Our goal is to automatically identify constraints in a spreadsheet.
 We have presented and evaluated our approach, implemented as the system \sname, that is able to learn many different constraints in tabular data.
 The resulting method has high recall, produces a limited number of redundant constraints and is sufficiently efficient for normal and interactive use.
-\tias{Smth about extendible: more constraints can be added by specifying signature in terms of properties and implementing the subblock finding (or in less detail, can be added, e.g. all native Excel constraints... should this be true)}
+Our approach also allows new constraint templates to be easily added by specifying their signature in terms of properties and providing an implementation that finds subassignments satisfying the definition.
 
 The approach is designed to find constraints that hold over entire columns and rows. In future work we plan to extend this to learn arbitrary nested constraints (e.g. $\sbl{r} = (\sbl{1} + \sbl{2}) / \sbl{3}$), as well as constraints over only a subset of the vectors. This may give rise to more redundant and spurious constraints, which was not problematic up to this point.
 
