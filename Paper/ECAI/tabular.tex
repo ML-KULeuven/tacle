@@ -509,8 +509,8 @@ In the experiments we will investigate the impact of redundancy further.
 %that a look-up constraint implies a foreign-key constraint. In the look-up constraint $\eclookup{G'_2}{G'_1}{H'_1}{H'_2}$ the values in the vector $G'_2$ are determined by looking up the corresponding value in vector $G'_1$ in vector $H'_1$ and returning the corresponding value in vector $H'_2$. In Figure~\ref{fig:main_example} we have $\eclookup{\range{T_{4}}{\rangeall}{3}}{\range{T_{4}}{\rangeall}{2}}{\range{T_{1}}{\rangeall}{1}}{\range{T_{1}}{\rangeall}{2}}$. This implies a foreign-key constraint $\ecfkey{G'_1}{H'_1}$ where each of the values in vector $G'_1$ must appear in $H'_1$ for the look-up to work.
 
 
-%\tias{I am not defining a new problem for 'most specific canonical tabular constraint learning' because we loosely showed how implications and equivalences would be expressed, but not how to express canonicity and we did not claim that most specific is always best.}
-%\tias{Note also that our method finds ALL constraints; it uses specificity to faster traverse the search space, but the resulting set of constraints found would be the same, whether or not using the specificity (see 4.2.1).}
+%tias{I am not defining a new problem for 'most specific canonical tabular constraint learning' because we loosely showed how implications and equivalences would be expressed, but not how to express canonicity and we did not claim that most specific is always best.}
+%tias{Note also that our method finds ALL constraints; it uses specificity to faster traverse the search space, but the resulting set of constraints found would be the same, whether or not using the specificity (see 4.2.1).}
 
 %Let us introduce the version of tabular constraint learning by modifying Definition \ref{def:problem_statement} that takes into account the specificity relation between constraint templates.
 %
@@ -798,18 +798,18 @@ As a result, many subassignments can be discarded by looking at just one or a fe
 %   return all
 % \end{verbatim}
 
- %$G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. \samuel{\tias{How are they stopped in the code? should be part of the pseud-code because not part of $Test(X)$?} will make it part of pseudo-code}
+ %$G_1 = +(G_2, G_3) \leftrightarrow G_1 = +(G_3, G_2)$. samuel{tias{How are they stopped in the code? should be part of the pseud-code because not part of $Test(X)$?} will make it part of pseudo-code}
 
 % \paragraph{Example 2, not used (should be replaced by pseudo-code above?)}
 % Sum Product
 
 % Implementation: finds subgroups based on assignments\\
 % Method $Test(G_R, G_{O_1}, G_{O_2})$\\
-% $If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$\tias{ill-defined, $G_{O_1}$ is a group and $<$ not defined on it (on vector identifiers rather than content?)}\\
-% $If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$ \tias{does not show that reasons over content of vectors}
+% $If \lnot G_{O_1} < G_{O_2}: Reject~\#~Canonicity$tias{ill-defined, $G_{O_1}$ is a group and $<$ not defined on it (on vector identifiers rather than content?)}\\
+% $If data(G_R) = data(G_{O_1}) \bullet data(G_{O_2}): Accept$ tias{does not show that reasons over content of vectors}
 % \\\\
 % Method $FindSubgroups(Assignments)$\\
-% $Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$ \tias{does not enforce size of subgroups (e.g. vectors)?}
+% $Return \{ (G_R', G_{O_1}', G_{O_2}') | \exists (G_R, G_{O_1}, G_{O_2}) \in Assignments \land G_R' \subseteq G_R \land G_{O_1}' \subseteq G_{O_1} \land G_{O_2}' \subseteq G_{O_2} \land Test(G_R', G_{O_1}', G_{O_2}') \}$ tias{does not enforce size of subgroups (e.g. vectors)?}
 
 
 
@@ -854,7 +854,7 @@ The procedure to generate CSPs remains the same otherwise.
 
 
 %\subsubsection{Constraint solvers}
-%\samuel{Tias, Sergey, have a look at his section, I'm torn about rewriting it, feeling it should either be reduced or expanded, especially the second part.}
+%samuel{Tias, Sergey, have a look at his section, I'm torn about rewriting it, feeling it should either be reduced or expanded, especially the second part.}
 %Generic constraint solving technology can be used for the candidate group generation as well as for enumerating the satisfying subgroups.
 %Constraint solvers can be categorized as being stand-alone solvers, meaning that they have a text-based modeling language in which the CSP must be formulated, and \textit{embedded}, meaning that they have a programmatic API to formulate the CSP.
 %
@@ -896,7 +896,7 @@ For \textit{LOOKUP}, aggregates and \textit{PROJECT} we use optimized implementa
 
 Given a superblock assignment, the implementation for \eclookup{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}} first generates candidate vectors for \sbl{pk} and \sbl{val}, then populates a hash table that allows it to quickly look up keys, afterwards it generates candidate vectors for the remaining arguments and, finally, checks which subassignments are valid.
 
-For aggregates and project, a custom implementation is used that tries to find maximal subblocks that satisfy the constraint templates.
+For aggregates (e.g. \textit{SUM}) and \textit{PROJECT}, a custom implementation is used that tries to find maximal subblocks that satisfy the constraint templates.
 Instead of generating all possible subblocks, given a superblock assignment, these implementations start from a superblock and repeatedly generate and test smaller subblocks.
 Therefore, once a match is found, all smaller subblocks do not need to be considered anymore.
 
@@ -906,15 +906,15 @@ These results are then cached and used to quickly reject subassignments where th
 
 %tias{Just below this comment I commented out the paragraph that FK,Lookup,proj have optimized methods becuase it does not properly explain what is used instead. That creates confusion and makes our method not reproducible. Leave out until it is rewritten with sufficient information.}
 %As an optimization, for \textit{FOREIGNKEY}, \textit{LOOKUP}, aggregates and \textit{PROJECT} we use custom methods to find subassignments.
-%Instead of the more generic generate-and-test implementation, we use, for example, caching, maximal range-finding and partial tests. \tias{Really, this is unacceptably vague. I have no clue what you mean with that, meaning that our research is not reproducable and hence not scientific}
+%Instead of the more generic generate-and-test implementation, we use, for example, caching, maximal range-finding and partial tests. tias{Really, this is unacceptably vague. I have no clue what you mean with that, meaning that our research is not reproducable and hence not scientific}
 %While conditional aggregates use generate-and-test, they employ similar optimizations in their test method.
 
 
-%\paragraph{Theoretical analysis of runtime, this does not belong in experiments}\tias{move to technical section}\sam{Has to be moved yet to 'Constraints' section, explaining fail-fast}
+%\paragraph{Theoretical analysis of runtime, this does not belong in experiments}tias{move to technical section}sam{Has to be moved yet to 'Constraints' section, explaining fail-fast}
 %For most constraint templates the time required to check whether a subassignment satisfies the template is linear in the size of the subassignment (the number of subblocks and their size).
 %For a constraint with arity~$n$, and a subassignment consisting of $n$~blocks with $m$~vectors of length~$k$, the worst case complexity becomes $O(n * m * k)$.
 %However, in practice, most subassignments will not satisfy the constraint template.
-%Since our implementation tries to account for this by failing fast\tias{explain more precisely what you mean with 'failing fast'}, the amortized time is constant in the length of the vectors~$k$, unless $k$~is very large\footnote{Specifically, if $k$ is much larger than the number of candidate subassignments} or many constraints hold in the data.
+%Since our implementation tries to account for this by failing fasttias{explain more precisely what you mean with 'failing fast'}, the amortized time is constant in the length of the vectors~$k$, unless $k$~is very large\footnote{Specifically, if $k$ is much larger than the number of candidate subassignments} or many constraints hold in the data.
 %For templates requiring their arguments to be single vectors $m$~is~$1$, and the total complexity for checking a subassignment becomes~$O(n) \simeq O(1)$ (since $n$ is typically small).
 
 
@@ -922,9 +922,9 @@ These results are then cached and used to quickly reject subassignments where th
 %Their dependencies are reflected in their \CSignature and shown in Figure~\ref{fig:learning_order}.
 %These constraints have been selected based on the most-used Excel functions as well as their occurrence in various example spreadsheets we observed.
 
-%Note that \samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display - diff not present - pruning relation?}
+%Note that samuel{Motivate why product, not sum (=diff) you only need one, hardcoded preference for display - diff not present - pruning relation?}
 
-% Extending the system with a new constraint template amounts to \tias{TODO: samuel, explain how to define syntax; signature-for-groupgen; signature-for-def; definition}
+% Extending the system with a new constraint template amounts to tias{TODO: samuel, explain how to define syntax; signature-for-groupgen; signature-for-def; definition}
 
 
 % \begin{equation}
@@ -958,7 +958,7 @@ These results are then cached and used to quickly reject subassignments where th
 %   \item Algorithm (select constraints, find assignments, find solutions)
 % \end{itemize}
 
-% \samuel{Move next to subgroup satisfaction search}
+% samuel{Move next to subgroup satisfaction search}
 % \section{Declarative modeling}
 
 \newcommand{\runtotal}{16.12}
@@ -1067,7 +1067,7 @@ This is because in the first phase entire blocks can be disqualified that do not
 
 % For a constraint template with arity~$n$ and $v$~vectors there are $n^v$ subassignments (or $\frac{n!}{(n - v)!}$ if the arguments have to be different). tias{Better move to 4.3.2? or have there too anyway, no new facts in 'experiment' section}
 % As the number of vectors in a spreadsheet increases, the running time will quickly be dominated by constraints with a larger arity.
-% This effect is noticeable in our synthetic experiments when the number of (equally sized) vectors \tias{more details about equal sized: is this a strict requirement for this to happen? I assume this is worst case and does not happen that much in practice? (the next sentences half hint at that, be more explicit)} is increased (Figure~\ref{fig:runtime_analysis}a).
+% This effect is noticeable in our synthetic experiments when the number of (equally sized) vectors tias{more details about equal sized: is this a strict requirement for this to happen? I assume this is worst case and does not happen that much in practice? (the next sentences half hint at that, be more explicit)} is increased (Figure~\ref{fig:runtime_analysis}a).
 
 \paragraph{Effect of length of vectors}
 %The benchmark experiments show that the number of cells in a spreadsheet has a very limited impact on the running time.
@@ -1096,7 +1096,7 @@ Non-aggregate constraints have only single vector arguments.
 By splitting a set of vectors into many blocks, however, there will be a larger number of superblocks given as input to the first phase. 
 %Recall that in phase~1 the algorithm additionally tests block level properties for every superblock assignment.
 In the generated spreadsheets, the first phase, which looks at properties of superblocks alone, can disqualify few or no superblock assignments, leading to some increase in runtime as more blocks are added.
-%therefore, it will be faster to group the same vectors into larger super blocks, generate fewer superblock assignments to test and split these into single vector subassignments in phase~2.\sam{Not sure}
+%therefore, it will be faster to group the same vectors into larger super blocks, generate fewer superblock assignments to test and split these into single vector subassignments in phase~2.
 
 %tias{I'm cutting this paragraph, in an unsupervised method you do not control the number of blocks and will hence not 'split unrelated vectors'; that would be supervised.}
 %Splitting unrelated vectors into smaller subblocks can decrease the running time for some spreadsheets by reducing the workload for aggregate constraints.
