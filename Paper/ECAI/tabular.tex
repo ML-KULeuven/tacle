@@ -9,7 +9,7 @@
 % see http://www.acm.org/binaries/content/assets/publications/article-templates/sig-alternate-sample.tex
 
 \author{Samuel Kolb* \and Sergey Paramonov* \and Tias Guns \and Luc De Raedt}
-\institute{KULeuven\\ {*} Shared first author}
+\institute{KU Leuven\\ {*} Shared first author}
 
 \maketitle
 
@@ -770,7 +770,7 @@ For every (disjoint) subassignment the exact signature (e.g. subtypes will not h
 Based on the assumptions that most subassignments will not satisfy the definition of the constraint template, the implementation of the definition check is geared to \textit{fail-fast} when possible.
 Specifically, for many constraints the entries of every subblock are fetched one by one, and as soon as one does not hold failure is returned.
 Often, the first entry will already not satisfy the definition (e.g. if $\sbl{r}[0] \neq \sbl{1}[0] \times \sbl{2}[0]$ then $\sbl{r} = \sbl{1} \times \sbl{2}$ does not hold).
-As a result, many subassignments can be discared by looking at just one or a few entries, and considering all subassignments that will be checked, the runtime of the checks will typically not be influenced much by the length of the vectors.
+As a result, many subassignments can be discarded by looking at just one or a few entries, and considering all subassignments that will be checked, the runtime of the checks will typically not be influenced much by the length of the vectors.
 %tias{Moved the discussion from 4.4.3 to here, where it better fits. Plus, I find the O(1) claim too strong! O() is worst-case time complexity, not average case}
 %the time to check if a subassignment satisfies a constraint definition with a fail-fast implementation requires constant time\footnote{If the number of entries to look at is bounded by a constant, the vector lengths are smaller than the number of subassignments to test ($a$) and the time to test subassignments that satisfy the constraint is $O(a)$, then the time to test a subassignment is amortized $O(1)$} in most cases and does not depend on the length of the vectors.
 
@@ -1050,7 +1050,7 @@ Unless otherwise mentioned, the adaptable table consists of one block of $8$ vec
 %Recall that our method uses a 2-phase approach where in the first phase, the superblock assignments are generated (Section~\ref{sec:algo:super} and in the second phase, the subblock assignments are generated (Section~\ref{sec:algo:subgr}).
 
 \paragraph{Effect of number of vectors}
-Figure~\ref{fig:runtime_analysis}a shows the results of our experiments, in which \sname was run on generated spreadsheets containing an increasing number of (equally sized) vectors.
+Figure~\ref{fig:runtime_analysis} (a) shows the results of our experiments, in which \sname was run on generated spreadsheets containing an increasing number of (equally sized) vectors.
 As shown in the figure, the number of vectors in a spreadsheet can have a significant impact on the running time.
 
 This behavior is to be expected when few superblock assignments can be discarded in the first phase, for example, when all vectors have the same type and size as we artificially enforced in this experiment.
@@ -1072,7 +1072,7 @@ This is because in the first phase entire blocks can be disqualified that do not
 \paragraph{Effect of length of vectors}
 %The benchmark experiments show that the number of cells in a spreadsheet has a very limited impact on the running time.
 To measure the effect that the length of the vectors has on the running time, we ran our system on spreadsheets in which the length of the vectors was gradually increased.
-Figure~\ref{fig:runtime_analysis}b summarizes our results and shows that the length of the vectors has a small impact on the performance for most templates.
+Figure~\ref{fig:runtime_analysis} (b) summarizes our results and shows that the length of the vectors has a small impact on the performance for most templates.
 
 As discussed in Section~\ref{sec:which_cons}, our implementation attempts to detect as fast as possible if a subassignments does not satisfy a constraint template.
 Our experiments satisfy the assumption that the large majority of possible subassignments do not satisfy most constraints.
@@ -1083,7 +1083,7 @@ The implementation is often not able to quickly detect that subassignments do no
 
 \paragraph{Effect of block size}
 To measure the effect of changing the block size, the number of vectors is set to~$32$ and the vectors are explicitly split into varying number of blocks/tables (up to ~$32$).
-Figure~\ref{fig:runtime_analysis}c shows the running times of \sname for various settings.
+Figure~\ref{fig:runtime_analysis} (c) shows the running times of \sname for various settings.
 As the blocks become smaller, the total running time first decreases before increasing again.
 Looking at the running times for aggregate constraints and non-aggregate constraints  separately reveals that they are affected differently by the block size.
 For aggregate constraints (green line) the running time decreases with the block size, while for non-aggregate constraints (red line) the running time first stays more or less constant but then increases more strongly as the size of the blocks becomes small.
