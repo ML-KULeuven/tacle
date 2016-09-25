@@ -896,7 +896,7 @@ For \textit{LOOKUP}, aggregates and \textit{PROJECT} we use optimized implementa
 
 Given a superblock assignment, the implementation for \eclookup{\sbl{r}}{\sbl{fk}}{\sbl{pk}}{\sbl{val}} first generates candidate vectors for \sbl{pk} and \sbl{val}, then populates a hash table that allows it to quickly look up keys, afterwards it generates candidate vectors for the remaining arguments and, finally, checks which subassignments are valid.
 
-For aggregates and project, a custom implementation is used that tries to find maximal subblocks that satisfy the constraint templates.
+For aggregates (e.g. \textit{SUM}) and \textit{PROJECT}, a custom implementation is used that tries to find maximal subblocks that satisfy the constraint templates.
 Instead of generating all possible subblocks, given a superblock assignment, these implementations start from a superblock and repeatedly generate and test smaller subblocks.
 Therefore, once a match is found, all smaller subblocks do not need to be considered anymore.
 
