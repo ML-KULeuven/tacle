@@ -21,6 +21,7 @@
 \title{MLJ Revision Letter:\\ learning constraints in spreadsheets and tabular data}
 \begin{document}
 \maketitle
+\section{Key issues}
 
 \paragraph{Competitor algorithms and related work:} \textit{The reviewers point out that you should compare with other methods. One reviewer stresses that Microsoft Excel provides functionality that alleviates part of the problem you address. Another reviewer suggests that you compare to a baseline that considers all constraints. You must compare to algorithms that solve the same problem (at least part of it).}
 
@@ -35,6 +36,15 @@ We have elaborated the differences between TaCLe and FlashFill in the related wo
 
 
 Also, we have compared TaCLe with a baseline: one where the graph dependency is disabled and another where we disabled Step 1 (candidate generation based on properties) and graph dependency. \sergey{Samuel, Tias -- can you expand and correct this one?}
+
+\section{Detailed comments}
+
+\paragraph{Sensitivity to the noise}
+
+\paragraph{How the data was obtained and its detailed overview}
+We have extended the description of the gathered collection of spreadsheets in the paper (Section 5.3), also we provided an extensive technical description of the dataset in the corresponding github repository: \url{https://github.com/sergeyparamonov/tacle}.
+\sergey{Samuel, can you make a detailed overview of the dataset in github https://github.com/sergeyparamonov/tacle}?
+
 
 
 \end{document}
