@@ -3,6 +3,7 @@ from typing import List, Dict, Set
 import itertools
 from constraint import Problem
 from core.group import Group, Orientation
+from core.solutions import Solutions
 from parse.parser import GType
 
 
@@ -46,9 +47,9 @@ class Source:
         return self._variables
 
     def candidates(self, groups, solutions, filters):
-        return self._complete([{}], groups, filters)
+        return self._complete([{}], groups, filters, solutions)
 
-    def _complete(self, assignments, groups, filters):
+    def _complete(self, assignments, groups, filters, solutions):
         result = []
 
         # TODO type as constraint
@@ -67,17 +68,17 @@ class Source:
                 variables = list([v.name for v in f.variables])
 
                 def c_j(ff, vv):
-                    return lambda *args: ff.test({vv[i]: args[i] for i in range(len(args))})
+                    return lambda *args: ff.test({vv[i]: args[i] for i in range(len(args))}, solutions)
 
                 problem.addConstraint(c_j(f, variables), variables)
 
             return True, list(problem.getSolutions())
 
         for assignment in assignments:
-            resume, solutions = try_assignment()
+            resume, candidate_solutions = try_assignment()
             if not resume:
                 return []
-            result += solutions
+            result += candidate_solutions
         return result
 
     def depends_on(self) -> Set:
@@ -96,7 +97,7 @@ class ConstraintSource(Source):
 
     def candidates(self, groups, solutions, filters):
         assignments = [{self.dictionary[k]: v for k, v in s.items()} for s in solutions.get_solutions(self.constraint)]
-        return self._complete(assignments, groups, filters)
+        return self._complete(assignments, groups, filters, solutions)
 
     def depends_on(self):
         return {self.constraint}
@@ -110,7 +111,7 @@ class Filter:
     def variables(self):
         return self._variables
 
-    def test(self, assignment: Dict[str, Group]):
+    def test(self, assignment: Dict[str, Group], solutions):
         raise NotImplementedError()
 
     def test_same(self, assignment, f):
@@ -127,8 +128,8 @@ class Not(Filter):
         super().__init__(original_filter.variables)
         self._original_filter = original_filter
 
-    def test(self, assignment):
-        return not self._original_filter.test(assignment)
+    def test(self, assignment, solutions):
+        return not self._original_filter.test(assignment, solutions)
 
 
 class If(Filter):
@@ -153,35 +154,35 @@ class If(Filter):
     def else_filter(self):
         return self._else_filter
 
-    def test(self, assignment: Dict[str, Group]):
-        if self.if_filter.test(assignment):
-            return self.then_filter.test(assignment)
+    def test(self, assignment: Dict[str, Group], solutions):
+        if self.if_filter.test(assignment, solutions):
+            return self.then_filter.test(assignment, solutions)
         else:
-            return self.else_filter.test(assignment)
+            return self.else_filter.test(assignment, solutions)
 
 
 class NoFilter(Filter):
-    def test(self, assignment: Dict[str, Group]):
+    def test(self, assignment: Dict[str, Group], solutions):
         return True
 
 
 class SameLength(Filter):
-    def test(self, assignment: Dict[str, Group]):
+    def test(self, assignment: Dict[str, Group], solutions):
         return self.test_same(assignment, Group.length)
 
 
 class SameTable(Filter):
-    def test(self, assignment: Dict[str, Group]):
+    def test(self, assignment: Dict[str, Group], solutions):
         return self.test_same(assignment, lambda g: g.table)
 
 
 class SameOrientation(Filter):
-    def test(self, assignment: Dict[str, Group]):
+    def test(self, assignment: Dict[str, Group], solutions):
         return self.test_same(assignment, lambda g: g.row)
 
 
 class SameType(Filter):
-    def test(self, assignment: Dict[str, Group]):
+    def test(self, assignment: Dict[str, Group], solutions):
         return self.test_same(assignment, lambda g: g.dtype)
 
 
@@ -194,7 +195,7 @@ class SizeFilter(Filter):
         self._vectors = vectors
         self._max_size = max_size
 
-    def test(self, assignment: Dict[str, Group]):
+    def test(self, assignment: Dict[str, Group], solutions):
         groups = list([assignment[v.name] for v in self.variables])
         op = (lambda x, y: x <= y) if self._max_size else (lambda x, y: x >= y)
         return all(self._rows is None or op(g.rows(), self._rows) for g in groups) \
@@ -212,22 +213,42 @@ class OrientationFilter(Filter):
     def orientation(self):
         return self._orientation
 
-    def test(self, assignment: Dict[str, Group]):
+    def test(self, assignment: Dict[str, Group], solutions):
         return self.test_all(assignment, lambda g: g.row == (self.orientation == Orientation.HORIZONTAL))
 
 
 class NotPartial(Filter):
-    def test(self, assignment: Dict[str, Group]):
+    def test(self, assignment: Dict[str, Group], solutions):
         return not any([assignment[v.name].is_partial for v in self.variables])
 
 
 class Partial(Filter):
-    def test(self, assignment: Dict[str, Group]):
+    def test(self, assignment: Dict[str, Group], solutions):
         return all([assignment[v.name].is_partial for v in self.variables])
 
 
 class NotSubgroup(Filter):
-    def test(self, assignment: Dict[str, Group]):
+    def test(self, assignment: Dict[str, Group], solutions):
         if len(self.variables) != 2:
             raise RuntimeError("Expected two variables, got {}".format(len(self.variables)))
         return not assignment[self.variables[0].name].is_subgroup(assignment[self.variables[1].name])
+
+
+class SatisfiesConstraint(Filter):
+    def __init__(self, variables, constraint, mapping):
+        super().__init__(variables)
+        self._constraint = constraint
+        self._mapping = mapping
+
+    @property
+    def constraint(self):
+        return self._constraint
+
+    @property
+    def mapping(self):
+        return self._mapping
+
+    def test(self, assignment: Dict[str, Group], solutions: Solutions):
+        variables = self.constraint.variables
+        return solutions.has(self.constraint, variables, {assignment[self.mapping[v.name]] for v in variables})
+

@@ -42,7 +42,7 @@ class ConstraintCounter:
     def count(self, found=None, relevant=None, supported=False):
         relevant_list = self._relevant
         if supported is True:
-            relevant_list = list(r for r in relevant_list if r in [c.name for c in excel_constraints()])
+            relevant_list = list(r for r, _ in relevant_list if r in [c.name for c in excel_constraints()])
         if relevant is True and found is True:
                 return len(relevant_list) - len(self._tracking)
         elif relevant is True and found is False:
@@ -101,6 +101,8 @@ class Experiment:
             csv_file, config_file = self._get_csv_file(), self._get_config_file()
             learning_task = workflow.task(csv_file, config_file)
             solutions = learning_task.run()
+            # print(*learning_task.constraints, sep="\t")
+            # print(*["{:.3f}".format(learning_task.time(c)) for c in learning_task.constraints], sep="\t")
 #
             self._running_times.append(learning_task.total_time())
             self.count_constraints(solutions)

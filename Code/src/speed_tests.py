@@ -103,7 +103,7 @@ def generate_random(test_id: SpeedTestId):
             for _ in range(size):
                 max_rows = max(max_rows, table.rows)
                 if b_type == GType.int:
-                    column_data.append(np.random.randint(1, 100, table.rows))
+                    column_data.append(np.random.randint(1, 1000, table.rows))
                 elif b_type == GType.string:
                     letter = lambda: random.choice(string.ascii_lowercase)
                     word = lambda: ''.join(letter() for _ in range(np.random.randint(5, 15)))
@@ -136,8 +136,10 @@ def generate_blocks(test_id: SpeedTestId):
     content = dict()
     # Generate tables
     tables = []
+    index = 1
     for i, table in enumerate(test_id.tables):
-        bounds = [1, table.rows, table.cols * i + 1, table.cols * (i + 1)]
+        bounds = [1, table.rows, index, index + table.cols - 1]
+        index += table.cols
         tables.append({"Name": "T{}".format(i + 1), "Bounds": bounds, "Orientation": "Column"})
     content["Tables"] = tables
 
@@ -278,7 +280,7 @@ def draw_figures(tables):
         table = tables["cat1"]
         scatter_1 = ScatterData("(a) Number of vectors", list(test_id.tables[0].cols for test_id in table))
         scatter_1.add_data("All constraints", list(np.average(series["total"]) for series in table.values()))
-        scatter_1.x_lim((10**0, 10**4))
+        scatter_1.x_lim((10**0, 10**2))
         scatter_1.y_lim((10**-2, 10**2))
         scatters.append(scatter_1)
 
@@ -301,19 +303,13 @@ def draw_figures(tables):
         scatter_3 = ScatterData("(c) Number of blocks (aggregates)", number_of_blocks)
         total_times = list(np.average(series["total"]) for series in table.values())
         aggregates = list(sum(np.average(series[c]) for c in Aggregate.instances()) for series in table.values())
+        non_aggregates = list(total - aggregate for total, aggregate in zip(total_times, aggregates))
         scatter_3.add_data("All constraints", total_times)
         scatter_3.add_data("Aggregate constraints", aggregates)
-        scatter_3.x_lim((10**0, 10**4))
+        scatter_3.add_data("Non-aggregate constraints", non_aggregates)
+        scatter_3.x_lim((10**0, 10**2))
         scatter_3.y_lim((10**-2, 10**2))
         scatters.append(scatter_3)
-
-        scatter_4 = ScatterData("(d) Number of blocks (non-aggregates)", number_of_blocks)
-        non_aggregates = list(total - aggregate for total, aggregate in zip(total_times, aggregates))
-        scatter_4.add_data("All constraints", total_times)
-        scatter_4.add_data("Vector constraints", non_aggregates)
-        scatter_4.x_lim((10**0, 10**4))
-        scatter_4.y_lim((10**-2, 10**2))
-        scatters.append(scatter_4)
 
     from runtime_rendering import plot
     path = "../experiments"
@@ -350,7 +346,8 @@ def get_tables(categories, import_file=None, runs=1):
 
 def main():
     # ID: cols, rows, blocks, int | str | float
-    tables = get_tables(generate_experiments(), import_file="20160914_141603.log")
+    import_file = "20160925_195326.log"
+    tables = get_tables(generate_experiments(), import_file=import_file)  # import_file="20160914_141603.log")
     print_tables(tables)
     draw_figures(tables)
 
