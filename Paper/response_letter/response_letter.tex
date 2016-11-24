@@ -1,0 +1,51 @@
+\documentclass{article}
+\usepackage{enumerate}
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage{hyperref}
+\usepackage{latexsym}    % to get LASY symbols
+\usepackage{graphicx}    % to insert PostScript figures
+\usepackage{xspace}
+\usepackage[usenames,dvipsnames]{xcolor}
+
+
+\newcommand{\sergey}[1]{\textcolor{magenta}{{\sc Sergey:} #1}\xspace}
+\newcommand{\sam}[1]{\textcolor{green}{{\sc Samuel:} #1}\xspace}
+\newcommand{\samuel}[1]{\textcolor{green}{{\sc Samuel:} #1}\xspace}
+\newcommand{\tias}[1]{\textcolor{blue}{{\sc Tias:} #1}\xspace}
+\newcommand{\luc}[1]{\textcolor{red}{{\sc Luc:} #1}\xspace}
+\newcommand{\added}[1]{\textcolor{red}{added:} {#1} \textcolor{red}{end}\xspace}
+
+\newcommand{\scaleconstant}{1.0}
+\bibliographystyle{plainnat}
+\author{Samuel Kolb \and Sergey Paramonov \and Tias Guns \and Luc {De Raedt}}
+\title{MLJ Revision Letter:\\ learning constraints in spreadsheets and tabular data}
+\begin{document}
+\maketitle
+\section{Key issues}
+
+\paragraph{Competitor algorithms and related work:} \textit{The reviewers point out that you should compare with other methods. One reviewer stresses that Microsoft Excel provides functionality that alleviates part of the problem you address. Another reviewer suggests that you compare to a baseline that considers all constraints. You must compare to algorithms that solve the same problem (at least part of it).}
+
+
+We have elaborated the differences between TaCLe and FlashFill in the related work section (highlighted in \textcolor{red}{red}), also indicating why FlashFill cannot be applied to the examples we consider. Let us summarize the key differences here \sergey{Samuel, you had a point on this, can you add it ?}:
+\begin{itemize}
+  \item FlashFill works only with a single table, while TaCLe can handle multiple tables
+  \item FlashFill only searches for a string transformation program, while TaCLe works with textual and numeric constraints
+  \item FlashFill requires marked input-output columns (and columns are treated as vectors), while TaCLe is unsupervised and works across columns and rows
+  \item \sergey{here should be the point by Samuel} like they produce a single program with a single solution, while we enumerate multiple constraints that hold in the data
+\end{itemize}
+
+
+Also, we have compared TaCLe with a baseline: one where the graph dependency is disabled and another where we disabled Step 1 (candidate generation based on properties) and graph dependency. \sergey{Samuel, Tias -- can you expand and correct this one?}
+
+\section{Detailed comments}
+
+\paragraph{Sensitivity to the noise}
+
+\paragraph{How the data was obtained and its detailed overview}
+We have extended the description of the gathered collection of spreadsheets in the paper (Section 5.3), also we provided an extensive technical description of the dataset in the corresponding github repository: \url{https://github.com/sergeyparamonov/tacle}.
+\sergey{Samuel, can you make a detailed overview of the dataset in github https://github.com/sergeyparamonov/tacle}?
+
+
+
+\end{document}
