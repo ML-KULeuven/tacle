@@ -123,23 +123,35 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return self._generate_test_vectors(assignments, [c.y, c.x], lambda *args: True, is_rank)
 
         def foreign_keys(constraint, assignments, solutions):
-            solutions = []
+
+            pks = dict()
             for assignment in assignments:
-                pk_group = assignment[constraint.pk.name]
-                fk_group = assignment[constraint.fk.name]
+                pk_block = assignment[constraint.pk.name]
+                for pk_v in pk_block:
+                    if pk_v not in pks:
+                        pks[pk_v] = set(pk_v.get_vector(1))
 
-                fk_vectors = [fk_group.vector_subset(j, j) for j in range(1, fk_group.vectors() + 1)]
-                blank_f = blank_filter(fk_group.data, vectorized=True)[1]
-                fk_sets = map(lambda v: (v, set(filter(blank_f, v.get_vector(1)))), fk_vectors)
+            keys = [constraint.pk, constraint.fk]
 
-                pk_vectors = [pk_group.vector_subset(j, j) for j in range(1, pk_group.vectors() + 1)]
-                pk_sets = map(lambda v: (v, set(v.get_vector(1))), pk_vectors)
+            def test_foreign_key(pk_v, fk_v):
+                blank_f = blank_filter(fk_v.data)[1]
+                fk = fk_v.get_vector(1)
+                pk_set = pks[pk_v]
+                for i in range(len(fk)):
+                    if blank_f(fk[i]) and fk[i] not in pk_set:
+                        return False
+                return True
 
-                for (pk, pk_set) in pk_sets:
-                    for (fk, fk_set) in fk_sets:
-                        if not pk.overlaps_with(fk) and pk_set >= fk_set:
-                            solutions.append({constraint.pk.name: pk, constraint.fk.name: fk})
-            return solutions
+                # fk_sets = map(lambda v: (v, set(filter(blank_f, v.get_vector(1)))), fk_vectors)
+
+                # pk_vectors = [pk_group.vector_subset(j, j) for j in range(1, pk_group.vectors() + 1)]
+                # pk_sets = map(lambda v: (v, set(v.get_vector(1))), pk_vectors)
+
+                # for pk_v in pks:
+                #     for (fk, fk_set) in fk_sets:
+                #         if not pk_v.overlaps_with(fk) and pks[pk_v] >= fk_set:
+                #             solutions.append({constraint.pk.name: pk_v, constraint.fk.name: fk})
+            return self._generate_test_vectors(assignments, keys, lambda *args: True, test_foreign_key)
 
         def lookups(c: Lookup, assignments, solutions):
             # TODO redundant lookups
@@ -206,7 +218,37 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             partial_cache = dict()
             fk_dict = dict()
 
+            overlap = dict()
+            new_assignments = []
+
+            # Calculate overlap
+            for assignment in assignments:
+                ok_block = assignment[c.o_key.name]
+                fk_block = assignment[c.f_key.name]
+
+                candidate = False
+                for ok_v in ok_block:
+                    for fk_v in fk_block:
+                        key = frozenset({ok_v, fk_v})
+                        if key not in overlap:
+                            overlap[key] = len(set(ok_v.get_vector(1)) & set(fk_v.get_vector(1))) > 0
+                        if overlap[key]:
+                            candidate = True
+
+                if candidate:
+                    new_assignments.append(assignment)
+
+            assignments = new_assignments
+
+            # print(len(assignments))
+            # assignments = [a for a in assignments
+            #                if any(overlap[frozenset({ok_v, fk_v})] for ok_v in ok_block for fk_v in fk_block)]
+            # print(len(assignments))
+
             def is_aggregate(ok, r, fk, v):
+                if not overlap[frozenset({ok, fk})]:
+                    return False
+
                 foreign_key = ForeignKey()
                 if solutions.has(foreign_key, [foreign_key.fk, foreign_key.pk], [ok, fk]):
                     return False
@@ -249,7 +291,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         return False
                 return any_match
 
-            return list(self._generate_test_vectors(assignments, keys, lambda *args: True, is_aggregate))
+            return self._generate_test_vectors(assignments, keys, lambda *args: True, is_aggregate)
 
         def running_total(c: RunningTotal, assignments, solutions):
             def is_running_diff(acc_v, pos_v, neg_v):

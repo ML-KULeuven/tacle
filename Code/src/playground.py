@@ -31,6 +31,8 @@ def main():
                 print(file)
                 for accident in experiment.counter.additional:
                     print("\tADDITIONAL:\t{}".format(accident))
+                for missing in experiment.counter.missed:
+                    print("\tMISSING:\t{}".format(missing))
                 entry = {t[0]: t[1](experiment) for t in info}
                 entry["relevant.found"] = experiment.counter.count(relevant=True, found=True)
                 entry["extra.found"] = experiment.counter.count(relevant=False, found=True)

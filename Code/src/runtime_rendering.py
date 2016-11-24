@@ -3,8 +3,8 @@ import numpy
 
 
 class ScatterData:
-    colors = ["black", "green"]
-    markers = ["o", "v"]
+    colors = ["black", "green", "red"]
+    markers = ["o", "v", "x"]
 
     def __init__(self, title, x_data):
         self.title = title
@@ -26,7 +26,7 @@ class ScatterData:
     def y_lim(self, limits):
         self.limits = self.limits[0], limits
 
-    def render(self, ax, lines=True, log_x=True, log_y=True):
+    def render(self, ax, lines=True, log_x=True, log_y=True, legend_pos="lower right"):
         plots = []
         for i in range(self.size):
             title, times = self.data[i]
@@ -35,7 +35,8 @@ class ScatterData:
             if lines:
                 ax.plot(x_data, times, color=self.colors[i])
 
-        ax.legend(plots, (title for title, _ in self.data), loc="lower right")
+        ax.grid(True)
+        ax.legend(plots, (title for title, _ in self.data), loc=legend_pos)
 
         if log_x:
             ax.set_xscale('log')
@@ -57,12 +58,18 @@ def plot(file, *args):
     fig.set_size_inches(12, 12)
 
     subplots = len(args)
-    cols = numpy.ceil(numpy.sqrt(subplots))
-    rows = numpy.ceil(subplots / cols)
+    cols = int(numpy.ceil(numpy.sqrt(subplots)))
+    rows = int(numpy.ceil(subplots / cols))
+
+    import matplotlib.gridspec as grid_spec
+    gs = grid_spec.GridSpec(rows, cols)
+
+    axes = [plt.subplot(gs[0, 0]), plt.subplot(gs[0, 1]), plt.subplot(gs[1, :])]
+    legend_positions = ["lower right", "upper right", "lower left"]
 
     for i in range(subplots):
-        ax = fig.add_subplot(cols, rows, i + 1)
-        args[i].render(ax)
+        legend_pos = legend_positions[i]
+        args[i].render(axes[i], legend_pos=legend_pos)
 
     if file is None:
         plt.show()
