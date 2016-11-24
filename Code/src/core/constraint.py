@@ -174,7 +174,6 @@ class Aggregate(Constraint):
 
 # TODO Subset -> Fuzzy lookup
 
-
 class Permutation(Constraint):
     x = Variable("X", types=numeric)
 
