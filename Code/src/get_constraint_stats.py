@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 import json
+from workflow import get_constraint_list
 
 def get_category(filename, categories):
     for key, value in categories.items():
@@ -10,6 +11,7 @@ def get_category(filename, categories):
     raise Exception("that shouldn't have happened")
 
 def main():
+    supported_constraints = {x.name for x in get_constraint_list()}
     folder    = "data/truth/"
     filenames = set(os.listdir(folder)) - set(['examples.txt','fbi_offenses.txt',"columnwise-sum-rows.txt",'exps.txt'])
     stats_absolute              = defaultdict(int)
@@ -17,6 +19,8 @@ def main():
     number_of_files_in_category = defaultdict(int)
     all_constraints = set()
     all_categories  = set()
+    overall_counter = 0
+    constraints_by_category = defaultdict(int)
     with open("data/data.txt", "r") as catetoriesfile:
         categories = json.load(catetoriesfile)
     for filename in filenames:
@@ -26,9 +30,18 @@ def main():
             number_of_files_in_category[category] += 1
             raw         = json.load(afile)
             constraints = raw['Essential']
+          # if raw['Non-trivial']:
+          #     constraints = constraints.update(raw['Non-trivial'])
             for key, value in constraints.items():
-                print("key",key,"value",value)
-                stats_absolute[(category,key)] += 1
+                if key not in supported_constraints:
+                    continue
+#               print("key",key,"value",value)
+                stats_absolute[(category,key)] += len(value)
+                if len(value) > 1:
+                    print(value)
+                    print("len",len(value))
+                overall_counter += len(value)
+                constraints_by_category[category] += len(value)
                 stats_fraction_aux[(category,key)].add(filename)
                 all_constraints.add(key)
     stats_fraction = defaultdict(float)
@@ -38,20 +51,25 @@ def main():
    #print(stats_absolute)
    #print(stats_fraction)
    #print(number_of_files_in_category)
-    
-    print("constraint," + ",".join(all_categories))
+    all_constraints = sorted(all_constraints)
+    print("| constraint " + " | ".join(all_categories) + " |")
     for constraint in all_constraints:
-        print(constraint, end=",")
+        print("| "+constraint, end=" | ")
         for category in all_categories:
-            print("{:.2f}".format(stats_fraction[(category,constraint)]),end=",")
+            print("{:.2f}".format(stats_fraction[(category,constraint)]),end=" | ")
         print()
     
-    print("constraint," + ",".join(all_categories))
+    print("| constraint |" + " | ".join(all_categories) + " | ")
     for constraint in all_constraints:
-        print(constraint, end=",")
+        print("| "+constraint, end=" | ")
         for category in all_categories:
-            print(stats_absolute[(category,constraint)],end=",")
+            print(str(stats_absolute[(category,constraint)]),end=" | ")
         print()
+    print(overall_counter)
+    print(constraints_by_category)
+    print(number_of_files_in_category)
+
+
 
 
 

@@ -41,10 +41,19 @@ Also, we have compared TaCLe with a baseline: one where the graph dependency is 
 \section{Detailed comments}
 
 \paragraph{Sensitivity to the noise}
+In the field of Inductive Logic Programming and Constraint Learning, there has been a line of work devoted to noise handling. Let us briefly overview the key methods applicable in our case:
+\begin{itemize}
+  \item \textbf{Noisy semantics}: a possible approach is to modify the semantics of constraints such as $\sum_{i=1}^n b_i = c$ into $\sum_{i=1}^n b_i = c + \epsilon$, where $\epsilon$ is the noise level that might be dependent on $b_i$'s, $n$ or $c$.
+  \item \textbf{Skip semantics}: another possibility is to allow skipping of elements in vectors, i.e. in the constraint  $\sum_{i=1}^n b_i = c$, we can allow $i$ to skip up to $k$ elements to match $c$, then we treat skipped values as noise and do not take them into account.
+  \item \textbf{Soft constraints}: a constraint satisfaction is determined by a real-value measure such as $\sum_{i=1}^n b_i = c + \sigma|c|$, where $\sigma=0$ denotes the perfect match and the other values denote deviations in absolute values of $c$, then our goal would be to select top-$k$ best matching constraints according to the designed measure.
+\end{itemize}
+
 
 \paragraph{How the data was obtained and its detailed overview}
 We have extended the description of the gathered collection of spreadsheets in the paper (Section 5.3), also we provided an extensive technical description of the dataset in the corresponding github repository: \url{https://github.com/sergeyparamonov/tacle}.
 \sergey{Samuel, can you make a detailed overview of the dataset in github https://github.com/sergeyparamonov/tacle}?
+
+\sergey{Also, they wanted some real examples of formulas from the dataset in Section 6}
 
 
 
