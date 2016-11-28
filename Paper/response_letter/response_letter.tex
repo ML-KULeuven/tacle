@@ -22,7 +22,14 @@
 \title{MLJ Revision Letter:\\ learning constraints in spreadsheets and tabular data}
 \begin{document}
 \maketitle
+\sergey{just in case, the text is preliminary, feel free to cut, expand and rewrite, I think it should be 1 or 2 pages at the end, I hope}
 \section{Key issues}
+
+\paragraph{Goal and motivation}
+\sergey{should we even mention possible approach to compression here?}
+
+\paragraph{Approach}
+\sergey{here is the response on the unclear definitions and notation}
 
 \paragraph{Competitor algorithms and related work:} \textit{The reviewers point out that you should compare with other methods. One reviewer stresses that Microsoft Excel provides functionality that alleviates part of the problem you address. Another reviewer suggests that you compare to a baseline that considers all constraints. You must compare to algorithms that solve the same problem (at least part of it).}
 
@@ -47,6 +54,8 @@ In the field of Inductive Logic Programming and Constraint Learning, there has b
   \item \textbf{Skip semantics}: another possibility is to allow skipping of elements in vectors, i.e. in the constraint  $\sum_{i=1}^n b_i = c$, we can allow $i$ to skip up to $k$ elements to match $c$, then we treat skipped values as noise and do not take them into account.
   \item \textbf{Soft constraints}: a constraint satisfaction is determined by a real-value measure such as $\sum_{i=1}^n b_i = c + \sigma|c|$, where $\sigma=0$ denotes the perfect match and the other values denote deviations in absolute values of $c$, then our goal would be to select top-$k$ best matching constraints according to the designed measure.
 \end{itemize}
+
+We have expanded the conclusions section to accommodate these proposals.
 
 
 \paragraph{How the data was obtained and its detailed overview}
