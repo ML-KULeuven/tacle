@@ -22,17 +22,24 @@
 \title{MLJ Revision Letter:\\ learning constraints in spreadsheets and tabular data}
 \begin{document}
 \maketitle
+\sergey{We need a discussion section on: noise, (non)-contiguous blocks and combination of constraints} 
 \sergey{just in case, the text is preliminary, feel free to cut, expand and rewrite, I think it should be 1 or 2 pages at the end, I hope}
 \section{Key issues}
 
 \paragraph{Goal and motivation}
-\sergey{should we even mention possible approach to compression here?}
+\sergey{Reviewer pointed out that (and we should thank him and use it, I think):}
+
+\textbf{Reviewer \#3:}
+Section 6. The reviewer would like to point out the important field of data cleaning (of dirty data, as it is called in the database community) and anomaly detection, beyond simple error detection. Because your method does not only detect errors, but can also show *why* it deems something as erronous your method falls in the desirable category of descriptive or explainable anomaly detection algorithms.\\
+\sergey{A sentence on compression, maybe?}\\
+\sergey{We need to connect better Sections 5 and 6 -- from the reviews}
 
 \paragraph{Approach}
 \sergey{here is the response on the unclear definitions and notation}
 
 \paragraph{Competitor algorithms and related work:} \textit{The reviewers point out that you should compare with other methods. One reviewer stresses that Microsoft Excel provides functionality that alleviates part of the problem you address. Another reviewer suggests that you compare to a baseline that considers all constraints. You must compare to algorithms that solve the same problem (at least part of it).}
 
+\sergey{Tias, you also had a point here that flash fill is searching for a combination of string transformations, we search for atomic constraints and etc, could you integrate it here? and indicate what part should be added to the paper?}
 
 We have elaborated the differences between TaCLe and FlashFill in the related work section (highlighted in \textcolor{red}{red}), also indicating why FlashFill cannot be applied to the examples we consider. Let us summarize the key differences here \sergey{Samuel, you had a point on this, can you add it ?}:
 \begin{itemize}
