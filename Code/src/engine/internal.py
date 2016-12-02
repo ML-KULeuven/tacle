@@ -3,8 +3,6 @@ import itertools
 
 import math
 
-import sys
-
 from core.constraint import *
 from core.group import Group
 from core.solutions import Solutions
