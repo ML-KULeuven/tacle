@@ -76,28 +76,43 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         super().__init__()
 
         def series(c: Series, assignments, solutions):
-            def test_list(vector):
-                for i in range(len(vector)):
-                    if not vector[i] == i + 1:
+            print(assignments)
+
+            def test_series(x_v):
+                x, = to_data(x_v)
+                for i in range(len(x)):
+                    if not x[i] == i + 1:
                         return False
                 return True
 
-            return self._generate_test_vectors(assignments, [c.x], test_list)
+
+            return self._generate_test_vectors(assignments, [c.x], lambda *args: True, test_series)
 
         def all_different(c: AllDifferent, assignments, solutions):
-            return self._generate_test_vectors(assignments, [c.x], lambda v: len(set(v)) == len(v)
-                                               , lambda g: g.is_textual() or g.is_integer())
+            def test_all_different(x_v):
+                # TODO test exact types
+                if not x_v.is_textual or x_v.is_integer():
+                    return False
+
+                # TODO make fail-fast (easy)
+                x, = to_data(x_v)
+                return len(set(x)) == len(x)
+
+            return self._generate_test_vectors(assignments, [c.x], lambda *args: True, test_all_different)
 
         def permutation(c: Permutation, assignments, solutions):
-            def test_set(vector):
-                number_set = set(range(1, len(vector) + 1))
-                for i in range(len(vector)):
-                    if not vector[i] in number_set:
+            def test_permutation(x_v):
+                x, = to_data(x_v)
+                number_set = set(range(1, len(x) + 1))
+
+                # TODO Reformulate without explicit set (easy)
+                for i in range(len(x)):
+                    if not x[i] in number_set:
                         return False
-                    number_set.remove(vector[i])
+                    number_set.remove(x[i])
                 return True
 
-            return self._generate_test_vectors(assignments, [c.x], test_set)
+            return self._generate_test_vectors(assignments, [c.x], lambda *args: True, test_permutation)
 
         def rank(c: Rank, assignments, solutions):
             def is_rank(y_v, x_v):
@@ -140,15 +155,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         return False
                 return True
 
-                # fk_sets = map(lambda v: (v, set(filter(blank_f, v.get_vector(1)))), fk_vectors)
-
-                # pk_vectors = [pk_group.vector_subset(j, j) for j in range(1, pk_group.vectors() + 1)]
-                # pk_sets = map(lambda v: (v, set(v.get_vector(1))), pk_vectors)
-
-                # for pk_v in pks:
-                #     for (fk, fk_set) in fk_sets:
-                #         if not pk_v.overlaps_with(fk) and pks[pk_v] >= fk_set:
-                #             solutions.append({constraint.pk.name: pk_v, constraint.fk.name: fk})
             return self._generate_test_vectors(assignments, keys, lambda *args: True, test_foreign_key)
 
         def lookups(c: Lookup, assignments, solutions):

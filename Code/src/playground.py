@@ -16,7 +16,7 @@ def main():
         ("Recall", lambda e: recall(e.counter), "green", lambda x: "{:.2f}".format(x)),
         ("Recall Supported", lambda e: recall(e.counter, True), "lightgreen", lambda x: "{:.2f}".format(x)),
         ("Precision", lambda e: precision(e.counter), "yellow", lambda x: "{:.2f}".format(x)),
-        ("Runtime", lambda e: numpy.average(e.running_times(10)), "red", lambda x: "{:.2f}s".format(x))
+        ("Runtime", lambda e: numpy.average(e.running_times(1)), "red", lambda x: "{:.2f}s".format(x))
     ]
 
     with open(local("data/data.txt")) as data_file:
