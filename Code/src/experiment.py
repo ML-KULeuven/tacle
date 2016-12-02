@@ -66,6 +66,7 @@ class Experiment:
         self._tables = None
         self._vectors = None
         self._counter = None
+        self.manager = None
 
     @property
     def name(self):
@@ -99,7 +100,7 @@ class Experiment:
     def run(self):
         if not self._run:
             csv_file, config_file = self._get_csv_file(), self._get_config_file()
-            learning_task = workflow.task(csv_file, config_file)
+            learning_task = workflow.task(csv_file, config_file, manager=self.manager)
             solutions = learning_task.run()
             # print(*learning_task.constraints, sep="\t")
             # print(*["{:.3f}".format(learning_task.time(c)) for c in learning_task.constraints], sep="\t")

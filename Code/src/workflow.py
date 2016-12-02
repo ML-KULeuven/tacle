@@ -54,10 +54,12 @@ def order_constraints(constraints: List[Constraint]):
     return ordered
 
 
-def task(csv_file, groups_file, constraints=None):
+def task(csv_file, groups_file, constraints=None, manager=None):
     if constraints is None:
         constraints = get_constraint_list()
-    return LearningTask(csv_file, groups_file, get_manager(), constraints)
+    if manager is None:
+        manager = get_manager()
+    return LearningTask(csv_file, groups_file, manager, constraints)
 
 
 def main(csv_file, groups_file, verbose, silent=False, constraints=None, only_total_time=False):
