@@ -21,7 +21,10 @@ class Solutions:
 
     @staticmethod
     def _to_tuple(constraint, solution):
-        return tuple(solution[v.name] for v in constraint.variables)
+        try:
+            return tuple(solution[v.name] for v in constraint.variables)
+        except KeyError as e:
+            raise RuntimeError("No value for {} in solution {}".format(e.args[0], solution))
 
     def set_canon(self, canon_map):
         self.canon_map = canon_map
