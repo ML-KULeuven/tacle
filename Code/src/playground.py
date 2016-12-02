@@ -44,6 +44,7 @@ def main():
         print("\n" * 2)
         max_label = list(t[3](maximal[t[0]]) for t in info)
         global_plot = Plotter("comparison", list(t[0] for t in info), upper=max_label)
+        test = {"Exercises": (30, 2), "Tutorials": (46, 20), "Data": (6, 0)}
         for category, cat_stats in [(cat, stats[cat]) for cat in categories]:
             print(category)
             plotter = Plotter("benchmark_" + category)
@@ -57,8 +58,20 @@ def main():
                 errors.append(numpy.std(list(stats[name] for stats in cat_stats)) / maximal[name])
                 total = sum(stats[name] for stats in cat_stats)
                 print(result_string.format(name=name.lower(), average=pretty(average), total=pretty(total)))
-            print("\tRelevant found: {}".format(sum(stats["relevant.found"] for stats in cat_stats)))
-            print("\tExtra found: {}".format(sum(stats["extra.found"] for stats in cat_stats)))
+            relevant = sum(stats["relevant.found"] for stats in cat_stats)
+            print("\tRelevant found: {}".format(relevant))
+            extra = sum(stats["extra.found"] for stats in cat_stats)
+            print("\tExtra found: {}".format(extra))
+
+            relevant_expected, extra_expected = test[category]
+            if relevant_expected != relevant:
+                print("ERROR ({}): found {} instead of {} relevant constraints"
+                      .format(category, relevant, relevant_expected))
+
+            if extra_expected != extra:
+                print("ERROR ({}): found {} instead of {} extra constraints"
+                      .format(category, extra, extra_expected))
+
             global_plot.add_category(category, averages, colors[category], errors, "green")
             plotter.plot()
         global_plot.plot()
