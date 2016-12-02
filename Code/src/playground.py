@@ -12,7 +12,7 @@ def main():
         ("Tables", lambda e: e.tables, "grey", lambda x: str(x)),
         # ("Vectors", lambda e: e.vectors, "cyan", lambda x: str(x)),
         ("Cells", lambda e: e.cells, "black", lambda x: str(x)),
-        ("Intended Constraints", lambda e: e.counter.count(relevant=True), "magenta", lambda x: str(x)),
+        ("Intended Constraints", lambda e: e.counter.count(relevant=True, supported=True), "magenta", lambda x: str(x)),
         ("Recall", lambda e: recall(e.counter), "green", lambda x: "{:.2f}".format(x)),
         ("Recall Supported", lambda e: recall(e.counter, True), "lightgreen", lambda x: "{:.2f}".format(x)),
         ("Precision", lambda e: precision(e.counter), "yellow", lambda x: "{:.2f}".format(x)),
