@@ -1296,7 +1296,7 @@ The approach is designed to find constraints that hold over entire columns and r
 Two promising ways to mitigate redundant and spurious constraints are heuristic filtering or post-processing of the constraint set and the integration of our approach in an interactive setting where users can receive and provide feedback.
 The latter is more similar to an active learning setting.
 
-A final direction is that the current approach assumes noise-free data (but see the part on error correction); in inductive logic programming there has been much work on how to handle noisy data, while in constraint satisfaction a popular alternative is to consider \textit{soft} constraints that can be violated (at a cost). 
+\added{A final direction is that the current approach assumes noise-free data (but see the part on error correction); in inductive logic programming there has been much work on how to handle noisy data such as allowing a tolerance level $\epsilon$ when a rule or a constraint $\sum_{i=1}^n b_i = c$ matches up to $\epsilon$: $|\sum_{i=1}^n b_i - c| \leq \epsilon$, while in constraint satisfaction a popular alternative is to consider \textit{soft} constraints that can be violated at a cost, which is a real value and then the task is to find top-$k$ best matching constraints. }
 This could extend the approach to new application domains, beyond traditional spreadsheets.
 
 
