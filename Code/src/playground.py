@@ -44,7 +44,7 @@ def main():
         print("\n" * 2)
         max_label = list(t[3](maximal[t[0]]) for t in info)
         global_plot = Plotter("comparison", list(t[0] for t in info), upper=max_label)
-        test = {"Exercises": (30, 2), "Tutorials": (46, 20), "Data": (6, 0)}
+        test = {"Exercises": (30, 2), "Tutorials": (46, 21), "Data": (6, 0)}
         for category, cat_stats in [(cat, stats[cat]) for cat in categories]:
             print(category)
             plotter = Plotter("benchmark_" + category)

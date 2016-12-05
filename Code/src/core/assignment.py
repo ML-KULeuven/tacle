@@ -68,7 +68,7 @@ class Source:
                 variables = list([v.name for v in f.variables])
 
                 def c_j(ff, vv):
-                    return lambda *args: ff.test({vv[i]: args[i] for i in range(len(args))}, solutions)
+                    return lambda *args: ff.test_relaxed({vv[i]: args[i] for i in range(len(args))}, solutions)
 
                 problem.addConstraint(c_j(f, variables), variables)
 
@@ -113,6 +113,12 @@ class Filter:
 
     def test(self, assignment: Dict[str, Group], solutions):
         raise NotImplementedError()
+
+    def test_relaxed(self, assignment, solutions):
+        return self.test(assignment, solutions)
+
+    def is_relaxed(self):
+        return False
 
     def test_same(self, assignment, f):
         groups = list([assignment[v.name] for v in self.variables])
@@ -202,6 +208,20 @@ class SizeFilter(Filter):
             and all(self._cols is None or op(g.columns(), self._cols) for g in groups) \
             and all(self._length is None or op(g.length(), self._length) for g in groups) \
             and all(self._vectors is None or op(g.vectors(), self._vectors) for g in groups)
+
+    def test_relaxed(self, assignment: Dict[str, Group], solutions):
+        if self._max_size:
+            # Max size can not be enforced at the super-block level
+            groups = list([assignment[v.name] for v in self.variables])
+            valid = all(self._rows is None or g.row_oriented() or g.rows() <= self._rows for g in groups) and all(
+                self._cols is None or not g.row_oriented() or g.columns() <= self._cols for g in groups) and all(
+                self._length is None or g.length() <= self._length for g in groups)
+            return valid
+        else:
+            return self.test(assignment, solutions)
+
+    def is_relaxed(self):
+        return self._max_size
 
 
 class OrientationFilter(Filter):

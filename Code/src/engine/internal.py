@@ -439,13 +439,13 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             keys = [c.result, c.first, c.second]
 
             def is_sum_product(r_v, o1_v, o2_v):
-                if not ordered(o1_v, o2_v):
+                if not ordered(o1_v, o2_v) or r_v.rows() != 1 or r_v.columns() != 1:
                     return False
 
                 r, o1, o2 = to_data(r_v, o1_v, o2_v)
 
                 # TODO too many vector operations (easy)
-                return numpy.vectorize(equal)(r, numpy.sum(numpy.vectorize(Operation.PRODUCT.func)(o1, o2))).all()
+                return equal_v(r, numpy.sum(numpy.vectorize(Operation.PRODUCT.func)(o1, o2))).all()
 
             return self._generate_test_vectors(assignments, keys, is_sum_product)
 
