@@ -1320,23 +1320,27 @@ This could extend the approach to new application domains, beyond traditional sp
   \bibliography{references}}
 \appendix
 \section{Spreadsheet Dataset Overview}
+\label{appendix:dataset_overview}
 \sergey{Samuel, we need an extended discussion here on how the data was obtained, I'll try a first sketch here}\\
 There are three main sources for spreadsheets we have collected.
 \begin{itemize}
-  \item 
-  \item 
-  \item 
+  \item After identification of popular Excel functions (MS Office web page has an overview of popular functions), we have searched for online tutorials about these functions and collected them under the category \textbf{Tutorials}.
+  \item We have collected the exercises under the category \textbf{Exercises} from the introductory Excel book \cite{excel_book} that focused on popular Excel functions.
+  \item We have collected under the category \textbf{Data} publicly available economic and crime reporting data from the U.S. Bureau of Economic Analysis (BEA) and U.S. FBI Uniform Crime Reporting (UCR) Program.
 \end{itemize}
 
+The overview of constraint distributions per category is presented in Table \ref{tab:constraint_by_category}.
 
 \begin{table}
   \centering
   \rowcolors{2}{gray!25}{white}
+  \caption{Constraint occurrence by category}
+  \label{tab:constraint_by_category}
   \begin{tabular}{l | c c c }
     \textbf{Constraint} & \textbf{Exercises} & \textbf{Data} & \textbf{Tutorials}  \\\hline
     average (col) & 0 & 0 & 2 \\
     average (row) & 0 & 1 & 0 \\
-    average-if & 1 & 0 & 0 \\
+    average-if    & 1 & 0 & 0 \\
     count (col) & 0 & 0 & 1 \\
     count-if & 1 & 0 & 0 \\
     difference & 2 & 1 & 0 \\
@@ -1358,8 +1362,6 @@ There are three main sources for spreadsheets we have collected.
     sum-if & 2 & 0 & 9 \\
     sum-product & 0 & 0 & 2 \\
   \end{tabular}
-  \caption{Constraint occurrence by category}
-  \label{tab:constraint_by_category}
 \end{table}
 
 \end{document}
