@@ -32,6 +32,7 @@
 \textbf{Reviewer \#3:}
 Section 6. The reviewer would like to point out the important field of data cleaning (of dirty data, as it is called in the database community) and anomaly detection, beyond simple error detection. Because your method does not only detect errors, but can also show *why* it deems something as erronous your method falls in the desirable category of descriptive or explainable anomaly detection algorithms.\\
 \sergey{A sentence on compression, maybe?}\\
+\sergey{Can we claim as a contribution creation of the first dataset for tabular constraint learning? I guess it is a valid claim, it didn't exist before at all, right?}\\
 \sergey{We need to connect better Sections 5 and 6 -- from the reviews}
 
 \paragraph{Approach}
@@ -66,10 +67,13 @@ We have expanded the conclusions section to accommodate these proposals.
 
 
 \paragraph{How the data was obtained and its detailed overview}
-We have extended the description of the gathered collection of spreadsheets in the paper (Section 5.3), also we provided an extensive technical description of the dataset in the corresponding github repository: \url{https://github.com/sergeyparamonov/tacle}.
+We have extended the description of the gathered collection of spreadsheets in the paper (Section 5.3), also we provided an extensive technical description of the dataset in the corresponding github repository: \url{https://github.com/sergeyparamonov/tacle} and added a table indicating present constraints by category into the appendix.
 \sergey{Samuel, can you make a detailed overview of the dataset in github https://github.com/sergeyparamonov/tacle}?
 
 \sergey{Also, they wanted some real examples of formulas from the dataset in Section 6}
+
+
+\sergey{Samuel? I guess, we have to say that it should be specified in the constraint itself, on what it depends, kind of given}~ \textbf{Reviwer \#2}: C. According to my understanding, the proposed method exploits possible dependencies and redundancies that may exist between the different constraints. However, it is unclear how such dependencies/redundancies are found. Are they assumed to be given as input? Are they detected by the algorithm? What would be the performance (runtime and precision/recall) of the algorithm if no dependencies/redundancies exist?
 
 
 

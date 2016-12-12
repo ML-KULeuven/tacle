@@ -1128,10 +1128,10 @@ These experiments with generated data have given us a better understanding of wh
 \subsection{Effectiveness on real spreadsheets}
 \added{
 In order to test our approach on real data we assembled a benchmark of spreadsheets from three sources:
-  1)~spreadsheets from an exercise session for teaching Excel at the Brussels Business School based on the book~\cite{excel_book}, covering the most popular Excel formulas; 2)~spreadsheets from online tutorials on Excel formulas; and 3)~publicly available \textit{data} spreadsheets such as real-world crime statistics (FBI:UCR) or financial reports (US BEA). The data and its extended description are available at the same repository\footref{github-link} with the links to all original publicly available spreadsheets used in the experiments (in the file \textit{links.txt}).
+1)~spreadsheets from an exercise session for teaching Excel at the Brussels Business School based on the book~\cite{excel_book}, covering the most popular Excel formulas; 2)~spreadsheets from online tutorials on Excel formulas; and 3)~publicly available \textit{data} spreadsheets such as real-world crime statistics (FBI:UCR) or financial reports (US BEA). The data and its extended description are available in Appendix \ref{appendix:dataset_overview} in Table \ref{tab:constraint_by_category} and at the same repository\footref{github-link} with the links to all original publicly available spreadsheets used in the experiments (in the file \textit{links.txt}).
 } 
 
-\sergey{Samuel, can you provide an extended technical description in github? Like straight in the README?}
+\sergey{Samuel, can you provide an extended technical description in github? Like straight in the README next to the tables?}
 
 Table~\ref{tbl:category_overview} gives an overview of the spreadsheets in the different categories and summarizes the results of our experiments.
 % Notice that for the data category the average number of cells is higher while the number of intended constraints and tables is lower compared to the other categories. tias{Weird here because purpose unclear, point to this when discussing some result for which this is important}
@@ -1318,4 +1318,48 @@ This could extend the approach to new application domains, beyond traditional sp
 \bibliographystyle{plain}
 {
   \bibliography{references}}
+\appendix
+\section{Spreadsheet Dataset Overview}
+\sergey{Samuel, we need an extended discussion here on how the data was obtained, I'll try a first sketch here}\\
+There are three main sources for spreadsheets we have collected.
+\begin{itemize}
+  \item 
+  \item 
+  \item 
+\end{itemize}
+
+
+\begin{table}
+  \centering
+  \rowcolors{2}{gray!25}{white}
+  \begin{tabular}{l | c c c }
+    \textbf{Constraint} & \textbf{Exercises} & \textbf{Data} & \textbf{Tutorials}  \\\hline
+    average (col) & 0 & 0 & 2 \\
+    average (row) & 0 & 1 & 0 \\
+    average-if & 1 & 0 & 0 \\
+    count (col) & 0 & 0 & 1 \\
+    count-if & 1 & 0 & 0 \\
+    difference & 2 & 1 & 0 \\
+    equal & 0 & 0 & 10 \\
+    foreign-product & 1 & 0 & 0 \\
+    fuzzy-lookup & 2 & 0 & 1 \\
+    lookup & 1 & 0 & 0 \\
+    max (col) & 0 & 0 & 2 \\
+    max-if & 1 & 0 & 0 \\
+    min (col) & 0 & 0 & 3 \\
+    min-if & 1 & 0 & 0 \\
+    percentual-diff & 5 & 1 & 0 \\
+    product & 2 & 0 & 3 \\
+    project & 1 & 0 & 0 \\
+    rank & 1 & 0 & 0 \\
+    series & 2 & 1 & 0 \\
+    sum (col) & 5 & 0 & 10 \\
+    sum (row) & 2 & 2 & 3 \\
+    sum-if & 2 & 0 & 9 \\
+    sum-product & 0 & 0 & 2 \\
+  \end{tabular}
+  \caption{Constraint occurrence by category}
+  \label{tab:constraint_by_category}
+\end{table}
+
 \end{document}
