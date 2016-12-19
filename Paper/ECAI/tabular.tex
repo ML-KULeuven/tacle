@@ -1232,14 +1232,16 @@ One way to increase precision for this case is to post-process the constraints t
 
 
 \section{Applications}\label{sec:applications}
-In this section, we illustrate how various applications can build on our method for solving the tabular constraint learning problem.
+\added{In this section, we illustrate how two of the motivating applications, auto-completion and error checking, can build on our method for solving the tabular constraint learning problem.}
 
 
 
 
 
-\subsection{Autocompletion}
-Autocompletion can be seen as using knowledge derived from the current data to predict new values before they are written by the user.
+\subsection{Auto-completion}
+Auto-completion can be seen as using knowledge derived from the current data to predict new values before they are written by the user.
+\added{We can decompose this process into three phases: 1) learn constraints on a snapshot~($D_0$) of the spreadsheet, 2) new data~($\Delta D$) is added by the user, and 3) the system uses the learned constraints to predict missing values.
+}
 A snapshot~($D_0$) is used to learn constraints and these are combined with new data~($\Delta D$) that the user has added.
 Using~$\Delta D$ we can keep track of which vectors have changed and which vectors are now \textit{incomplete}.
 \textit{Functional} constraints, such as $\ecsumc{\sbl{r}}{\mathbf{\sbl{x}}}$, are able to compute a result~($\sbl{r}$) based on its \textit{input}~($\mathbf{\sbl{x}}$).
