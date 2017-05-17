@@ -68,7 +68,7 @@ def is_excel_constraint(c: Constraint):
     return c in excel_constraints()
 
 
-constraint_map = {c.name: c for c in workflow.constraint_list}
+constraint_map = {c.name: c for c in workflow.get_constraint_list()}
 
 
 def print_constraints(prefix, constraints):
