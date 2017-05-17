@@ -585,7 +585,7 @@ def rank_data(a):
 def equal(x, y, scale=False):
     if x is None or y is None:
         return x is y
-    if isinstance(x, float) or isinstance(y, float):
+    if isinstance(x, (float, int)) and isinstance(y, (float, int)) and (isinstance(x, float) or isinstance(y, float)):
         delta = pow(10, -10)
         if scale:
             n_digits = min(precision_and_scale(x)[1], precision_and_scale(y)[1])
