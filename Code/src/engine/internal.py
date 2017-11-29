@@ -115,6 +115,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return self._generate_test_vectors(assignments, [c.x], test_permutation)
 
         def rank(c: Rank, assignments, solutions):
+            # TODO Speed up by using local inconsistencies: check some random elements and check consistency of rank
             def is_rank(y_v, x_v):
                 # Calculate rank values for x and compare, fail fast
                 y, x = to_data(y_v, x_v)

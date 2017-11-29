@@ -12,7 +12,7 @@ def main(name):
     groups_file = local("data/groups/{}.txt".format(name))
     if not os.path.isfile(groups_file):
         groups_file = None
-    solutions = workflow.main(csv_file, groups_file, False, silent=True, parse_silent=True)
+    solutions = workflow.main(csv_file, groups_file, False, silent=True)
     for constraint in solutions.solutions:
         sols = solutions.get_solutions(constraint)
         if len(sols) > 0:

@@ -120,7 +120,8 @@ def main(csv_file, groups_file, verbose, silent=False, constraints=None, only_to
     if verbose and not silent: #or True: # TODO:
         print("Total: {0:.3f} (Assign: {1:.3f}, Solve: {2:.3f}, Add: {3:.3f})".format(total_time, assign, solve, add))
 
-    print("{0:.3f}".format(total_time))
+    if not silent:
+        print("{0:.3f}".format(total_time))
 
     return solutions
 
