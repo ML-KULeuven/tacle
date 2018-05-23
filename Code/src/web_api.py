@@ -54,12 +54,10 @@ def learn_constraints(data, data_tables):
     return constraints
 
 
-@app.route("/learn/<tables>")
-def learn(tables):
-    tables = json.loads(tables)
-    print(tables)
+@app.route("/learn/", methods=["POST"])
+def learn():
+    tables = json.loads(request.form["tables"])
     constraints = learn_constraints(tables["data"], tables["indexing"])
-    print(constraints)
     return redirect("https://127.0.0.1:3000?constraints={}".format(json.dumps(constraints)))
 
 
