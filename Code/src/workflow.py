@@ -62,11 +62,12 @@ def task(csv_file, groups_file, constraints=None, manager=None):
     return LearningTask(csv_file, groups_file, manager, constraints)
 
 
-def main(csv_file, groups_file, verbose, silent=False, constraints=None, only_total_time=False):
+def main(csv_file, groups_file, verbose, silent=False, constraints=None, only_total_time=False, groups=None):
     if only_total_time:
         silent = True
     manager = get_manager()
-    groups = list(get_groups_tables(csv_file, groups_file))
+    if groups is None:
+        groups = list(get_groups_tables(csv_file, groups_file))
 
     solutions = Solutions()
     t_origin = time.time()

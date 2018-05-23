@@ -133,6 +133,35 @@ def get_groups_tables(csv_file, groups_file=None):
     return groups
 
 
+def get_groups(data, indexing_data):
+    type_data = np.vectorize(detect_type)(data)
+    table_dict = {}
+    tables = []
+    groups = []
+
+    for table_description in indexing_data["Tables"]:
+        bounds = Bounds(table_description["Bounds"])
+        data_subset = bounds.subset(data)
+        name = table_description["Name"]
+        orientation = None
+        if "Orientation" in table_description:
+            o_string = table_description["Orientation"].lower()
+            if o_string == "row" or o_string == "horizontal":
+                orientation = Orientation.HORIZONTAL
+            elif o_string == "column" or o_string == "col" or o_string == "vertical":
+                orientation = Orientation.VERTICAL
+        table_dict[name] = Table(name, data_subset, orientation)
+        tables.append((bounds.bounds, table_dict[name]))
+
+    if "Groups" in indexing_data:
+        for group_description in indexing_data["Groups"]:
+            table = table_dict[group_description["Table"]]
+            groups.append(create_group(group_description["Bounds"], table))
+    else:
+        groups = detect_groups(type_data, tables)
+    return groups
+
+
 def create_group(bounds_list, table: Table):
     if bounds_list[0] == ":":
         bounds = Bounds([1, table.rows] + bounds_list[1:3])
