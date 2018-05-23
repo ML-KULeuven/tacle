@@ -141,7 +141,7 @@ def get_headers_count(table_range: Range, table_type_data, orientation):
 
 @app.route("/detect_tables/", methods=['POST'])
 def detect_tables():
-    data = request.form["data"]
+    data = json.loads(request.form["data"])
     data = numpy.array(data, dtype=object)
     type_data = numpy.vectorize(Typing.detect_type)(data)
     tables = detect_table_ranges(type_data)
