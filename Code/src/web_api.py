@@ -143,6 +143,7 @@ def get_headers_count(table_range: Range, table_type_data, orientation):
 def detect_tables():
     if request.is_json:
         data = request.get_json(silent=True)
+        return jsonify(data)
         data = numpy.array(data, dtype=object)
         type_data = numpy.vectorize(Typing.detect_type)(data)
         tables = detect_table_ranges(type_data)
