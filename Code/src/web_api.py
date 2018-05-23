@@ -58,7 +58,7 @@ def learn_constraints(data, data_tables):
 def learn():
     tables = json.loads(request.form["data"])
     constraints = learn_constraints(tables["data"], tables["indexing"])
-    return redirect("https://127.0.0.1:3000?constraints={}".format(json.dumps(constraints)))
+    return jsonify(constraints)
 
 
 def detect_table_ranges(type_data):
