@@ -1,7 +1,7 @@
 import json
 
 import numpy
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, jsonify
 from flask_cors import CORS
 
 from indexing import Table, Typing, Orientation, Range
@@ -139,14 +139,16 @@ def get_headers_count(table_range: Range, table_type_data, orientation):
     return headers
 
 
-@app.route("/detect_tables/<data>")
-def detect_tables(data):
-    data = json.loads(data)
-    data = numpy.array(data, dtype=object)
-    type_data = numpy.vectorize(Typing.detect_type)(data)
-    tables = detect_table_ranges(type_data)
-    print(tables)
-    return redirect("https://127.0.0.1:3000?tables={}".format(json.dumps(tables)))
+@app.route("/detect_tables/", methods=['POST'])
+def detect_tables():
+    if request.is_json:
+        data = json.loads(request.get_json(silent=True))
+        data = numpy.array(data, dtype=object)
+        type_data = numpy.vectorize(Typing.detect_type)(data)
+        tables = detect_table_ranges(type_data)
+        return jsonify(tables)
+    else:
+        return "Request data needs to be formatted as JSON"
 
 
 if __name__ == "__main__":
