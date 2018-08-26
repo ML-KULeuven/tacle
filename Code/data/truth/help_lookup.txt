@@ -1,8 +1,0 @@
-{
-	"Essential":
-		{
-			"fuzzy-lookup": [{"FV": "T2[:, 2]", "FK": "T2[:, 1]", "OV": "T1[:, 2]", "OK": "T1[:, 1]"}]
-		},
-	"Non-trivial":
-		{}
-}

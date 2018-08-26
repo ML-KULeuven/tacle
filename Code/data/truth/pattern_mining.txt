@@ -1,9 +1,0 @@
-{
-	"Essential":
-		{
-			"average (row)": [{"X": "T1[:, 2:11]", "Y": "T1[:, 12]"}],
-			"series": [{"X": "T1[:, 1]"}]
-		},
-	"Non-trivial":
-	    {}
-}

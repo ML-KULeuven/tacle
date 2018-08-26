@@ -1,5 +1,4 @@
-# DataCleaning
+# TaCle: Tabular Constraint Learner
+TaCLe is a constraint learner designed for usage in spreadsheets and tabular data.
 
-## Learning tabular constraints
-The document [Progress.pdf](Progress.pdf) describes our current progress and ideas.
-Our running-example excel sheet is [Examples.xlsx](Excel Documents/Examples.xlsx).
+Read more about TaCLe in one of our two papers [TODO].

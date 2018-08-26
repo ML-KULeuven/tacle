@@ -41,19 +41,20 @@ Backup[ ]of[ ]*.numbers/
 
 # Mac finder files and hidden folders
 .DS_Store
-Code/.idea
 
 # Python
 __pycache__/
 
-Paper/.idea/
+.idea/
 
 #virtual environment
-Code/src/tacle/virt/
-Code/src/comparison.pdf
-Code/src/benchmark_tutorials.pdf
-Code/src/benchmark_test.pdf
-Code/src/benchmark_exercises.pdf
-Code/src/benchmark_data.pdf
-/Paper/ECAI/example.eps
-/Code/data/speed_tests
+*.pdf
+
+# Compiled python modules.
+*.pyc
+
+# Setuptools distribution folder.
+/dist/
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
