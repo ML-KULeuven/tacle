@@ -81,7 +81,7 @@ class Typing(object):
         if isinstance(value, int):
             return Typing.int
         elif isinstance(value, float):
-            return Typing.float
+            return Typing.float if not numpy.isnan(value) else None
 
         value = str(value)
         if value == "":
@@ -220,7 +220,7 @@ class Range(object):
         return self.intersect(other)
 
     def __repr__(self):
-        return "Range({},{},{},{})".format(self.column, self.row, self.width, self.height)
+        return "Range(x:{}, y:{}, w:{}, h:{})".format(self.column, self.row, self.width, self.height)
 
     def __str__(self):
         return "({},{}-{},{})".format(self.x0, self.y0, self.x1, self.y1)
