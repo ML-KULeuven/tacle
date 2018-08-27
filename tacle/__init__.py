@@ -4,7 +4,7 @@ from typing import List, Union
 import numpy as np
 import csv
 
-from .convert import get_tables, get_blocks
+from .convert import get_tables
 from .detect import detect_table_ranges, get_type_data
 from .learn import learn_constraints
 from .core.solutions import Constraint
@@ -52,7 +52,7 @@ def ranges_from_cells(data):
 
 
 def tables_from_csv(csv_file):
-    return ranges_from_cells(parse_csv(csv_file))
+    return tables_from_cells(parse_csv(csv_file))
 
 
 def tables_from_cells(data):

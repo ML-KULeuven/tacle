@@ -11,6 +11,7 @@ class Typing(object):
     currency = "currency"
     percentage = "percentage"
     any = "any"
+    unknown = "unknown"
 
     percent_pattern = re.compile(r"\s*-?\s*\d+(\.\d+)?\s*%")
     currency_pattern = re.compile(r"(\s*[$€£]\s*\d+[\d,]*\s*)|(\s*\d+[\d,]*\s*[$€£]\s*)")
@@ -33,9 +34,9 @@ class Typing(object):
             return cell_type1
         if cell_type1 is None or cell_type2 is None:
             return None
-        if cell_type1 == Typing.any:
+        if cell_type1 == Typing.any or cell_type1 == Typing.unknown:
             return cell_type2
-        if cell_type2 == Typing.any:
+        if cell_type2 == Typing.any or cell_type2 == Typing.unknown:
             return cell_type1
 
         hierarchy = Typing.hierarchy()
@@ -86,11 +87,13 @@ class Typing(object):
         if isinstance(value, int):
             return Typing.int
         elif isinstance(value, float):
-            return Typing.float if not np.isnan(value) else None
+            return Typing.float
 
         value = str(value)
         if value == "":
-            return None
+            return Typing.any
+        if value == "#?":
+            return Typing.unknown
         elif re.match(Typing.percent_pattern, value):
             return Typing.percentage
         elif re.match(Typing.currency_pattern, value):
@@ -113,7 +116,9 @@ class Typing(object):
         elif cell_type == Typing.currency:
             return float(re.sub(Typing.currency_symbols, "", str(value)))
         elif cell_type in [Typing.int, Typing.float, Typing.numeric]:
-            return float(re.sub(Typing.place_holder, "", str(value))) if value is not None else np.nan
+            return float(re.sub(Typing.place_holder, "", str(value))) if value not in [None, "#?"] else np.nan
+        elif cell_type == Typing.unknown:
+            return "#?"
         raise ValueError("Unexpected cell type: " + cell_type)
 
 
@@ -285,6 +290,9 @@ class Table(object):
         self.range = t_range
         self.orientations = orientations
 
+        from tacle.convert import get_blocks
+        self.blocks = get_blocks(self)
+
     @property
     def columns(self):
         return self.range.columns
@@ -317,7 +325,7 @@ class Table(object):
 
 
 class Block(object):
-    def __init__(self, table, relative_range, orientation, vector_types):
+    def __init__(self, table, relative_range, orientation):
         """
         :type table: Table
         :type relative_range: Range
@@ -329,18 +337,24 @@ class Block(object):
         self.relative_range = relative_range
         self.orientation = orientation
 
-        f = np.vectorize(Typing.cast)
-        self.data = f(relative_range.get_data(table.type_data), relative_range.get_data(table.data))
+        self.vector_types = []
+        self.vector_data = []
+        for i in range(relative_range.vector_count(orientation)):
+            v_type = Typing.max(relative_range.vector_range(i, orientation).get_data(table.type_data))
+            self.vector_types.append(v_type)
 
-        self.vector_types = vector_types
-        self.type = Typing.max(vector_types)
+            v_data = relative_range.get_data(table.data)
+            self.vector_data.append(np.vectorize(lambda v: Typing.cast(v_type, v))(v_data.flatten()))
+
+        self.type = Typing.max(self.vector_types)
+        self.data = np.vectorize(lambda v: Typing.cast(v_type, v))(relative_range.get_data(table.data).flatten())
         self.has_blanks = not np.all(np.vectorize(Typing.blank_detector(self.type))(self.data))
 
         self.cache = dict()
         self.hash = hash((self.table, self.relative_range, self.orientation))
 
     def __repr__(self):
-        return "Block({}, {}, {})".format(self.table, self.relative_range, self.orientation)
+        return "Block({}, {}, {}, {})".format(self.table, self.relative_range, self.type, self.orientation)
 
     def vector_count(self):
         return self.relative_range.vector_count(self.orientation)

@@ -41,7 +41,7 @@ def detect_table_ranges(type_data, typed=True):
 
     for r in range(numpy.size(type_data, 0)):
         for c in range(numpy.size(type_data, 1)):
-            if type_data[r, c] != "None":
+            if type_data[r, c] != Typing.any:
                 selected_range = find_range(c, r)
                 if selected_range is None:
                     top_range = find_range(c, r - 1) if r - 1 >= 0 else None

@@ -24,6 +24,8 @@ if __name__ == "__main__":
 
     constraints = learn_from_csv(args.csv_file)
     tables = tables_from_csv(args.csv_file)
+    print(*[(str(table), table.blocks) for table in tables], sep="\n")
+
     if args.filter is not None:
         constraints = filter_constraints(constraints, *args.filter)
     if args.group:
