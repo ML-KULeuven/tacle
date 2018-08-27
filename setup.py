@@ -9,4 +9,4 @@ setup(name='tacle',
       license='MIT',
       packages=find_packages(),
       zip_safe=False, install_requires=['numpy', 'python-constraint', 'matplotlib']
-      )
+)
