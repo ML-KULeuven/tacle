@@ -25,16 +25,19 @@ def parse_csv(csv_file):
     return data
 
 
-def learn_from_csv(csv_file):
-    return learn_from_cells(parse_csv(csv_file))
+def learn_from_csv(csv_file, filters=None):
+    return learn_from_cells(parse_csv(csv_file), filters)
 
 
-def learn_from_cells(data):
+def learn_from_cells(data, filters=None):
     data = np.array(data, dtype=object)
     type_data = get_type_data(data)
     t_ranges = detect_table_ranges(type_data)
     # tables = get_tables(data, type_data, t_ranges)
-    return learn_constraints(data, t_ranges).constraints
+    constraints = learn_constraints(data, t_ranges).constraints
+    if filters is not None:
+        constraints = filter_constraints(filters)
+    return constraints
 
 
 def filter_constraints(constraints, *args):
