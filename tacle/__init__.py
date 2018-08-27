@@ -4,11 +4,6 @@ from typing import List, Union
 import numpy as np
 import csv
 
-from . import core
-from . import engine
-from . import parse
-from . import util
-
 from .detect import detect_table_ranges, get_type_data
 from .learn import learn_constraints
 from .core.solutions import Constraint
