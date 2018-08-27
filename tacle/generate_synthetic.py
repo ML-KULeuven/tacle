@@ -2,6 +2,7 @@ import numpy as np
 from os.path import join
 from os import system
 
+
 def generate_files(path,prefix,generate_function):
     file_list = []
     system("rm {folder}/*".format(folder=join(path,prefix)))
@@ -15,18 +16,18 @@ def generate_files(path,prefix,generate_function):
             file_list.append(full_path)
     return file_list
 
+
 def generate_ones(cols,rows):
     single_row = ",".join(["1"]*cols)
     multiple_rows = "\n".join([single_row]*rows)
     return multiple_rows
+
 
 def generate_random(cols,rows):
     def single_row():
         return ",".join(map(lambda x: str(x),np.random.randint(1,1000,cols)))
     multiple_rows = "\n".join([single_row() for x in range(rows)])
     return multiple_rows
-
-
 
 
 def main():
