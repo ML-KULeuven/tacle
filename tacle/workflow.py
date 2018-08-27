@@ -1,14 +1,14 @@
 import argparse
 import time
 
-from core.constraint import *
-from core.learning import LearningTask
-from core.solutions import Solutions
-from core.strategy import StrategyManager
-from engine.idp import IdpAssignmentStrategy
-from engine.internal import InternalCSPStrategy, InternalSolvingStrategy
-from engine.minizinc import MinizincAssignmentStrategy, MinizincSolvingStrategy
-from parse.parser import get_groups_tables
+from .core.template import *
+from .core.learning import LearningTask
+from .core.solutions import Solutions
+from .core.strategy import StrategyManager
+from .engine.idp import IdpAssignmentStrategy
+from .engine.internal import InternalCSPStrategy, InternalSolvingStrategy
+from .engine.minizinc import MinizincAssignmentStrategy, MinizincSolvingStrategy
+from .parse.parser import get_groups_tables
 
 
 def get_constraint_list():
@@ -36,7 +36,7 @@ def get_constraint_list():
     return constraint_list
 
 
-def order_constraints(constraints: List[Constraint]):
+def order_constraints(constraints: List[ConstraintTemplate]):
     ordered = []
     found = set()
     spill = constraints

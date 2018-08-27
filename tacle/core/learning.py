@@ -1,8 +1,8 @@
 import time
 
-from core.solutions import Solutions
-from parse.parser import get_groups_tables
-from util import printing
+from .solutions import Solutions
+from tacle.parse.parser import get_groups_tables
+from tacle.util import printing
 
 
 class LearningTask:

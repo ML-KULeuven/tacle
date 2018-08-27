@@ -7,11 +7,11 @@ import re
 
 import time
 
-from core.group import Bounds, Table, Group, Orientation, GType
+from tacle.core.group import Bounds, Table, Group, Orientation, GType
 
 
 # TODO Single vector => try both orientations
-from util import printing
+from tacle.util import printing
 
 
 def parse(filename):

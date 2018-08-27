@@ -1,13 +1,13 @@
 import json
 
 import numpy
-from flask import Flask, request, redirect, jsonify
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from indexing import Table, Typing, Orientation, Range
 import workflow
 from core.group import Bounds
 from experiment import is_excel_constraint
+from indexing import Typing, Orientation, Range
 from parse.parser import get_groups
 
 app = Flask(__name__)

@@ -138,7 +138,7 @@ class Group:
         self._vector_types = gtype_set
         self._dtype = GType.max(gtype_set)
         self._data = data
-        from core.constraint import blank_filter
+        from tacle.core.template import blank_filter
         self._is_partial = not numpy.all(numpy.vectorize(blank_filter(self._data)[1])(self._data))
         self._subgroups = dict()
         self._hash = None

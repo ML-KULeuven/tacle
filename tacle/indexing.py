@@ -50,13 +50,25 @@ class Typing(object):
             return None
 
         last = -1
-        while path1[last - 1] == path2[last - 1]:
+        while min(len(path1), len(path2)) > -last + 1 and path1[last - 1] == path2[last - 1]:
             last -= 1
 
         return path1[last]
 
     @staticmethod
+    def compatible(cell_types):
+        if isinstance(cell_types, numpy.ndarray):
+            cell_types = cell_types.flatten()
+        root_type = Typing.root(cell_types[0])
+        for cell_type in cell_types[1:]:
+            if Typing.root(cell_type) != root_type:
+                return False
+        return True
+
+    @staticmethod
     def max(cell_types):
+        if isinstance(cell_types, numpy.ndarray):
+            cell_types = cell_types.flatten()
         super_type = cell_types[0]
         for cell_type in cell_types[1:]:
             super_type = Typing.lowest_common_ancestor(super_type, cell_type)
@@ -115,6 +127,10 @@ class Typing(object):
 class Orientation(object):
     vertical = "vertical"
     horizontal = "horizontal"
+
+    @staticmethod
+    def all():
+        return [Orientation.vertical, Orientation.horizontal]
 
 
 class Range(object):
@@ -205,16 +221,24 @@ class Range(object):
         return self.x0 if orientation == Orientation.vertical else self.y0
 
     def sub_range(self, vector_index, vector_count, orientation):
-        if self.x0 + vector_index + vector_count > self.x1:
-            return ValueError("Sub range exceeds range")
+        if self.vector_index(orientation) + vector_index + vector_count >\
+                self.vector_index(orientation) + self.vector_count(orientation):
+            raise ValueError("Sub range exceeds range")
 
         if orientation == Orientation.vertical:
             return Range(self.x0 + vector_index, self.y0, vector_count, self.height)
         else:
             return Range(self.x0, self.y0 + vector_index, self.width, vector_count)
 
+    def vector_range(self, vector_index, orientation):
+        return self.sub_range(vector_index, 1, orientation)
+
     def as_dict(self):
         return {"columnIndex": self.column, "rowIndex": self.row, "columns": self.columns, "rows": self.rows}
+
+    def as_legacy_bounds(self):
+        from tacle.core.group import Bounds
+        return Bounds((self.y0 + 1, self.y1, self.x0 + 1, self.x1))
 
     def __and__(self, other):
         return self.intersect(other)
@@ -249,9 +273,9 @@ class DataSheet(object):
 
 
 class Table(object):
-    def __init__(self, data, t_range, name=None, orientation=None):
-        if orientation not in [None, Orientation.vertical, Orientation.horizontal]:
-            raise ValueError("Invalid orientation {}".format(orientation))
+    def __init__(self, data, t_range, name=None, orientations=None):
+        if any(orientation not in [None, Orientation.vertical, Orientation.horizontal] for orientation in orientations):
+            raise ValueError("Invalid orientations {}".format(orientations))
 
         if numpy.size(data, 1) != t_range.columns or numpy.size(data, 0) != t_range.rows:
             raise ValueError("Mismatch between data and range dimensions: {} vs {}"
@@ -260,7 +284,7 @@ class Table(object):
         self.name = name if name is not None else str(t_range)
         self.data = data
         self.range = t_range
-        self.orientation = orientation
+        self.orientations = orientations
 
     @property
     def columns(self):
@@ -271,7 +295,7 @@ class Table(object):
         return self.range.rows
 
     def __repr__(self):
-        return "Table({}, {}, {}, {})".format(self.name, self.data, repr(self.range), self.orientation)
+        return "Table({}, {}, {}, {})".format(self.name, self.data, repr(self.range), self.orientations)
 
     def __str__(self):
         return self.name

@@ -1,28 +1,50 @@
+from typing import Dict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .template import ConstraintTemplate
+
+
+class Constraint(object):
+    def __init__(self, template, assignment):
+        # type: (ConstraintTemplate, Dict[str, object]) -> None
+        self.template = template
+        self.assignment = assignment
+
+    def __repr__(self):
+        return "Constraint({}, {})".format(repr(self.template), self.assignment)
+
+    def __str__(self):
+        return self.template.to_string(self.assignment)
+
+
 class Solutions:
     def __init__(self):
         self.solutions = {}
         self.properties = {}
         self.canon_map = dict()
+        self.constraints = []
 
-    def add(self, constraint, solutions):
+    def add(self, template, solutions):
         solutions_l = list(solutions)
-        self.solutions[constraint] = solutions_l
-        solution_set = set(self._to_tuple(constraint, solution) for solution in solutions_l)
-        self.properties[constraint] = solution_set
+        self.solutions[template] = solutions_l
+        solution_set = set(self._to_tuple(template, solution) for solution in solutions_l)
+        self.properties[template] = solution_set
+        for solution in solutions_l:
+            self.constraints.append(Constraint(template, solution))
 
-    def get_solutions(self, constraint):
-        return self.solutions.get(constraint, [])
+    def get_solutions(self, template):
+        return self.solutions.get(template, [])
 
-    def has_solution(self, constraint, solution):
-        return self._to_tuple(constraint, solution) in self.properties[constraint]
+    def has_solution(self, template, solution):
+        return self._to_tuple(template, solution) in self.properties[template]
 
-    def has(self, constraint, keys, values):
-        return self.has_solution(constraint, {k.name: v for k, v in zip(keys, values)})
+    def has(self, template, keys, values):
+        return self.has_solution(template, {k.name: v for k, v in zip(keys, values)})
 
     @staticmethod
-    def _to_tuple(constraint, solution):
+    def _to_tuple(template, solution):
         try:
-            return tuple(solution[v.name] for v in constraint.variables)
+            return tuple(solution[v.name] for v in template.variables)
         except KeyError as e:
             raise RuntimeError("No value for {} in solution {}".format(e.args[0], solution))
 

@@ -8,5 +8,5 @@ setup(name='tacle',
       author_email='samuel.kolb@me.com',
       license='MIT',
       packages=['tacle'],
-      zip_safe=False, install_requires=['numpy']
+      zip_safe=False, install_requires=['numpy', 'python-constraint', 'matplotlib']
       )

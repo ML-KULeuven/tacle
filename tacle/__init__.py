@@ -1,7 +1,8 @@
 import numpy as np
 import csv
 
-from .detect import detect_table_ranges
+from .detect import detect_table_ranges, get_type_data
+from .learn import learn_constraints
 
 
 def parse(csv_file):
@@ -21,9 +22,12 @@ def parse(csv_file):
 
 
 def learn_from_csv(csv_file):
-    learn_from_cells(parse(csv_file))
+    return learn_from_cells(parse(csv_file))
 
 
 def learn_from_cells(data):
     data = np.array(data, dtype=object)
-    print(*[t_range.get_data(data) for t_range in detect_table_ranges(data)], sep="\n")
+    type_data = get_type_data(data)
+    t_ranges = detect_table_ranges(type_data)
+    # tables = get_tables(data, type_data, t_ranges)
+    return learn_constraints(data, t_ranges).constraints

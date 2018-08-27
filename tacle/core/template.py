@@ -1,20 +1,21 @@
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import numpy
 
-from core.assignment import Source, Filter, Variable, SameLength, ConstraintSource, SameTable, \
-    SameOrientation, SameType, SizeFilter, Not, NotPartial, Partial, SatisfiesConstraint
-from core.group import GType, Group, Orientation
+from .assignment import Source, Filter, Variable, SameLength, ConstraintSource, SameTable, \
+    SameOrientation, SameType, SizeFilter, Not, NotPartial, Partial
+from .group import GType, Group, Orientation
 
 
-class Constraint:
-    def __init__(self, name, print_format, source: Source, filters: List[Filter], depends_on=set()):
+class ConstraintTemplate:
+    def __init__(self, name, print_format, source, filters, depends_on=frozenset()):
+        # type: (str, str, Source, List[Filter], Union[frozenset, set]) -> None
         self.name = name
         self.print_format = print_format
         self.source = source
         self._filters = filters
-        self._depends_on = set.union(depends_on, source.depends_on())
+        self._depends_on = depends_on | source.depends_on()
 
     @property
     def filters(self):
@@ -51,12 +52,17 @@ numeric = {GType.int, GType.float}
 textual = {GType.string}
 discrete = {GType.string, GType.int}
 
-filter_nan = lambda e: not numpy.isnan(e)
-filter_none = lambda e: e is not None
+
+def filter_nan(e):
+    return not numpy.isnan(e)
+
+
+def filter_none(e):
+    return e is not None
 
 
 def blank_filter(data, vectorized=False):
-    if numpy.issubdtype(data.dtype, numpy.float):
+    if numpy.issubdtype(data.dtype, numpy.floating):
         blank, blank_f = [numpy.nan, filter_nan]
     else:
         blank, blank_f = [None, filter_none]
@@ -122,7 +128,7 @@ class Operation(Enum):
         return self._func
 
 
-class Aggregate(Constraint):
+class Aggregate(ConstraintTemplate):
     x = Variable("X", types=numeric)
     y = Variable("Y", vector=True, types=numeric)
 
@@ -174,7 +180,7 @@ class Aggregate(Constraint):
 
 # TODO Subset -> Fuzzy lookup
 
-class Permutation(Constraint):
+class Permutation(ConstraintTemplate):
     x = Variable("X", types=numeric)
 
     def __init__(self):
@@ -184,7 +190,7 @@ class Permutation(Constraint):
         super().__init__("permutation", "PERMUTATION({X})", source, filters)
 
 
-class Series(Constraint):
+class Series(ConstraintTemplate):
     x = Variable("X", types=numeric)
 
     def __init__(self):
@@ -194,7 +200,7 @@ class Series(Constraint):
         super().__init__("series", "SERIES({X})", source, filters)
 
 
-class AllDifferent(Constraint):
+class AllDifferent(ConstraintTemplate):
     x = Variable("X", types=discrete)
 
     def __init__(self):
@@ -203,7 +209,7 @@ class AllDifferent(Constraint):
         super().__init__("all-different", "ALLDIFFERENT({X})", Source(variables), filters)
 
 
-class Ordered(Constraint):
+class Ordered(ConstraintTemplate):
     x = Variable("X", types=numeric)
 
     def __init__(self):
@@ -213,7 +219,7 @@ class Ordered(Constraint):
         super().__init__("ordered", "ORDERED({X})", source, filters)
 
 
-class Rank(Constraint):
+class Rank(ConstraintTemplate):
     x = Variable("X", vector=True, types=numeric)
     y = Variable("Y", vector=True, types=integer)
 
@@ -224,7 +230,7 @@ class Rank(Constraint):
         super().__init__("rank", "{Y} = RANK({X})", source, filters, {Equal()})
 
 
-class ForeignKey(Constraint):
+class ForeignKey(ConstraintTemplate):
     pk = Variable("PK", vector=True, types=discrete)
     fk = Variable("FK", vector=True, types=discrete)
 
@@ -235,7 +241,7 @@ class ForeignKey(Constraint):
         super().__init__("foreign-key", "{FK} -> {PK}", source, filters)
 
 
-class Lookup(Constraint):
+class Lookup(ConstraintTemplate):
     o_key = Variable("OK", vector=True, types=discrete)
     o_value = Variable("OV", vector=True)
     f_key = Variable("FK", vector=True, types=discrete)
@@ -251,7 +257,7 @@ class Lookup(Constraint):
         super().__init__("lookup", "{FV} = LOOKUP({FK}, {OK}, {OV})", source, filters, {Equal()})
 
 
-class FuzzyLookup(Constraint):
+class FuzzyLookup(ConstraintTemplate):
     o_key = Variable("OK", vector=True, types=numeric)
     o_value = Variable("OV", vector=True)
     f_key = Variable("FK", vector=True, types=numeric)
@@ -268,7 +274,7 @@ class FuzzyLookup(Constraint):
         super().__init__("fuzzy-lookup", "{FV} = FUZZY-LOOKUP({FK}, {OK}, {OV})", source, filters, {Equal()})
 
 
-class ConditionalAggregate(Constraint):
+class ConditionalAggregate(ConstraintTemplate):
     o_key = Variable("OK", vector=True, types=discrete)
     result = Variable("R", vector=True, types=numeric)
     f_key = Variable("FK", vector=True, types=discrete)
@@ -306,7 +312,7 @@ class ConditionalAggregate(Constraint):
         return list(cls.instance(op) for op in Operation if not op == Operation.PRODUCT)
 
 
-class RunningTotal(Constraint):
+class RunningTotal(ConstraintTemplate):
     acc = Variable("A", vector=True, types=numeric)
     pos = Variable("P", vector=True, types=numeric)
     neg = Variable("N", vector=True, types=numeric)
@@ -318,7 +324,7 @@ class RunningTotal(Constraint):
         super().__init__("running-total", "{A} = PREV({A}) + {P} - {N}", source, filters, {Equal()})
 
 
-class ForeignOperation(Constraint):
+class ForeignOperation(ConstraintTemplate):
     f_key = Variable("FK", vector=True, types=discrete)
     o_key = Variable("OK", vector=True, types=discrete)
     result = Variable("R", vector=True, types=numeric)
@@ -347,12 +353,12 @@ class ForeignProduct(ForeignOperation):
         super().__init__("PRODUCT", Operation.PRODUCT)
 
 
-class VectorOperation(Constraint):
+class VectorOperation(ConstraintTemplate):
     result = Variable("R", vector=True, types=numeric)
     first = Variable("O1", vector=True, types=numeric)
     second = Variable("O2", vector=True, types=numeric)
 
-    def __init__(self, name, p_format, source, filters, symmetric=False, depends_on=set()):
+    def __init__(self, name, p_format, source, filters, symmetric=False, depends_on=frozenset()):
         self._symmetric = symmetric
         super().__init__(name, p_format, source, filters, depends_on=depends_on)
 
@@ -389,7 +395,7 @@ class PercentualDiff(VectorOperation):
         super().__init__("percentual-diff", "{R} = ({O1} - {O2}) / {O2}", source, filters, False, {Equal()})
 
 
-class Projection(Constraint):
+class Projection(ConstraintTemplate):
     result = Variable("R", vector=True)
     projected = Variable("P")
 
@@ -401,7 +407,7 @@ class Projection(Constraint):
         super().__init__("project", "{R} = PROJECT({P})", source, filters)
 
 
-class SumProduct(Constraint):
+class SumProduct(ConstraintTemplate):
     result = Variable("R", vector=True, types=numeric)
     first = Variable("O1", vector=True, types=numeric)
     second = Variable("O2", vector=True, types=numeric)
@@ -415,7 +421,7 @@ class SumProduct(Constraint):
         super().__init__("sum-product", "{R} = SUMPRODUCT({O1}, {O2})", source, filters)
 
 
-class Equal(Constraint):
+class Equal(ConstraintTemplate):
     first = Variable("O1", vector=True)
     second = Variable("O2", vector=True)
 
@@ -426,7 +432,7 @@ class Equal(Constraint):
         super().__init__("equal", "{O1} = {O2}", source, filters)
 
 
-class EqualGroup(Constraint):
+class EqualGroup(ConstraintTemplate):
     x = Variable("X")
 
     def __init__(self):

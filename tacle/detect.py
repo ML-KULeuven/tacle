@@ -22,12 +22,14 @@ def get_headers_count(table_range: Range, table_type_data, orientation):
     return headers
 
 
-def detect_table_ranges(data, typed=False):
+def get_type_data(data):
+    data = numpy.array(data, dtype=object)
+    return numpy.vectorize(Typing.detect_type)(data)
+
+
+def detect_table_ranges(type_data, typed=True):
     if not typed:
-        data = numpy.array(data, dtype=object)
-        type_data = numpy.vectorize(Typing.detect_type)(data)
-    else:
-        type_data = data
+        type_data = get_type_data(type_data)
 
     ranges = []
 

@@ -16,4 +16,5 @@ if __name__ == "__main__":
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    learn_from_csv(args.csv_file)
+    constraints = learn_from_csv(args.csv_file)
+    print(*list(map(str, constraints)), sep="\n")

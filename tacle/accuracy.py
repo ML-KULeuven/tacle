@@ -1,13 +1,11 @@
 import os
-
 import time
+
 from pandas import json
 
 import print_truth
 import workflow
-from core.constraint import *
-from core.group import Bounds
-from draw import Plotter
+from core.template import *
 from engine.util import local
 
 exercises = [
@@ -64,7 +62,7 @@ def excel_constraints():
          ForeignProduct(), Equal(), PercentualDiff(), Projection()]
 
 
-def is_excel_constraint(c: Constraint):
+def is_excel_constraint(c: ConstraintTemplate):
     return c in excel_constraints()
 
 
@@ -171,7 +169,7 @@ class CategoryCounter:
     def not_present(self):
         return self._not_present
 
-    def count(self, constraint: Constraint, solution):
+    def count(self, constraint: ConstraintTemplate, solution):
         s_strings = frozenset({name: str(group) for name, group in solution.items()}.items())
         if (constraint.name, s_strings) in self._constraints:
             self._present += 1

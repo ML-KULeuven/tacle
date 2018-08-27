@@ -1,9 +1,9 @@
 import re
 
-from core.constraint import *
-from core.group import *
-from core.strategy import DictAssignmentStrategy
-from engine.util import run_command, local
+from tacle.core.template import *
+from tacle.core.group import *
+from tacle.core.strategy import DictAssignmentStrategy
+from .util import run_command, local
 
 
 class IdpAssignmentStrategy(DictAssignmentStrategy):
@@ -30,7 +30,7 @@ class IdpAssignmentStrategy(DictAssignmentStrategy):
                 assignments.append(a)
         return assignments
 
-    def create_structure(self, constraint: Constraint, groups):
+    def create_structure(self, constraint: ConstraintTemplate, groups):
         variables = constraint.get_variables()
 
         def lambda_filter(f):

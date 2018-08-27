@@ -3,10 +3,10 @@ import itertools
 
 import math
 
-from core.constraint import *
-from core.group import Group
-from core.solutions import Solutions
-from core.strategy import AssignmentStrategy, DictSolvingStrategy
+from tacle.core.template import *
+from tacle.core.group import Group
+from tacle.core.solutions import Solutions
+from tacle.core.strategy import AssignmentStrategy, DictSolvingStrategy
 
 
 class MaxRange:
@@ -61,13 +61,13 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(SumProduct())
         self.add_constraint(Ordered())
 
-    def add_constraint(self, constraint: Constraint):
+    def add_constraint(self, constraint: ConstraintTemplate):
         self._constraints.add(constraint)
 
     def applies_to(self, constraint):
         return constraint in self._constraints
 
-    def apply(self, constraint: Constraint, groups: [Group], solutions):
+    def apply(self, constraint: ConstraintTemplate, groups: [Group], solutions):
         return constraint.source.candidates(groups, solutions, constraint.filters)
 
 

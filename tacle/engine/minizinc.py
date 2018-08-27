@@ -2,10 +2,10 @@ import re
 
 from numpy import transpose
 
-from core.constraint import *
-from core.group import Group, GType
-from core.strategy import DictAssignmentStrategy, DictSolvingStrategy
-from engine.util import local, run_command, TempFile
+from tacle.core.template import *
+from tacle.core.group import Group, GType
+from tacle.core.strategy import DictAssignmentStrategy, DictSolvingStrategy
+from .util import local, run_command, TempFile
 
 unsatisfiable_pattern = re.compile(r".*UNSATISFIABLE.*")
 error_pattern = re.compile(r".*error.*")
@@ -133,7 +133,7 @@ class MinizincAssignmentStrategy(DictAssignmentStrategy):
     def applies_to(self, constraint):
         return constraint in self.strategies
 
-    def apply(self, constraint: Constraint, groups: [Group], solutions):
+    def apply(self, constraint: ConstraintTemplate, groups: [Group], solutions):
         return self.strategies[constraint](constraint, groups, solutions)
 
     @staticmethod

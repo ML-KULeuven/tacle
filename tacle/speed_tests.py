@@ -10,7 +10,7 @@ import workflow
 import os
 import itertools
 
-from core.constraint import Rank, Aggregate
+from core.template import Rank, Aggregate
 from core.group import GType
 from runtime_rendering import ScatterData
 

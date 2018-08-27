@@ -3,7 +3,7 @@ from os import system
 
 import numpy as np
 
-from core.constraint import Aggregate, Operation
+from core.template import Aggregate, Operation
 from core.group import GType, Orientation
 from core.strategy import DictSolvingStrategy
 from functools import partial

@@ -1,11 +1,9 @@
 import os
 
-import time
-
+from core.template import *
 from pandas import json
 
 import workflow
-from core.constraint import *
 from core.group import Bounds
 from engine.util import local
 
@@ -32,7 +30,7 @@ class ConstraintCounter:
     def missed(self):
         return self._tracking
 
-    def register(self, constraint: Constraint, solution):
+    def register(self, constraint: ConstraintTemplate, solution):
         s_strings = frozenset({name: str(group) for name, group in solution.items()}.items())
         if (constraint.name, s_strings) in self._relevant:
             self._tracking.remove((constraint.name, s_strings))
@@ -164,5 +162,5 @@ def excel_constraints():
          ForeignProduct(), Equal(), PercentualDiff(), Projection()]
 
 
-def is_excel_constraint(c: Constraint):
+def is_excel_constraint(c: ConstraintTemplate):
     return c in excel_constraints()

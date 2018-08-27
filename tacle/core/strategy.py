@@ -1,12 +1,12 @@
-from core.constraint import Constraint
-from core.group import Group
+from .template import ConstraintTemplate
+from .group import Group
 
 
 class AssignmentStrategy:
     def applies_to(self, constraint):
         raise NotImplementedError()
 
-    def apply(self, constraint: Constraint, groups: [Group], solutions):
+    def apply(self, constraint: ConstraintTemplate, groups: [Group], solutions):
         raise NotImplementedError()
 
 
@@ -14,13 +14,13 @@ class DictAssignmentStrategy(AssignmentStrategy):
     def __init__(self):
         self.strategies = {}
 
-    def add_strategy(self, constraint: Constraint, strategy_f):
+    def add_strategy(self, constraint: ConstraintTemplate, strategy_f):
         self.strategies[constraint] = strategy_f
 
     def applies_to(self, constraint):
         return constraint in self.strategies
 
-    def apply(self, constraint: Constraint, groups: [Group], solutions):
+    def apply(self, constraint: ConstraintTemplate, groups: [Group], solutions):
         return self.strategies[constraint](constraint, groups, solutions)
 
 
@@ -28,7 +28,7 @@ class SolvingStrategy:
     def applies_to(self, constraint):
         raise NotImplementedError()
 
-    def apply(self, constraint: Constraint, assignments: [{Group}], solutions):
+    def apply(self, constraint: ConstraintTemplate, assignments: [{Group}], solutions):
         raise NotImplementedError()
 
 
@@ -36,13 +36,13 @@ class DictSolvingStrategy(SolvingStrategy):
     def __init__(self):
         self.strategies = {}
 
-    def add_strategy(self, constraint: Constraint, strategy_f):
+    def add_strategy(self, constraint: ConstraintTemplate, strategy_f):
         self.strategies[constraint] = strategy_f
 
     def applies_to(self, constraint):
         return constraint in self.strategies
 
-    def apply(self, constraint: Constraint, assignments: [{Group}], solutions):
+    def apply(self, constraint: ConstraintTemplate, assignments: [{Group}], solutions):
         return self.strategies[constraint](constraint, assignments, solutions)
 
 
@@ -58,25 +58,25 @@ class StrategyManager:
     def add_solving_strategy(self, strategy: SolvingStrategy):
         self.solving_strategies.append(strategy)
 
-    def find_assignments(self, constraint: Constraint, groups: [Group], solutions) -> [[Group]]:
+    def find_assignments(self, constraint: ConstraintTemplate, groups: [Group], solutions) -> [[Group]]:
         for strategy in self.assignment_strategies:
             if strategy.applies_to(constraint):
                 return strategy.apply(constraint, groups, solutions)
         raise Exception("No assignment handler for {}".format(constraint))
 
-    def supports_assignments_for(self, constraint: Constraint):
+    def supports_assignments_for(self, constraint: ConstraintTemplate):
         for strategy in self.assignment_strategies:
             if strategy.applies_to(constraint):
                 return True
         return False
 
-    def find_solutions(self, constraint: Constraint, assignments: [{Group}], solutions) -> [{(Group, int)}]:
+    def find_solutions(self, constraint: ConstraintTemplate, assignments: [{Group}], solutions) -> [{(Group, int)}]:
         for strategy in self.solving_strategies:
             if strategy.applies_to(constraint):
                 return strategy.apply(constraint, assignments, solutions)
         raise Exception("No solving handler for {}".format(constraint))
 
-    def supports_solving_for(self, constraint: Constraint):
+    def supports_solving_for(self, constraint: ConstraintTemplate):
         for strategy in self.solving_strategies:
             if strategy.applies_to(constraint):
                 return True

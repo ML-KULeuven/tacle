@@ -1,10 +1,10 @@
 from typing import List, Dict, Set
 
-import itertools
 from constraint import Problem
-from core.group import Group, Orientation
-from core.solutions import Solutions
-from parse.parser import GType
+
+from tacle.parse.parser import GType
+from .group import Group, Orientation
+from .solutions import Solutions
 
 
 class Variable:
