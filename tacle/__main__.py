@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from tacle import learn_from_csv, filter_constraints
+from tacle import learn_from_csv, filter_constraints, tables_from_csv
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -23,6 +23,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     constraints = learn_from_csv(args.csv_file)
+    tables = tables_from_csv(args.csv_file)
     if args.filter is not None:
         constraints = filter_constraints(constraints, *args.filter)
     if args.group:

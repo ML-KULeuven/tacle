@@ -1,6 +1,6 @@
 import re
 
-import numpy
+import numpy as np
 
 
 class Typing(object):
@@ -10,6 +10,7 @@ class Typing(object):
     string = "string"
     currency = "currency"
     percentage = "percentage"
+    any = "any"
 
     percent_pattern = re.compile(r"\s*-?\s*\d+(\.\d+)?\s*%")
     currency_pattern = re.compile(r"(\s*[$€£]\s*\d+[\d,]*\s*)|(\s*\d+[\d,]*\s*[$€£]\s*)")
@@ -30,9 +31,11 @@ class Typing(object):
     def lowest_common_ancestor(cell_type1, cell_type2):
         if cell_type1 == cell_type2:
             return cell_type1
-        elif cell_type1 is None:
+        if cell_type1 is None or cell_type2 is None:
+            return None
+        if cell_type1 == Typing.any:
             return cell_type2
-        elif cell_type2 is None:
+        if cell_type2 == Typing.any:
             return cell_type1
 
         hierarchy = Typing.hierarchy()
@@ -56,18 +59,8 @@ class Typing(object):
         return path1[last]
 
     @staticmethod
-    def compatible(cell_types):
-        if isinstance(cell_types, numpy.ndarray):
-            cell_types = cell_types.flatten()
-        root_type = Typing.root(cell_types[0])
-        for cell_type in cell_types[1:]:
-            if Typing.root(cell_type) != root_type:
-                return False
-        return True
-
-    @staticmethod
     def max(cell_types):
-        if isinstance(cell_types, numpy.ndarray):
+        if isinstance(cell_types, np.ndarray):
             cell_types = cell_types.flatten()
         super_type = cell_types[0]
         for cell_type in cell_types[1:]:
@@ -77,14 +70,14 @@ class Typing(object):
     @staticmethod
     def blank_detector(cell_type):
         if Typing.max([cell_type, Typing.numeric]) is not None:
-            return lambda e: not numpy.isnan(e)
+            return lambda e: not np.isnan(e)
         else:
             return lambda e: e is not None
 
     @staticmethod
     def get_blank(cell_type):
         if Typing.max([cell_type, Typing.numeric]) is not None:
-            return numpy.nan
+            return np.nan
         else:
             return None
 
@@ -93,7 +86,7 @@ class Typing(object):
         if isinstance(value, int):
             return Typing.int
         elif isinstance(value, float):
-            return Typing.float if not numpy.isnan(value) else None
+            return Typing.float if not np.isnan(value) else None
 
         value = str(value)
         if value == "":
@@ -105,7 +98,7 @@ class Typing(object):
 
         try:
             value = float(value.replace(",", ""))
-            if numpy.isnan(value):
+            if np.isnan(value):
                 raise RuntimeError("Unclear how to deal with NaN here")
             return Typing.int if float(value) == int(value) else Typing.float
         except ValueError:
@@ -120,7 +113,7 @@ class Typing(object):
         elif cell_type == Typing.currency:
             return float(re.sub(Typing.currency_symbols, "", str(value)))
         elif cell_type in [Typing.int, Typing.float, Typing.numeric]:
-            return float(re.sub(Typing.place_holder, "", str(value))) if value is not None else numpy.nan
+            return float(re.sub(Typing.place_holder, "", str(value))) if value is not None else np.nan
         raise ValueError("Unexpected cell type: " + cell_type)
 
 
@@ -247,7 +240,7 @@ class Range(object):
         return "Range(x:{}, y:{}, w:{}, h:{})".format(self.column, self.row, self.width, self.height)
 
     def __str__(self):
-        return "({},{}-{},{})".format(self.x0, self.y0, self.x1, self.y1)
+        return "({}:{}, {}:{})".format(self.y0, self.y1, self.x0, self.x1)
 
     def __hash__(self):
         return hash((self.row, self.column, self.width, self.height))
@@ -262,27 +255,33 @@ class Range(object):
 class DataSheet(object):
     def __init__(self, data):
         self.raw_data = data
-        self.type_data = numpy.vectorize(Typing.detect_type)(self.raw_data)
-        self.data = numpy.vectorize(Typing.cast)(self.type_data, self.raw_data)
+        self.type_data = np.vectorize(Typing.detect_type)(self.raw_data)
+        self.data = np.vectorize(Typing.cast)(self.type_data, self.raw_data)
 
     def columns(self):
-        return numpy.size(self.data, 1)
+        return np.size(self.data, 1)
 
     def rows(self):
-        return numpy.size(self.data, 0)
+        return np.size(self.data, 0)
 
 
 class Table(object):
-    def __init__(self, data, t_range, name=None, orientations=None):
+    def __init__(self, data, type_data, t_range, name=None, orientations=None):
         if any(orientation not in [None, Orientation.vertical, Orientation.horizontal] for orientation in orientations):
             raise ValueError("Invalid orientations {}".format(orientations))
 
-        if numpy.size(data, 1) != t_range.columns or numpy.size(data, 0) != t_range.rows:
+        if np.size(data, 1) != t_range.columns or np.size(data, 0) != t_range.rows:
             raise ValueError("Mismatch between data and range dimensions: {} vs {}"
-                             .format((numpy.size(data, 1), numpy.size(data, 0)), (t_range.columns, t_range.rows)))
+                             .format((np.size(data, 1), np.size(data, 0)), (t_range.columns, t_range.rows)))
+
+        if np.size(type_data, 1) != t_range.columns or np.size(type_data, 0) != t_range.rows:
+            raise ValueError("Mismatch between data and range dimensions: {} vs {}"
+                             .format((np.size(type_data, 1), np.size(type_data, 0)),
+                                     (t_range.columns, t_range.rows)))
 
         self.name = name if name is not None else str(t_range)
         self.data = data
+        self.type_data = type_data
         self.range = t_range
         self.orientations = orientations
 
@@ -293,6 +292,10 @@ class Table(object):
     @property
     def rows(self):
         return self.range.rows
+
+    @property
+    def relative_range(self):
+        return Range(0, 0, self.range.width, self.range.height)
 
     def __repr__(self):
         return "Table({}, {}, {}, {})".format(self.name, self.data, repr(self.range), self.orientations)
@@ -325,10 +328,13 @@ class Block(object):
         self.table = table
         self.relative_range = relative_range
         self.orientation = orientation
-        self.data = relative_range.get_data(table.data)
+
+        f = np.vectorize(Typing.cast)
+        self.data = f(relative_range.get_data(table.type_data), relative_range.get_data(table.data))
+
         self.vector_types = vector_types
         self.type = Typing.max(vector_types)
-        self.has_blanks = not numpy.all(numpy.vectorize(Typing.blank_detector(self.type))(self.data))
+        self.has_blanks = not np.all(np.vectorize(Typing.blank_detector(self.type))(self.data))
 
         self.cache = dict()
         self.hash = hash((self.table, self.relative_range, self.orientation))

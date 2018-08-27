@@ -4,7 +4,7 @@ from typing import List, Union
 import numpy as np
 import csv
 
-from convert import get_tables
+from .convert import get_tables, get_blocks
 from .detect import detect_table_ranges, get_type_data
 from .learn import learn_constraints
 from .core.solutions import Constraint
@@ -40,15 +40,25 @@ def learn_from_cells(data, filters=None):
     return constraints
 
 
+def ranges_from_csv(csv_file):
+    return ranges_from_cells(parse_csv(csv_file))
+
+
+def ranges_from_cells(data):
+    data = np.array(data, dtype=object)
+    type_data = get_type_data(data)
+    t_ranges = detect_table_ranges(type_data)
+    return t_ranges
+
+
 def tables_from_csv(csv_file):
-    return tables_from_cells(parse_csv(csv_file))
+    return ranges_from_cells(parse_csv(csv_file))
 
 
 def tables_from_cells(data):
     data = np.array(data, dtype=object)
     type_data = get_type_data(data)
-    t_ranges = detect_table_ranges(type_data)
-    return get_tables(data, type_data, t_ranges)
+    return get_tables(data, type_data, detect_table_ranges(type_data))
 
 
 def filter_constraints(constraints, *args):

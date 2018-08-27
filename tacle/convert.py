@@ -1,6 +1,8 @@
+from typing import List
+
 import numpy as np
 
-from .indexing import Table, Orientation, Typing
+from .indexing import Table, Orientation, Typing, Block
 
 
 def get_tables(data, type_data, ranges, names=None):
@@ -12,16 +14,41 @@ def get_tables(data, type_data, ranges, names=None):
         t_data = t_range.get_data(data)
         supported_orientation = [o for o in Orientation.all() if orientation_compatible(type_data, t_range, o)]
         if len(supported_orientation) > 0:
-            tables.append(Table(t_data, t_range, name, supported_orientation))
+            tables.append(Table(t_data, t_range.get_data(type_data), t_range, name, supported_orientation))
 
     return tables
+
+
+def get_blocks(table):
+    # type: (Table) -> List[Block]
+    blocks = []
+    for orientation in table.orientations:
+        rel_range = table.relative_range
+        max_types = []
+        root_types = []
+        vector_count = rel_range.vector_count(orientation)
+        for i in range(vector_count):
+            vector_type_data = rel_range.vector_range(i, orientation).get_data(table.type_data)
+            max_type = Typing.max(vector_type_data)
+            max_types.append(max_type)
+            root_types.append(Typing.root(max_type))
+        block_indices = [0]
+        for i in range(1, vector_count):
+            if root_types[i] != root_types[block_indices[-1]]:
+                block_indices.append(i)
+        block_indices.append(len(root_types))
+        lengths = [block_indices[i + 1] - block_indices[i] for i in range(len(block_indices) - 1)]
+        for start, count in zip(block_indices, lengths):
+            block_range = rel_range.sub_range(start, count, orientation)
+            blocks.append(Block(table, block_range, orientation, max_types[start:start + count]))
+    return blocks
 
 
 def orientation_compatible(type_data, t_range, orientation):
     for vi in range(t_range.vector_count(orientation)):
         vector_range = t_range.vector_range(vi, orientation)
         cell_types = vector_range.get_data(type_data)
-        if not Typing.compatible(cell_types):
+        if not Typing.max(cell_types) is None:
             return False
     return True
 
