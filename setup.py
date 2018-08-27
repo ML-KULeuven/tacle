@@ -1,12 +1,12 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='tacle',
-      version='0.2',
+      version='0.3',
       description='TaCLe is a tool for learning constraints and formulas',
       url='http://github.com/samuelkolb/tacle.git',
       author='Samuel Kolb',
       author_email='samuel.kolb@me.com',
       license='MIT',
-      packages=['tacle'],
+      packages=find_packages(),
       zip_safe=False, install_requires=['numpy', 'python-constraint', 'matplotlib']
       )
