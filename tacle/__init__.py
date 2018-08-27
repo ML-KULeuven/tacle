@@ -4,12 +4,17 @@ from typing import List, Union
 import numpy as np
 import csv
 
+from . import core
+from . import engine
+from . import parse
+from . import util
+
 from .detect import detect_table_ranges, get_type_data
 from .learn import learn_constraints
 from .core.solutions import Constraint
 
 
-def parse(csv_file):
+def parse_csv(csv_file):
     data = []
     with open(csv_file) as f:
         csv_reader = csv.reader(f, delimiter=',')
@@ -26,7 +31,7 @@ def parse(csv_file):
 
 
 def learn_from_csv(csv_file):
-    return learn_from_cells(parse(csv_file))
+    return learn_from_cells(parse_csv(csv_file))
 
 
 def learn_from_cells(data):
