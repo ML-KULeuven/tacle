@@ -1,4 +1,4 @@
-from typing import Dict, TYPE_CHECKING
+from typing import Dict, TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from .template import ConstraintTemplate
@@ -7,8 +7,11 @@ if TYPE_CHECKING:
 class Constraint(object):
     def __init__(self, template, assignment):
         # type: (ConstraintTemplate, Dict[str, object]) -> None
-        self.template = template
+        self.template = template  # type: ConstraintTemplate
         self.assignment = assignment
+
+    def is_formula(self):
+        return self.template.is_formula()
 
     def __repr__(self):
         return "Constraint({}, {})".format(repr(self.template), self.assignment)
@@ -22,7 +25,7 @@ class Solutions:
         self.solutions = {}
         self.properties = {}
         self.canon_map = dict()
-        self.constraints = []
+        self.constraints = []  # type: List[Constraint]
 
     def add(self, template, solutions):
         solutions_l = list(solutions)

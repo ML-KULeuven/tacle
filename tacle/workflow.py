@@ -1,5 +1,6 @@
 import argparse
 import time
+import logging
 
 from .core.template import *
 from .core.learning import LearningTask
@@ -9,6 +10,8 @@ from .engine.idp import IdpAssignmentStrategy
 from .engine.internal import InternalCSPStrategy, InternalSolvingStrategy
 from .engine.minizinc import MinizincAssignmentStrategy, MinizincSolvingStrategy
 from .parse.parser import get_groups_tables
+
+logger = logging.getLogger(__name__)
 
 
 def get_constraint_list():
@@ -85,20 +88,17 @@ def main(csv_file, groups_file, verbose, silent=False, constraints=None, only_to
         else:
             supported.append(constraint)
 
-    if len(unsupported_assignment) > 0 and not silent:
-        print("No assignment strategy for: {}".format(", ".join(str(c) for c in unsupported_assignment)))
-    if len(unsupported_solving) > 0 and not silent:
-        print("No solving strategies for: {}".format(", ".join(str(c) for c in unsupported_solving)))#
-    if (len(unsupported_assignment) > 0 or len(unsupported_solving) > 0) and not silent:
-        print()
+    if len(unsupported_assignment) > 0:
+        logger.info("No assignment strategy for: {}".format(", ".join(str(c) for c in unsupported_assignment)))
+    if len(unsupported_solving) > 0:
+        logger.info("No solving strategies for: {}".format(", ".join(str(c) for c in unsupported_solving)))
 
     ordered = order_constraints(supported)
     assign = 0
     solve = 0
     add = 0
     for constraint in ordered:
-        if verbose and not silent:
-            print(constraint.name, end=" ", flush=True)
+        logger.debug("Searching for constraints of type {}".format(constraint.name))
         t_start = time.time()
         assignments = manager.find_assignments(constraint, groups, solutions)
         t_assign = time.time()
@@ -109,21 +109,15 @@ def main(csv_file, groups_file, verbose, silent=False, constraints=None, only_to
         assign += t_assign - t_start
         solve += t_before_add - t_assign
         add += t_end - t_before_add
-        if verbose and not silent:
-            f_string = "[assignment time: {assign:.3f}, solving time: {solve:.3f}]"
-            print(f_string.format(assign=t_assign - t_start, solve=t_end - t_assign))
-        if len(solutions.get_solutions(constraint)) > 0 and not silent:
-            print("\n".join(["\t" + constraint.to_string(s) for s in solutions.get_solutions(constraint)]))
-        if (len(solutions.get_solutions(constraint)) > 0 or verbose) and not silent:
-            print()
+
+        f_string = "Assignment time: {assign:.3f}, solving time: {solve:.3f}]"
+        logger.debug(f_string.format(assign=t_assign - t_start, solve=t_end - t_assign))
 
     total_time = time.time() - t_origin
-    if verbose and not silent: #or True: # TODO:
-        print("Total: {0:.3f} (Assign: {1:.3f}, Solve: {2:.3f}, Add: {3:.3f})".format(total_time, assign, solve, add))
+    logger.debug("Total: {0:.3f} (Assign: {1:.3f}, Solve: {2:.3f}, Add: {3:.3f})"
+                 .format(total_time, assign, solve, add))
 
-    if not silent:
-        print("{0:.3f}".format(total_time))
-
+    logger.info("Total time {0:.3f}".format(total_time))
     return solutions
 
 
@@ -136,16 +130,3 @@ def get_manager():
     # manager.add_solving_strategy(AspSolvingStrategy())
     manager.add_solving_strategy(MinizincSolvingStrategy())
     return manager
-
-
-def arg_parser():
-    p = argparse.ArgumentParser()
-    p.add_argument('csv_file')
-    p.add_argument('-g', '--groups_file', default=None)
-    p.add_argument('-v', '--verbose', action="store_true")
-    p.add_argument('-t', '--only_total_time', action="store_true")
-    return p
-
-
-if __name__ == '__main__':
-    main(**vars(arg_parser().parse_args()))

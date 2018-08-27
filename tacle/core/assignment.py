@@ -39,7 +39,8 @@ class Variable:
 
 
 class Source:
-    def __init__(self, variables: List[Variable]):
+    def __init__(self, variables):
+        # type: (List[Variable]) -> None
         self._variables = variables
 
     @property
