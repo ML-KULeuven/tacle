@@ -8,10 +8,17 @@ class Constraint(object):
     def __init__(self, template, assignment):
         # type: (ConstraintTemplate, Dict[str, object]) -> None
         self.template = template  # type: ConstraintTemplate
-        self.assignment = assignment
+        self.assignment = assignment  # type: Dict[str, object]
 
     def is_formula(self):
         return self.template.is_formula()
+
+    def __getattr__(self, item):
+        if isinstance(item, str):
+            return self.assignment[item]
+        elif isinstance(item, int):
+            return self.assignment[self.template.variables[item]]
+        raise AttributeError("No attribute called {}".format(item))
 
     def __repr__(self):
         return "Constraint({}, {})".format(repr(self.template), self.assignment)
