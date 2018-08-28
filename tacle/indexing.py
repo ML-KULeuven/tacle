@@ -116,7 +116,10 @@ class Typing(object):
         elif cell_type == Typing.currency:
             return float(re.sub(Typing.currency_symbols, "", str(value)))
         elif cell_type in [Typing.int, Typing.float, Typing.numeric]:
-            return float(re.sub(Typing.place_holder, "", str(value))) if value not in [None, "#?"] else np.nan
+            converted = float(re.sub(Typing.place_holder, "", str(value))) if value not in [None, "#?"] else np.nan
+            if cell_type == Typing.int and not np.isnan(converted):
+                converted = int(converted)
+            return converted
         elif cell_type == Typing.unknown:
             return "#?"
         raise ValueError("Unexpected cell type: " + cell_type)
