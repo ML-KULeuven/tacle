@@ -361,7 +361,7 @@ class Block(object):
             v_type = Typing.max(relative_range.vector_range(i, orientation).get_data(table.type_data))
             self.vector_types.append(v_type)
 
-            v_data = relative_range.get_data(table.data)
+            v_data = relative_range.vector_range(i, orientation).get_data(table.data)
             self.vector_data.append(np.vectorize(lambda v: Typing.cast(v_type, v))(v_data.flatten()))
 
         self.type = Typing.max(self.vector_types)
