@@ -23,7 +23,7 @@ class Constraint(object):
         if isinstance(item, str):
             return self.assignment[item]
         elif isinstance(item, int):
-            return self.assignment[self.template.variables[item]]
+            return self.assignment[self.template.variables[item].name]
         raise AttributeError("No attribute called {}".format(item))
 
     def __repr__(self):
