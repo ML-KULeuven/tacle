@@ -305,6 +305,24 @@ class Table(object):
     def relative_range(self):
         return Range(0, 0, self.range.width, self.range.height)
 
+    def get_vector_data(self, i, orientation=None):
+        if orientation is None and len(self.orientations) > 1:
+            raise ValueError("Ambiguous orientation, please specify")
+        elif orientation is None and len(self.orientations) == 1:
+            orientation = self.orientations[0]
+
+        if i < 0 or i >= self.range.vector_count(orientation):
+            raise ValueError("Invalid index {} (should be 0 <= i <= {})"
+                             .format(i, self.range.vector_count(orientation)))
+
+        vector_range = self.relative_range.vector_range(i, orientation)
+
+        for block in self.blocks:
+            if block.orientation == orientation and vector_range.overlaps_with(block.relative_range):
+                return block.vector_data[i - block.relative_range.vector_index(orientation)]
+        raise RuntimeError("Illegal state: {}, {}, {}".format(i, orientation, self))
+
+
     def __repr__(self):
         return "Table({}, {}, {}, {})".format(self.name, self.data, repr(self.range), self.orientations)
 
