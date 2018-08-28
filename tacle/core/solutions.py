@@ -1,19 +1,25 @@
-from typing import Dict, TYPE_CHECKING, List
+from typing import Dict, TYPE_CHECKING, List, Union
 
 if TYPE_CHECKING:
     from .template import ConstraintTemplate
+    from .group import Group
 
 
 class Constraint(object):
     def __init__(self, template, assignment):
         # type: (ConstraintTemplate, Dict[str, object]) -> None
         self.template = template  # type: ConstraintTemplate
-        self.assignment = assignment  # type: Dict[str, object]
+        self.assignment = assignment  # type: Dict[str, Group]
 
     def is_formula(self):
         return self.template.is_formula()
 
     def __getattr__(self, item):
+        # type: (str) -> Group
+        return self[item]
+
+    def __getitem__(self, item):
+        # type: (Union[str, int]) -> Group
         if isinstance(item, str):
             return self.assignment[item]
         elif isinstance(item, int):
