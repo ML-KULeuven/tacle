@@ -424,7 +424,10 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             def is_diff(r_v, o1_v, o2_v):
                 r, o1, o2 = (v.get_vector(1) for v in (r_v, o1_v, o2_v))
                 for i in range(0, len(r)):
-                    res = (o1[i] - o2[i]) / o2[i]
+                    try:
+                        res = (o1[i] - o2[i]) / o2[i]
+                    except RuntimeError:
+                        return False
                     n_digits = precision_and_scale(r[i])[1]
                     res = numpy.round(res, n_digits)
                     if o2[i] == 0 or not equal(r[i], res):
