@@ -392,9 +392,11 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     if r_v > o2_v:
                         expected = r[i]
                         actual = Operation.PRODUCT.func(o1[i], o2[i])
-                    else:
+                    elif o1[i] != 0:
                         expected = o2[i]
                         actual = r[i] / o1[i]
+                    else:
+                        return False
                     res = smart_round(actual, expected)
                     if not equal(expected, res):
                         return False

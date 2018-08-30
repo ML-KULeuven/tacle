@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='tacle',
-      version='0.4.13',
+      version='0.4.14',
       description='TaCLe is a tool for learning constraints and formulas',
       url='http://github.com/samuelkolb/tacle.git',
       author='Samuel Kolb',
