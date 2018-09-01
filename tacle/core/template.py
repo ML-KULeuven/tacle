@@ -428,6 +428,33 @@ class SumProduct(ConstraintTemplate):
         super().__init__("sum-product", "{R} = SUMPRODUCT({O1}, {O2})", source, filters, None, self.result)
 
 
+class MutualExclusivity(ConstraintTemplate):
+    x = Variable("X", vector=False, types=integer)
+
+    def __init__(self):
+        variables = [self.x]
+        source = Source(variables)
+        filters = [NotPartial(variables), SizeFilter(variables, vectors=2, max_size=False)]
+        super().__init__("xor", "XOR({})", source, filters)
+
+    @staticmethod
+    def test_data(data):
+        for r in data.shape[0]:
+            for c in data.shape[1]:
+                if data[r, c] not in (0, 1):
+                    return False
+            if data[r, :].sum() != 1:
+                return False
+        return True
+
+
+# class BooleanCondition(ConstraintTemplate):
+#     condition = Variable("C", vector=True, types=integer)
+#     result = Variable("R", vector=True, types=integer)
+#
+#     def __init__(self):
+
+
 class Equal(ConstraintTemplate):
     first = Variable("O1", vector=True)
     second = Variable("O2", vector=True)

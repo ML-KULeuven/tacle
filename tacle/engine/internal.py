@@ -542,6 +542,25 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return self._generate_test_vectors(assignments, [c.x], test_ordering)
 
+        def xor(c, assignments, solutions):
+            result = []
+
+            for assignment in assignments:
+                x = assignment[c.x.name]  # type: Group
+
+                def test(start, end):
+                    solution = {c.x.name: x.vector_subset(start + 1, end)}
+                    if c.test_data(x.vector_subset(start + 1, end).data):
+                        result.append(solution)
+                        return True
+                    return False
+
+                max_range = MaxRange(test)
+                max_range.find(0, x.vectors(), 2)
+
+            return result
+
+
         self.add_strategy(Equal(), equality)
         self.add_strategy(EqualGroup(), equal_group)
         self.add_strategy(Series(), series)
@@ -563,6 +582,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(PercentualDiff(), percent_diff)
         self.add_strategy(SumProduct(), sum_product)
         self.add_strategy(Ordered(), ordered_constraint)
+        self.add_strategy(MutualExclusivity(), xor)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_groups):

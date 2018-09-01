@@ -3,7 +3,8 @@ from typing import List, Dict, Tuple, Any
 import numpy as np
 
 from tacle.core.group import Orientation
-from tacle.core.template import ConditionalAggregate, ConstraintTemplate, Aggregate, Operation, Lookup, Ordered
+from tacle.core.template import ConditionalAggregate, ConstraintTemplate, Aggregate, Operation, Lookup, Ordered,\
+    MutualExclusivity
 
 
 def op_neutral(operation):
@@ -61,6 +62,10 @@ def check_template(template, assignment):
             if x[i + 1] < x[i]:
                 return False
         return True
+
+    elif isinstance(template, MutualExclusivity):
+        x = assignment[template.x]
+        return template.test_data(x)
 
     elif not template.target:
         raise RuntimeError("Cannot evaluate {}".format(template))
