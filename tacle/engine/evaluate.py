@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple, Any
 import numpy as np
 
 from tacle.core.group import Orientation
-from tacle.core.template import ConditionalAggregate, ConstraintTemplate, Aggregate, Operation, Lookup
+from tacle.core.template import ConditionalAggregate, ConstraintTemplate, Aggregate, Operation, Lookup, Ordered
 
 
 def op_neutral(operation):
@@ -51,3 +51,19 @@ def evaluate_template(template, assignment):
 
     else:
         raise ValueError("Cannot evaluate constraint")
+
+
+def check_template(template, assignment):
+    # type: (ConstraintTemplate, Dict[str, np.ndarray]) -> bool
+    if isinstance(template, Ordered):
+        x = assignment[template.x]
+        for i in range(len(x) - 1):
+            if x[i + 1] < x[i]:
+                return False
+        return True
+
+    elif not template.target:
+        raise RuntimeError("Cannot evaluate {}".format(template))
+
+    else:
+        raise ValueError("Cannot check formula")
