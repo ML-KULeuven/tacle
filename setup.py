@@ -8,5 +8,7 @@ setup(name='tacle',
       author_email='samuel.kolb@me.com',
       license='MIT',
       packages=find_packages(),
-      zip_safe=False, install_requires=['numpy', 'python-constraint', 'matplotlib']
+      zip_safe=False, install_requires=['numpy', 'python-constraint', 'matplotlib'],
+      setup_requires=['pytest-runner'],
+      tests_require=["pytest"]
 )

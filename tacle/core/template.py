@@ -97,7 +97,7 @@ class Operation(Enum):
 
     # noinspection PyInitNewSignature
     def __init__(self, aggregate, func):
-        self._aggregate = aggregate
+        self.aggregate_f = aggregate
         self._func = func
 
     @property
@@ -116,16 +116,16 @@ class Operation(Enum):
                         vec = data[:, i][blank_test(data[:, i])]
                         if len(vec) != 0:
                             vec = numpy.array(vec, dtype=numpy.float64)
-                            results[i] = self._aggregate(vec)
+                            results[i] = self.aggregate_f(vec)
                     return results
                 else:
-                    return self._aggregate(data, 0)
+                    return self.aggregate_f(data, 0)
             else:
                 if partial:
                     array = numpy.array(data[blank_test(data)], dtype=numpy.float64)
-                    return self._aggregate(array) if len(array) > 0 else blank
+                    return self.aggregate_f(array) if len(array) > 0 else blank
                 else:
-                    return self._aggregate(data)
+                    return self.aggregate_f(data)
 
         return apply
 
