@@ -60,6 +60,7 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(PercentualDiff())
         self.add_constraint(SumProduct())
         self.add_constraint(Ordered())
+        self.add_constraint(MutualExclusivity())
 
     def add_constraint(self, constraint: ConstraintTemplate):
         self._constraints.add(constraint)
@@ -559,7 +560,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 max_range.find(0, x.vectors(), 2)
 
             return result
-
 
         self.add_strategy(Equal(), equality)
         self.add_strategy(EqualGroup(), equal_group)
