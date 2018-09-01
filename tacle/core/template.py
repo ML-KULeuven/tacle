@@ -435,12 +435,12 @@ class MutualExclusivity(ConstraintTemplate):
         variables = [self.x]
         source = Source(variables)
         filters = [NotPartial(variables), SizeFilter(variables, vectors=2, max_size=False)]
-        super().__init__("xor", "XOR({})", source, filters)
+        super().__init__("xor", "XOR({X})", source, filters)
 
     @staticmethod
     def test_data(data):
-        for r in data.shape[0]:
-            for c in data.shape[1]:
+        for r in range(data.shape[0]):
+            for c in range(data.shape[1]):
                 if data[r, c] not in (0, 1):
                     return False
             if data[r, :].sum() != 1:
