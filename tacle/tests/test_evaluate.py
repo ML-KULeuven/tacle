@@ -1,7 +1,7 @@
 import numpy as np
 
 from tacle.core.group import Orientation
-from tacle.core.template import ConditionalAggregate, Operation, Aggregate
+from tacle.core.template import ConditionalAggregate, Operation, Aggregate, Lookup
 from tacle.engine.evaluate import evaluate_template
 
 
@@ -45,3 +45,16 @@ def test_mean():
 
     result = evaluate_template(template_v, {template_h.x: x})
     assert all(result == np.mean(x, axis=1))
+
+
+def test_lookup():
+    template = Lookup()
+    ok = np.array([1, 2, 3])
+    ov = np.array(["a", "b", "c"])
+
+    d = {1: "a", 2: "b", 3: "c"}
+
+    fk = np.array([2, 2, 3, 3, 2])
+
+    result = evaluate_template(template, {template.o_key: ok, template.f_key: fk, template.o_value: ov})
+    assert all(result == [d[k] for k in fk])

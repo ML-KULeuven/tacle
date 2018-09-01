@@ -3,8 +3,7 @@ from typing import List, Dict, Tuple, Any
 import numpy as np
 
 from tacle.core.group import Orientation
-from tacle.core.template import Aggregate, Operation
-from tacle.core.template import ConditionalAggregate, ConstraintTemplate
+from tacle.core.template import ConditionalAggregate, ConstraintTemplate, Aggregate, Operation, Lookup
 
 
 def op_neutral(operation):
@@ -41,6 +40,11 @@ def evaluate_template(template, assignment):
         x = assignment[template.x]
         axis = 0 if template.orientation == Orientation.HORIZONTAL else 1
         return template.operation.aggregate(x, axis=axis)
+
+    elif isinstance(template, Lookup):
+        ok, ov, fk = (assignment[v] for v in [template.o_key, template.o_value, template.f_key])
+        d = {k: v for k, v in zip(ok, ov)}
+        return np.array([d[k] for k in fk])
 
     elif template.target:
         raise RuntimeError("Cannot evaluate {}".format(template))
