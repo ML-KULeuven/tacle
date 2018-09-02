@@ -37,7 +37,7 @@ class Typing(object):
     def soft_root(cell_type):
         hierarchy = Typing.hierarchy()
         return Typing.soft_root(hierarchy[cell_type]) if cell_type not in [Typing.int, Typing.string, Typing.float]\
-            else cell_type
+            and cell_type in hierarchy else cell_type
 
     @staticmethod
     def lowest_common_ancestor(cell_type1, cell_type2):
@@ -46,9 +46,9 @@ class Typing(object):
         if cell_type1 is None or cell_type2 is None:
             return None
         if cell_type1 == Typing.any or cell_type1 == Typing.unknown:
-            return cell_type2
+            return cell_type2 if cell_type2 != Typing.int else Typing.float
         if cell_type2 == Typing.any or cell_type2 == Typing.unknown:
-            return cell_type1
+            return cell_type1 if cell_type1 != Typing.int else Typing.float
         if Typing.root(cell_type1) == Typing.numeric and cell_type2 == Typing.nested_index or\
                 cell_type1 == Typing.nested_index and Typing.root(cell_type2) == Typing.numeric:
             return Typing.nested_index
@@ -392,7 +392,7 @@ class Block(object):
             self.vector_data.append(np.vectorize(lambda v: Typing.cast(v_type, v))(v_data.flatten()))
 
         self.type = Typing.max(self.vector_types)
-        self.data = np.vectorize(lambda v: Typing.cast(v_type, v))(relative_range.get_data(table.data).flatten())
+        self.data = np.vectorize(lambda v: Typing.cast(self.type, v))(relative_range.get_data(table.data).flatten())
         self.has_blanks = not np.all(np.vectorize(Typing.blank_detector(self.type))(self.data))
 
         self.cache = dict()
