@@ -551,7 +551,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
                 def test(start, end):
                     solution = {c.x.name: x.vector_subset(start + 1, end)}
-                    print(solution)
 
                     if c.test_data(x.vector_subset(start + 1, end).data):
                         result.append(solution)
