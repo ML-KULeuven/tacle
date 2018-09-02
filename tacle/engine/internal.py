@@ -22,7 +22,7 @@ class MaxRange:
         while True:
             if last - start < size:
                 return
-            elif end - start < size or end <= limit:
+            elif end - start < size or end < limit:  # TODO Check change from end <= limit
                 start += 1
                 end = last
                 limit = max(start + size, limit)
@@ -551,6 +551,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
                 def test(start, end):
                     solution = {c.x.name: x.vector_subset(start + 1, end)}
+                    print(solution)
+
                     if c.test_data(x.vector_subset(start + 1, end).data):
                         result.append(solution)
                         return True
