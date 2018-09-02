@@ -29,7 +29,7 @@ def get_blocks(table):
         for i in range(vector_count):
             vector_type_data = rel_range.vector_range(i, orientation).get_data(table.type_data)
             max_type = Typing.max(vector_type_data)
-            max_types.append(max_type)
+            max_types.append(Typing.soft_root(max_type))
         block_indices = [0]
         for i in range(1, vector_count):
             if max_types[i] == Typing.unknown or Typing.max([max_types[i], max_types[block_indices[-1]]]) is None:

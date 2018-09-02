@@ -1,6 +1,9 @@
-import numpy
+from typing import List
 
-from .indexing import Typing, Range, Orientation
+import numpy
+import numpy as np
+
+from .indexing import Typing, Range, Orientation, Table
 
 
 def get_headers_count(table_range: Range, table_type_data, orientation):

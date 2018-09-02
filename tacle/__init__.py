@@ -33,8 +33,8 @@ def learn_from_csv(csv_file, filters=None):
 def learn_from_cells(data, filters=None):
     data = np.array(data, dtype=object)
     type_data = get_type_data(data)
-    t_ranges = detect_table_ranges(type_data)
-    constraints = learn_constraints(data, t_ranges).constraints
+    tables = get_tables(data, type_data, detect_table_ranges(type_data))
+    constraints = learn_constraints(data, tables).constraints
     if filters is not None:
         constraints = filter_constraints(filters)
     return constraints

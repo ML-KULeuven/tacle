@@ -55,6 +55,8 @@ def cast(g_type: GType, v_type: DType, value):
             value = re.sub(currency_symbols, "", str(value))
         value = re.sub(place_holder, "", str(value))
         if g_type == GType.int or g_type == GType.float:
+            if value == "":
+                return np.nan
             return float(value)
         raise ValueError("Unexpected GType: " + str(g_type))
 
@@ -156,13 +158,18 @@ def get_groups(data, indexing_data):
     if "Groups" in indexing_data:
         for group_description in indexing_data["Groups"]:
             table = table_dict[group_description["Table"]]
-            groups.append(create_group(group_description["Bounds"], table))
+            if "Types" in group_description:
+                g_types = [GType.int if gt == "int" else (GType.float if gt == "float" else GType.string)
+                           for gt in group_description["Types"]]
+            else:
+                g_type = None
+            groups.append(create_group(group_description["Bounds"], table, g_types))
     else:
         groups = detect_groups(type_data, tables)
     return groups
 
 
-def create_group(bounds_list, table: Table):
+def create_group(bounds_list, table: Table, g_types=None):
     if bounds_list[0] == ":":
         bounds = Bounds([1, table.rows] + bounds_list[1:3])
         row = False
@@ -174,7 +181,9 @@ def create_group(bounds_list, table: Table):
 
     data = bounds.subset(table.data)
     types = np.vectorize(detect_type)(data)
-    if row:
+    if g_types is not None:
+        gtype_set = g_types
+    elif row:
         gtype_set = [infer_type(row) for row in types]
     else:
         gtype_set = [infer_type(col) for col in types.T]

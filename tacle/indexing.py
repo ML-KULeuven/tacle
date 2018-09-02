@@ -1,6 +1,9 @@
 import re
+from typing import Optional, Union, List
 
 import numpy as np
+
+from tacle.core import group
 
 
 class Typing(object):
@@ -10,6 +13,7 @@ class Typing(object):
     string = "string"
     currency = "currency"
     percentage = "percentage"
+    nested_index = "nested_index"
     any = "any"
     unknown = "unknown"
 
@@ -17,16 +21,23 @@ class Typing(object):
     currency_pattern = re.compile(r"(\s*[$€£]\s*\d+[\d,]*\s*)|(\s*\d+[\d,]*\s*[$€£]\s*)")
     currency_symbols = re.compile(r"[$€£]")
     place_holder = re.compile(r"[\s,]")
+    nested_index_pattern = re.compile(r"\d+\.\d+(\.\d+)")
 
     @staticmethod
     def hierarchy():
         return {Typing.int: Typing.numeric, Typing.float: Typing.numeric, Typing.currency: Typing.float,
-                Typing.percentage: Typing.float}
+                Typing.percentage: Typing.float, Typing.nested_index: Typing.string}
 
     @staticmethod
     def root(cell_type):
         hierarchy = Typing.hierarchy()
         return Typing.root(hierarchy[cell_type]) if cell_type in hierarchy else cell_type
+
+    @staticmethod
+    def soft_root(cell_type):
+        hierarchy = Typing.hierarchy()
+        return Typing.soft_root(hierarchy[cell_type]) if cell_type not in [Typing.int, Typing.string, Typing.float]\
+            else cell_type
 
     @staticmethod
     def lowest_common_ancestor(cell_type1, cell_type2):
@@ -38,6 +49,9 @@ class Typing(object):
             return cell_type2
         if cell_type2 == Typing.any or cell_type2 == Typing.unknown:
             return cell_type1
+        if Typing.root(cell_type1) == Typing.numeric and cell_type2 == Typing.nested_index or\
+                cell_type1 == Typing.nested_index and Typing.root(cell_type2) == Typing.numeric:
+            return Typing.nested_index
 
         hierarchy = Typing.hierarchy()
         path1 = [cell_type1]
@@ -70,7 +84,7 @@ class Typing(object):
 
     @staticmethod
     def blank_detector(cell_type):
-        if Typing.max([cell_type, Typing.numeric]) is not None:
+        if Typing.root(cell_type) == Typing.numeric is not None:
             return lambda e: not np.isnan(e)
         else:
             return lambda e: e is not None
@@ -98,6 +112,8 @@ class Typing(object):
             return Typing.percentage
         elif re.match(Typing.currency_pattern, value):
             return Typing.currency
+        elif re.match(Typing.nested_index_pattern, value):
+            return Typing.nested_index
 
         try:
             value = float(value.replace(",", ""))
@@ -109,7 +125,7 @@ class Typing(object):
 
     @staticmethod
     def cast(cell_type, value):
-        if cell_type == Typing.string:
+        if cell_type in (Typing.string, Typing.nested_index):
             return str(value) if value is not None else None
         elif cell_type == Typing.percentage:
             return float(str(value).replace("%", "")) / 100.0
@@ -238,8 +254,17 @@ class Range(object):
         return {"columnIndex": self.column, "rowIndex": self.row, "columns": self.columns, "rows": self.rows}
 
     def as_legacy_bounds(self):
-        from tacle.core.group import Bounds
-        return Bounds((self.y0 + 1, self.y1, self.x0 + 1, self.x1))
+        # type: () -> group.Bounds
+        return group.Bounds((self.y0 + 1, self.y1, self.x0 + 1, self.x1))
+
+    def as_legacy_list(self, orientation=None):
+        # type: (Optional[Orientation]) -> List[Union[str, int]]
+        if orientation is None:
+            return group.Bounds((self.y0 + 1, self.y1, self.x0 + 1, self.x1)).bounds
+        elif orientation == Orientation.vertical:
+            return [":", self.x0 + 1, self.x1]
+        elif orientation == Orientation.horizontal:
+            return [self.y0 + 1, self.y1, ":"]
 
     def __and__(self, other):
         return self.intersect(other)
@@ -290,7 +315,7 @@ class Table(object):
         self.name = name if name is not None else str(t_range)
         self.data = data
         self.type_data = type_data
-        self.range = t_range
+        self.range = t_range  # type: Range
         self.orientations = orientations
 
         from tacle.convert import get_blocks
@@ -324,7 +349,6 @@ class Table(object):
             if block.orientation == orientation and vector_range.overlaps_with(block.relative_range):
                 return block.vector_data[i - block.relative_range.vector_index(orientation)]
         raise RuntimeError("Illegal state: {}, {}, {}".format(i, orientation, self))
-
 
     def __repr__(self):
         return "Table({}, {}, {}, {})".format(self.name, self.data, repr(self.range), self.orientations)
