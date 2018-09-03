@@ -24,7 +24,7 @@ class DictAssignmentStrategy(AssignmentStrategy):
         return self.strategies[constraint](constraint, groups, solutions)
 
 
-class SolvingStrategy:
+class SolvingStrategy(object):
     def applies_to(self, constraint):
         raise NotImplementedError()
 
@@ -42,7 +42,33 @@ class DictSolvingStrategy(SolvingStrategy):
     def applies_to(self, constraint):
         return constraint in self.strategies
 
+    # def adapt_assignment(self, constraint, assignment):
+    #     variable_name = None
+    #     adapted_block = None
+    #     for v, block in assignment.items():
+    #         if isinstance(block, indexing.Block) and block.virtual:
+    #             if constraint.target and constraint.target.name == v:
+    #                 try:
+    #                     adapted_block = block.set_data(evaluate_template(constraint, assignment))
+    #                     variable_name = v
+    #                 except UnsupportedFormula:
+    #                     return None
+    #                 except InvalidArguments:
+    #                     return None
+    #             else:
+    #                 return None
+    #     if adapted_block is not None:
+    #         return {v: b if v != variable_name else adapted_block for v, b, in assignment.items()}
+    #     return assignment
+
     def apply(self, constraint: ConstraintTemplate, assignments: [{Group}], solutions):
+        # if self.virtual:
+        #     new_assignments = []
+        #     for assignment in assignments:
+        #         adapted = self.adapt_assignment(constraint, assignment)
+        #         if adapted is not None:
+        #             new_assignments.append(adapted)
+        #     assignments = new_assignments
         return self.strategies[constraint](constraint, assignments, solutions)
 
 

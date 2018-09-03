@@ -14,6 +14,7 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--group", help="Group constraints by type", action="store_true")
     parser.add_argument("-v", "--verbose", help="Increase the verbosity level", action="store_true")
     parser.add_argument("-d", "--debug", help="Increase the verbosity level to debug-level", action="store_true")
+    parser.add_argument("--virtual", help="Add virtual blocks", action="store_true")
 
     args = parser.parse_args()
 
@@ -22,7 +23,7 @@ if __name__ == "__main__":
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    constraints = learn_from_csv(args.csv_file)
+    constraints = learn_from_csv(args.csv_file, virtual=args.virtual)
     tables = tables_from_csv(args.csv_file)
     print(*[(str(table), table.blocks) for table in tables], sep="\n")
 

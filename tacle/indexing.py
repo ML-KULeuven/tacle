@@ -140,6 +140,20 @@ class Typing(object):
             return "#?"
         raise ValueError("Unexpected cell type: " + cell_type)
 
+    @staticmethod
+    def as_legacy_type(cell_type):
+        from tacle.core.group import GType
+        if isinstance(cell_type, GType):
+            return cell_type
+        cell_type = Typing.soft_root(cell_type)
+        if cell_type == Typing.int:
+            return GType.int
+        if cell_type == Typing.string:
+            return GType.string
+        if cell_type == Typing.float:
+            return GType.float
+        raise ValueError("Cannot convert {}".format(cell_type))
+
 
 class Orientation(object):
     vertical = "vertical"
@@ -148,6 +162,19 @@ class Orientation(object):
     @staticmethod
     def all():
         return [Orientation.vertical, Orientation.horizontal]
+
+    @staticmethod
+    def from_legacy_orientation(o):
+        if group.Orientation.column(o):
+            return Orientation.vertical
+        elif group.Orientation.row(o):
+            return Orientation.horizontal
+
+    def as_legacy_orientation(self, o):
+        if o == Orientation.vertical:
+            return group.Orientation.VERTICAL
+        elif o == Orientation.horizontal:
+            return group.Orientation.HORIZONTAL
 
 
 class Range(object):
@@ -370,7 +397,7 @@ class Table(object):
 
 
 class Block(object):
-    def __init__(self, table, relative_range, orientation):
+    def __init__(self, table, relative_range, orientation, vector_types=None, virtual=False):
         """
         :type table: Table
         :type relative_range: Range
@@ -381,19 +408,28 @@ class Block(object):
         self.table = table
         self.relative_range = relative_range
         self.orientation = orientation
+        self.virtual = virtual
 
-        self.vector_types = []
-        self.vector_data = []
-        for i in range(relative_range.vector_count(orientation)):
-            v_type = Typing.max(relative_range.vector_range(i, orientation).get_data(table.type_data))
-            self.vector_types.append(v_type)
+        if virtual is False:
+            self.vector_types = [] if not vector_types else vector_types
+            self.vector_data = []
+            for i in range(relative_range.vector_count(orientation)):
+                if vector_types is None:
+                    v_type = Typing.max(relative_range.vector_range(i, orientation).get_data(table.type_data))
+                    self.vector_types.append(v_type)
 
-            v_data = relative_range.vector_range(i, orientation).get_data(table.data)
-            self.vector_data.append(np.vectorize(lambda v: Typing.cast(v_type, v))(v_data.flatten()))
+                v_data = relative_range.vector_range(i, orientation).get_data(table.data)
+                self.vector_data.append(np.vectorize(lambda v: Typing.cast(v_type, v))(v_data.flatten()))
 
-        self.type = Typing.max(self.vector_types)
-        self.data = np.vectorize(lambda v: Typing.cast(self.type, v))(relative_range.get_data(table.data).flatten())
-        self.has_blanks = not np.all(np.vectorize(Typing.blank_detector(self.type))(self.data))
+            self.type = Typing.max(self.vector_types)
+            self.data = np.vectorize(lambda v: Typing.cast(self.type, v))(relative_range.get_data(table.data).flatten())
+            self.has_blanks = not np.all(np.vectorize(Typing.blank_detector(self.type))(self.data))
+        else:
+            v_type, blanks = virtual
+            self.vector_types = [v_type]
+            self.type = v_type
+            self.data = None
+            self.has_blanks = blanks
 
         self.cache = dict()
         self.hash = hash((self.table, self.relative_range, self.orientation))
@@ -411,21 +447,41 @@ class Block(object):
         return self.relative_range.vector_index(self.orientation)
 
     def columns(self):
-        return self.relative_range.columns()
+        return self.relative_range.columns
 
     def rows(self):
-        return self.relative_range.rows()
+        return self.relative_range.rows
+
+    @property
+    def bounds(self):
+        return self.relative_range.as_legacy_bounds()
 
     def sub_block(self, vector_index, vector_count=1):
         key = (vector_index, vector_count)
         if key not in self.cache:
             new_range = self.relative_range.sub_range(vector_index, vector_count, self.orientation)
             vector_types = self.vector_types[vector_index:vector_index + vector_count]
-            sub_block = Block(self.table, new_range, self.orientation, vector_types)
+            sub_block = Block(self.table, new_range, self.orientation, vector_types, virtual=self.virtual)
             self.cache[key] = sub_block
             return sub_block
         else:
             return self.cache[key]
+
+    def vector(self, vector_index):
+        return self.sub_block(vector_index)
+
+    def set_data(self, data):
+        if self.virtual:
+            # block = Block(self.table, self.relative_range, self.orientation, virtual=self.virtual)
+            # block.vector_data = [data]
+            # block.data = data
+            if self.orientation == Orientation.horizontal:
+                data = data[np.newaxis, :]
+            elif self.orientation == Orientation.vertical:
+                data = data[:, np.newaxis]
+            from tacle.core.group import Group
+            return Group(self.table, self.relative_range.as_legacy_bounds(), self.orientation == Orientation.horizontal,
+                         data, [Typing.as_legacy_type(self.type)])
 
     def __iter__(self):
         for i in range(self.vector_count()):
@@ -444,7 +500,7 @@ class Block(object):
         return not self == other
 
     def __eq__(self, other):
-        return self.table == other.table and self.orientation == other.orientation and\
+        return isinstance(other, Block) and self.table == other.table and self.orientation == other.orientation and\
                self.relative_range == other.relative_range
 
     def __lt__(self, other):

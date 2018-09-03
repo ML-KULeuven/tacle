@@ -6,6 +6,7 @@ import numpy
 from .assignment import Source, Filter, Variable, SameLength, ConstraintSource, SameTable, \
     SameOrientation, SameType, SizeFilter, Not, NotPartial, Partial
 from .group import GType, Group, Orientation
+from tacle import indexing
 
 
 class ConstraintTemplate:
@@ -143,17 +144,19 @@ class Aggregate(ConstraintTemplate):
         self._operation = operation
         self.min_size = 2
         self.min_vectors = 3 if operation == Operation.PRODUCT or operation == Operation.SUM else 2
-        size = Group.columns if orientation == Orientation.VERTICAL else Group.rows
+        size = Filter.cols if orientation == Orientation.VERTICAL else Filter.rows
         or_string = "col" if orientation == Orientation.VERTICAL else "row"
         op_string = operation.name
         variables = [self.x, self.y]
 
         def test(_, a: Dict[str, Group], _solutions):
             x_group, y_group = [a[v.name] for v in variables]
-            o_match = x_group.row == (orientation == Orientation.HORIZONTAL)
-            if not o_match and x_group.vectors() < self.min_vectors:
+            o_match = Filter.orientation(x_group) == indexing.Orientation.from_legacy_orientation(orientation)
+            # o_match = x_group.row == (orientation == Orientation.HORIZONTAL)
+            if not o_match and Filter.vector_count(x_group) < self.min_vectors:
                 return False
-            return y_group.length() <= size(x_group) if o_match else y_group.length() == size(x_group)
+            return Filter.vector_length(y_group) <= size(x_group)\
+                if o_match else Filter.vector_length(y_group) == size(x_group)
 
         filter_class = type("{}{}Length".format(op_string.lower().capitalize(), or_string.capitalize()),
                             (Filter,), {"test": test})

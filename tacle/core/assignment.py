@@ -2,6 +2,8 @@ from typing import List, Dict, Set
 
 from constraint import Problem
 
+from tacle import indexing
+from tacle.indexing import Typing
 from tacle.parse.parser import GType
 from .group import Group, Orientation
 from .solutions import Solutions
@@ -60,7 +62,8 @@ class Source:
 
             for variable in self.variables:
                 candidates = [assignment[variable.name]] if variable.name in assignment else groups
-                domain = list([g for g in candidates if any(st in variable.types for st in g.vector_types)])
+                domain = list([g for g in candidates if any(st in variable.types for st in
+                                                            (Typing.as_legacy_type(gt) for gt in g.vector_types))])
                 if len(domain) == 0:
                     return variable.name in assignment, []
                 problem.addVariable(variable.name, domain)
@@ -123,11 +126,83 @@ class Filter:
 
     def test_same(self, assignment, f):
         groups = list([assignment[v.name] for v in self.variables])
-        return all(f(groups[i]) == f(groups[j]) for i in range(len(groups)) for j in range(i + 1, len(groups)))
+        result = all(f(groups[i]) == f(groups[j]) for i in range(len(groups)) for j in range(i + 1, len(groups)))
+        return result
 
     def test_all(self, assignment, f):
         groups = list([assignment[v.name] for v in self.variables])
-        return all(f(g) for g in groups)
+        result = all(f(g) for g in groups)
+        return result
+
+    @staticmethod
+    def rows(block):
+        if isinstance(block, Group):
+            return block.rows()
+        elif isinstance(block, indexing.Block):
+            return block.rows()
+        else:
+            raise ValueError()
+
+    @staticmethod
+    def cols(block):
+        if isinstance(block, Group):
+            return block.columns()
+        elif isinstance(block, indexing.Block):
+            return block.columns()
+        else:
+            raise ValueError()
+
+    @staticmethod
+    def vector_length(block):
+        if isinstance(block, Group):
+            return block.length()
+        elif isinstance(block, indexing.Block):
+            return block.vector_length()
+        else:
+            raise ValueError()
+
+    @staticmethod
+    def vector_count(block):
+        if isinstance(block, Group):
+            return block.vectors()
+        elif isinstance(block, indexing.Block):
+            return block.vector_count()
+        else:
+            raise ValueError()
+
+    @staticmethod
+    def table(block):
+        if isinstance(block, Group):
+            return block.table.name  # DEPRECATED
+        elif isinstance(block, indexing.Block):
+            return block.table.name
+        else:
+            raise ValueError()
+
+    @staticmethod
+    def orientation(block):
+        if isinstance(block, Group):
+            return indexing.Orientation.horizontal if block.row else indexing.Orientation.vertical
+        elif isinstance(block, indexing.Block):
+            return block.orientation
+        else:
+            raise ValueError()
+
+    @staticmethod
+    def block_type(block):
+        if isinstance(block, Group):
+            if block.dtype == GType.float:
+                return Typing.float
+            elif block.dtype == GType.int:
+                return Typing.int
+            elif block.dtype == GType.string:
+                return Typing.string
+            else:
+                raise ValueError()
+        elif isinstance(block, indexing.Block):
+            return block.type
+        else:
+            raise ValueError()
 
 
 class Not(Filter):
@@ -175,22 +250,22 @@ class NoFilter(Filter):
 
 class SameLength(Filter):
     def test(self, assignment: Dict[str, Group], solutions):
-        return self.test_same(assignment, Group.length)
+        return self.test_same(assignment, SameLength.vector_length)
 
 
 class SameTable(Filter):
     def test(self, assignment: Dict[str, Group], solutions):
-        return self.test_same(assignment, lambda g: g.table)
+        return self.test_same(assignment, SameTable.table)
 
 
 class SameOrientation(Filter):
     def test(self, assignment: Dict[str, Group], solutions):
-        return self.test_same(assignment, lambda g: g.row)
+        return self.test_same(assignment, SameOrientation.orientation)
 
 
 class SameType(Filter):
     def test(self, assignment: Dict[str, Group], solutions):
-        return self.test_same(assignment, lambda g: g.dtype)
+        return self.test_same(assignment, SameType.block_type)
 
 
 class SizeFilter(Filter):
@@ -205,18 +280,20 @@ class SizeFilter(Filter):
     def test(self, assignment: Dict[str, Group], solutions):
         groups = list([assignment[v.name] for v in self.variables])
         op = (lambda x, y: x <= y) if self._max_size else (lambda x, y: x >= y)
-        return all(self._rows is None or op(g.rows(), self._rows) for g in groups) \
-            and all(self._cols is None or op(g.columns(), self._cols) for g in groups) \
-            and all(self._length is None or op(g.length(), self._length) for g in groups) \
-            and all(self._vectors is None or op(g.vectors(), self._vectors) for g in groups)
+        return all(self._rows is None or op(self.rows(g), self._rows) for g in groups) \
+            and all(self._cols is None or op(self.cols(g), self._cols) for g in groups) \
+            and all(self._length is None or op(self.vector_length(g), self._length) for g in groups) \
+            and all(self._vectors is None or op(self.vector_count(g), self._vectors) for g in groups)
 
     def test_relaxed(self, assignment: Dict[str, Group], solutions):
         if self._max_size:
             # Max size can not be enforced at the super-block level
             groups = list([assignment[v.name] for v in self.variables])
-            valid = all(self._rows is None or g.row_oriented() or g.rows() <= self._rows for g in groups) and all(
-                self._cols is None or not g.row_oriented() or g.columns() <= self._cols for g in groups) and all(
-                self._length is None or g.length() <= self._length for g in groups)
+            valid = all(self._rows is None or self.orientation(g) == indexing.Orientation.horizontal
+                        or self.rows(g) <= self._rows for g in groups)\
+                and all(self._cols is None or self.orientation(g) == indexing.Orientation.vertical
+                        or self.cols(g) <= self._cols for g in groups)\
+                and all(self._length is None or self.vector_length(g) <= self._length for g in groups)
             return valid
         else:
             return self.test(assignment, solutions)
@@ -239,13 +316,22 @@ class OrientationFilter(Filter):
 
 
 class NotPartial(Filter):
+    @staticmethod
+    def has_blanks(block):
+        if isinstance(block, Group):
+            return block.is_partial
+        elif isinstance(block, indexing.Block):
+            return block.has_blanks
+        else:
+            raise ValueError()
+
     def test(self, assignment: Dict[str, Group], solutions):
-        return not any([assignment[v.name].is_partial for v in self.variables])
+        return not any([self.has_blanks(assignment[v.name]) for v in self.variables])
 
 
 class Partial(Filter):
     def test(self, assignment: Dict[str, Group], solutions):
-        return all([assignment[v.name].is_partial for v in self.variables])
+        return all([NotPartial.has_blanks(assignment[v.name]) for v in self.variables])
 
 
 class NotSubgroup(Filter):

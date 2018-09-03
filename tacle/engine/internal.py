@@ -3,6 +3,8 @@ import itertools
 
 import math
 
+from tacle.engine import evaluate
+from tacle.core.virtual_template import VirtualLookup, VirtualConditionalAggregate
 from tacle.core.template import *
 from tacle.core.group import Group
 from tacle.core.solutions import Solutions
@@ -46,8 +48,11 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(Permutation())
         self.add_constraint(Rank())
         self.add_constraint(ForeignKey())
+        self.add_constraint(VirtualLookup())
         self.add_constraint(Lookup())
         self.add_constraint(FuzzyLookup())
+        for c in VirtualConditionalAggregate.instances():
+            self.add_constraint(c)
         for c in ConditionalAggregate.instances():
             self.add_constraint(c)
         self.add_constraint(RunningTotal())
@@ -219,8 +224,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return self._generate_test_vectors(assignments, keys, test_equal)
 
         def conditional_aggregate(c: ConditionalAggregate, assignments, solutions: Solutions):
-            keys = [c.o_key, c.result, c.f_key, c.values]
-
             partial_cache = dict()
             fk_dict = dict()
 
@@ -246,22 +249,30 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             assignments = new_assignments
 
-            # print(len(assignments))
-            # assignments = [a for a in assignments
-            #                if any(overlap[frozenset({ok_v, fk_v})] for ok_v in ok_block for fk_v in fk_block)]
-            # print(len(assignments))
+            if isinstance(c, VirtualConditionalAggregate):
+                print("VCA")
+                keys = ConditionalAggregate.o_key, ConditionalAggregate.f_key, ConditionalAggregate.values
+            else:
+                keys = [c.o_key, c.f_key, c.values, c.result]
 
-            def is_aggregate(ok, r, fk, v):
+            def is_aggregate(ok, fk, v, r=None):
                 if not overlap[frozenset({ok, fk})]:
                     return False
 
                 foreign_key = ForeignKey()
                 if solutions.has(foreign_key, [foreign_key.fk, foreign_key.pk], [ok, fk]):
                     return False
-                if solutions.has(foreign_key, [foreign_key.fk, foreign_key.pk], [r, v]):
-                    return False
 
-                vectors = {g: g.get_vector(1) for g in [ok, r, fk, v]}
+                if r is None:
+                    vectors = {g: g.get_vector(1) for g in [ok, fk, v]}
+                    r = "?"
+                    vectors[r] = evaluate.evaluate_template(c, {k: assignment[k.name].get_vector(1) for k in keys}).flatten()
+
+                else:
+                    if solutions.has(foreign_key, [foreign_key.fk, foreign_key.pk], [r, v]):
+                        return False
+
+                    vectors = {g: g.get_vector(1) for g in [ok, r, fk, v]}
 
                 for g in [ok, r, v]:
                     # FIXME avoid all call
@@ -340,11 +351,11 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             for assignment in assignments:
                 x_group, y_group = (assignment[k.name] for k in [c.x, c.y])
                 x_data = x_group.data
-                assert isinstance(x_group, Group)
-                assert isinstance(y_group, Group)
+                # assert isinstance(x_group, Group)
+                # assert isinstance(y_group, Group)
                 y_length = y_group.length()
 
-                o_match = x_group.row == Orientation.row(c.orientation)
+                o_match = Filter.orientation(x_group) == indexing.Orientation.from_legacy_orientation(c.orientation)
                 if o_match:
                     sums = c.operation.aggregate(x_group.data, 0 if o_column else 1, x_group.is_partial)
                     for y_vector_group in y_group:
@@ -562,6 +573,23 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return result
 
+        def virtual_lookups(template, assignments, solutions):
+            # type: (ConstraintTemplate, List[Dict[str, Group]], Solutions) -> List[Dict[str, Group]]
+
+            results = []
+
+            for assignment in assignments:
+                pk, pv, fk = [assignment[k.name] for k in [Lookup.o_key, Lookup.o_value, Lookup.f_key]]
+                for pk_v, pv_v in itertools.product(pk, pv):
+                    if not pk_v.overlaps_with(pv_v):
+                        for fk_v in fk:
+                            if not found_equal(pk_v, fk_v, solutions)\
+                                    and not any(g1.overlaps_with(g2) for g1 in [pk_v, pv_v] for g2 in [fk_v]):
+                                result = {Lookup.o_key: pk_v, Lookup.o_value: pv_v, Lookup.f_key: fk_v}
+                                results.append({k.name: v for k, v in result.items()})
+
+            return results
+
         self.add_strategy(Equal(), equality)
         self.add_strategy(EqualGroup(), equal_group)
         self.add_strategy(Series(), series)
@@ -569,9 +597,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(Permutation(), permutation)
         self.add_strategy(Rank(), rank)
         self.add_strategy(ForeignKey(), foreign_keys)
+        self.add_strategy(VirtualLookup(), virtual_lookups)
         self.add_strategy(Lookup(), lookups)
         self.add_strategy(FuzzyLookup(), fuzzy_lookup)
         for c_instance in ConditionalAggregate.instances():
+            self.add_strategy(c_instance, conditional_aggregate)
+        for c_instance in VirtualConditionalAggregate.instances():
             self.add_strategy(c_instance, conditional_aggregate)
         self.add_strategy(RunningTotal(), running_total)
         self.add_strategy(ForeignProduct(), foreign_operation)
@@ -680,7 +711,10 @@ def equal_groups(solutions, solution):
 
 def to_data(*args):
     for arg in args:
-        yield arg.get_vector(1)
+        if isinstance(arg, Group):
+            yield arg.get_vector(1)
+        elif isinstance(arg, indexing.Block):
+            yield arg.vector_data[0]
 
 
 def complete(vector):

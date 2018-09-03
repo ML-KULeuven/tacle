@@ -7,6 +7,16 @@ from tacle.core.template import ConditionalAggregate, ConstraintTemplate, Aggreg
     MutualExclusivity
 
 
+class UnsupportedFormula(BaseException):
+    def __init__(self, template):
+        super().__init__("Cannot evaluate {}".format(template))
+        self.template = template
+
+
+class InvalidArguments(BaseException):
+    pass
+
+
 def op_neutral(operation):
     # type: (Operation) -> Any
     if operation == Operation.SUM:
@@ -27,10 +37,19 @@ def op_neutral(operation):
 
 def evaluate_template(template, assignment):
     # type: (ConstraintTemplate, Dict[str, np.ndarray]) -> np.ndarray
+    if all(type(k) == str for k in assignment.keys()):
+        assignment = {v: assignment[v.name] if isinstance(assignment[v.name], np.ndarray) else assignment[v.name].data
+                      for v in template.variables if v != template.target}
+
     if isinstance(template, ConditionalAggregate):
         ok, fk, v = (assignment[v] for v in [template.o_key, template.f_key, template.values])
+        print(ok, fk, v, "", sep="\n")
+        if any(len(d.shape) != 1 for d in (ok, fk, v)):
+            raise InvalidArguments()
         result = {k: [] for k in ok}
         for i in range(len(fk)):
+            if fk[i] not in result:
+                raise InvalidArguments()
             result[fk[i]].append(v[i])
         return np.array([template.operation.aggregate_f(np.array(result[k]))
                          if len(result[k]) > 0
@@ -45,10 +64,11 @@ def evaluate_template(template, assignment):
     elif isinstance(template, Lookup):
         ok, ov, fk = (assignment[v] for v in [template.o_key, template.o_value, template.f_key])
         d = {k: v for k, v in zip(ok, ov)}
+        print("lookup")
         return np.array([d[k] for k in fk])
 
     elif template.target:
-        raise RuntimeError("Cannot evaluate {}".format(template))
+        raise UnsupportedFormula(template)
 
     else:
         raise ValueError("Cannot evaluate constraint")
