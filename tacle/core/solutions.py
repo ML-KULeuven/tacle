@@ -20,7 +20,7 @@ class Constraint(object):
 
     def __getitem__(self, item):
         # type: (Union[str, int]) -> Group
-        if isinstance(item, str):
+        if isinstance(item, str) and item in self.assignment:
             return self.assignment[item]
         elif isinstance(item, int):
             return self.assignment[self.template.variables[item].name]
