@@ -43,7 +43,6 @@ def evaluate_template(template, assignment):
 
     if isinstance(template, ConditionalAggregate):
         ok, fk, v = (assignment[v] for v in [template.o_key, template.f_key, template.values])
-        print(ok, fk, v, "", sep="\n")
         if any(len(d.shape) != 1 for d in (ok, fk, v)):
             raise InvalidArguments()
         result = {k: [] for k in ok}
@@ -64,7 +63,6 @@ def evaluate_template(template, assignment):
     elif isinstance(template, Lookup):
         ok, ov, fk = (assignment[v] for v in [template.o_key, template.o_value, template.f_key])
         d = {k: v for k, v in zip(ok, ov)}
-        print("lookup")
         return np.array([d[k] for k in fk])
 
     elif template.target:
