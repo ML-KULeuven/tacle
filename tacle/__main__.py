@@ -26,7 +26,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     tables = tables_from_csv(args.csv_file)
-    logger.info("\n".join("{}: {}".format(table, ", ".join(map(str(table.blocks)))) for table in tables))
+    logger.info("\n".join("{}: {}".format(table, ", ".join(map(str, table.blocks))) for table in tables))
     constraints = learn_from_csv(args.csv_file, virtual=args.virtual)
 
     if args.filter is not None:
