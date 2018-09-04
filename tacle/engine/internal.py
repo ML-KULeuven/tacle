@@ -66,6 +66,7 @@ class InternalCSPStrategy(AssignmentStrategy):
         self.add_constraint(SumProduct())
         self.add_constraint(Ordered())
         self.add_constraint(MutualExclusivity())
+        self.add_constraint(MutualExclusiveVector())
 
     def add_constraint(self, constraint: ConstraintTemplate):
         self._constraints.add(constraint)
@@ -553,6 +554,9 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return self._generate_test_vectors(assignments, [c.x], test_ordering)
 
+        def xor_vector(c: MutualExclusiveVector, assignments, solutions):
+            return self._generate_test_vectors(assignments, [c.x], lambda xb: c.test_data(*to_data(xb)))
+
         def xor(c, assignments, solutions):
             result = []
 
@@ -614,6 +618,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         self.add_strategy(SumProduct(), sum_product)
         self.add_strategy(Ordered(), ordered_constraint)
         self.add_strategy(MutualExclusivity(), xor)
+        self.add_strategy(MutualExclusiveVector(), xor_vector)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_groups):

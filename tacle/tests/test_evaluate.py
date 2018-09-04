@@ -1,8 +1,8 @@
 import numpy as np
 
 from tacle.core.group import Orientation
-from tacle.core.template import ConditionalAggregate, Operation, Aggregate, Lookup, Rank
-from tacle.engine.evaluate import evaluate_template
+from tacle.core.template import ConditionalAggregate, Operation, Aggregate, Lookup, Rank, MutualExclusiveVector
+from tacle.engine.evaluate import evaluate_template, check_template
 
 
 def test_conditional_sum():
@@ -67,3 +67,25 @@ def test_rank():
 
     result = evaluate_template(template, {template.x: x})
     assert all(target == result)
+
+
+def test_xor_vector():
+    template = MutualExclusiveVector()
+    x_list = [
+        (np.array([0, 0, 1, 0, 0]), True),
+        (np.array([1, 0, 1, 0, 0]), False),
+        (np.array([1, 0, 0, 0, 0]), True),
+        (np.array([1, 0, 0, 0, 1]), False),
+        (np.array([0, 1, 1, 0, 0]), False),
+        (np.array(["a", "", "", "", ""]), True),
+        (np.array(["a", "b", "b", "b", "b"]), True),
+        (np.array(["a", "b", "b", "a", "b"]), False),
+        (np.array([None, None, None, "XR", None]), True),
+        (np.array([None, "XR", None, "XR", None]), False),
+    ]
+
+    for x, l in x_list:
+        if l:
+            assert check_template(template, {template.x: x})
+        else:
+            assert not check_template(template, {template.x: x})

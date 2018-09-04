@@ -451,6 +451,30 @@ class MutualExclusivity(ConstraintTemplate):
         return True
 
 
+class MutualExclusiveVector(ConstraintTemplate):
+    x = Variable("X", vector=True, types=discrete)
+
+    def __init__(self):
+        variables = [self.x]
+        source = Source(variables)
+        filters = [SizeFilter(variables, length=4, max_size=False)]
+        super().__init__("xor-vec", "ONLY-ONE({X})", source, filters)
+
+    @staticmethod
+    def test_data(data):
+        data = data.squeeze()
+        if len(data.shape) > 1:
+            return ValueError("Expected vector, got matrix")
+        symbols = {}
+        for e in data:
+            if e not in symbols:
+                if len(symbols) == 2:
+                    return False
+                symbols[e] = 0
+            symbols[e] += 1
+        return len(symbols) == 2 and any(v == 1 for v in symbols.values())
+
+
 # class BooleanCondition(ConstraintTemplate):
 #     condition = Variable("C", vector=True, types=integer)
 #     result = Variable("R", vector=True, types=integer)

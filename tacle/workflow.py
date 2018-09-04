@@ -34,6 +34,7 @@ def get_constraint_list():
         SumProduct(),
         Ordered(),
         MutualExclusivity(),
+        MutualExclusiveVector()
     ]
     constraint_list += Aggregate.instances()
     constraint_list += ConditionalAggregate.instances()

@@ -4,7 +4,7 @@ import numpy as np
 
 from tacle.core.group import Orientation
 from tacle.core.template import ConditionalAggregate, ConstraintTemplate, Aggregate, Operation, Lookup, Ordered,\
-    MutualExclusivity, Rank
+    MutualExclusivity, Rank, MutualExclusiveVector
 
 
 class UnsupportedFormula(BaseException):
@@ -91,6 +91,10 @@ def check_template(template, assignment):
         return True
 
     elif isinstance(template, MutualExclusivity):
+        x = assignment[template.x]
+        return template.test_data(x)
+
+    elif isinstance(template, MutualExclusiveVector):
         x = assignment[template.x]
         return template.test_data(x)
 
