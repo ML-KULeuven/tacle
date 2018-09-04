@@ -1,7 +1,7 @@
 import numpy as np
 
 from tacle.core.group import Orientation
-from tacle.core.template import ConditionalAggregate, Operation, Aggregate, Lookup
+from tacle.core.template import ConditionalAggregate, Operation, Aggregate, Lookup, Rank
 from tacle.engine.evaluate import evaluate_template
 
 
@@ -58,3 +58,12 @@ def test_lookup():
 
     result = evaluate_template(template, {template.o_key: ok, template.f_key: fk, template.o_value: ov})
     assert all(result == [d[k] for k in fk])
+
+
+def test_rank():
+    template = Rank()
+    x = np.array([4, 17.3, 17.3, 50.2])
+    target = np.array([4, 2, 2, 1])
+
+    result = evaluate_template(template, {template.x: x})
+    assert all(target == result)

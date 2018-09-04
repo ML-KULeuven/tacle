@@ -4,7 +4,7 @@ import numpy as np
 
 from tacle.core.group import Orientation
 from tacle.core.template import ConditionalAggregate, ConstraintTemplate, Aggregate, Operation, Lookup, Ordered,\
-    MutualExclusivity
+    MutualExclusivity, Rank
 
 
 class UnsupportedFormula(BaseException):
@@ -62,8 +62,17 @@ def evaluate_template(template, assignment):
 
     elif isinstance(template, Lookup):
         ok, ov, fk = (assignment[v] for v in [template.o_key, template.o_value, template.f_key])
+        if any(len(d.shape) > 1 for d in (ok, ov, fk)):
+            ok, ov, fk = ok.squeeze(), ov.squeeze(), fk.squeeze()
+
         d = {k: v for k, v in zip(ok, ov)}
         return np.array([d[k] for k in fk])
+
+    elif isinstance(template, Rank):
+        from tacle.engine.internal import rank_data
+
+        x = assignment[Rank.x].squeeze()
+        return np.array(rank_data(x))
 
     elif template.target:
         raise UnsupportedFormula(template)

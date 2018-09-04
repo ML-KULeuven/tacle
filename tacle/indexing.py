@@ -403,8 +403,8 @@ class Table(object):
         if orientation not in self.orientations:
             raise ValueError("Unsupported orientation: {}".format(orientation))
         if orientation == Orientation.vertical:
-            new_data = np.concatenate((data, vector_data), axis=0)
-            new_type_data = np.concatenate((type_data, vector_types), axis=0)
+            new_data = np.concatenate((data, vector_data[:, np.newaxis]), axis=1)
+            new_type_data = np.concatenate((type_data, vector_types[:, np.newaxis]), axis=1)
             new_range = Range(self.range.column, self.range.row, self.range.width + 1, self.range.height)
             return Table(new_data, new_type_data, new_range, self.name, self.orientations)
         raise ValueError("Horizontal orientation is not yet supported")
