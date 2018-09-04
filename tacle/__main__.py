@@ -3,6 +3,8 @@ import logging
 
 from tacle import learn_from_csv, filter_constraints, tables_from_csv
 
+logger = logging.getLogger(__name__)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -23,9 +25,9 @@ if __name__ == "__main__":
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    constraints = learn_from_csv(args.csv_file, virtual=args.virtual)
     tables = tables_from_csv(args.csv_file)
-    print(*[(str(table), table.blocks) for table in tables], sep="\n")
+    logger.info("\n".join("{}: {}".format(table, ", ".join(map(str(table.blocks)))) for table in tables))
+    constraints = learn_from_csv(args.csv_file, virtual=args.virtual)
 
     if args.filter is not None:
         constraints = filter_constraints(constraints, *args.filter)
