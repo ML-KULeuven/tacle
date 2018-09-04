@@ -394,6 +394,9 @@ class Table(object):
                 return block.vector_types[i - block.relative_range.vector_index(orientation)]
         raise RuntimeError("Illegal state: {}, {}, {}".format(i, orientation, self))
 
+    def copy(self):
+        return Table(self.data.copy(), self.type_data.copy(), self.range, self.name, self.orientations)
+
     def __repr__(self):
         return "Table({}, {}, {}, {})".format(self.name, self.data, repr(self.range), self.orientations)
 
