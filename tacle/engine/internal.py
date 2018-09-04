@@ -250,7 +250,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             assignments = new_assignments
 
             if isinstance(c, VirtualConditionalAggregate):
-                print("VCA")
                 keys = ConditionalAggregate.o_key, ConditionalAggregate.f_key, ConditionalAggregate.values
             else:
                 keys = [c.o_key, c.f_key, c.values, c.result]
