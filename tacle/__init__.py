@@ -31,10 +31,10 @@ def learn_from_csv(csv_file, filters=None, virtual=None):
     return learn_from_cells(parse_csv(csv_file), filters, virtual=virtual)
 
 
-def learn_from_cells(data, filters=None, virtual=None):
+def learn_from_cells(data, filters=None, virtual=None, orientation=None):
     data = np.array(data, dtype=object)
     type_data = get_type_data(data)
-    tables = get_tables(data, type_data, detect_table_ranges(type_data))
+    tables = get_tables(data, type_data, detect_table_ranges(type_data, orientation=orientation))
     constraints = learn_constraints(data, tables, virtual).constraints
     if virtual:
         # constraints = [c for c in constraints if c.template.target and
@@ -47,25 +47,25 @@ def learn_from_cells(data, filters=None, virtual=None):
     return constraints
 
 
-def ranges_from_csv(csv_file):
-    return ranges_from_cells(parse_csv(csv_file))
+def ranges_from_csv(csv_file, orientation=None):
+    return ranges_from_cells(parse_csv(csv_file), orientation)
 
 
-def ranges_from_cells(data):
+def ranges_from_cells(data, orientation=None):
     data = np.array(data, dtype=object)
     type_data = get_type_data(data)
-    t_ranges = detect_table_ranges(type_data)
+    t_ranges = detect_table_ranges(type_data, orientation=orientation)
     return t_ranges
 
 
-def tables_from_csv(csv_file):
-    return tables_from_cells(parse_csv(csv_file))
+def tables_from_csv(csv_file, orientation=None):
+    return tables_from_cells(parse_csv(csv_file), orientation)
 
 
-def tables_from_cells(data):
+def tables_from_cells(data, orientation=None):
     data = np.array(data, dtype=object)
     type_data = get_type_data(data)
-    return get_tables(data, type_data, detect_table_ranges(type_data))
+    return get_tables(data, type_data, detect_table_ranges(type_data, orientation=orientation))
 
 
 def filter_constraints(constraints, *args):

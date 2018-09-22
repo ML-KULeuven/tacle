@@ -1,6 +1,7 @@
 import argparse
 import logging
 
+from .indexing import Orientation
 from tacle import learn_from_csv, filter_constraints, tables_from_csv
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,8 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--verbose", help="Increase the verbosity level", action="store_true")
     parser.add_argument("-d", "--debug", help="Increase the verbosity level to debug-level", action="store_true")
     parser.add_argument("--virtual", help="Add virtual blocks", action="store_true")
+    parser.add_argument("-t", "--tables_only", help="Show only tables", action="store_true")
+    parser.add_argument("-o", "--orientation", type=str, help="Show only tables", default=None)
 
     args = parser.parse_args()
 
@@ -25,19 +28,33 @@ if __name__ == "__main__":
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    tables = tables_from_csv(args.csv_file)
-    logger.info("\n".join("{}: {}".format(table, ", ".join(map(str, table.blocks))) for table in tables))
-    constraints = learn_from_csv(args.csv_file, virtual=args.virtual)
+    tables = tables_from_csv(args.csv_file, args.orientation)
 
-    if args.filter is not None:
-        constraints = filter_constraints(constraints, *args.filter)
-    if args.group:
-        groups = dict()
-        for constraint in constraints:
-            if constraint.template.name not in groups:
-                groups[constraint.template.name] = []
-            groups[constraint.template.name].append(constraint)
-        for name in sorted(groups.keys()):
-            print(name, *list(map(str, groups[name])), sep="\n\t")
-    else:
-        print(*list(map(str, constraints)), sep="\n")
+    if args.verbose or args.debug:
+        for table in tables:
+            print("Table {}, {}".format(table.name, table.range))
+            for orientation in table.orientations:
+                print(", ".join("{} {}-{} ({})".format("Columns" if orientation == Orientation.vertical else "Rows",
+                                                       block.relative_range.vector_index(orientation),
+                                                       block.relative_range.vector_index(orientation) +
+                                                       block.relative_range.vector_count(orientation),
+                                                       block.type)
+                                for block in table.blocks if block.orientation == orientation))
+            print()
+
+    if not args.tables_only:
+        logger.info("\n".join("{}: {}".format(table, ", ".join(map(str, table.blocks))) for table in tables))
+        constraints = learn_from_csv(args.csv_file, virtual=args.virtual)
+
+        if args.filter is not None:
+            constraints = filter_constraints(constraints, *args.filter)
+        if args.group:
+            groups = dict()
+            for constraint in constraints:
+                if constraint.template.name not in groups:
+                    groups[constraint.template.name] = []
+                groups[constraint.template.name].append(constraint)
+            for name in sorted(groups.keys()):
+                print(name, *list(map(str, groups[name])), sep="\n\t")
+        else:
+            print(*list(map(str, constraints)), sep="\n")

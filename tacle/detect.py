@@ -30,7 +30,7 @@ def get_type_data(data):
     return numpy.vectorize(Typing.detect_type)(data)
 
 
-def detect_table_ranges(type_data, typed=True):
+def detect_table_ranges(type_data, typed=True, orientation=None):
     if not typed:
         type_data = get_type_data(type_data)
 
@@ -70,19 +70,21 @@ def detect_table_ranges(type_data, typed=True):
         headers = None
         cells = 0
 
-        for column_header in range(t_range.columns):
-            row_header = max(column_headers[column_header:])
-            cell_score = (t_range.rows - row_header) * (t_range.columns - column_header)
-            if cell_score > cells:
-                cells = cell_score
-                headers = (column_header, row_header)
+        if orientation is None or orientation == Orientation.vertical:
+            for column_header in range(t_range.columns):
+                row_header = max(column_headers[column_header:])
+                cell_score = (t_range.rows - row_header) * (t_range.columns - column_header)
+                if cell_score > cells:
+                    cells = cell_score
+                    headers = (column_header, row_header)
 
-        for row_header in range(t_range.rows):
-            column_header = max(row_headers[row_header:])
-            cell_score = (t_range.rows - row_header) * (t_range.columns - column_header)
-            if cell_score > cells:
-                cells = cell_score
-                headers = (column_header, row_header)
+        if orientation is None or orientation == Orientation.horizontal:
+            for row_header in range(t_range.rows):
+                column_header = max(row_headers[row_header:])
+                cell_score = (t_range.rows - row_header) * (t_range.columns - column_header)
+                if cell_score > cells:
+                    cells = cell_score
+                    headers = (column_header, row_header)
 
         t_r = t_range.intersect(Range(t_range.x0 + headers[0], t_range.y0 + headers[1], t_range.columns, t_range.rows))
         table_ranges.append(t_r)
