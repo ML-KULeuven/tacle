@@ -1,3 +1,5 @@
+import multiprocessing
+
 from .template import ConstraintTemplate
 from .group import Group
 
@@ -72,11 +74,11 @@ class DictSolvingStrategy(SolvingStrategy):
         return self.strategies[constraint](constraint, assignments, solutions)
 
 
-class StrategyManager:
-    def __init__(self):
-        super().__init__()
+class StrategyManager(object):
+    def __init__(self, timeout=None):
         self.assignment_strategies = []
         self.solving_strategies = []
+        self.timeout = timeout
 
     def add_assignment_strategy(self, strategy: AssignmentStrategy):
         self.assignment_strategies.append(strategy)
@@ -99,7 +101,28 @@ class StrategyManager:
     def find_solutions(self, constraint: ConstraintTemplate, assignments: [{Group}], solutions) -> [{(Group, int)}]:
         for strategy in self.solving_strategies:
             if strategy.applies_to(constraint):
-                return strategy.apply(constraint, assignments, solutions)
+                if self.timeout is not None:
+                    def async_call(c, a, s, q):
+                        found = strategy.apply(constraint, assignments, solutions)
+                        queue.put(found)
+
+                    queue = multiprocessing.Queue()
+                    p = multiprocessing.Process(target=async_call, args=(constraint, assignments, solutions, queue))
+                    p.start()
+
+                    p.join(self.timeout)
+
+                    if p.is_alive():
+                        p.terminate()
+                        p.join()
+
+                    if not queue.empty():
+                        return queue.get()
+                    else:
+                        return []
+
+                else:
+                    return strategy.apply(constraint, assignments, solutions)
         raise Exception("No solving handler for {}".format(constraint))
 
     def supports_solving_for(self, constraint: ConstraintTemplate):

@@ -27,15 +27,15 @@ def parse_csv(csv_file):
     return data
 
 
-def learn_from_csv(csv_file, filters=None, virtual=None):
-    return learn_from_cells(parse_csv(csv_file), filters, virtual=virtual)
+def learn_from_csv(csv_file, filters=None, virtual=None, solve_timeout=None):
+    return learn_from_cells(parse_csv(csv_file), filters, virtual=virtual, solve_timeout=solve_timeout)
 
 
-def learn_from_cells(data, filters=None, virtual=None, orientation=None):
+def learn_from_cells(data, filters=None, virtual=None, orientation=None, solve_timeout=None):
     data = np.array(data, dtype=object)
     type_data = get_type_data(data)
     tables = get_tables(data, type_data, detect_table_ranges(type_data, orientation=orientation))
-    constraints = learn_constraints(data, tables, virtual).constraints
+    constraints = learn_constraints(data, tables, virtual, solve_timeout).constraints
     if virtual:
         # constraints = [c for c in constraints if c.template.target and
         #                (Range.from_legacy_bounds(c.assignment[c.template.target.name].bounds).row == -1

@@ -67,10 +67,11 @@ def task(csv_file, groups_file, constraints=None, manager=None):
     return LearningTask(csv_file, groups_file, manager, constraints)
 
 
-def main(csv_file, groups_file, verbose, silent=False, constraints=None, only_total_time=False, groups=None):
+def main(csv_file, groups_file, verbose, silent=False, constraints=None, only_total_time=False, groups=None,
+         solve_timeout=None):
     if only_total_time:
         silent = True
-    manager = get_manager()
+    manager = get_manager(solve_timeout)
     if groups is None:
         groups = list(get_groups_tables(csv_file, groups_file))
 
@@ -123,8 +124,8 @@ def main(csv_file, groups_file, verbose, silent=False, constraints=None, only_to
     return solutions
 
 
-def get_manager():
-    manager = StrategyManager()
+def get_manager(solve_timeout=None):
+    manager = StrategyManager(timeout=solve_timeout)
     manager.add_assignment_strategy(InternalCSPStrategy())
     manager.add_solving_strategy(InternalSolvingStrategy())
     manager.add_assignment_strategy(IdpAssignmentStrategy())

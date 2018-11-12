@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import Union, List, Optional
 
 import numpy as np
 
@@ -10,8 +10,8 @@ from .parse.parser import get_groups
 from .indexing import Table, Block, Orientation, Range, Typing
 
 
-def learn_constraints(data, tables, virtual=False):
-    # type: (np.ndarray, List[Table], bool) -> Solutions
+def learn_constraints(data, tables, virtual=False, solve_timeout=None):
+    # type: (np.ndarray, List[Table], bool, Optional[int]) -> Solutions
     indexing_data = {
         "Tables": [
             {"Name": table.name, "Bounds": table.range.as_legacy_bounds().bounds}
@@ -34,7 +34,7 @@ def learn_constraints(data, tables, virtual=False):
     if virtual:
         templates.append(VirtualLookup())
         templates += VirtualConditionalAggregate.instances()
-    return learn(None, None, False, True, templates, groups=groups)
+    return learn(None, None, False, True, templates, groups=groups, solve_timeout=solve_timeout)
 
 
 def make_virtual_block(table, orientation, block_type):

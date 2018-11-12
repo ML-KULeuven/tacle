@@ -20,6 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("--virtual", help="Add virtual blocks", action="store_true")
     parser.add_argument("-t", "--tables_only", help="Show only tables", action="store_true")
     parser.add_argument("-o", "--orientation", type=str, help="Show only tables", default=None)
+    parser.add_argument("--solve_timeout", type=float, help="Timeout for solving per constraint", default=None)
 
     args = parser.parse_args()
 
@@ -44,7 +45,7 @@ if __name__ == "__main__":
 
     if not args.tables_only:
         logger.info("\n".join("{}: {}".format(table, ", ".join(map(str, table.blocks))) for table in tables))
-        constraints = learn_from_csv(args.csv_file, virtual=args.virtual)
+        constraints = learn_from_csv(args.csv_file, virtual=args.virtual, solve_timeout=args.solve_timeout)
 
         if args.filter is not None:
             constraints = filter_constraints(constraints, *args.filter)
