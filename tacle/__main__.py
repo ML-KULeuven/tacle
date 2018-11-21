@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     tables = tables_from_csv(args.csv_file, args.orientation)
 
-    if args.verbose or args.debug:
+    if args.verbose or args.debug or args.tables_only:
         for table in tables:
             print("Table {}, {}".format(table.name, table.range))
             for orientation in table.orientations:
