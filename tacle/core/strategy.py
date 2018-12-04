@@ -1,4 +1,5 @@
 import multiprocessing
+import time
 
 from .template import ConstraintTemplate
 from .group import Group
@@ -103,8 +104,8 @@ class StrategyManager(object):
             if strategy.applies_to(constraint):
                 if self.timeout is not None:
                     def async_call(c, a, s, q):
-                        found = strategy.apply(constraint, assignments, solutions)
-                        queue.put(found)
+                        found = list(strategy.apply(c, a, s))
+                        q.put(found)
 
                     queue = multiprocessing.Queue()
                     p = multiprocessing.Process(target=async_call, args=(constraint, assignments, solutions, queue))
@@ -112,15 +113,19 @@ class StrategyManager(object):
 
                     p.join(self.timeout)
 
-                    if p.is_alive():
-                        p.terminate()
-                        p.join()
+                    result = []
+                    while True:
+                        if not queue.empty():
+                            result += queue.get()
+                        else:
+                            p.terminate()
+                            p.join()
+                            break
+                        time.sleep(0.01)  # Give tasks a chance to put more data in
+                        if not p.is_alive():
+                            break
 
-                    if not queue.empty():
-                        return queue.get()
-                    else:
-                        return []
-
+                    return result
                 else:
                     return strategy.apply(constraint, assignments, solutions)
         raise Exception("No solving handler for {}".format(constraint))

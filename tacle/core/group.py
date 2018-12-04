@@ -18,7 +18,7 @@ class GType(Enum):
     @staticmethod
     def max(gtype_set):
         if any([gt == GType.string for gt in gtype_set]) and not all([gt == GType.string for gt in gtype_set]):
-            raise Exception("Inconsistent types")
+            raise Exception("Inconsistent types {}".format(gtype_set))
         return GType(max([gt.value for gt in gtype_set]))
 
 

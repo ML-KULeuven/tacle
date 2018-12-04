@@ -3,8 +3,8 @@ from typing import List, Dict, Tuple, Any
 import numpy as np
 
 from tacle.core.group import Orientation
-from tacle.core.template import ConditionalAggregate, ConstraintTemplate, Aggregate, Operation, Lookup, Ordered,\
-    MutualExclusivity, Rank, MutualExclusiveVector
+from tacle.core.template import ConditionalAggregate, ConstraintTemplate, Aggregate, Operation, Lookup, Ordered, \
+    MutualExclusivity, Rank, MutualExclusiveVector, Product, Diff
 
 
 class UnsupportedFormula(BaseException):
@@ -57,8 +57,14 @@ def evaluate_template(template, assignment):
 
     elif isinstance(template, Aggregate):
         x = assignment[template.x]
-        axis = 0 if template.orientation == Orientation.HORIZONTAL else 1
+        axis = 1 if template.orientation == Orientation.HORIZONTAL else 0
         return template.operation.aggregate(x, axis=axis)
+
+    elif isinstance(template, Product):
+        return assignment[template.first] * assignment[template.second]
+
+    elif isinstance(template, Diff):
+        return assignment[template.first] - assignment[template.second]
 
     elif isinstance(template, Lookup):
         ok, ov, fk = (assignment[v] for v in [template.o_key, template.o_value, template.f_key])

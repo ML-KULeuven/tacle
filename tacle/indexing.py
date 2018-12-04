@@ -125,14 +125,31 @@ class Typing(object):
 
     @staticmethod
     def cast(cell_type, value):
+        original_cell_type = Typing.detect_type(value)
+        if original_cell_type != cell_type and original_cell_type != Typing.any:
+            value = Typing.cast(original_cell_type, value)
+
         if cell_type in (Typing.string, Typing.nested_index):
             return str(value) if value is not None else None
         elif cell_type == Typing.percentage:
-            return float(str(value).replace("%", "")) / 100.0
+            try:
+                return Typing.cast(Typing.float, str(value).replace("%", "")) / 100.0
+            except ValueError:
+                print("Could not convert percentage {}".format(value))
+                raise
+
         elif cell_type == Typing.currency:
-            return float(re.sub(Typing.currency_symbols, "", str(value)))
+            return Typing.cast(Typing.float, re.sub(Typing.currency_symbols, "", str(value)))
         elif cell_type in [Typing.int, Typing.float, Typing.numeric]:
-            converted = float(re.sub(Typing.place_holder, "", str(value))) if value not in [None, "#?", ""] else np.nan
+            if str(value) not in [None, "#?", ""]:
+                cleaned = re.sub(Typing.place_holder, "", str(value))
+                try:
+                    converted = float(cleaned)
+                except ValueError:
+                    print("Cleaned from", value, "to", cleaned)
+                    raise
+            else:
+                converted = np.nan
             if cell_type == Typing.int and not np.isnan(converted):
                 converted = int(converted)
             return converted
@@ -449,6 +466,8 @@ class Block(object):
                 if vector_types is None:
                     v_type = Typing.max(relative_range.vector_range(i, orientation).get_data(table.type_data))
                     self.vector_types.append(v_type)
+                else:
+                    v_type = vector_types[i]
 
                 v_data = relative_range.vector_range(i, orientation).get_data(table.data)
                 self.vector_data.append(np.vectorize(lambda v: Typing.cast(v_type, v))(v_data.flatten()))

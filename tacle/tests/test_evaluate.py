@@ -41,10 +41,10 @@ def test_mean():
     ])
 
     result = evaluate_template(template_h, {template_h.x: x})
-    assert all(result == np.mean(x, axis=0))
-
-    result = evaluate_template(template_v, {template_h.x: x})
     assert all(result == np.mean(x, axis=1))
+
+    result = evaluate_template(template_v, {template_v.x: x})
+    assert all(result == np.mean(x, axis=0))
 
 
 def test_lookup():
@@ -58,6 +58,17 @@ def test_lookup():
 
     result = evaluate_template(template, {template.o_key: ok, template.f_key: fk, template.o_value: ov})
     assert all(result == [d[k] for k in fk])
+
+
+def test_sum():
+    template = Aggregate(Orientation.HORIZONTAL, Operation.SUM)
+    x = np.array([
+        [5, 6, 7],
+        [10, 20, 30],
+    ])
+
+    result = evaluate_template(template, {template.x: x})
+    assert all(result == np.array([5 + 6 + 7, 10 + 20 + 30]))
 
 
 def test_rank():

@@ -30,7 +30,7 @@ def get_type_data(data):
     return numpy.vectorize(Typing.detect_type)(data)
 
 
-def detect_table_ranges(type_data, typed=True, orientation=None):
+def detect_table_ranges(type_data, typed=True, orientation=None, min_cells=None, min_rows=None, min_columns=None):
     if not typed:
         type_data = get_type_data(type_data)
 
@@ -87,6 +87,8 @@ def detect_table_ranges(type_data, typed=True, orientation=None):
                     headers = (column_header, row_header)
 
         t_r = t_range.intersect(Range(t_range.x0 + headers[0], t_range.y0 + headers[1], t_range.columns, t_range.rows))
-        table_ranges.append(t_r)
+        if (min_cells is None or t_r.columns * t_r.rows >= min_cells) and (min_rows is None or t_r.rows >= min_rows)\
+                and (min_columns is None or t_r.columns >= min_columns):
+            table_ranges.append(t_r)
 
     return table_ranges

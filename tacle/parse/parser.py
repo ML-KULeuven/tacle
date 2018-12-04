@@ -159,7 +159,8 @@ def get_groups(data, indexing_data):
         for group_description in indexing_data["Groups"]:
             table = table_dict[group_description["Table"]]
             if "Types" in group_description:
-                g_types = [GType.int if gt == "int" else (GType.float if gt == "float" or gt == "numeric" else GType.string)
+                from tacle.indexing import Typing
+                g_types = [GType.int if Typing.root(gt) == "numeric" else GType.string
                            for gt in group_description["Types"]]
             else:
                 g_types = None
