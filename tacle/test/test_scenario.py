@@ -18,3 +18,7 @@ def test_mutual_exclusive_vector_positive_1():
 def test_ice_cream():
     constraints = get_constraints("magic_ice_cream.csv")
     assert len(constraints) == 6
+
+    sum_constraint = filter_constraints(constraints, "sum*")[0]
+    print(sum_constraint["X"])
+    print(sum_constraint.X)

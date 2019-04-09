@@ -16,6 +16,8 @@ class Constraint(object):
 
     def __getattr__(self, item):
         # type: (str) -> Group
+        if item.startswith("__") or item in ["template", "assignment"]:
+            return super().__getattribute__(item)
         return self[item]
 
     def __getitem__(self, item):
