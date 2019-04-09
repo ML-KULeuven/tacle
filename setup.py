@@ -90,6 +90,8 @@ setup(
     zip_safe=False,
     install_requires=REQUIRED,
     extras_require=EXTRAS,
+    setup_requires=['pytest-runner'],
+    tests_require=["pytest"],
     entry_points={},
     cmdclass={
         'upload': UploadCommand,

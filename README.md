@@ -10,7 +10,7 @@ TaCLe is a constraint learner designed for usage in spreadsheets and tabular dat
 ### Running TaCLe from command line
 TaCLe can be used from command line to analyze a CSV file:
 
-    python -m tacle res/magic_ice_cream.csv
+    python -m tacle data/magic_ice_cream.csv
     
 This returns a list of constraints in the file:
 
@@ -25,14 +25,14 @@ This returns a list of constraints in the file:
 
 If you are interested in specific types of constraints, you can filter the output:
 
-    python -m tacle res/magic_ice_cream.csv -f "foreign-key"  # Report only foreign keys
-    python -m tacle res/magic_ice_cream.csv -f "<f>"  # Report only formulas -- use <c> for only constraints
+    python -m tacle data/magic_ice_cream.csv -f "foreign-key"  # Report only foreign keys
+    python -m tacle data/magic_ice_cream.csv -f "<f>"  # Report only formulas -- use <c> for only constraints
 
 **Tables**
 
 To view the tables that TaCLe finds in a file you can run:
 
-    python -m tacle res/magic_ice_cream.csv -t
+    python -m tacle data/magic_ice_cream.csv -t
 
 
 This returns the tables and blocks found by TaCLe:

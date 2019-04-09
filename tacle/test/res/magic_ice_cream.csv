@@ -1,0 +1,15 @@
+Type,Country,June,July,August,Total,Profit
+Vanilla,BE,610,190,670,1470,YES
+Banana,BE,170,690,520,1380,YES
+Chocolate,BE,560,320,140,1020,YES
+Banana,DE,610,640,320,1570,NO
+Speculaas,BE,300,270,290,860,NO
+Chocolate,FR,430,350,300,1080,YES
+Banana,DE,250,650,630,1530,YES
+Chocolate,NL,210,280,270,760,NO
+
+Type,ProdTime
+Chocolate,60
+Banana,40
+Speculaas,70
+Vanilla,40

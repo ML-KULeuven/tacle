@@ -14,3 +14,7 @@ def test_mutual_exclusive_vector_positive_1():
     assert len(constraints) == 1
     assert Range.from_legacy_bounds(constraints[0][0].bounds).column == 1
 
+
+def test_ice_cream():
+    constraints = get_constraints("magic_ice_cream.csv")
+    assert len(constraints) == 6
