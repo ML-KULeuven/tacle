@@ -19,7 +19,7 @@ class IdpAssignmentStrategy(DictAssignmentStrategy):
     def extract_assignment(variables, files, structure):
         assignments = []
         assign_pattern = re.compile(r".*assign = .*")
-        patterns = [(var, re.compile(r'.*assign = .*"' + var.get_name() + '"->"(G\d+)".*')) for var in variables]
+        patterns = [(var, re.compile(r'.*assign = .*"' + var.get_name() + r'"->"(G\d+)".*')) for var in variables]
         for line in iter(execute(files, structure).splitlines()):
             if assign_pattern.match(line):
                 a = {}

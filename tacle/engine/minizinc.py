@@ -92,7 +92,7 @@ class MinizincOutputParser:
     def parse_assignments(self, groups, output):
         filter_pattern = re.compile(r"assign.*")
         assigns = filter(lambda l: bool(filter_pattern.match(l)), output.splitlines())
-        pattern = re.compile(r".*\[" + ", ".join(["(\d+)"] * len(self.variables)) + "\].*")
+        pattern = re.compile(r".*\[" + ", ".join([r"(\d+)"] * len(self.variables)) + "].*")
         assignments = []
         for line in assigns:
             match = pattern.match(line)
