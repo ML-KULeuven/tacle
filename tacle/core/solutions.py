@@ -1,5 +1,7 @@
 from typing import Dict, TYPE_CHECKING, List, Union
 
+from tacle.engine import evaluate
+
 if TYPE_CHECKING:
     from .template import ConstraintTemplate
     from .group import Group
@@ -14,9 +16,13 @@ class Constraint(object):
     def is_formula(self):
         return self.template.is_formula()
 
+    def predict(self, input_matrix):
+        assignment = {v.name: input_matrix[:, i] for i, v in enumerate(self.template.variables)}
+        return evaluate.evaluate_template(self.template, assignment)
+
     def __getattr__(self, item):
         # type: (str) -> Group
-        if item.startswith("__") or item in ["template", "assignment"]:
+        if item.startswith("__") or item in ["template", "assignment", "predict"]:
             return super().__getattribute__(item)
         from tacle.core.assignment import Variable
         return self[item.name] if isinstance(item, Variable) else self[item]
