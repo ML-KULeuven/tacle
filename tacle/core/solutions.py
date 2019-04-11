@@ -18,7 +18,8 @@ class Constraint(object):
         # type: (str) -> Group
         if item.startswith("__") or item in ["template", "assignment"]:
             return super().__getattribute__(item)
-        return self[item]
+        from core.assignment import Variable
+        return self[item.name] if isinstance(item, Variable) else self[item]
 
     def __getitem__(self, item):
         # type: (Union[str, int]) -> Group
