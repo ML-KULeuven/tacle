@@ -23,10 +23,13 @@ class Constraint(object):
 
     def __getitem__(self, item):
         # type: (Union[str, int]) -> Group
+        from core.assignment import Variable
         if isinstance(item, str) and item in self.assignment:
             return self.assignment[item]
         elif isinstance(item, int):
             return self.assignment[self.template.variables[item].name]
+        elif isinstance(item, Variable):
+            return self.assignment[item.name]
         raise AttributeError("No attribute called {}".format(item))
 
     def __repr__(self):
