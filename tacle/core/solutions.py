@@ -1,7 +1,5 @@
 from typing import Dict, TYPE_CHECKING, List, Union
 
-from tacle.engine import evaluate
-
 if TYPE_CHECKING:
     from .template import ConstraintTemplate
     from .group import Group
@@ -17,6 +15,7 @@ class Constraint(object):
         return self.template.is_formula()
 
     def predict(self, input_matrix):
+        from tacle.engine import evaluate
         assignment = {v.name: input_matrix[:, i] for i, v in enumerate(self.template.variables)}
         return evaluate.evaluate_template(self.template, assignment)
 
