@@ -16,7 +16,7 @@ class Constraint(object):
 
     def predict(self, input_matrix):
         from tacle.engine import evaluate
-        assignment = {v.name: input_matrix[:, i] for i, v in enumerate(self.template.variables)}
+        assignment = {v.name: input_matrix[:, i] for i, v in enumerate(self.template.variables) if v != self.template.target}
         return evaluate.evaluate_template(self.template, assignment)
 
     def __getattr__(self, item):
