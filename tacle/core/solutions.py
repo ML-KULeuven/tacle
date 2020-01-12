@@ -1,11 +1,28 @@
 from typing import Dict, TYPE_CHECKING, List, Union
 
+
 if TYPE_CHECKING:
     from .template import ConstraintTemplate
     from .group import Group
 
 
+class Importer:
+    def __init__(self):
+        from workflow import get_constraint_list
+        self.name_to_template = {
+            t.name: t for t in get_constraint_list()
+        }
+
+    def import_template(self, name):
+        return self.name_to_template[name]
+
+    def import_constraint(self, name, assignment):
+        return Constraint(self.import_template(name), assignment)
+
+
 class Constraint(object):
+    importer = Importer()
+
     def __init__(self, template, assignment):
         # type: (ConstraintTemplate, Dict[str, object]) -> None
         self.template = template  # type: ConstraintTemplate
@@ -46,6 +63,13 @@ class Constraint(object):
 
     def __str__(self):
         return self.template.to_string(self.assignment)
+
+    def to_dict(self):
+        return {"name": self.template.name, "assignment": self.assignment}
+
+    @staticmethod
+    def from_dict(constraint_dict):
+        return Constraint.importer.import_constraint(constraint_dict["name"], constraint_dict["assignment"])
 
 
 class Solutions:
