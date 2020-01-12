@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 class Importer:
     def __init__(self):
-        from workflow import get_constraint_list
+        from tacle.workflow import get_constraint_list
         self.name_to_template = {
             t.name: t for t in get_constraint_list()
         }
