@@ -21,7 +21,7 @@ class Importer:
 
 
 class Constraint(object):
-    importer = Importer()
+    importer = None
 
     def __init__(self, template, assignment):
         # type: (ConstraintTemplate, Dict[str, object]) -> None
@@ -69,6 +69,8 @@ class Constraint(object):
 
     @staticmethod
     def from_dict(constraint_dict):
+        if Constraint.importer is None:
+            Constraint.importer = Importer()
         return Constraint.importer.import_constraint(constraint_dict["name"], constraint_dict["assignment"])
 
 
