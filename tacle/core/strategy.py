@@ -2,14 +2,14 @@ import multiprocessing
 import time
 
 from .template import ConstraintTemplate
-from .group import Group
+from tacle.indexing import Block
 
 
 class AssignmentStrategy:
     def applies_to(self, constraint):
         raise NotImplementedError()
 
-    def apply(self, constraint: ConstraintTemplate, groups: [Group], solutions):
+    def apply(self, constraint: ConstraintTemplate, groups: [Block], solutions):
         raise NotImplementedError()
 
 
@@ -23,7 +23,7 @@ class DictAssignmentStrategy(AssignmentStrategy):
     def applies_to(self, constraint):
         return constraint in self.strategies
 
-    def apply(self, constraint: ConstraintTemplate, groups: [Group], solutions):
+    def apply(self, constraint: ConstraintTemplate, groups: [Block], solutions):
         return self.strategies[constraint](constraint, groups, solutions)
 
 
@@ -31,7 +31,7 @@ class SolvingStrategy(object):
     def applies_to(self, constraint):
         raise NotImplementedError()
 
-    def apply(self, constraint: ConstraintTemplate, assignments: [{Group}], solutions):
+    def apply(self, constraint: ConstraintTemplate, assignments: [{Block}], solutions):
         raise NotImplementedError()
 
 
@@ -64,7 +64,7 @@ class DictSolvingStrategy(SolvingStrategy):
     #         return {v: b if v != variable_name else adapted_block for v, b, in assignment.items()}
     #     return assignment
 
-    def apply(self, constraint: ConstraintTemplate, assignments: [{Group}], solutions):
+    def apply(self, constraint: ConstraintTemplate, assignments: [{Block}], solutions):
         # if self.virtual:
         #     new_assignments = []
         #     for assignment in assignments:
@@ -87,7 +87,9 @@ class StrategyManager(object):
     def add_solving_strategy(self, strategy: SolvingStrategy):
         self.solving_strategies.append(strategy)
 
-    def find_assignments(self, constraint: ConstraintTemplate, groups: [Group], solutions) -> [[Group]]:
+    def find_assignments(
+        self, constraint: ConstraintTemplate, groups: [Block], solutions
+    ) -> [[Block]]:
         for strategy in self.assignment_strategies:
             if strategy.applies_to(constraint):
                 return strategy.apply(constraint, groups, solutions)
@@ -99,16 +101,22 @@ class StrategyManager(object):
                 return True
         return False
 
-    def find_solutions(self, constraint: ConstraintTemplate, assignments: [{Group}], solutions) -> [{(Group, int)}]:
+    def find_solutions(
+        self, constraint: ConstraintTemplate, assignments: [{Block}], solutions
+    ) -> [{(Block, int)}]:
         for strategy in self.solving_strategies:
             if strategy.applies_to(constraint):
                 if self.timeout is not None:
+
                     def async_call(c, a, s, q):
                         found = list(strategy.apply(c, a, s))
                         q.put(found)
 
                     queue = multiprocessing.Queue()
-                    p = multiprocessing.Process(target=async_call, args=(constraint, assignments, solutions, queue))
+                    p = multiprocessing.Process(
+                        target=async_call,
+                        args=(constraint, assignments, solutions, queue),
+                    )
                     p.start()
 
                     p.join(self.timeout)

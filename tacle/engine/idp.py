@@ -1,7 +1,7 @@
 import re
 
 from tacle.core.template import *
-from tacle.core.group import *
+from legacy.group import *
 from tacle.core.strategy import DictAssignmentStrategy
 from .util import run_command, local
 
@@ -19,7 +19,10 @@ class IdpAssignmentStrategy(DictAssignmentStrategy):
     def extract_assignment(variables, files, structure):
         assignments = []
         assign_pattern = re.compile(r".*assign = .*")
-        patterns = [(var, re.compile(r'.*assign = .*"' + var.get_name() + r'"->"(G\d+)".*')) for var in variables]
+        patterns = [
+            (var, re.compile(r'.*assign = .*"' + var.get_name() + r'"->"(G\d+)".*'))
+            for var in variables
+        ]
         for line in iter(execute(files, structure).splitlines()):
             if assign_pattern.match(line):
                 a = {}
@@ -41,11 +44,22 @@ class IdpAssignmentStrategy(DictAssignmentStrategy):
             "\n".join([v.get_name() + " = " + v.get_name() for v in variables]),
             self._structure("vector", lambda_filter(Variable.is_vector)),
             self._structure("numeric", lambda_filter(Variable.is_numeric)),
-            self._structure("Num", ["1.." + str(max(map(lambda g: max(g.columns(), g.rows()), groups.values())))]),
-            self._structure("Group", list(groups.keys())), self._group_structure("g_length", Group.length, groups),
+            self._structure(
+                "Num",
+                [
+                    "1.."
+                    + str(
+                        max(map(lambda g: max(g.columns(), g.rows()), groups.values()))
+                    )
+                ],
+            ),
+            self._structure("Group", list(groups.keys())),
+            self._group_structure("g_length", Group.length, groups),
             self._group_structure("g_columns", Group.columns, groups),
             self._group_structure("g_rows", Group.rows, groups),
-            self._structure("g_numeric", [k for k, g in groups.items() if g.is_numeric()])
+            self._structure(
+                "g_numeric", [k for k, g in groups.items() if g.is_numeric()]
+            ),
         ]
         return "\nstructure S : VConstraint {\n" + "\n".join(parts) + "\n}"
 
@@ -54,9 +68,11 @@ class IdpAssignmentStrategy(DictAssignmentStrategy):
         return name + " = {" + "; ".join(members) + "}"
 
     def _group_structure(self, name, method, groups):
-        return self._structure(name, ["(" + k + ", " + str(method(g)) + ")" for k, g in groups.items()])
+        return self._structure(
+            name, ["(" + k + ", " + str(method(g)) + ")" for k, g in groups.items()]
+        )
 
 
 def execute(files: [], structure):
-    data = "\n".join(["include \"" + file + "\"" for file in files])
+    data = "\n".join(['include "' + file + '"' for file in files])
     return run_command(["idp"], input_data=data + structure)

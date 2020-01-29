@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 import json
-from workflow import get_constraint_list
+from workflow import get_default_templates
 
 def get_category(filename, categories):
     for key, value in categories.items():
@@ -11,7 +11,7 @@ def get_category(filename, categories):
     raise Exception("that shouldn't have happened")
 
 def main():
-    supported_constraints = {x.name for x in get_constraint_list()}
+    supported_constraints = {x.name for x in get_default_templates()}
     folder    = "data/truth/"
     filenames = set(os.listdir(folder)) - set(['examples.txt','fbi_offenses.txt',"columnwise-sum-rows.txt",'exps.txt'])
     stats_absolute              = defaultdict(int)

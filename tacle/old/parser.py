@@ -7,7 +7,7 @@ import re
 
 import time
 
-from tacle.core.group import Bounds, Table, Group, Orientation, GType
+from legacy.group import Bounds, Table, Group, Orientation, GType
 
 
 # TODO Single vector => try both orientations
@@ -21,6 +21,7 @@ def parse(filename):
 
 
 # --- Type detection ---
+
 
 class DType(Enum):
     nan = -1
@@ -76,8 +77,13 @@ def detect_type(val) -> DType:
 
 
 def numeric_type(d_type: DType):
-    return d_type == DType.percent or d_type == DType.currency or d_type == DType.int \
-        or d_type == DType.float or d_type == DType.nan
+    return (
+        d_type == DType.percent
+        or d_type == DType.currency
+        or d_type == DType.int
+        or d_type == DType.float
+        or d_type == DType.nan
+    )
 
 
 def infer_type(types):
@@ -97,14 +103,21 @@ def get_groups_tables(csv_file, groups_file=None):
     type_data = np.vectorize(detect_type)(data)
     if groups_file is None:
         t = list(detect_tables(type_data))
-        t = [(b, Table("T{}".format(i + 1), Bounds(b).subset(data), o)) for i, (b, o) in enumerate(t)]
+        t = [
+            (b, Table("T{}".format(i + 1), Bounds(b).subset(data), o))
+            for i, (b, o) in enumerate(t)
+        ]
 
         if parse_printer.on():
-            tables = ["{} = [{}:{}, {}:{}]".format(table.name, *bounds) for bounds, table in t]
+            tables = [
+                "{} = [{}:{}, {}:{}]".format(table.name, *bounds) for bounds, table in t
+            ]
             parse_printer.form("PARSE: Detected tables: {}", ", ".join(tables))
 
         groups = detect_groups(type_data, t)
-        parse_printer.form("PARSE: Detected groups: {}", ", ".join(str(g) for g in groups))
+        parse_printer.form(
+            "PARSE: Detected groups: {}", ", ".join(str(g) for g in groups)
+        )
     else:
         table_dict = {}
         t = []
@@ -120,7 +133,11 @@ def get_groups_tables(csv_file, groups_file=None):
                     o_string = table_description["Orientation"].lower()
                     if o_string == "row" or o_string == "horizontal":
                         orientation = Orientation.HORIZONTAL
-                    elif o_string == "column" or o_string == "col" or o_string == "vertical":
+                    elif (
+                        o_string == "column"
+                        or o_string == "col"
+                        or o_string == "vertical"
+                    ):
                         orientation = Orientation.VERTICAL
                 table_dict[name] = Table(name, data_subset, orientation)
                 t.append((bounds.bounds, table_dict[name]))
@@ -130,7 +147,9 @@ def get_groups_tables(csv_file, groups_file=None):
                     groups.append(create_group(group_description["Bounds"], table))
             else:
                 groups = detect_groups(type_data, t)
-                parse_printer.form("PARSE: Detected groups: {}", ", ".join(str(g) for g in groups))
+                parse_printer.form(
+                    "PARSE: Detected groups: {}", ", ".join(str(g) for g in groups)
+                )
     parse_printer.form("PARSE: Parsing took {}s", time.time() - t_start)
     return groups
 
@@ -160,8 +179,11 @@ def get_groups(data, indexing_data):
             table = table_dict[group_description["Table"]]
             if "Types" in group_description:
                 from tacle.indexing import Typing
-                g_types = [GType.int if Typing.root(gt) == "numeric" else GType.string
-                           for gt in group_description["Types"]]
+
+                g_types = [
+                    GType.int if Typing.root(gt) == "numeric" else GType.string
+                    for gt in group_description["Types"]
+                ]
             else:
                 g_types = None
             groups.append(create_group(group_description["Bounds"], table, g_types))
@@ -189,7 +211,10 @@ def create_group(bounds_list, table: Table, g_types=None):
     else:
         gtype_set = [infer_type(col) for col in types.T]
     g_type = GType.max(gtype_set)
-    cast_f = np.vectorize(lambda t, v: cast(g_type, t, v), otypes=[np.object if g_type is GType.string else np.float])
+    cast_f = np.vectorize(
+        lambda t, v: cast(g_type, t, v),
+        otypes=[np.object if g_type is GType.string else np.float],
+    )
     return Group(table, bounds, row, cast_f(types, data), gtype_set)
 
 
@@ -225,7 +250,10 @@ def detect_tables(type_data):
                 new_current[key] = rec
         saved += current.values()
         current = new_current
-    tables = [((r1 + 1, r2, c1 + 1, c2), o) for (r1, r2, c1, c2), o in [remove_header(rec, type_data) for rec in saved]]
+    tables = [
+        ((r1 + 1, r2, c1 + 1, c2), o)
+        for (r1, r2, c1, c2), o in [remove_header(rec, type_data) for rec in saved]
+    ]
     tables = [(rec, o) for rec, o in tables if rec[0] <= rec[1] and rec[2] <= rec[3]]
     # TODO Error BMI (no T1)
     return sorted(tables, key=lambda t: (t[0][0], t[0][2], t[0][1], t[0][3]))
@@ -240,7 +268,10 @@ def detect_groups(type_data, tables):
         for row in range(rows):
             if not is_type_consistent(t_data[row, :]):
                 return []
-        same = [numeric_type(t_data[row, 0]) == numeric_type(t_data[row - 1, 0]) for row in range(1, rows)] + [False]
+        same = [
+            numeric_type(t_data[row, 0]) == numeric_type(t_data[row - 1, 0])
+            for row in range(1, rows)
+        ] + [False]
 
         start = 0
         for row in range(rows):
@@ -254,7 +285,10 @@ def detect_groups(type_data, tables):
         for col in range(cols):
             if not is_type_consistent(t_data[:, col]):
                 return []
-        same = [numeric_type(t_data[0, col]) == numeric_type(t_data[0, col - 1]) for col in range(1, cols)] + [False]
+        same = [
+            numeric_type(t_data[0, col]) == numeric_type(t_data[0, col - 1])
+            for col in range(1, cols)
+        ] + [False]
 
         start = 0
         for col in range(cols):
@@ -286,6 +320,10 @@ def remove_header(rec, type_data):
 
 def is_type_consistent(v):
     for i in range(1, len(v)):
-        if v[i] != DType.nan and v[i - 1] != DType.nan and numeric_type(v[i]) != numeric_type(v[i - 1]):
+        if (
+            v[i] != DType.nan
+            and v[i - 1] != DType.nan
+            and numeric_type(v[i]) != numeric_type(v[i - 1])
+        ):
             return False
     return True

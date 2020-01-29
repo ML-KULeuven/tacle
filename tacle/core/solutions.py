@@ -3,15 +3,14 @@ from typing import Dict, TYPE_CHECKING, List, Union
 
 if TYPE_CHECKING:
     from .template import ConstraintTemplate
-    from .group import Group
+    from tacle.indexing import Block
 
 
 class Importer:
     def __init__(self):
-        from tacle.workflow import get_constraint_list
-        self.name_to_template = {
-            t.name: t for t in get_constraint_list()
-        }
+        from tacle.workflow import get_default_templates
+
+        self.name_to_template = {t.name: t for t in get_default_templates()}
 
     def import_template(self, name):
         return self.name_to_template[name]
@@ -24,16 +23,21 @@ class Constraint(object):
     importer = None
 
     def __init__(self, template, assignment):
-        # type: (ConstraintTemplate, Dict[str, object]) -> None
+        # type: (ConstraintTemplate, Dict[str, Block]) -> None
         self.template = template  # type: ConstraintTemplate
-        self.assignment = assignment  # type: Dict[str, Group]
+        self.assignment = assignment  # type: Dict[str, Block]
 
     def is_formula(self):
         return self.template.is_formula()
 
     def predict(self, input_matrix):
         from tacle.engine import evaluate
-        variables = [v for i, v in enumerate(self.template.variables) if v != self.template.target]
+
+        variables = [
+            v
+            for i, v in enumerate(self.template.variables)
+            if v != self.template.target
+        ]
         if len(variables) == 1 and input_matrix.shape[1] > 1:
             assignment = {variables[0]: input_matrix}
         else:
@@ -41,15 +45,17 @@ class Constraint(object):
         return evaluate.evaluate_template(self.template, assignment)
 
     def __getattr__(self, item):
-        # type: (str) -> Group
+        # type: (str) -> Block
         if item.startswith("__") or item in ["template", "assignment", "predict"]:
             return super().__getattribute__(item)
         from tacle.core.assignment import Variable
+
         return self[item.name] if isinstance(item, Variable) else self[item]
 
     def __getitem__(self, item):
-        # type: (Union[str, int]) -> Group
+        # type: (Union[str, int]) -> Block
         from tacle.core.assignment import Variable
+
         if isinstance(item, str) and item in self.assignment:
             return self.assignment[item]
         elif isinstance(item, int):
@@ -71,7 +77,9 @@ class Constraint(object):
     def from_dict(constraint_dict):
         if Constraint.importer is None:
             Constraint.importer = Importer()
-        return Constraint.importer.import_constraint(constraint_dict["name"], constraint_dict["assignment"])
+        return Constraint.importer.import_constraint(
+            constraint_dict["name"], constraint_dict["assignment"]
+        )
 
 
 class Solutions:
@@ -84,7 +92,9 @@ class Solutions:
     def add(self, template, solutions):
         solutions_l = list(solutions)
         self.solutions[template] = solutions_l
-        solution_set = set(self._to_tuple(template, solution) for solution in solutions_l)
+        solution_set = set(
+            self._to_tuple(template, solution) for solution in solutions_l
+        )
         self.properties[template] = solution_set
         for solution in solutions_l:
             self.constraints.append(Constraint(template, solution))
@@ -103,10 +113,9 @@ class Solutions:
         try:
             return tuple(solution[v.name] for v in template.variables)
         except KeyError as e:
-            raise RuntimeError("No value for {} in solution {}".format(e.args[0], solution))
+            raise RuntimeError(
+                "No value for {} in solution {}".format(e.args[0], solution)
+            )
 
     def set_canon(self, canon_map):
         self.canon_map = canon_map
-
-                  
-

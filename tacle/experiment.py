@@ -4,7 +4,7 @@ from core.template import *
 from pandas import json
 
 import workflow
-from core.group import Bounds
+from legacy.group import Bounds
 from engine.util import local
 
 
@@ -31,7 +31,9 @@ class ConstraintCounter:
         return self._tracking
 
     def register(self, constraint: ConstraintTemplate, solution):
-        s_strings = frozenset({name: str(group) for name, group in solution.items()}.items())
+        s_strings = frozenset(
+            {name: str(group) for name, group in solution.items()}.items()
+        )
         if (constraint.name, s_strings) in self._relevant:
             self._tracking.remove((constraint.name, s_strings))
         elif is_excel_constraint(constraint):
@@ -40,17 +42,21 @@ class ConstraintCounter:
     def count(self, found=None, relevant=None, supported=False):
         relevant_list = self._relevant
         if supported is True:
-            relevant_list = list(r for r, _ in relevant_list if r in [c.name for c in excel_constraints()])
+            relevant_list = list(
+                r
+                for r, _ in relevant_list
+                if r in [c.name for c in excel_constraints()]
+            )
         if relevant is True and found is True:
-                return len(relevant_list) - len(self._tracking)
+            return len(relevant_list) - len(self._tracking)
         elif relevant is True and found is False:
-                return len(self._tracking)
+            return len(self._tracking)
         elif relevant is True and found is None:
-                return len(relevant_list)
+            return len(relevant_list)
         elif relevant is False and found is True:
-                return len(self._additional)
+            return len(self._additional)
         elif relevant is None and found is True:
-                return len(relevant_list) - len(self._tracking) + len(self._additional)
+            return len(relevant_list) - len(self._tracking) + len(self._additional)
         raise Exception("Unknown")
 
 
@@ -102,7 +108,7 @@ class Experiment:
             solutions = learning_task.run()
             # print(*learning_task.constraints, sep="\t")
             # print(*["{:.3f}".format(learning_task.time(c)) for c in learning_task.constraints], sep="\t")
-#
+            #
             self._running_times.append(learning_task.total_time())
             self.count_constraints(solutions)
             self.measure_size(config_file)
@@ -123,7 +129,9 @@ class Experiment:
                 elif table["Orientation"].lower()[0:3] == "col":
                     vector_count += bounds.columns()
                 else:
-                    raise Exception("Unexpected orientation: {}".format(table["Orientation"]))
+                    raise Exception(
+                        "Unexpected orientation: {}".format(table["Orientation"])
+                    )
                 self._cells = cell_count
                 self._vectors = vector_count
             self._tables = len(tables)
@@ -132,7 +140,9 @@ class Experiment:
         truth_file = self._get_truth_file()
         with open(truth_file) as file:
             json_data = json.load(file)
-            self._counter = ConstraintCounter({**json_data["Essential"], **json_data["Non-trivial"]})
+            self._counter = ConstraintCounter(
+                {**json_data["Essential"], **json_data["Non-trivial"]}
+            )
             for constraint in solutions.solutions:
                 for solution in solutions.get_solutions(constraint):
                     self._counter.register(constraint, solution)
@@ -157,9 +167,24 @@ class Experiment:
 
 
 def excel_constraints():
-    return Aggregate.instances() + ConditionalAggregate.instances() +\
-        [Series(), Rank(), Lookup(), FuzzyLookup(), RunningTotal(), Product(), Diff(), SumProduct(),
-         ForeignProduct(), Equal(), PercentualDiff(), Projection()]
+    return (
+        Aggregate.instances()
+        + ConditionalAggregate.instances()
+        + [
+            Series(),
+            Rank(),
+            Lookup(),
+            FuzzyLookup(),
+            RunningTotal(),
+            Product(),
+            Diff(),
+            SumProduct(),
+            ForeignProduct(),
+            Equal(),
+            PercentualDiff(),
+            Projection(),
+        ]
+    )
 
 
 def is_excel_constraint(c: ConstraintTemplate):

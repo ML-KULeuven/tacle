@@ -10,9 +10,11 @@ def get_constraints(name):
 
 
 def test_mutual_exclusive_vector_positive_1():
-    constraints = filter_constraints(get_constraints("mutual_exclusive_vector_positive_1.csv"), MutualExclusiveVector)
+    constraints = filter_constraints(
+        get_constraints("mutual_exclusive_vector_positive_1.csv"), MutualExclusiveVector
+    )
     assert len(constraints) == 1
-    assert Range.from_legacy_bounds(constraints[0][0].bounds).column == 1
+    assert constraints[0][0].relative_range.column == 1
 
 
 def test_ice_cream():
@@ -21,4 +23,7 @@ def test_ice_cream():
 
     sum_constraint = filter_constraints(constraints, "sum*")[0]
     print(sum_constraint["X"])
-    print(sum_constraint.X)
+
+
+if __name__ == "__main__":
+    test_ice_cream()

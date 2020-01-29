@@ -5,10 +5,10 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import workflow
-from core.group import Bounds
+from legacy.group import Bounds
 from experiment import is_excel_constraint
 from indexing import Typing, Orientation, Range
-from parse.parser import get_groups
+from legacy.parser import get_groups
 
 app = Flask(__name__)
 CORS(app)
@@ -34,21 +34,35 @@ def foo():
 #
 #     blocks = []
 
+
 def learn_constraints(data, data_tables):
-    table_bounds_lookup = {data_table["address"]: data_table["bounds"] for data_table in data_tables}
-    indexing_data = {"Tables": [{"Name": data_table["address"], "Bounds": data_table["bounds"]}
-                                for data_table in data_tables]}
+    table_bounds_lookup = {
+        data_table["address"]: data_table["bounds"] for data_table in data_tables
+    }
+    indexing_data = {
+        "Tables": [
+            {"Name": data_table["address"], "Bounds": data_table["bounds"]}
+            for data_table in data_tables
+        ]
+    }
     groups = get_groups(numpy.array(data), indexing_data)
     solutions = workflow.main(None, None, False, True, groups=groups)
     constraints = []
     for constraint in solutions.solutions:
-        if is_excel_constraint(constraint) and len(solutions.get_solutions(constraint)) > 0:
+        if (
+            is_excel_constraint(constraint)
+            and len(solutions.get_solutions(constraint)) > 0
+        ):
             for solution in solutions.get_solutions(constraint):
                 constraint_solution = {"name": constraint.name, "vars": dict()}
                 for var_name, block in solution.items():
-                    absolute_bounds = Bounds(table_bounds_lookup[block.table.name]).combine(block.bounds)
+                    absolute_bounds = Bounds(
+                        table_bounds_lookup[block.table.name]
+                    ).combine(block.bounds)
                     block_dict = Range.from_legacy_bounds(absolute_bounds).as_dict()
-                    block_dict["orientation"] = str(Orientation.horizontal if block.row else Orientation.vertical)
+                    block_dict["orientation"] = str(
+                        Orientation.horizontal if block.row else Orientation.vertical
+                    )
                     constraint_solution["vars"][var_name] = block_dict
                 constraints.append(constraint_solution)
     return constraints
@@ -118,15 +132,29 @@ def detect_table_ranges(data, typed=False):
                 cells = cell_score
                 headers = (column_header, row_header)
 
-        t_r = t_range.intersect(Range(t_range.x0 + headers[0], t_range.y0 + headers[1], t_range.columns, t_range.rows))
+        t_r = t_range.intersect(
+            Range(
+                t_range.x0 + headers[0],
+                t_range.y0 + headers[1],
+                t_range.columns,
+                t_range.rows,
+            )
+        )
         table_ranges.append(t_r)
 
-    return [[t_range.x0, t_range.y0, t_range.columns, t_range.rows] for t_range in table_ranges]
+    return [
+        [t_range.x0, t_range.y0, t_range.columns, t_range.rows]
+        for t_range in table_ranges
+    ]
 
 
 def get_headers_count(table_range: Range, table_type_data, orientation):
     def get(_vi, _ei):
-        return table_type_data[_vi, _ei] if orientation == Orientation.horizontal else table_type_data[_ei, _vi]
+        return (
+            table_type_data[_vi, _ei]
+            if orientation == Orientation.horizontal
+            else table_type_data[_ei, _vi]
+        )
 
     headers = []
     for vector_index in range(table_range.vector_count(orientation)):
@@ -143,7 +171,7 @@ def get_headers_count(table_range: Range, table_type_data, orientation):
     return headers
 
 
-@app.route("/detect_tables/", methods=['POST'])
+@app.route("/detect_tables/", methods=["POST"])
 def detect_tables():
     data = json.loads(request.form["data"])
     tables = detect_table_ranges(data)

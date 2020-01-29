@@ -3,14 +3,27 @@ from typing import List, Dict, Union
 
 import numpy
 
-from .assignment import Source, Filter, Variable, SameLength, ConstraintSource, SameTable, \
-    SameOrientation, SameType, SizeFilter, Not, NotPartial, Partial
-from .group import GType, Group, Orientation
-from tacle import indexing
+from .assignment import (
+    Source,
+    Filter,
+    Variable,
+    SameLength,
+    ConstraintSource,
+    SameTable,
+    SameOrientation,
+    SameType,
+    SizeFilter,
+    Not,
+    NotPartial,
+    Partial,
+)
+from tacle.indexing import Orientation, Typing, Block
 
 
 class ConstraintTemplate:
-    def __init__(self, name, print_format, source, filters, depends_on=None, target=None):
+    def __init__(
+        self, name, print_format, source, filters, depends_on=None, target=None
+    ):
         # type: (str, str, Source, List[Filter], Union[set, None], Union[Variable, None]) -> None
         self.name = name
         self.print_format = print_format
@@ -54,10 +67,10 @@ class ConstraintTemplate:
         return not (self == other)
 
 
-integer = {GType.int}
-numeric = {GType.int, GType.float}
-textual = {GType.string}
-discrete = {GType.string, GType.int}
+integer = {Typing.int}
+numeric = {Typing.int, Typing.float}
+textual = {Typing.string}
+discrete = {Typing.string, Typing.int}
 
 
 def filter_nan(e):
@@ -106,6 +119,7 @@ class Operation(Enum):
         def apply(data, axis=None, partial=True):
             if axis == 1:
                 data = data.T
+
             if not data.shape:
                 data = numpy.array([[data]])
             blank, blank_test = blank_filter(data, vectorized=True)
@@ -143,30 +157,43 @@ class Aggregate(ConstraintTemplate):
         self._orientation = orientation
         self._operation = operation
         self.min_size = 2
-        self.min_vectors = 3 if operation == Operation.PRODUCT or operation == Operation.SUM else 2
-        size = Filter.cols if orientation == Orientation.VERTICAL else Filter.rows
-        or_string = "col" if orientation == Orientation.VERTICAL else "row"
+        self.min_vectors = (
+            3 if operation == Operation.PRODUCT or operation == Operation.SUM else 2
+        )
+        size = Filter.cols if Orientation.is_vertical(orientation) else Filter.rows
+        or_string = "col" if Orientation.is_vertical(orientation) else "row"
         op_string = operation.name
         variables = [self.x, self.y]
 
-        def test(_, a: Dict[str, Group], _solutions):
+        def test(_, a: Dict[str, Block], _solutions):
             x_group, y_group = [a[v.name] for v in variables]
-            o_match = Filter.orientation(x_group) == indexing.Orientation.from_legacy_orientation(orientation)
+            o_match = Filter.orientation(x_group) == orientation
             # o_match = x_group.row == (orientation == Orientation.HORIZONTAL)
             if not o_match and Filter.vector_count(x_group) < self.min_vectors:
                 return False
-            return Filter.vector_length(y_group) <= size(x_group)\
-                if o_match else Filter.vector_length(y_group) == size(x_group)
+            return (
+                Filter.vector_length(y_group) <= size(x_group)
+                if o_match
+                else Filter.vector_length(y_group) == size(x_group)
+            )
 
-        filter_class = type("{}{}Length".format(op_string.lower().capitalize(), or_string.capitalize()),
-                            (Filter,), {"test": test})
-        x_size_filter = SizeFilter([self.x], rows=self.min_size)\
-            if Orientation.column(orientation) else SizeFilter([self.x], cols=self.min_size)
+        filter_class = type(
+            "{}{}Length".format(op_string.lower().capitalize(), or_string.capitalize()),
+            (Filter,),
+            {"test": test},
+        )
+        x_size_filter = (
+            SizeFilter([self.x], rows=self.min_size)
+            if Orientation.is_vertical(orientation)
+            else SizeFilter([self.x], cols=self.min_size)
+        )
         filters = [x_size_filter, filter_class(variables)]
         format_s = "{Y} = " + op_string.upper() + "({X}, " + or_string + ")"
         name = "{} ({})".format(op_string.lower(), or_string)
         # TODO Dependency only min max average
-        super().__init__(name, format_s, Source(variables), filters, {Equal(), Projection()}, self.y)
+        super().__init__(
+            name, format_s, Source(variables), filters, {Equal(), Projection()}, self.y
+        )
 
     @property
     def orientation(self):
@@ -182,19 +209,24 @@ class Aggregate(ConstraintTemplate):
 
     @classmethod
     def instances(cls):
-        return list(cls.instance(o, op) for o in Orientation for op in Operation)  # if not op == Operation.PRODUCT)
+        return list(
+            cls.instance(o, op) for o in Orientation.all() for op in Operation
+        )  # if not op == Operation.PRODUCT)
 
 
 # TODO Same table, different orientation, overlapping bounds => prune assignment already
 
 # TODO Subset -> Fuzzy lookup
 
+
 class Permutation(ConstraintTemplate):
     x = Variable("X", types=numeric)
 
     def __init__(self):
         variables = [self.x]
-        source = ConstraintSource(variables, AllDifferent(), {AllDifferent.x.name: self.x.name})
+        source = ConstraintSource(
+            variables, AllDifferent(), {AllDifferent.x.name: self.x.name}
+        )
         filters = [NotPartial(variables)]
         super().__init__("permutation", "PERMUTATION({X})", source, filters)
 
@@ -204,7 +236,9 @@ class Series(ConstraintTemplate):
 
     def __init__(self):
         variables = [self.x]
-        source = ConstraintSource(variables, Permutation(), {Permutation.x.name: self.x.name})
+        source = ConstraintSource(
+            variables, Permutation(), {Permutation.x.name: self.x.name}
+        )
         filters = [NotPartial(variables)]
         super().__init__("series", "SERIES({X})", source, filters, None, self.x)
 
@@ -214,8 +248,10 @@ class AllDifferent(ConstraintTemplate):
 
     def __init__(self):
         variables = [self.x]
-        filters = [NotPartial(variables)]
-        super().__init__("all-different", "ALLDIFFERENT({X})", Source(variables), filters)
+        filters = [NotPartial(variables), SizeFilter(variables, length=2)]
+        super().__init__(
+            "all-different", "ALLDIFFERENT({X})", Source(variables), filters
+        )
 
 
 class Ordered(ConstraintTemplate):
@@ -224,7 +260,7 @@ class Ordered(ConstraintTemplate):
     def __init__(self):
         variables = [self.x]
         source = Source(variables)
-        filters = [NotPartial(variables)]
+        filters = [NotPartial(variables), SizeFilter(variables, length=2)]
         super().__init__("ordered", "ORDERED({X})", source, filters)
 
 
@@ -246,7 +282,11 @@ class ForeignKey(ConstraintTemplate):
     def __init__(self):
         variables = [self.pk, self.fk]
         source = ConstraintSource(variables, AllDifferent(), {"X": "PK"})
-        filters = [Not(SameTable(variables)), SameType(variables), NotPartial([self.pk])]
+        filters = [
+            Not(SameTable(variables)),
+            SameType(variables),
+            NotPartial([self.pk]),
+        ]
         super().__init__("foreign-key", "{FK} -> {PK}", source, filters)
 
 
@@ -259,11 +299,24 @@ class Lookup(ConstraintTemplate):
     def __init__(self):
         variables = [self.o_key, self.o_value, self.f_key, self.f_value]
         source = ConstraintSource(variables, ForeignKey(), {"PK": "OK", "FK": "FK"})
-        filters = [SameType([self.o_value, self.f_value]), NotPartial(variables),
-                   SameLength([self.f_key, self.f_value]), SameLength([self.o_key, self.o_value]),
-                   SameTable([self.f_key, self.f_value]), SameTable([self.o_key, self.o_value]),
-                   SameOrientation([self.f_key, self.f_value]), SameOrientation([self.o_key, self.o_value])]
-        super().__init__("lookup", "{FV} = LOOKUP({FK}, {OK}, {OV})", source, filters, {Equal()}, self.f_value)
+        filters = [
+            SameType([self.o_value, self.f_value]),
+            NotPartial(variables),
+            SameLength([self.f_key, self.f_value]),
+            SameLength([self.o_key, self.o_value]),
+            SameTable([self.f_key, self.f_value]),
+            SameTable([self.o_key, self.o_value]),
+            SameOrientation([self.f_key, self.f_value]),
+            SameOrientation([self.o_key, self.o_value]),
+        ]
+        super().__init__(
+            "lookup",
+            "{FV} = LOOKUP({FK}, {OK}, {OV})",
+            source,
+            filters,
+            {Equal()},
+            self.f_value,
+        )
 
 
 class FuzzyLookup(ConstraintTemplate):
@@ -275,13 +328,23 @@ class FuzzyLookup(ConstraintTemplate):
     def __init__(self):
         variables = [self.o_key, self.o_value, self.f_key, self.f_value]
         # source = Source(variables)
-        source = ConstraintSource(variables, Ordered(), {Ordered.x.name: self.o_key.name})
-        filters = [SameType([self.o_value, self.f_value]), NotPartial(variables),
-                   SameLength([self.f_key, self.f_value]), SameLength([self.o_key, self.o_value]),
-                   SameTable([self.f_key, self.f_value]), SameTable([self.o_key, self.o_value]),
-                   SameOrientation([self.f_key, self.f_value]), SameOrientation([self.o_key, self.o_value])]
+        source = ConstraintSource(
+            variables, Ordered(), {Ordered.x.name: self.o_key.name}
+        )
+        filters = [
+            SameType([self.o_value, self.f_value]),
+            NotPartial(variables),
+            SameLength([self.f_key, self.f_value]),
+            SameLength([self.o_key, self.o_value]),
+            SameTable([self.f_key, self.f_value]),
+            SameTable([self.o_key, self.o_value]),
+            SameOrientation([self.f_key, self.f_value]),
+            SameOrientation([self.o_key, self.o_value]),
+        ]
         print_format = "{FV} = FUZZY-LOOKUP({FK}, {OK}, {OV})"
-        super().__init__("fuzzy-lookup", print_format, source, filters, {Equal()}, self.f_value)
+        super().__init__(
+            "fuzzy-lookup", print_format, source, filters, {Equal()}, self.f_value
+        )
 
 
 class ConditionalAggregate(ConstraintTemplate):
@@ -297,13 +360,26 @@ class ConditionalAggregate(ConstraintTemplate):
         variables = [self.o_key, self.result, self.f_key, self.values]
         all_diff = AllDifferent()
         source = ConstraintSource(variables, all_diff, {all_diff.x.name: "OK"})
-        filters = [SameLength([self.o_key, self.result]), SameLength([self.f_key, self.values]),
-                   SameTable([self.f_key, self.values]), Not(SameTable([self.f_key, self.o_key])),
-                   # SameTable([self.o_key, self.result]),  # TODO think about this
-                   NotPartial([self.o_key]), SameType([self.f_key, self.o_key]),
-                   SameOrientation([self.o_key, self.result]), SameOrientation([self.f_key, self.values])]
+        filters = [
+            SameLength([self.o_key, self.result]),
+            SameLength([self.f_key, self.values]),
+            SameTable([self.f_key, self.values]),
+            Not(SameTable([self.f_key, self.o_key])),
+            # SameTable([self.o_key, self.result]),  # TODO think about this
+            NotPartial([self.o_key]),
+            SameType([self.f_key, self.o_key]),
+            SameOrientation([self.o_key, self.result]),
+            SameOrientation([self.f_key, self.values]),
+        ]
         p_format = "{R} = " + name.upper() + "IF({FK}={OK}, {V})"
-        super().__init__("{}-if".format(name.lower()), p_format, source, filters, {Lookup()}, self.result)
+        super().__init__(
+            "{}-if".format(name.lower()),
+            p_format,
+            source,
+            filters,
+            {Lookup()},
+            self.result,
+        )
 
     @property
     def operation(self) -> Operation:
@@ -330,8 +406,19 @@ class RunningTotal(ConstraintTemplate):
     def __init__(self):
         variables = [self.acc, self.pos, self.neg]
         source = Source(variables)
-        filters = [SameLength(variables), SizeFilter(variables, length=2), NotPartial(variables)]
-        super().__init__("running-total", "{A} = PREV({A}) + {P} - {N}", source, filters, {Equal()}, self.acc)
+        filters = [
+            SameLength(variables),
+            SizeFilter(variables, length=2),
+            NotPartial(variables),
+        ]
+        super().__init__(
+            "running-total",
+            "{A} = PREV({A}) + {P} - {N}",
+            source,
+            filters,
+            {Equal()},
+            self.acc,
+        )
 
 
 class ForeignOperation(ConstraintTemplate):
@@ -347,11 +434,28 @@ class ForeignOperation(ConstraintTemplate):
         original = [self.o_key, self.o_value]
         variables = foreign + original
         foreign_key = ForeignKey()
-        source = ConstraintSource(variables, foreign_key, {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"})
-        filters = [SameLength(foreign), SameTable(foreign), SameOrientation(foreign), NotPartial(variables),
-                   SameLength(original), SameTable(original), SameOrientation(original)]
-        super().__init__("foreign-" + name.lower(), "{R} = " + name.upper() + "({FV}, {FK}={OK} | {OV})", source,
-                         filters, None, self.result)
+        source = ConstraintSource(
+            variables,
+            foreign_key,
+            {foreign_key.pk.name: "OK", foreign_key.fk.name: "FK"},
+        )
+        filters = [
+            SameLength(foreign),
+            SameTable(foreign),
+            SameOrientation(foreign),
+            NotPartial(variables),
+            SameLength(original),
+            SameTable(original),
+            SameOrientation(original),
+        ]
+        super().__init__(
+            "foreign-" + name.lower(),
+            "{R} = " + name.upper() + "({FV}, {FK}={OK} | {OV})",
+            source,
+            filters,
+            None,
+            self.result,
+        )
 
     @property
     def operation(self):
@@ -368,7 +472,9 @@ class VectorOperation(ConstraintTemplate):
     first = Variable("O1", vector=True, types=numeric)
     second = Variable("O2", vector=True, types=numeric)
 
-    def __init__(self, name, p_format, source, filters, symmetric=False, depends_on=None):
+    def __init__(
+        self, name, p_format, source, filters, symmetric=False, depends_on=None
+    ):
         self._symmetric = symmetric
         super().__init__(name, p_format, source, filters, depends_on, self.result)
 
@@ -393,7 +499,11 @@ class Diff(VectorOperation):
     def __init__(self):
         variables = self.list_variables()
         source = Source(variables)
-        filters = [SameLength(variables), NotPartial(variables), SameOrientation(variables)]
+        filters = [
+            SameLength(variables),
+            NotPartial(variables),
+            SameOrientation(variables),
+        ]
         super().__init__("difference", "{R} = {O1} - {O2}", source, filters)
 
 
@@ -401,8 +511,19 @@ class PercentualDiff(VectorOperation):
     def __init__(self):
         variables = self.list_variables()
         source = Source(variables)
-        filters = [SameLength(variables), NotPartial(variables), SameOrientation(variables)]
-        super().__init__("percentual-diff", "{R} = ({O1} - {O2}) / {O2}", source, filters, False, {Equal()})
+        filters = [
+            SameLength(variables),
+            NotPartial(variables),
+            SameOrientation(variables),
+        ]
+        super().__init__(
+            "percentual-diff",
+            "{R} = ({O1} - {O2}) / {O2}",
+            source,
+            filters,
+            False,
+            {Equal()},
+        )
 
 
 class Projection(ConstraintTemplate):
@@ -412,9 +533,17 @@ class Projection(ConstraintTemplate):
     def __init__(self):
         variables = [self.result, self.projected]
         source = Source(variables)
-        filters = [SameLength(variables), SameOrientation(variables), SameTable(variables), SameType(variables),
-                   SizeFilter([self.projected], vectors=2), Partial([self.projected])]
-        super().__init__("project", "{R} = PROJECT({P})", source, filters, None, self.result)
+        filters = [
+            SameLength(variables),
+            SameOrientation(variables),
+            SameTable(variables),
+            SameType(variables),
+            SizeFilter([self.projected], vectors=2),
+            Partial([self.projected]),
+        ]
+        super().__init__(
+            "project", "{R} = PROJECT({P})", source, filters, None, self.result
+        )
 
 
 class SumProduct(ConstraintTemplate):
@@ -425,23 +554,46 @@ class SumProduct(ConstraintTemplate):
     def __init__(self):
         variables = [self.result, self.first, self.second]
         source = Source(variables)
-        filters = [SameLength([self.first, self.second]), NotPartial(variables),
-                   SizeFilter([self.first, self.second], length=2), SizeFilter([self.result], rows=1, cols=1),
-                   SizeFilter([self.result], rows=1, cols=1, max_size=True)]
-        super().__init__("sum-product", "{R} = SUMPRODUCT({O1}, {O2})", source, filters, None, self.result)
+        filters = [
+            SameLength([self.first, self.second]),
+            NotPartial(variables),
+            SizeFilter([self.first, self.second], length=2),
+            SizeFilter([self.result], rows=1, cols=1),
+            SizeFilter([self.result], rows=1, cols=1, max_size=True),
+        ]
+        super().__init__(
+            "sum-product",
+            "{R} = SUMPRODUCT({O1}, {O2})",
+            source,
+            filters,
+            None,
+            self.result,
+        )
 
 
 class MutualExclusivity(ConstraintTemplate):
     x = Variable("X", vector=False, types=integer)
 
-    def __init__(self):
+    def __init__(self, orientation):
         variables = [self.x]
+        self.orientation = orientation
         source = Source(variables)
-        filters = [NotPartial(variables), SizeFilter(variables, vectors=2, max_size=False)]
-        super().__init__("xor", "XOR({X})", source, filters)
+        filters = [
+            NotPartial(variables),
+            SizeFilter(variables, vectors=2, max_size=False),
+        ]
+        o_string = "row" if Orientation.is_horizontal(orientation) else "column"
+        super().__init__(
+            "xor-{}".format(o_string),
+            "XOR({{X}}, {})".format(o_string),
+            source,
+            filters,
+        )
 
-    @staticmethod
-    def test_data(data):
+    def test_data(self, data: numpy.ndarray):
+        if Orientation.is_vertical(self.orientation):
+            data = data.T
+
         for r in range(data.shape[0]):
             for c in range(data.shape[1]):
                 if data[r, c] not in (0, 1):
@@ -449,6 +601,10 @@ class MutualExclusivity(ConstraintTemplate):
             if data[r, :].sum() != 1:
                 return False
         return True
+
+    @staticmethod
+    def instances():
+        return [MutualExclusivity(Orientation.horizontal)]
 
 
 class MutualExclusiveVector(ConstraintTemplate):

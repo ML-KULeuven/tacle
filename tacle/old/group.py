@@ -3,38 +3,45 @@ from enum import Enum
 import numpy
 
 
-class GType(Enum):
-    int = 0
-    float = 1
-    string = 2
-
-    @staticmethod
-    def super(gtype):
-        if gtype == GType.int:
-            return GType.float
-        else:
-            return gtype
-
-    @staticmethod
-    def max(gtype_set):
-        if any([gt == GType.string for gt in gtype_set]) and not all([gt == GType.string for gt in gtype_set]):
-            raise Exception("Inconsistent types {}".format(gtype_set))
-        return GType(max([gt.value for gt in gtype_set]))
+# class GType(Enum):
+#     int = 0
+#     float = 1
+#     string = 2
+#
+#     @staticmethod
+#     def super(gtype):
+#         if gtype == GType.int:
+#             return GType.float
+#         else:
+#             return gtype
+#
+#     @staticmethod
+#     def max(gtype_set):
+#         if any([gt == GType.string for gt in gtype_set]) and not all(
+#             [gt == GType.string for gt in gtype_set]
+#         ):
+#             raise Exception("Inconsistent types {}".format(gtype_set))
+#         return GType(max([gt.value for gt in gtype_set]))
 
 
 # --- Orientation ---
 
-class Orientation(Enum):
-    HORIZONTAL = True
-    VERTICAL = False
 
-    @staticmethod
-    def row(orientation):
-        return orientation is None or orientation == Orientation.HORIZONTAL
-
-    @staticmethod
-    def column(orientation):
-        return orientation is None or orientation == Orientation.VERTICAL
+# class Orientation(Enum):
+#     HORIZONTAL = True
+#     VERTICAL = False
+#
+#     @staticmethod
+#     def row(orientation):
+#         return orientation is None or orientation == Orientation.HORIZONTAL
+#
+#     @staticmethod
+#     def column(orientation):
+#         return orientation is None or orientation == Orientation.VERTICAL
+#
+#     @staticmethod
+#     def all():
+#         return [Orientation.HORIZONTAL, Orientation.VERTICAL]
 
 
 def null(var, val):
@@ -42,6 +49,7 @@ def null(var, val):
 
 
 # --- Bounds ---
+
 
 class Bounds:
     def __init__(self, bounds_list):
@@ -64,12 +72,14 @@ class Bounds:
         r1, r2, c1, c2 = bounds.bounds
         r1, c1 = [null(r1, 1), null(c1, 1)]
         b = lambda x, offset: min(max(x, self.bounds[offset]), self.bounds[offset + 1])
-        return Bounds([
-            b(self.bounds[0] + r1 - 1, 0),
-            b(self.bounds[1] if r2 is None else self.bounds[0] + r2 - 1, 0),
-            b(self.bounds[2] + c1 - 1, 2),
-            b(self.bounds[3] if c2 is None else self.bounds[2] + c2 - 1, 2)
-        ])
+        return Bounds(
+            [
+                b(self.bounds[0] + r1 - 1, 0),
+                b(self.bounds[1] if r2 is None else self.bounds[0] + r2 - 1, 0),
+                b(self.bounds[2] + c1 - 1, 2),
+                b(self.bounds[3] if c2 is None else self.bounds[2] + c2 - 1, 2),
+            ]
+        )
 
     def contains(self, bounds):
         r1, r2, c1, c2 = bounds.bounds
@@ -96,6 +106,7 @@ class Bounds:
 
 # --- Table ---
 
+
 class Table:
     def __init__(self, name, data, orientation=None):
         self.name = name
@@ -109,7 +120,14 @@ class Table:
         return self._orientation
 
     def __repr__(self):
-        repr_str = "Data:\n" + str(self.data) + "\nRows: " + str(self.rows) + "\nColumn: " + str(self.columns)
+        repr_str = (
+            "Data:\n"
+            + str(self.data)
+            + "\nRows: "
+            + str(self.rows)
+            + "\nColumn: "
+            + str(self.columns)
+        )
         return repr_str
 
     def __str__(self):
@@ -130,6 +148,7 @@ class Table:
 
 # --- Group ---
 
+
 class Group:
     def __init__(self, table, bounds, row, data, gtype_set):
         self._table = table
@@ -139,7 +158,10 @@ class Group:
         self._dtype = GType.max(gtype_set)
         self._data = data
         from tacle.core.template import blank_filter
-        self._is_partial = not numpy.all(numpy.vectorize(blank_filter(self._data)[1])(self._data))
+
+        self._is_partial = not numpy.all(
+            numpy.vectorize(blank_filter(self._data)[1])(self._data)
+        )
         self._subgroups = dict()
         self._hash = None
 
@@ -222,8 +244,16 @@ class Group:
             r1, r2, c1, c2 = sub_bounds.bounds
             sub_data = sub_bounds.subset(self.data)
             indices = [r1, r2] if self.row else [c1, c2]
-            vector_types = [self._vector_types[i - 1] for i in range(indices[0], indices[1] + 1)]
-            group = Group(self.table, self.bounds.combine(bounds), self.row, sub_data, vector_types)
+            vector_types = [
+                self._vector_types[i - 1] for i in range(indices[0], indices[1] + 1)
+            ]
+            group = Group(
+                self.table,
+                self.bounds.combine(bounds),
+                self.row,
+                sub_data,
+                vector_types,
+            )
             self._subgroups[bounds] = group
             return group
         return self._subgroups[bounds]
@@ -256,8 +286,11 @@ class Group:
         return not self == other
 
     def __eq__(self, other):
-        return isinstance(other, Group) \
-            and (self.table, self.row, self.bounds) == (other.table, other.row, other.bounds)
+        return isinstance(other, Group) and (self.table, self.row, self.bounds) == (
+            other.table,
+            other.row,
+            other.bounds,
+        )
 
     def __lt__(self, other):
         if not isinstance(other, Group):
@@ -265,6 +298,9 @@ class Group:
         if self.table < other.table:
             return True
         index = 0 if self.row else 2
-        if self.row == other.row and self.bounds.bounds[index] < other.bounds.bounds[index]:
+        if (
+            self.row == other.row
+            and self.bounds.bounds[index] < other.bounds.bounds[index]
+        ):
             return True
         return False
