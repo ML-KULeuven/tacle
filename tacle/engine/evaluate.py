@@ -142,6 +142,6 @@ def check_template(template, assignment):
         raise RuntimeError("Cannot evaluate {}".format(template))
 
     else:
-        res = assignment[template.target.name]
+        res = assignment[template.target.name].squeeze()
         computed = evaluate_template(template, assignment)
         return np.all(np.abs(res - computed) < 10 ** -10)
