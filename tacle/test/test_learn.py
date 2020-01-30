@@ -5,7 +5,6 @@ from tacle.core.template import (
     ForeignKey,
     Equal,
     Aggregate,
-    Operation,
     Permutation,
     Rank,
     Series,
@@ -160,7 +159,7 @@ def learn(data_arrays):
     total_columns = sum(arr.shape[1] + 1 for arr in data_arrays) - 1
     max_rows = max(arr.shape[0] for arr in data_arrays)
     data = np.array(
-        [["" for c in range(total_columns)] for r in range(max_rows)], dtype=np.object
+        [["" for _c in range(total_columns)] for _r in range(max_rows)], dtype=np.object
     )
     offset = 0
     ranges = []

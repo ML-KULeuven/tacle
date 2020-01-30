@@ -2,11 +2,11 @@ import os
 
 from tacle.indexing import Range
 from tacle.core.template import MutualExclusiveVector
-from tacle import learn_from_csv, filter_constraints
+from tacle import learn_from_file, filter_constraints
 
 
 def get_constraints(name):
-    return learn_from_csv(os.path.join(os.path.dirname(__file__), "res", name))
+    return learn_from_file(os.path.join(os.path.dirname(__file__), "res", name))
 
 
 def test_mutual_exclusive_vector_positive_1():

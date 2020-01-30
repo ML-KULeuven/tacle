@@ -3,7 +3,7 @@ from typing import List, Union
 
 import numpy as np
 
-from parse import parse_file
+from .parse import parse_file
 from .core.virtual_template import is_virtual
 from .convert import get_tables
 from .detect import detect_table_ranges, get_type_data
