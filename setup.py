@@ -12,10 +12,10 @@ URL = "https://github.com/ML-KULeuven/tacle"
 EMAIL = "samuel.kolb@me.com"
 AUTHOR = "Samuel Kolb"
 REQUIRES_PYTHON = ">=3.5.0"
-VERSION = "0.9.3"
+VERSION = "0.9.4"
 
 # What packages are required for this module to be executed?
-REQUIRED = ["numpy", "python-constraint", "matplotlib", "pandas"]
+REQUIRED = ["numpy", "python-constraint", "matplotlib", "pandas", "openpyxl"]
 
 # What packages are optional?
 EXTRAS = {}
