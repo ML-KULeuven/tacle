@@ -2,7 +2,18 @@ import argparse
 import logging
 
 from .indexing import Orientation
-from tacle import learn_from_csv, filter_constraints, tables_from_csv
+from tacle import learn_from_csv, filter_constraints, tables_from_csv, save_heaeder, save_json_file
+
+
+
+
+from collections import OrderedDict
+class DefaultListOrderedDict(OrderedDict):
+    def __missing__(self,k):
+        self[k] = []
+        return self[k]
+
+    
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +45,9 @@ if __name__ == "__main__":
 
     tables = tables_from_csv(args.csv_file, args.orientation, args.min_cells, args.min_rows, args.min_columns)
 
-    if args.verbose or args.debug or args.tables_only:
+    if args.verbose or args.debug or args.tables_only or True:
         for table in tables:
-            print("Table {}, {}".format(table.name, table.range))
+            print("Table {}, {}, {}".format(table.name, table.range, table.header))
             for orientation in table.orientations:
                 print(", ".join("{} {}-{} ({})".format("Columns" if orientation == Orientation.vertical else "Rows",
                                                        block.relative_range.vector_index(orientation),
@@ -62,4 +73,11 @@ if __name__ == "__main__":
             for name in sorted(groups.keys()):
                 print(name, *list(map(str, groups[name])), sep="\n\t")
         else:
+            text_dict= DefaultListOrderedDict()
+            save_json_file(constraints, text_dict, args.csv_file)
+            """"
+            for constraint in constraints:
+                print(constraint.template)
+                print(constraint.assignment)
+            """
             print(*list(map(str, constraints)), sep="\n")

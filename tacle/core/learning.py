@@ -1,7 +1,7 @@
 import time
 
 from .solutions import Solutions
-from legacy.parser import get_groups_tables
+from tacle.parse.parser import get_groups_tables
 from tacle.util import printing
 
 
@@ -9,7 +9,7 @@ class LearningTask:
     def __init__(self, csv_file, groups_file, manager, constraints):
         self._manager = manager
         self._groups = list(get_groups_tables(csv_file, groups_file))
-        # self._solutions = Solutions()
+        #self._solutions = Solutions()
         self._constraints = ordered_constraints(constraints)
         self._times = dict()
 
@@ -36,15 +36,9 @@ class LearningTask:
         print_concise = printing.get(__name__, on=False)
 
         if len(unsupported_assignment) > 0:
-            print_concise.form(
-                "No assignment strategy for: {}",
-                ", ".join(str(c) for c in unsupported_assignment),
-            )
+            print_concise.form("No assignment strategy for: {}", ", ".join(str(c) for c in unsupported_assignment))
         if len(unsupported_solving) > 0:
-            print_concise.form(
-                "No solving strategies for: {}",
-                ", ".join(str(c) for c in unsupported_solving),
-            )
+            print_concise.form("No solving strategies for: {}", ", ".join(str(c) for c in unsupported_solving))
         if len(unsupported_assignment) > 0 or len(unsupported_solving) > 0:
             print_concise.nl()
 
@@ -53,33 +47,19 @@ class LearningTask:
         for constraint in self.constraints:
             print_verbose.write(constraint.name, end=" ")
             t_start = time.time()
-            assignments = self.manager.find_assignments(
-                constraint, self._groups, solutions
-            )
+            assignments = self.manager.find_assignments(constraint, self._groups, solutions)
             t_assign = time.time()
-            solutions.add(
-                constraint,
-                self.manager.find_solutions(constraint, assignments, solutions),
-            )
+            solutions.add(constraint, self.manager.find_solutions(constraint, assignments, solutions))
             t_end = time.time()
             assignment_time = t_assign - t_start
             solving_time = t_end - t_assign
             self._times[constraint] = (assignment_time, solving_time)
             if print_verbose.on():
-                print_verbose.form(
-                    "[assignment time: {assign:.3f}, solving time: {solve:.3f}]",
-                    assign=assignment_time,
-                    solve=solving_time,
-                )
+                print_verbose.form("[assignment time: {assign:.3f}, solving time: {solve:.3f}]",
+                                   assign=assignment_time, solve=solving_time)
             if len(solutions.get_solutions(constraint)) > 0:
-                print_concise.write(
-                    lambda: "\n".join(
-                        [
-                            "\t" + constraint.to_string(s)
-                            for s in solutions.get_solutions(constraint)
-                        ]
-                    )
-                )
+                print_concise.write(lambda: "\n".join(["\t" + constraint.to_string(s)
+                                                       for s in solutions.get_solutions(constraint)]))
             if len(solutions.get_solutions(constraint)) > 0 or print_verbose.on():
                 print_concise.nl()
 
@@ -95,18 +75,19 @@ class LearningTask:
 
 
 def ordered_constraints(constraints):
-    ordered = []
-    found = set()
-    spill = constraints
-    while len(spill) > 0:
-        new_spill = []
-        for constraint in constraints:
-            if constraint.depends_on().issubset(found):
-                ordered.append(constraint)
-                found.add(constraint)
-            else:
-                spill.append(constraint)
-        if len(new_spill) == len(spill):
-            raise Exception("Dependency order is not a DAG")
-        spill = new_spill
-    return ordered
+        ordered = []
+        found = set()
+        spill = constraints
+        while len(spill) > 0:
+            new_spill = []
+            for constraint in constraints:
+                if constraint.depends_on().issubset(found):
+                    ordered.append(constraint)
+                    found.add(constraint)
+                else:
+                    spill.append(constraint)
+            if len(new_spill) == len(spill):
+                raise Exception("Dependency order is not a DAG")
+            spill = new_spill
+        return ordered
+

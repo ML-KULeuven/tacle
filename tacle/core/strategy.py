@@ -2,14 +2,14 @@ import multiprocessing
 import time
 
 from .template import ConstraintTemplate
-from tacle.indexing import Block
+from .group import Group
 
 
 class AssignmentStrategy:
     def applies_to(self, constraint):
         raise NotImplementedError()
 
-    def apply(self, constraint: ConstraintTemplate, groups: [Block], solutions):
+    def apply(self, constraint: ConstraintTemplate, groups: [Group], solutions):
         raise NotImplementedError()
 
 
@@ -23,7 +23,7 @@ class DictAssignmentStrategy(AssignmentStrategy):
     def applies_to(self, constraint):
         return constraint in self.strategies
 
-    def apply(self, constraint: ConstraintTemplate, groups: [Block], solutions):
+    def apply(self, constraint: ConstraintTemplate, groups: [Group], solutions):
         return self.strategies[constraint](constraint, groups, solutions)
 
 
@@ -31,13 +31,13 @@ class SolvingStrategy(object):
     def applies_to(self, constraint):
         raise NotImplementedError()
 
-    def apply(self, constraint: ConstraintTemplate, assignments: [{Block}], solutions):
+    def apply(self, constraint: ConstraintTemplate, assignments: [{Group}], solutions):
         raise NotImplementedError()
 
 
 class DictSolvingStrategy(SolvingStrategy):
     def __init__(self):
-        self.strategies = {}
+        self.strategies = {}# Dictionary key: contraintTemplate value= function
 
     def add_strategy(self, constraint: ConstraintTemplate, strategy_f):
         self.strategies[constraint] = strategy_f
@@ -64,7 +64,7 @@ class DictSolvingStrategy(SolvingStrategy):
     #         return {v: b if v != variable_name else adapted_block for v, b, in assignment.items()}
     #     return assignment
 
-    def apply(self, constraint: ConstraintTemplate, assignments: [{Block}], solutions):
+    def apply(self, constraint: ConstraintTemplate, assignments: [{Group}], solutions):
         # if self.virtual:
         #     new_assignments = []
         #     for assignment in assignments:
@@ -87,12 +87,11 @@ class StrategyManager(object):
     def add_solving_strategy(self, strategy: SolvingStrategy):
         self.solving_strategies.append(strategy)
 
-    def find_assignments(
-        self, constraint: ConstraintTemplate, groups: [Block], solutions
-    ) -> [[Block]]:
+    def find_assignments(self, constraint: ConstraintTemplate, groups: [Group], target_group, solutions) -> [[Group]]:
         for strategy in self.assignment_strategies:
+            print("Running startegy; Strategy type: {}".format(type(strategy)))
             if strategy.applies_to(constraint):
-                return strategy.apply(constraint, groups, solutions)
+                return strategy.apply(constraint, groups, target_group, solutions)
         raise Exception("No assignment handler for {}".format(constraint))
 
     def supports_assignments_for(self, constraint: ConstraintTemplate):
@@ -101,22 +100,17 @@ class StrategyManager(object):
                 return True
         return False
 
-    def find_solutions(
-        self, constraint: ConstraintTemplate, assignments: [{Block}], solutions
-    ) -> [{(Block, int)}]:
-        for strategy in self.solving_strategies:
-            if strategy.applies_to(constraint):
+    def find_solutions(self, constraint: ConstraintTemplate, assignments: [{Group}], solutions) -> [{(Group, int)}]:
+        for strategy in self.solving_strategies:#solveing_strategies=[InternalSolvingStrategy, MiniZincSolvingStrategy]
+            print("Running solving_startegy; Strategy type: {}".format(type(strategy)))
+            if strategy.applies_to(constraint):#if current constraint exist in the strategies dictorary
                 if self.timeout is not None:
-
                     def async_call(c, a, s, q):
                         found = list(strategy.apply(c, a, s))
                         q.put(found)
 
                     queue = multiprocessing.Queue()
-                    p = multiprocessing.Process(
-                        target=async_call,
-                        args=(constraint, assignments, solutions, queue),
-                    )
+                    p = multiprocessing.Process(target=async_call, args=(constraint, assignments, solutions, queue))
                     p.start()
 
                     p.join(self.timeout)

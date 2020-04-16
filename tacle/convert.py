@@ -8,13 +8,16 @@ from .indexing import Table, Orientation, Typing, Block
 def get_tables(data, type_data, ranges, names=None):
     data = np.array(data, dtype=np.object)
     if names is None:
-        names = ["T{}".format(i + 1) for i in range(len(ranges))]
+        names = ["T{}".format(i + 1) for i in range(len(ranges[1]))]
     tables = []
-    for name, t_range in zip(names, ranges):
+    for name, t_range, header in zip(names, ranges[1], ranges[0]):
+        if(t_range == header):
+            header= None
+        
         t_data = t_range.get_data(data)
         supported_orientation = [o for o in Orientation.all() if orientation_compatible(type_data, t_range, o)]
         if len(supported_orientation) > 0:
-            tables.append(Table(t_data, t_range.get_data(type_data), t_range, name, supported_orientation))
+            tables.append(Table(t_data, t_range.get_data(type_data), t_range, header, name, supported_orientation))
 
     return tables
 

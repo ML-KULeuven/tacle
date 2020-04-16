@@ -1,0 +1,24 @@
+{
+  "header": [
+    {
+      "word": "August",
+      "constraint": "all-different",
+      "location": "{'X': T1[:, 5]}"
+    },
+    {
+      "word": "July",
+      "constraint": "all-different",
+      "location": "{'X': T1[:, 4]}"
+    },
+    {
+      "word": "Total",
+      "constraint": "all-different",
+      "location": "{'X': T1[:, 6]}"
+    },
+    {
+      "word": "Type",
+      "constraint": "all-different",
+      "location": "{'X': T2[:, 1]}"
+    }
+  ]
+}

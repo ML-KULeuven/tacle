@@ -1,15 +1,7 @@
 import numpy as np
 
-# from tacle.core.group import Orientation
-from tacle.indexing import Orientation
-from tacle.core.template import (
-    ConditionalAggregate,
-    Operation,
-    Aggregate,
-    Lookup,
-    Rank,
-    MutualExclusiveVector,
-)
+from tacle.core.group import Orientation
+from tacle.core.template import ConditionalAggregate, Operation, Aggregate, Lookup, Rank, MutualExclusiveVector
 from tacle.engine.evaluate import evaluate_template, check_template
 
 
@@ -22,14 +14,8 @@ def test_conditional_sum():
     }
     result = evaluate_template(template, assignment)
     assert 0 == result[0]
-    assert (
-        sum(assignment[template.values][np.array([True, True, False, True, False])])
-        == result[1]
-    )
-    assert (
-        sum(assignment[template.values][np.array([False, False, True, False, True])])
-        == result[2]
-    )
+    assert sum(assignment[template.values][np.array([True, True, False, True, False])]) == result[1]
+    assert sum(assignment[template.values][np.array([False, False, True, False, True])]) == result[2]
 
 
 def test_conditional_max():
@@ -41,20 +27,18 @@ def test_conditional_max():
     }
     result = evaluate_template(template, assignment)
     assert result[0] is None
-    assert (
-        max(assignment[template.values][np.array([True, True, False, True, False])])
-        == result[1]
-    )
-    assert (
-        max(assignment[template.values][np.array([False, False, True, False, True])])
-        == result[2]
-    )
+    assert max(assignment[template.values][np.array([True, True, False, True, False])]) == result[1]
+    assert max(assignment[template.values][np.array([False, False, True, False, True])]) == result[2]
 
 
 def test_mean():
-    template_h = Aggregate(Orientation.horizontal, Operation.AVERAGE)
-    template_v = Aggregate(Orientation.vertical, Operation.AVERAGE)
-    x = np.array([[20.3, 14, 7], [8.9, 1.6, 5.2], [2.3, 43.8, 140]])
+    template_h = Aggregate(Orientation.HORIZONTAL, Operation.AVERAGE)
+    template_v = Aggregate(Orientation.VERTICAL, Operation.AVERAGE)
+    x = np.array([
+        [20.3, 14, 7],
+        [8.9, 1.6, 5.2],
+        [2.3, 43.8, 140],
+    ])
 
     result = evaluate_template(template_h, {template_h.x: x})
     assert all(result == np.mean(x, axis=1))
@@ -72,22 +56,19 @@ def test_lookup():
 
     fk = np.array([2, 2, 3, 3, 2])
 
-    result = evaluate_template(
-        template, {template.o_key: ok, template.f_key: fk, template.o_value: ov}
-    )
+    result = evaluate_template(template, {template.o_key: ok, template.f_key: fk, template.o_value: ov})
     assert all(result == [d[k] for k in fk])
 
 
 def test_sum():
-    template = Aggregate(Orientation.horizontal, Operation.SUM)
-    x = np.array([[5, 6, 7], [10, 20, 30]])
+    template = Aggregate(Orientation.HORIZONTAL, Operation.SUM)
+    x = np.array([
+        [5, 6, 7],
+        [10, 20, 30],
+    ])
 
     result = evaluate_template(template, {template.x: x})
-    expected = np.array([5 + 6 + 7, 10 + 20 + 30])
-
-    print(result)
-    print(expected)
-    assert all(result == expected)
+    assert all(result == np.array([5 + 6 + 7, 10 + 20 + 30]))
 
 
 def test_rank():

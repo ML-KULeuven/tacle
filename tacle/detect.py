@@ -42,16 +42,16 @@ def detect_table_ranges(type_data, typed=True, orientation=None, min_cells=None,
                 return _i, _range
         return None
 
-    for r in range(numpy.size(type_data, 0)):
-        for c in range(numpy.size(type_data, 1)):
-            if type_data[r, c] != Typing.any:
-                selected_range = find_range(c, r)
+    for r in range(numpy.size(type_data, 0)):  # r=0
+        for c in range(numpy.size(type_data, 1)): # c=1
+            if type_data[r, c] != Typing.any: # True
+                selected_range = find_range(c, r) #selected_range= None
                 if selected_range is None:
-                    top_range = find_range(c, r - 1) if r - 1 >= 0 else None
-                    left_range = find_range(c - 1, r) if c - 1 >= 0 else None
-                    cell_range = Range(c, r, 1, 1)
+                    top_range = find_range(c, r - 1) if r - 1 >= 0 else None# top_range= None
+                    left_range = find_range(c - 1, r) if c - 1 >= 0 else None #left_range = {0: Range(0,0,1,1)}
+                    cell_range = Range(c, r, 1, 1) # cell_range = Range(0,1,1,1)
                     if top_range is None and left_range is None:
-                        ranges.append(cell_range)
+                        ranges.append(cell_range) # ranges=[Range(0, 0, 1, 1)]
                     elif top_range is None:
                         ranges[left_range[0]] = cell_range.bounding_box(left_range[1])
                     elif left_range is None:
@@ -62,6 +62,7 @@ def detect_table_ranges(type_data, typed=True, orientation=None, min_cells=None,
 
     ranges = [r for r in ranges if r is not None]
     table_ranges = []
+    table_headers = []
 
     for t_range in ranges:
         t_type_data = t_range.get_data(type_data)
@@ -87,8 +88,11 @@ def detect_table_ranges(type_data, typed=True, orientation=None, min_cells=None,
                     headers = (column_header, row_header)
 
         t_r = t_range.intersect(Range(t_range.x0 + headers[0], t_range.y0 + headers[1], t_range.columns, t_range.rows))
+        t_h = t_range.minus(Range(t_range.x0 + headers[0], t_range.y0 + headers[1], t_range.columns, t_range.rows))
+
         if (min_cells is None or t_r.columns * t_r.rows >= min_cells) and (min_rows is None or t_r.rows >= min_rows)\
                 and (min_columns is None or t_r.columns >= min_columns):
             table_ranges.append(t_r)
+            table_headers.append(t_h)
 
-    return table_ranges
+    return [table_headers, table_ranges]

@@ -1,9 +1,10 @@
 import fnmatch
-from typing import List, Union
+from typing import List, Union, Any
 
 import numpy as np
+import csv
+import re
 
-from .parse import parse_file
 from .core.virtual_template import is_virtual
 from .convert import get_tables
 from .detect import detect_table_ranges, get_type_data
@@ -11,27 +12,108 @@ from .learn import learn_constraints
 from .core.solutions import Constraint
 
 
-def learn_from_file(
-    csv_file, filters=None, virtual=None, solve_timeout=None, tables=None, sheet=None
-):
-    return learn_from_cells(
-        parse_file(csv_file, sheet),
-        filters,
-        virtual=virtual,
-        solve_timeout=solve_timeout,
-        tables=tables,
-    )
+def parse_csv(csv_file):
+    data = []
+    with open(csv_file) as f:
+        csv_reader = csv.reader(f, delimiter=',')
+        max_length = 0
+        for row in csv_reader:
+            max_length = max(max_length, len(row))
+            data.append(row)
+
+    # Fill rows to max length
+    for i in range(len(data)):
+        data[i] += ["" for _ in range(max_length - len(data[i]))]
+
+    return data
 
 
-def learn_from_cells(
-    data, filters=None, virtual=None, orientation=None, solve_timeout=None, tables=None
-):
+def save_heaeder(constraints, text_dict):
+    
+    with open('dictionary.txt', 'r+') as reader:
+        for line in reader.readlines():
+            text= line.split("\t")
+            key = text[0].strip(": ")
+            words= text[1].split(",")
+            for t in words:
+                #t= re.sub('[-]', '_', t)
+                t= re.sub('[\W]+', '', t) 
+                text_dict[key].append(t)
+                
+        
+        for constraint in constraints:
+            temp =list(constraint.assignment.values())
+            #print(temp[len(temp)-1].__repr__())
+            if temp[len(temp)-1].table.header is not None:
+                header_data= (temp[len(temp)-1].table.header)
+                
+                r1, r2, c1, c2 = temp[len(temp)-1].bounds.bounds
+                if temp[len(temp)-1].row:
+                    index = r1-1 if r1 == r2 else "{}:{}".format(r1, r2)
+                else:
+                    index = c1-1 if c1 == c2 else "{}:{}".format(c1, c2)
+                text_dict[constraint.template.name].append(re.sub('[- ]', '_', header_data[0][index]))
+                #f.write("{}\t{}\t\n".format(constraint.template.name, str(header_data[0][index])))
+
+            #f.close()
+    
+    f = open("dictionary.txt", "w+")
+    for k in text_dict.keys():
+        f.write("{}:\t {}\t\n".format(k, list(set(text_dict[k]))))
+
+    f.close()  
+
+
+
+def save_json_file(constraints, text_dict, csv_file):
+    import json
+
+    lst =[]
+
+
+    for constraint in constraints:
+        dic= dict()
+        temp =list(constraint.assignment.values())
+        #print(temp[len(temp)-1].__repr__())
+        if temp[len(temp)-1].table.header is not None:
+            header_data= (temp[len(temp)-1].table.header)
+            r1, r2, c1, c2 = temp[len(temp)-1].bounds.bounds
+            if temp[len(temp)-1].row:
+                index = r1-1 if r1 == r2 else "{}:{}".format(r1, r2)
+            else:
+                index = c1-1 if c1 == c2 else "{}:{}".format(c1, c2)
+            text_dict[constraint.template.name].append(re.sub('[- ]', '_', header_data[0][index]))
+            dic= {"word": "{}".format(str(header_data[0][index])), "constraint":"{}".format(constraint.template.name),  "location":"{}".format(constraint.assignment)}
+
+
+            #strg= "{{word: {}, constraint:{},  location:{}}}".format(str(header_data[0][index]), constraint.template.name, constraint.assignment)
+            lst.append(dic)
+
+    dic= {"header": lst}
+
+    import os
+
+    base = os.path.splitext(csv_file)[0]
+    file_name= "header/{}.json".format(base.split("/")[-1])
+
+    with open(file_name, "w+") as f:
+        json.dump(dic, f, indent= 2)
+
+    #data= json.dumps(dic, indent= 2, sort_keys= True)
+
+    #print(data)
+
+
+def learn_from_csv(csv_file, filters=None, virtual=None, solve_timeout=None, tables=None):
+    return learn_from_cells(parse_csv(csv_file), filters, virtual=virtual, solve_timeout=solve_timeout, tables=tables)
+
+
+def learn_from_cells(data, filters=None, virtual=None, orientation=None, solve_timeout=None, tables=None):
     data = np.array(data, dtype=object)
     type_data = get_type_data(data)
-    tables = tables or get_tables(
-        data, type_data, detect_table_ranges(type_data, orientation=orientation)
-    )
+    tables = tables or get_tables(data, type_data, detect_table_ranges(type_data, orientation=orientation))
     constraints = learn_constraints(data, tables, virtual, solve_timeout).constraints
+    #print("Type of Constraint: {}".format(type(constraint) for constraint in constraints))
     if virtual:
         # constraints = [c for c in constraints if c.template.target and
         #                (Range.from_legacy_bounds(c.assignment[c.template.target.name].bounds).row == -1
@@ -43,8 +125,8 @@ def learn_from_cells(
     return constraints
 
 
-def ranges_from_csv(csv_file, orientation=None, sheet=None):
-    return ranges_from_cells(parse_file(csv_file, sheet), orientation)
+def ranges_from_csv(csv_file, orientation=None):
+    return ranges_from_cells(parse_csv(csv_file), orientation)
 
 
 def ranges_from_cells(data, orientation=None):
@@ -54,30 +136,16 @@ def ranges_from_cells(data, orientation=None):
     return t_ranges
 
 
-def tables_from_csv(
-    csv_file, orientation=None, min_cells=None, min_rows=None, min_columns=None
-):
-    return tables_from_cells(
-        parse_file(csv_file, sheet=None),
-        orientation,
-        min_cells=min_cells,
-        min_rows=min_rows,
-        min_columns=min_columns,
-    )
+def tables_from_csv(csv_file, orientation=None, min_cells=None, min_rows=None, min_columns=None):
+    return tables_from_cells(parse_csv(csv_file), orientation,
+                             min_cells=min_cells, min_rows=min_rows, min_columns=min_columns)
 
 
-def tables_from_cells(
-    data, orientation=None, min_cells=None, min_rows=None, min_columns=None
-):
+def tables_from_cells(data, orientation=None, min_cells=None, min_rows=None, min_columns=None):
     data = np.array(data, dtype=object)
     type_data = get_type_data(data)
-    ranges = detect_table_ranges(
-        type_data,
-        orientation=orientation,
-        min_cells=min_cells,
-        min_rows=min_rows,
-        min_columns=min_columns,
-    )
+    ranges = detect_table_ranges(type_data, orientation=orientation, min_cells=min_cells, min_rows=min_rows,
+                                 min_columns=min_columns)
     return get_tables(data, type_data, ranges)
 
 
@@ -94,9 +162,7 @@ def filter_constraints(constraints, *args):
         elif all_constraints and not _c.is_formula():
             return True
         return any(
-            fnmatch.fnmatch(_c.template.name, pattern)
-            if isinstance(pattern, str)
-            else isinstance(_c.template, pattern)
+            fnmatch.fnmatch(_c.template.name, pattern) if isinstance(pattern, str) else isinstance(_c.template, pattern)
             for pattern in args
         )
 
