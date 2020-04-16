@@ -173,6 +173,8 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
     )
 
     logger.info("Total time {0:.3f}".format(total_time))
+
+    print(solutions.constraints)
     return solutions
 
 

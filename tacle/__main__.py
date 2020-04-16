@@ -116,6 +116,8 @@ if __name__ == "__main__":
             semantic=args.semantic,
         )
 
+        print(constraints)
+
         if args.filter is not None:
             constraints = filter_constraints(constraints, *args.filter)
         if args.group:
