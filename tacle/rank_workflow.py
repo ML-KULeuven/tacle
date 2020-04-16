@@ -39,7 +39,7 @@ nlp = spacy.load("en_core_web_lg")
 nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
 
 
-def get_constraint_list():
+"""def get_constraint_list():
     constraint_list = [
         Equal(),
         AllDifferent(),
@@ -50,7 +50,16 @@ def get_constraint_list():
         SumProduct(),
         Ordered(),
     ]
-    #constraint_list += Aggregate.instances()
+    constraint_list += Aggregate.instances()
+    #constraint_list += ConditionalAggregate.instances()
+    return constraint_list
+"""
+def get_constraint_list():
+    constraint_list = [
+        Equal(),
+        Projection()
+    ]
+    constraint_list += Aggregate.instances()
     #constraint_list += ConditionalAggregate.instances()
     return constraint_list
 
@@ -140,7 +149,8 @@ def main(data, csv_file, groups_file, tables: List[Table], verbose, silent=False
         for i in range(table.columns):
             target= create_index_group(data, table, i, Orientation.vertical)
             #print("{}--> {}".format(headers[0][i],table.get_vector_data(i, Orientation.vertical)))
-            ordered= order_constraints(headers[0][i], supported)
+            ordered= supported
+            #ordered= (order_constraints(headers[0][i], supported))
             print("{}--> {}".format(headers[0][i], list(order.name for order in ordered)))
 
             for constraint in ordered:

@@ -66,8 +66,11 @@ class Source:
             problem = Problem()
             for variable in self.variables:
                 candidates = [assignment[variable.name]] if variable.name in assignment else groups
-                domain = list([g for g in candidates if any(st in variable.types for st in
-                                                            (Typing.as_legacy_type(gt) for gt in g.vector_types))])
+                print("{}-->Candidate {}".format(variable.name, candidates))
+                #domain = list([g for g in candidates if any(st in variable.types for st in
+                                                            #(Typing.as_legacy_type(gt) for gt in g.vector_types))])
+
+                domain = [g for g in candidates if any(st in variable.types for st in g.vector_types)]
 
                 print("domain for {}: {}".format(variable.name ,domain))
 
