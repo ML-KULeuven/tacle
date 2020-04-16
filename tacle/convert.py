@@ -9,12 +9,29 @@ def get_tables(data, type_data, ranges, names=None):
     data = np.array(data, dtype=np.object)
     if names is None:
         names = ["T{}".format(i + 1) for i in range(len(ranges))]
+
     tables = []
-    for name, t_range in zip(names, ranges):
+    for name, (t_range, t_headers) in zip(names, ranges):
         t_data = t_range.get_data(data)
-        supported_orientation = [o for o in Orientation.all() if orientation_compatible(type_data, t_range, o)]
+        supported_orientation = [
+            o
+            for o in Orientation.all()
+            if orientation_compatible(type_data, t_range, o)
+        ]
         if len(supported_orientation) > 0:
-            tables.append(Table(t_data, t_range.get_data(type_data), t_range, name, supported_orientation))
+            tables.append(
+                Table(
+                    t_data,
+                    t_range.get_data(type_data),
+                    t_range,
+                    name,
+                    supported_orientation,
+                    header_ranges=t_headers,
+                    header_data={o: hr.get_data(data) for o, hr in t_headers.items()}
+                    if t_headers
+                    else None,
+                )
+            )
 
     return tables
 
@@ -27,15 +44,23 @@ def get_blocks(table):
         max_types = []
         vector_count = rel_range.vector_count(orientation)
         for i in range(vector_count):
-            vector_type_data = rel_range.vector_range(i, orientation).get_data(table.type_data)
+            vector_type_data = rel_range.vector_range(i, orientation).get_data(
+                table.type_data
+            )
             max_type = Typing.max(vector_type_data)
             max_types.append(Typing.soft_root(max_type))
         block_indices = [0]
         for i in range(1, vector_count):
-            if max_types[i] == Typing.unknown or Typing.max([max_types[i], max_types[block_indices[-1]]]) is None:
+            if (
+                max_types[i] == Typing.unknown
+                or Typing.max([max_types[i], max_types[block_indices[-1]]]) is None
+            ):
                 block_indices.append(i)
         block_indices.append(vector_count)
-        lengths = [block_indices[i + 1] - block_indices[i] for i in range(len(block_indices) - 1)]
+        lengths = [
+            block_indices[i + 1] - block_indices[i]
+            for i in range(len(block_indices) - 1)
+        ]
         for start, count in zip(block_indices, lengths):
             block_range = rel_range.sub_range(start, count, orientation)
             blocks.append(Block(table, block_range, orientation))
@@ -49,6 +74,7 @@ def orientation_compatible(type_data, t_range, orientation):
         if Typing.max(cell_types) is None:
             return False
     return True
+
 
 # def get_groups(data, indexing_data):
 #     type_data = np.vectorize(detect_type)(data)

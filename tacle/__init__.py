@@ -2,6 +2,7 @@ import fnmatch
 from typing import List, Union
 
 import numpy as np
+import re
 
 from .parse import parse_file
 from .core.virtual_template import is_virtual
@@ -12,7 +13,13 @@ from .core.solutions import Constraint
 
 
 def learn_from_file(
-    csv_file, filters=None, virtual=None, solve_timeout=None, tables=None, sheet=None
+    csv_file,
+    filters=None,
+    virtual=None,
+    solve_timeout=None,
+    tables=None,
+    sheet=None,
+    semantic=False,
 ):
     return learn_from_cells(
         parse_file(csv_file, sheet),
@@ -20,18 +27,27 @@ def learn_from_file(
         virtual=virtual,
         solve_timeout=solve_timeout,
         tables=tables,
+        semantic=semantic,
     )
 
 
 def learn_from_cells(
-    data, filters=None, virtual=None, orientation=None, solve_timeout=None, tables=None
+    data,
+    filters=None,
+    virtual=None,
+    orientation=None,
+    solve_timeout=None,
+    tables=None,
+    semantic=False,
 ):
     data = np.array(data, dtype=object)
     type_data = get_type_data(data)
     tables = tables or get_tables(
         data, type_data, detect_table_ranges(type_data, orientation=orientation)
     )
-    constraints = learn_constraints(data, tables, virtual, solve_timeout).constraints
+    constraints = learn_constraints(
+        data, tables, virtual, solve_timeout, semantic=semantic
+    ).constraints
     if virtual:
         # constraints = [c for c in constraints if c.template.target and
         #                (Range.from_legacy_bounds(c.assignment[c.template.target.name].bounds).row == -1
@@ -101,3 +117,82 @@ def filter_constraints(constraints, *args):
         )
 
     return [c for c in constraints if check(c)]
+
+
+def save_header(constraints, text_dict):
+    with open("dictionary.txt", "r+") as reader:
+        for line in reader.readlines():
+            text = line.split("\t")
+            key = text[0].strip(": ")
+            words = text[1].split(",")
+            for t in words:
+                # t= re.sub('[-]', '_', t)
+                t = re.sub("[\W]+", "", t)
+                text_dict[key].append(t)
+
+        for constraint in constraints:
+            temp = list(constraint.assignment.values())
+            # print(temp[len(temp)-1].__repr__())
+            if temp[len(temp) - 1].table.header is not None:
+                header_data = temp[len(temp) - 1].table.header
+
+                r1, r2, c1, c2 = temp[len(temp) - 1].bounds.bounds
+                if temp[len(temp) - 1].row:
+                    index = r1 - 1 if r1 == r2 else "{}:{}".format(r1, r2)
+                else:
+                    index = c1 - 1 if c1 == c2 else "{}:{}".format(c1, c2)
+                text_dict[constraint.template.name].append(
+                    re.sub("[- ]", "_", header_data[0][index])
+                )
+                # f.write("{}\t{}\t\n".format(constraint.template.name, str(header_data[0][index])))
+
+            # f.close()
+
+    f = open("dictionary.txt", "w+")
+    for k in text_dict.keys():
+        f.write("{}:\t {}\t\n".format(k, list(set(text_dict[k]))))
+
+    f.close()
+
+
+def save_json_file(constraints, text_dict, csv_file):
+    import json
+
+    lst = []
+
+    for constraint in constraints:
+        dic = dict()
+        temp = list(constraint.assignment.values())
+        # print(temp[len(temp)-1].__repr__())
+        if temp[len(temp) - 1].table.header is not None:
+            header_data = temp[len(temp) - 1].table.header
+            r1, r2, c1, c2 = temp[len(temp) - 1].bounds.bounds
+            if temp[len(temp) - 1].row:
+                index = r1 - 1 if r1 == r2 else "{}:{}".format(r1, r2)
+            else:
+                index = c1 - 1 if c1 == c2 else "{}:{}".format(c1, c2)
+            text_dict[constraint.template.name].append(
+                re.sub("[- ]", "_", header_data[0][index])
+            )
+            dic = {
+                "word": "{}".format(str(header_data[0][index])),
+                "constraint": "{}".format(constraint.template.name),
+                "location": "{}".format(constraint.assignment),
+            }
+
+            # strg= "{{word: {}, constraint:{},  location:{}}}".format(str(header_data[0][index]), constraint.template.name, constraint.assignment)
+            lst.append(dic)
+
+    dic = {"header": lst}
+
+    import os
+
+    base = os.path.splitext(csv_file)[0]
+    file_name = "header/{}.json".format(base.split("/")[-1])
+
+    with open(file_name, "w+") as f:
+        json.dump(dic, f, indent=2)
+
+    # data= json.dumps(dic, indent= 2, sort_keys= True)
+
+    # print(data)

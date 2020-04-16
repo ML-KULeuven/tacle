@@ -9,7 +9,13 @@ class AssignmentStrategy:
     def applies_to(self, constraint):
         raise NotImplementedError()
 
-    def apply(self, constraint: ConstraintTemplate, groups: [Block], solutions):
+    def apply(
+        self,
+        constraint: ConstraintTemplate,
+        groups: [Block],
+        solutions,
+        partial_assignments=None,
+    ):
         raise NotImplementedError()
 
 
@@ -88,11 +94,17 @@ class StrategyManager(object):
         self.solving_strategies.append(strategy)
 
     def find_assignments(
-        self, constraint: ConstraintTemplate, groups: [Block], solutions
+        self,
+        constraint: ConstraintTemplate,
+        groups: [Block],
+        solutions,
+        partial_assignments=None,
     ) -> [[Block]]:
         for strategy in self.assignment_strategies:
             if strategy.applies_to(constraint):
-                return strategy.apply(constraint, groups, solutions)
+                return strategy.apply(
+                    constraint, groups, solutions, partial_assignments
+                )
         raise Exception("No assignment handler for {}".format(constraint))
 
     def supports_assignments_for(self, constraint: ConstraintTemplate):

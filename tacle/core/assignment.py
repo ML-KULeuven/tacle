@@ -49,8 +49,9 @@ class Source:
     def variables(self):
         return self._variables
 
-    def candidates(self, groups, solutions, filters):
-        return self._complete([{}], groups, filters, solutions)
+    def candidates(self, groups, solutions, filters, partial_assignments=None):
+        assignments = partial_assignments or [{}]
+        return self._complete(assignments, groups, filters, solutions)
 
     def _complete(self, assignments, groups, filters, solutions):
         result = []
@@ -110,7 +111,7 @@ class ConstraintSource(Source):
     def constraint(self):
         return self._constraint
 
-    def candidates(self, groups, solutions, filters):
+    def candidates(self, groups, solutions, filters, partial_assignments=None):
         assignments = [
             {self.dictionary[k]: v for k, v in s.items()}
             for s in solutions.get_solutions(self.constraint)

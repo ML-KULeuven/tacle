@@ -419,7 +419,16 @@ class DataSheet(object):
 
 
 class Table(object):
-    def __init__(self, data, type_data, t_range, name=None, orientations=None):
+    def __init__(
+        self,
+        data,
+        type_data,
+        t_range,
+        name=None,
+        orientations=None,
+        header_ranges=None,
+        header_data=None,
+    ):
         if any(
             orientation not in [None, Orientation.vertical, Orientation.horizontal]
             for orientation in orientations
@@ -450,6 +459,8 @@ class Table(object):
         self.type_data = type_data
         self.range = t_range  # type: Range
         self.orientations = orientations
+        self.header_ranges = header_ranges
+        self.header_data = header_data
 
         from tacle.convert import get_blocks
 

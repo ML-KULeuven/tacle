@@ -77,8 +77,16 @@ class InternalCSPStrategy(AssignmentStrategy):
     def applies_to(self, constraint):
         return constraint in self._constraints
 
-    def apply(self, constraint: ConstraintTemplate, groups: [Block], solutions):
-        return constraint.source.candidates(groups, solutions, constraint.filters)
+    def apply(
+        self,
+        constraint: ConstraintTemplate,
+        groups: [Block],
+        solutions,
+        partial_assignments=None,
+    ):
+        return constraint.source.candidates(
+            groups, solutions, constraint.filters, partial_assignments
+        )
 
 
 class InternalSolvingStrategy(DictSolvingStrategy):
