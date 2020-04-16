@@ -13,7 +13,7 @@ from .engine.idp import IdpAssignmentStrategy
 from .engine.internal import InternalCSPStrategy, InternalSolvingStrategy
 from .engine.minizinc import MinizincAssignmentStrategy, MinizincSolvingStrategy
 from .parse.parser import get_groups_tables, create_index_group
-from .indexing import Table, Orientation, Range
+from .indexing import Table, Orientation, Range, Block
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +106,12 @@ def task(csv_file, groups_file, constraints=None, manager=None):
     return LearningTask(csv_file, groups_file, manager, constraints)
 
 
+def make_column_block(table, column):
+    block_range = Range(column, 0, 1, table.range.height)
+    vertical = Orientation.vertical
+    return Block(table, block_range, vertical, [table.get_vector_type(column, vertical)])
+
+
 def main(data, csv_file, groups_file, tables: List[Table], verbose, silent=False, constraints=None, only_total_time=False, groups=None,
          solve_timeout=None):
     if only_total_time:
@@ -147,7 +153,7 @@ def main(data, csv_file, groups_file, tables: List[Table], verbose, silent=False
         headers=table.header.get_data(data)# Table.header--> Range
 
         for i in range(table.columns):
-            target= create_index_group(data, table, i, Orientation.vertical)
+            target = make_column_block(table, i)
             #print("{}--> {}".format(headers[0][i],table.get_vector_data(i, Orientation.vertical)))
             ordered= supported
             #ordered= (order_constraints(headers[0][i], supported))

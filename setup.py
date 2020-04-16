@@ -15,7 +15,7 @@ REQUIRES_PYTHON = ">=3.5.0"
 VERSION = "0.9.7"
 
 # What packages are required for this module to be executed?
-REQUIRED = ["numpy", "python-constraint", "matplotlib", "pandas", "openpyxl"]
+REQUIRED = ["numpy", "python-constraint", "matplotlib", "pandas", "openpyxl", "spacy"]
 
 # What packages are optional?
 EXTRAS = {}
