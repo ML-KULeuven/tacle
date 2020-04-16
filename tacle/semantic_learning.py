@@ -141,6 +141,7 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
                     partial_assignment = {template.target.name: target}
                 print(partial_assignment)
 
+                # TODO Adapt the blocks (removing the column)
                 assignments = manager.find_assignments(
                     template, blocks, solutions, [partial_assignment]
                 )
@@ -148,7 +149,7 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
                 found = list(manager.find_solutions(template, assignments, solutions))
                 print("found solution: {}\n".format(found))
 
-                if partial_assignment in found:
+                if len(found) > 0:
                     solutions.add(template, found)
                     break
 
@@ -174,7 +175,6 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
 
     logger.info("Total time {0:.3f}".format(total_time))
 
-    print(solutions.constraints)
     return solutions
 
 

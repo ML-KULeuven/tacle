@@ -449,8 +449,11 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                                 return False
                         x_subgroup = x_group.sub_block(start, end - start)
                         y_subgroup = y_group.sub_block(y_i, 1)
-                        add({c.x.name: x_subgroup, c.y.name: y_subgroup})
-                        return True
+                        if not x_subgroup.overlaps_with(y_subgroup):
+                            add({c.x.name: x_subgroup, c.y.name: y_subgroup})
+                            return True
+                        else:
+                            return False
 
                     max_range = MaxRange(check)
                     for y_i in range(y_group.vector_count()):
