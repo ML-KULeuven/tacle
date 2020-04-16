@@ -103,7 +103,7 @@ class Solutions:
         return self.solutions.get(template, [])
 
     def has_solution(self, template, solution):
-        return self._to_tuple(template, solution) in self.properties[template]
+        return self._to_tuple(template, solution) in self.properties.get(template, [])
 
     def has(self, template, keys, values):
         return self.has_solution(template, {k.name: v for k, v in zip(keys, values)})
