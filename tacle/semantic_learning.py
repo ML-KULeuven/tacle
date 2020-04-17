@@ -1,5 +1,8 @@
 import time
 import logging
+import spacy
+import re
+from spacy.tokens import Doc
 from typing import List
 
 from .indexing import Table, Orientation, Range, Block
@@ -56,9 +59,60 @@ def get_default_templates():
     # constraint_list += ConditionalAggregate.instances()
     return constraint_list
 
+class my_dictionary(dict):
+    # __init__ function
+    def __init__(self):
+        self = dict()
+        # Function to add key:value
+    def add(self, key, value):
+        self[key] = value
+
+class WhitespaceTokenizer(object):
+    def __init__(self, vocab):
+        self.vocab = vocab
+    def __call__(self, text):
+        words = text.split(' ')
+        # All tokens 'own' a subsequent space character in this tokenizer
+        spaces = [True] * len(words)
+        return Doc(self.vocab, words=words, spaces=spaces)
+
+nlp = spacy.load("en_core_web_lg")
+nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
+
+def clean(str):
+    str = re.sub('[- ]', '_', str)
+    str = re.sub('[\W]+', '', str)
+    str = re.sub('[_]+', ' ', str)
+    return str
 
 def rank_templates(header, templates):
-    # TODO Spacy code
+    # TODO handle multiple row header
+    tempplate_name = list(clean(template.name) for template in templates)
+    dictionary = dict()
+    ordered = []
+
+    print("The word is: {} \n The list is this: {}".format(header, tempplate_name))
+    word_token = nlp(header)
+
+    if (word_token and word_token.vector_norm):
+        for template in templates:
+            template_tokens = nlp("".join(clean(template.name)))
+            dictionary[template] = template_tokens.similarity(word_token)
+
+            for chunk in template_tokens.noun_chunks:
+                # print(chunk.text, chunk.has_vector, chunk.similarity(nlp("total")), chunk.vector_norm, chunk.root.text, chunk.root.dep_, chunk.root.head.text)
+                dictionary[template] = chunk.similarity(word_token)
+
+        sorted_dictionary = ((k, dictionary[k]) for k in sorted(dictionary, key=dictionary.get, reverse=True))
+
+        for k, v in sorted_dictionary:
+            # print(k, v)
+            ordered.append(k)
+
+        # print(ordered)
+        templates = ordered
+    else:
+        print("Can't rank templates for {}".format(header))
     return templates
 
 
@@ -132,7 +186,7 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
 
             for template in ordered:
                 logger.debug(
-                    "Searching for constraints of type {}".format(template.name)
+                    "Searching for template of type {}".format(template.name)
                 )
                 t_start = time.time()
 
@@ -150,13 +204,12 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
                 print("found solution: {}\n".format(found))
 
                 if len(found) > 0:
+                    #TODO handle when two constraint exist in one row
+                    # e.g. all-different, sum(row) for column 6
                     solutions.add(template, found)
                     break
 
             t_before_add = time.time()
-            # solutions.add(constraint, found)
-            # print( "Here is my solution object after assignment:solutions {}\n, properties {}\n, constraints {}\n".format(
-            # solutions.solutions, solutions.properties, solutions.constraints))
             t_end = time.time()
             assign += t_assign - t_start
             solve += t_before_add - t_assign
@@ -174,7 +227,6 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
     )
 
     logger.info("Total time {0:.3f}".format(total_time))
-
     return solutions
 
 
@@ -185,13 +237,13 @@ def main(tables, templates=None, solve_timeout=None):
     supported = []
     unsupported_assignment = []
     unsupported_solving = []
-    for constraint in templates:
-        if not manager.supports_assignments_for(constraint):
-            unsupported_assignment.append(constraint)
-        elif not manager.supports_solving_for(constraint):
-            unsupported_solving.append(constraint)
+    for template in templates:
+        if not manager.supports_assignments_for(template):
+            unsupported_assignment.append(template)
+        elif not manager.supports_solving_for(template):
+            unsupported_solving.append(template)
         else:
-            supported.append(constraint)
+            supported.append(template)
 
     if len(unsupported_assignment) > 0:
         logger.info(
@@ -211,19 +263,18 @@ def main(tables, templates=None, solve_timeout=None):
     solve = 0
     add = 0
     blocks = [block for table in tables for block in table.blocks]
-    for constraint in ordered:
-        logger.debug("Searching for constraints of type {}".format(constraint.name))
+    for template in ordered:
+        logger.debug("Searching for template of type {}".format(template.name))
         t_start = time.time()
-        assignments = manager.find_assignments(constraint, blocks, solutions)
+        assignments = manager.find_assignments(template, blocks, solutions)
         t_assign = time.time()
-        found = list(manager.find_solutions(constraint, assignments, solutions))
+        found = list(manager.find_solutions(template, assignments, solutions))
         t_before_add = time.time()
-        solutions.add(constraint, found)
+        solutions.add(template, found)
         t_end = time.time()
         assign += t_assign - t_start
         solve += t_before_add - t_assign
         add += t_end - t_before_add
-
         f_string = "Assignment time: {assign:.3f}, solving time: {solve:.3f}]"
         logger.debug(f_string.format(assign=t_assign - t_start, solve=t_end - t_assign))
 

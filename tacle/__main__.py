@@ -128,5 +128,5 @@ if __name__ == "__main__":
                 print(name, *list(map(str, groups[name])), sep="\n\t")
         else:
             text_dict = DefaultListOrderedDict()
-            # save_json_file(constraints, text_dict, args.csv_file)
+            save_json_file(constraints, text_dict, args.csv_file)
             print(*list(map(str, constraints)), sep="\n")
