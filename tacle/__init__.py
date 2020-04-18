@@ -13,7 +13,7 @@ from .core.solutions import Constraint
 from .indexing import Orientation
 
 
-def save_heaeder(constraints, text_dict):
+def save_heaeder(templates, text_dict):
     with open('dictionary.txt', 'r+') as reader:
         for line in reader.readlines():
             text = line.split("\t")
@@ -24,26 +24,26 @@ def save_heaeder(constraints, text_dict):
                 t = re.sub('[\W]+', '', t)
                 text_dict[key].append(t)
 
-        for constraint in constraints:
-            temp = list(constraint.assignment.values())
-            # print(temp[len(temp)-1].__repr__())
-            if temp[len(temp) - 1].table.header is not None:
-                header_data = (temp[len(temp) - 1].table.header)
-
-                r1, r2, c1, c2 = temp[len(temp) - 1].bounds.bounds
-                if temp[len(temp) - 1].row:
-                    index = r1 - 1 if r1 == r2 else "{}:{}".format(r1, r2)
-                else:
-                    index = c1 - 1 if c1 == c2 else "{}:{}".format(c1, c2)
-                text_dict[constraint.template.name].append(re.sub('[- ]', '_', header_data[0][index]))
-                # f.write("{}\t{}\t\n".format(constraint.template.name, str(header_data[0][index])))
-
-            # f.close()
+        for template in templates:
+            target = template.template.target.name
+            assigned_block = template.assignment[target]
+            if (assigned_block.orientation == Orientation.vertical):
+                header = assigned_block.table.header_data[Orientation.horizontal]
+                i = assigned_block.relative_range.column
+                header = "\n".join(
+                    [str(header[j, i]) for j in range(header.shape[0])]
+                )
+            else:
+                header = assigned_block.table.header_data[Orientation.vertical]
+                i = assigned_block.relative_range.row
+                header = "\n".join(
+                    [str(header[i, j]) for j in range(header.shape[1])]
+                )
+            text_dict[template.template.name].append(re.sub('[- ]', '_', header))
 
     f = open("dictionary.txt", "w+")
     for k in text_dict.keys():
         f.write("{}:\t {}\t\n".format(k, list(set(text_dict[k]))))
-
     f.close()
 
 
@@ -77,10 +77,11 @@ def save_json_file(templates, text_dict, csv_file):
     dictionary = {"header": lst}
 
     import os
-
     base = os.path.splitext(csv_file)[0]
     file_name = "header/{}.json".format(base.split("/")[-1])
-
+    directory= "/".join(base.split("/")[0:-2])+"header"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     with open(file_name, "w+") as f:
         json.dump(dictionary, f, indent=2)
 
@@ -192,39 +193,3 @@ def filter_constraints(constraints, *args):
         )
 
     return [c for c in constraints if check(c)]
-
-
-def save_header(constraints, text_dict):
-    with open("dictionary.txt", "r+") as reader:
-        for line in reader.readlines():
-            text = line.split("\t")
-            key = text[0].strip(": ")
-            words = text[1].split(",")
-            for t in words:
-                # t= re.sub('[-]', '_', t)
-                t = re.sub("[\W]+", "", t)
-                text_dict[key].append(t)
-
-        for constraint in constraints:
-            temp = list(constraint.assignment.values())
-            # print(temp[len(temp)-1].__repr__())
-            if temp[len(temp) - 1].table.header is not None:
-                header_data = temp[len(temp) - 1].table.header
-
-                r1, r2, c1, c2 = temp[len(temp) - 1].bounds.bounds
-                if temp[len(temp) - 1].row:
-                    index = r1 - 1 if r1 == r2 else "{}:{}".format(r1, r2)
-                else:
-                    index = c1 - 1 if c1 == c2 else "{}:{}".format(c1, c2)
-                text_dict[constraint.template.name].append(
-                    re.sub("[- ]", "_", header_data[0][index])
-                )
-                # f.write("{}\t{}\t\n".format(constraint.template.name, str(header_data[0][index])))
-
-            # f.close()
-
-    f = open("dictionary.txt", "w+")
-    for k in text_dict.keys():
-        f.write("{}:\t {}\t\n".format(k, list(set(text_dict[k]))))
-
-    f.close()
