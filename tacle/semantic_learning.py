@@ -59,25 +59,31 @@ def get_default_templates():
     # constraint_list += ConditionalAggregate.instances()
     return constraint_list
 
-class my_dictionary(dict):
+
+class MyDictionary(dict):
     # __init__ function
     def __init__(self):
         self = dict()
         # Function to add key:value
+
     def add(self, key, value):
         self[key] = value
+
 
 class WhitespaceTokenizer(object):
     def __init__(self, vocab):
         self.vocab = vocab
+
     def __call__(self, text):
         words = text.split(' ')
         # All tokens 'own' a subsequent space character in this tokenizer
         spaces = [True] * len(words)
         return Doc(self.vocab, words=words, spaces=spaces)
 
+
 nlp = spacy.load("en_core_web_lg")
 nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
+
 
 def clean(str):
     str = re.sub('[- ]', '_', str)
@@ -85,22 +91,30 @@ def clean(str):
     str = re.sub('[_]+', ' ', str)
     return str
 
+
 def rank_templates(header, templates):
     # TODO handle multiple row header
-    tempplate_name = list(clean(template.name) for template in templates)
+    template_name = list(clean(template.name) for template in templates)
     dictionary = dict()
     ordered = []
 
-    print("The word is: {} \n The list is this: {}".format(header, tempplate_name))
+    print("The word is: {} \n The list is this: {}".format(header, template_name))
     word_token = nlp(header)
 
-    if (word_token and word_token.vector_norm):
+    if word_token and word_token.vector_norm:
         for template in templates:
             template_tokens = nlp("".join(clean(template.name)))
             dictionary[template] = template_tokens.similarity(word_token)
 
             for chunk in template_tokens.noun_chunks:
-                # print(chunk.text, chunk.has_vector, chunk.similarity(nlp("total")), chunk.vector_norm, chunk.root.text, chunk.root.dep_, chunk.root.head.text)
+                # print(
+                # chunk.text,
+                # chunk.has_vector,
+                # chunk.similarity(nlp("total")),
+                # chunk.vector_norm,
+                # chunk.root.text,
+                # chunk.root.dep_,
+                # chunk.root.head.text)
                 dictionary[template] = chunk.similarity(word_token)
 
         sorted_dictionary = ((k, dictionary[k]) for k in sorted(dictionary, key=dictionary.get, reverse=True))
@@ -108,8 +122,6 @@ def rank_templates(header, templates):
         for k, v in sorted_dictionary:
             # print(k, v)
             ordered.append(k)
-
-        # print(ordered)
         templates = ordered
     else:
         print("Can't rank templates for {}".format(header))
@@ -122,6 +134,19 @@ def make_column_block(table, column):
     return Block(
         table, block_range, vertical, [table.get_vector_type(column, vertical)]
     )
+
+
+def split_block(block, index):
+    blocks=[]
+    if block.vector_count() == 1:
+        blocks = [block]
+    elif index == 0:
+        blocks = [block.sub_block(index+1, block.vector_count()-1-index)]
+    elif index == block.vector_count()-1:
+        blocks = [block.sub_block(0, index)]
+    else:
+        blocks = [block.sub_block(0, index), block.sub_block(index+1, block.vector_count()-1-index)]
+    return blocks
 
 
 def learn(tables: List[Table], templates=None, solve_timeout=None):
@@ -184,6 +209,19 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
 
             print("{}--> {}".format(header, list(order.name for order in ordered)))
 
+            # Adapting blocks by removing current column
+            new_blocks = []
+            for block in blocks:
+                new_blocks.append(block)
+                if block.is_sub_block(target):
+                    relative_index = target.vector_index() - block.vector_index()
+                    splited_blocks = split_block(block, relative_index)
+                    new_blocks.remove(block)
+                    for b in splited_blocks:
+                        new_blocks.append(b)
+
+            #print(f"Block after: {new_blocks}")
+
             for template in ordered:
                 logger.debug(
                     "Searching for template of type {}".format(template.name)
@@ -192,12 +230,16 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
 
                 partial_assignment = {}
                 if template.target:
+                    #pre-check type consistency
+                    domain = target if any(st in template.target.types for st in target.vector_types) else None
+                    print(f"Domain: {domain}")
+                    if domain is None:
+                        continue
                     partial_assignment = {template.target.name: target}
                 print(partial_assignment)
 
-                # TODO Adapt the blocks (removing the column)
                 assignments = manager.find_assignments(
-                    template, blocks, solutions, [partial_assignment]
+                    template, new_blocks, solutions, [partial_assignment]
                 )
                 t_assign = time.time()
                 found = list(manager.find_solutions(template, assignments, solutions))
