@@ -310,7 +310,7 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
                 tbl_assign = t_assign - t_start
                 tbl_wi_assign = t_assign - t_initial_assign
                 tbl_solve = t_end - t_assign
-                #tbl(header, template.name, domain, found, tbl_assign, tbl_wi_assign, tbl_solve)
+                tbl(header, template.name, domain, found, tbl_assign, tbl_wi_assign, tbl_solve)
 
                 if len(found) > 0:
                     # TODO handle when two constraint exist in one row
@@ -338,7 +338,7 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
             order_time += o_time
             #print for random/hand engineered constaint
             #tbl(header, ordered[0].name, c_time, o_time, c_assign, c_wi_assign, c_solve)
-            #tbl(header, "", c_time, o_time, c_assign, c_wi_assign, c_solve)
+            tbl(header, "", c_time, o_time, c_assign, c_wi_assign, c_solve)
 
     total_time = time.time() - t_origin
     logger.debug(
