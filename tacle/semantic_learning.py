@@ -181,7 +181,7 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
         Solutions()
     )  # solutions = {}; properties = {}; canon_map = dict(); constraints = []  # type: List[Constraint]
 
-    t_origin = time.time()
+    #t_origin = time.time()
 
     supported = []
     unsupported_assignment = []
@@ -209,6 +209,8 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
         )
 
     get_template_nlp(supported)
+
+    t_origin = time.time()
 
     assign = 0
     solve = 0
