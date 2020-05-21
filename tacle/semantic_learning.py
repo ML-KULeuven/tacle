@@ -35,6 +35,9 @@ from .core.template import (
 
 logger = logging.getLogger(__name__)
 
+#tbl = TableLogger(columns='column,template(random),total time, choice operation,assign,wi_assign,solve',float_format='{:,.4f}'.format)
+tbl = TableLogger(columns='column,template,target,solution,assign,wi_assign,solve', float_format='{:,.4f}'.format)
+nlp_dictionary = dict()
 
 def get_default_templates():
     constraint_list = [
@@ -94,13 +97,6 @@ def clean(str):
     return str
 
 
-#tbl = TableLogger(columns='column,template(random),total time, choice operation,assign,wi_assign,solve',float_format='{:,.4f}'.format)
-tbl = TableLogger(columns='column,template,target,solution,assign,wi_assign,solve',float_format='{:,.4f}'.format)
-
-
-nlp_dictionary = dict()
-
-
 def get_template_nlp(templates):
     for template in templates:
         nlp_dictionary[template] = nlp("".join(clean(template.name)))
@@ -108,11 +104,11 @@ def get_template_nlp(templates):
 
 def rank_templates(header, templates):
     # TODO handle multiple row header
-    template_name = list(clean(template.name) for template in templates)
+    #template_name = list(clean(template.name) for template in templates)
+    # print("The word is: {} \n The list is this: {}".format(header, template_name))
     dictionary = dict()
     ordered = []
 
-    #print("The word is: {} \n The list is this: {}".format(header, template_name))
     if header:
         word_token = nlp(header)
     else:
@@ -121,23 +117,28 @@ def rank_templates(header, templates):
     if word_token and word_token.vector_norm:
         for template in templates:
             template_tokens = nlp_dictionary[template]
-            dictionary[template] = template_tokens.similarity(word_token)
-
-            for chunk in template_tokens.noun_chunks:
-                # print(
-                # chunk.text,
-                # chunk.has_vector,
-                # chunk.similarity(nlp("total")),
-                # chunk.vector_norm,
-                # chunk.root.text,
-                # chunk.root.dep_,
-                # chunk.root.head.text)
-                dictionary[template] = chunk.similarity(word_token)
+            # if not a noun phrase
+            if not template_tokens.noun_chunks or sum(1 for e in template_tokens.noun_chunks) == 0:
+                dictionary[template] = template_tokens.similarity(word_token)
+            else:
+                dictionary[template] = 0
+                count = 0
+                for chunk in template_tokens.noun_chunks:
+                    count += 1
+                    #print(
+                    #chunk.text,
+                    #chunk.has_vector,
+                    #chunk.similarity(nlp("total")),
+                    #chunk.vector_norm,
+                    #chunk.root.text,
+                    #chunk.root.dep_,
+                    #chunk.root.head.text)
+                    dictionary[template] = (dictionary[template]+chunk.similarity(word_token))/count
 
         sorted_dictionary = ((k, dictionary[k]) for k in sorted(dictionary, key=dictionary.get, reverse=True))
 
         for k, v in sorted_dictionary:
-            # print(k, v)
+            #print(k, v)
             ordered.append(k)
         templates = ordered
     else:
@@ -309,7 +310,7 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
                 tbl_assign = t_assign - t_start
                 tbl_wi_assign = t_assign - t_initial_assign
                 tbl_solve = t_end - t_assign
-                tbl(header, template.name, domain, found, tbl_assign, tbl_wi_assign, tbl_solve)
+                #tbl(header, template.name, domain, found, tbl_assign, tbl_wi_assign, tbl_solve)
 
                 if len(found) > 0:
                     # TODO handle when two constraint exist in one row
@@ -337,7 +338,7 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
             order_time += o_time
             #print for random/hand engineered constaint
             #tbl(header, ordered[0].name, c_time, o_time, c_assign, c_wi_assign, c_solve)
-            tbl(header, "", c_time, o_time, c_assign, c_wi_assign, c_solve)
+            #tbl(header, "", c_time, o_time, c_assign, c_wi_assign, c_solve)
 
     total_time = time.time() - t_origin
     logger.debug(
@@ -348,63 +349,4 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
 
     logger.info("Total time {0:.3f}".format(total_time))
     print("Total time {0:.3f}, without ordering {1:.3f}".format(total_time, (total_time - order_time)))
-    return solutions
-
-
-def main(tables, templates=None, solve_timeout=None):
-    solutions = Solutions()
-    t_origin = time.time()
-
-    supported = []
-    unsupported_assignment = []
-    unsupported_solving = []
-    for template in templates:
-        if not manager.supports_assignments_for(template):
-            unsupported_assignment.append(template)
-        elif not manager.supports_solving_for(template):
-            unsupported_solving.append(template)
-        else:
-            supported.append(template)
-
-    if len(unsupported_assignment) > 0:
-        logger.info(
-            "No assignment strategy for: {}".format(
-                ", ".join(str(c) for c in unsupported_assignment)
-            )
-        )
-    if len(unsupported_solving) > 0:
-        logger.info(
-            "No solving strategies for: {}".format(
-                ", ".join(str(c) for c in unsupported_solving)
-            )
-        )
-
-    ordered = order_templates(supported)
-    assign = 0
-    solve = 0
-    add = 0
-    blocks = [block for table in tables for block in table.blocks]
-    for template in ordered:
-        logger.debug("Searching for template of type {}".format(template.name))
-        t_start = time.time()
-        assignments = manager.find_assignments(template, blocks, solutions)
-        t_assign = time.time()
-        found = list(manager.find_solutions(template, assignments, solutions))
-        t_before_add = time.time()
-        solutions.add(template, found)
-        t_end = time.time()
-        assign += t_assign - t_start
-        solve += t_before_add - t_assign
-        add += t_end - t_before_add
-        f_string = "Assignment time: {assign:.3f}, solving time: {solve:.3f}]"
-        logger.debug(f_string.format(assign=t_assign - t_start, solve=t_end - t_assign))
-
-    total_time = time.time() - t_origin
-    logger.debug(
-        "Total: {0:.3f} (Assign: {1:.3f}, Solve: {2:.3f}, Add: {3:.3f})".format(
-            total_time, assign, solve, add
-        )
-    )
-
-    logger.info("Total time {0:.3f}".format(total_time))
     return solutions
