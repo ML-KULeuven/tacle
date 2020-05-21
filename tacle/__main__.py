@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     if args.verbose or args.debug or args.tables_only:
         for table in tables:
-            print("Table {}, {}".format(table.name, table.range))
+            print("Table {}, {} \nHeader {}".format(table.name, table.range, table.header_ranges))
             for orientation in table.orientations:
                 print(
                     ", ".join(

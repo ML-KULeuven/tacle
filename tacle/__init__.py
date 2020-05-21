@@ -25,6 +25,7 @@ def save_heaeder(templates, text_dict):
                 text_dict[key].append(t)
 
         for template in templates:
+            #TODO Handle while there is no target
             target = template.template.target.name
             assigned_block = template.assignment[target]
             if (assigned_block.orientation == Orientation.vertical):
@@ -52,9 +53,12 @@ def save_json_file(templates, text_dict, csv_file):
     lst = []
 
     for template in templates:
-        target= template.template.target.name
+        target = template.template.target.name \
+            if template.template.target is not None \
+            else template.template.get_variables()[0].name
+
         assigned_block = template.assignment[target]
-        if(assigned_block.orientation== Orientation.vertical):
+        if(assigned_block.orientation == Orientation.vertical):
             header = assigned_block.table.header_data[Orientation.horizontal]
             i= assigned_block.relative_range.column
             header = "\n".join(
@@ -66,8 +70,8 @@ def save_json_file(templates, text_dict, csv_file):
             header = "\n".join(
                 [str(header[i, j]) for j in range(header.shape[1])]
             )
-
         text_dict[template.template.name].append(re.sub('[- ]', '_', header))
+
         dictionary = {
                 "word": "{}".format(str(header)),
                 "template": "{}".format(template.template.name),
@@ -87,6 +91,7 @@ def save_json_file(templates, text_dict, csv_file):
 
     # data= json.dumps(dic, indent= 2, sort_keys= True)
     # print(data)
+
 
 def learn_from_file(
     csv_file,
