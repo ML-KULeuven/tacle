@@ -10,7 +10,7 @@ def get_tables(data, type_data, ranges, names=None):
     if names is None:
         names = ["T{}".format(i + 1) for i in range(len(ranges))]
     tables = []
-    for name, t_range in zip(names, ranges):
+    for name, (t_range, t_headers) in zip(names, ranges):
         t_data = t_range.get_data(data)
         supported_orientation = [
             o
@@ -25,6 +25,10 @@ def get_tables(data, type_data, ranges, names=None):
                     t_range,
                     name,
                     supported_orientation,
+                    header_ranges=t_headers,
+                    header_data={o: hr.get_data(data) for o, hr in t_headers.items()}
+                    if t_headers
+                    else None,
                 )
             )
 
