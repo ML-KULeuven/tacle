@@ -19,4 +19,3 @@ def learn_constraints(data, tables, virtual=False, solve_timeout=None):
         templates.append(VirtualLookup())
         templates += VirtualConditionalAggregate.instances()
     return learn(tables, templates, solve_timeout)
-

@@ -8,7 +8,11 @@ from .indexing import Typing, Range, Orientation, Table
 
 def get_headers_count(table_range: Range, table_type_data, orientation):
     def get(_vi, _ei):
-        return table_type_data[_vi, _ei] if orientation == Orientation.horizontal else table_type_data[_ei, _vi]
+        return (
+            table_type_data[_vi, _ei]
+            if orientation == Orientation.horizontal
+            else table_type_data[_ei, _vi]
+        )
 
     headers = []
     for vector_index in range(table_range.vector_count(orientation)):
@@ -30,7 +34,14 @@ def get_type_data(data):
     return numpy.vectorize(Typing.detect_type)(data)
 
 
-def detect_table_ranges(type_data, typed=True, orientation=None, min_cells=None, min_rows=None, min_columns=None):
+def detect_table_ranges(
+    type_data,
+    typed=True,
+    orientation=None,
+    min_cells=None,
+    min_rows=None,
+    min_columns=None,
+):
     if not typed:
         type_data = get_type_data(type_data)
 
@@ -73,7 +84,9 @@ def detect_table_ranges(type_data, typed=True, orientation=None, min_cells=None,
         if orientation is None or orientation == Orientation.vertical:
             for column_header in range(t_range.columns):
                 row_header = max(column_headers[column_header:])
-                cell_score = (t_range.rows - row_header) * (t_range.columns - column_header)
+                cell_score = (t_range.rows - row_header) * (
+                    t_range.columns - column_header
+                )
                 if cell_score > cells:
                     cells = cell_score
                     headers = (column_header, row_header)
@@ -81,14 +94,26 @@ def detect_table_ranges(type_data, typed=True, orientation=None, min_cells=None,
         if orientation is None or orientation == Orientation.horizontal:
             for row_header in range(t_range.rows):
                 column_header = max(row_headers[row_header:])
-                cell_score = (t_range.rows - row_header) * (t_range.columns - column_header)
+                cell_score = (t_range.rows - row_header) * (
+                    t_range.columns - column_header
+                )
                 if cell_score > cells:
                     cells = cell_score
                     headers = (column_header, row_header)
 
-        t_r = t_range.intersect(Range(t_range.x0 + headers[0], t_range.y0 + headers[1], t_range.columns, t_range.rows))
-        if (min_cells is None or t_r.columns * t_r.rows >= min_cells) and (min_rows is None or t_r.rows >= min_rows)\
-                and (min_columns is None or t_r.columns >= min_columns):
+        t_r = t_range.intersect(
+            Range(
+                t_range.x0 + headers[0],
+                t_range.y0 + headers[1],
+                t_range.columns,
+                t_range.rows,
+            )
+        )
+        if (
+            (min_cells is None or t_r.columns * t_r.rows >= min_cells)
+            and (min_rows is None or t_r.rows >= min_rows)
+            and (min_columns is None or t_r.columns >= min_columns)
+        ):
             table_ranges.append(t_r)
 
     return table_ranges
