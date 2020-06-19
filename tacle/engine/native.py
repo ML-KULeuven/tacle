@@ -2,9 +2,7 @@ import functools
 import itertools
 
 import math
-from typing import Tuple
 
-from tacle.indexing import Typing, Block
 from tacle.engine import evaluate
 from tacle.core.virtual_template import VirtualLookup, VirtualConditionalAggregate
 from tacle.core.template import *
