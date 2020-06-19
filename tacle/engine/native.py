@@ -551,7 +551,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     if numpy.vectorize(lambda e: e == 1)(result).all():
                         p_subgroup = p_group.sub_block(start, end - start)
                         p_data = (
-                            p_subgroup.data if p_subgroup.row else p_subgroup.data.T
+                            p_subgroup.data if p_subgroup.orientation == Orientation.horizontal else p_subgroup.data.T
                         )
                         if equal_v(
                             r_group.vector(r_i),
