@@ -178,7 +178,7 @@ def learn(data_arrays):
                 r.get_data(data),
                 r.get_data(type_data),
                 r,
-                f"T{i+1}",
+                "T{}".format(i+1),
                 [Orientation.vertical],
             )
         )

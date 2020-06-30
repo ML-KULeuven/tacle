@@ -1,4 +1,5 @@
 import re
+from typing import Any, Optional, List, Dict
 
 import numpy as np
 
@@ -198,6 +199,10 @@ class Typing(object):
     #     if cell_type == Typing.float:
     #         return GType.float
     #     raise ValueError("Cannot convert {}".format(cell_type))
+
+
+# This variable is used to indicate the type of variables that should be an orientation, one of the enum values
+OrientationType = str
 
 
 class Orientation(object):
@@ -420,14 +425,14 @@ class DataSheet(object):
 
 class Table(object):
     def __init__(
-        self,
-        data,
-        type_data,
-        t_range,
-        name=None,
-        orientations=None,
-        header_ranges=None,
-        header_data=None,
+            self,
+            data: np.ndarray,
+            type_data: np.ndarray,
+            t_range: Range,
+            name: Optional[str] = None,
+            orientations: List[OrientationType] = None,
+            header_ranges: Dict[OrientationType, Range] = None,
+            header_data: Dict[OrientationType, np.ndarray] = None
     ):
         if any(
             orientation not in [None, Orientation.vertical, Orientation.horizontal]

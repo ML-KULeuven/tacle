@@ -1,9 +1,9 @@
-from typing import List
+from typing import List, Tuple, Any, Union, Optional, Dict
 
 import numpy
 import numpy as np
 
-from .indexing import Typing, Range, Orientation, Table
+from .indexing import Typing, Range, Orientation, Table, OrientationType
 
 
 def get_headers_count(table_range: Range, table_type_data, orientation):
@@ -35,13 +35,31 @@ def get_type_data(data):
 
 
 def detect_table_ranges(
-    type_data,
-    typed=True,
-    orientation=None,
-    min_cells=None,
-    min_rows=None,
-    min_columns=None,
-):
+    type_data: Union[List[List], np.ndarray],
+    typed: bool = True,
+    orientation: Optional[OrientationType] = None,
+    min_cells: Optional[int] = None,
+    min_rows: Optional[int] = None,
+    min_columns: Optional[int] = None,
+) -> List[Tuple[Range, Dict[OrientationType, Range]]]:
+    """
+    Detects and returns table ranges in a set of cells
+    :param type_data:
+        A matrix (list-of-list or numpy array) of data or of types (see tacle.indexing.Typing)
+    :param typed:
+        If true, then type-data consists of types, otherwise it consists of data and will be converted
+    :param orientation:
+        If not None, then only table ranges will be returned that are type-consistent in the given orientation.
+    :param min_cells:
+        If not None, then only table ranges will be returned that contain at least min_cells cells
+    :param min_rows:
+        If not None, then only table ranges will be returned that contain at least min_rows rows
+    :param min_columns:
+        If not None, then only table ranges will be returned that contain at least min_columns colums
+    :return:
+        A list of tuples containing: 1) table range containing type consistent data; and 2) a dictionary mapping
+        orientations to header ranges (vertical for a top header and horizontal for a left header)
+    """
     if not typed:
         type_data = get_type_data(type_data)
 
@@ -81,35 +99,28 @@ def detect_table_ranges(
         headers = None
         cells = 0
 
-        if orientation is None or orientation == Orientation.vertical:
-            for column_header in range(t_range.columns):#header for each column
-                row_header = max(column_headers[column_header:])
-                cell_score = (t_range.rows - row_header) * (t_range.columns - column_header)
+        orientations = [Orientation.vertical, Orientation.horizontal] if orientation is None else [orientation]
+
+        # Choose headers that maximize the number of non-header cells
+        for o in orientations:
+            for header in range(t_range.vector_count(o)):
+                if o == Orientation.vertical:
+                    candidate_headers = (header, max(column_headers[header:]))
+                else:
+                    candidate_headers = (max(row_headers[header:]), header)
+
+                cell_score = (t_range.columns - candidate_headers[0]) * (t_range.rows - candidate_headers[1])
                 if cell_score > cells:
                     cells = cell_score
-                    headers = (column_header, row_header)
-                    print(f"column's header: {headers}")
-                    # print(f"printing column_header {column_header}, row_header {row_header}")
+                    headers = candidate_headers
 
-        if orientation is None or orientation == Orientation.horizontal:
-            for row_header in range(t_range.rows): #header for each row
-                column_header = max(row_headers[row_header:])
-                cell_score = (t_range.rows - row_header) * (t_range.columns - column_header)
-                if cell_score > cells:
-                    cells = cell_score
-                    headers = (column_header, row_header)
-                    print(f"row's header: {headers}")
-                    # print(f"printing column_header {column_header}, row_header {row_header}")
-
-        print(headers)
-        # TODO Is this correct?
+        # Pasted in
         selected = Range(
             t_range.x0 + headers[0],
             t_range.y0 + headers[1],
             t_range.columns - headers[0],
             t_range.rows - headers[1],
         )
-
         t_r = t_range.intersect(selected)
         t_h = {
             Orientation.horizontal: Range(
