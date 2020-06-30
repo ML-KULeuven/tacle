@@ -556,7 +556,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         p_group.data
                     )
                     masks[p_group] = numpy.vectorize(lambda e: 1 if e else 0)(bool_mask)
-                p_masked = masks[p_group] if p_group.row else masks[p_group].T
+                    p_masked = masks[p_group] if p_group.row else masks[p_group].T
 
                 def check(start, end):
                     result = numpy.sum(p_masked[start:end, :], 0)

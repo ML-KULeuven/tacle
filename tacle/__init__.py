@@ -58,13 +58,13 @@ def save_json_file(templates, text_dict, csv_file):
             else template.template.get_variables()[0].name
 
         assigned_block = template.assignment[target]
-        if(assigned_block.orientation == Orientation.vertical):
+        if assigned_block.orientation == Orientation.vertical:
             header = assigned_block.table.header_data[Orientation.horizontal]
-            i= assigned_block.relative_range.column
+            i = assigned_block.relative_range.column
             header = "\n".join(
                 [str(header[j, i]) for j in range(header.shape[0])]
             )
-        else :
+        if assigned_block.orientation == Orientation.horizontal:
             header = assigned_block.table.header_data[Orientation.vertical]
             i = assigned_block.relative_range.row
             header = "\n".join(

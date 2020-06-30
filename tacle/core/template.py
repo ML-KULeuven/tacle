@@ -22,7 +22,7 @@ from tacle.indexing import Orientation, Typing, Block
 
 class ConstraintTemplate:
     def __init__(
-        self, name, print_format, source, filters, depends_on=None, target=None
+        self, name, print_format, source, filters, depends_on=None, target=None, word=None
     ):
         # type: (str, str, Source, List[Filter], Union[set, None], Union[Variable, None]) -> None
         self.name = name
@@ -33,6 +33,7 @@ class ConstraintTemplate:
         if depends_on is not None:
             self._depends_on |= depends_on
         self.target = target
+        self.word = word
 
     @property
     def filters(self):
@@ -190,9 +191,26 @@ class Aggregate(ConstraintTemplate):
         filters = [x_size_filter, filter_class(variables)]
         format_s = "{Y} = " + op_string.upper() + "({X}, " + or_string + ")"
         name = "{} ({})".format(op_string.lower(), or_string)
+
+        if op_string.lower() == "sum":
+            word = "cumulative"
+        elif op_string.lower() == "max":
+            word = "maximum"
+        elif op_string.lower() == "min":
+            word = "minimum"
+        elif op_string.lower() == "average":
+            word = "average"
+        elif op_string.lower() == "count":
+            word = "count"
+        elif op_string.lower() == "product":
+            word = "product"
+        else:
+            word = op_string.lower()
+
+
         # TODO Dependency only min max average
         super().__init__(
-            name, format_s, Source(variables), filters, {Equal(), Projection()}, self.y
+            name, format_s, Source(variables), filters, {Equal(), Projection()}, self.y, word
         )
 
     @property
@@ -542,7 +560,7 @@ class Projection(ConstraintTemplate):
             Partial([self.projected]),
         ]
         super().__init__(
-            "project", "{R} = PROJECT({P})", source, filters, None, self.result
+            "project", "{R} = PROJECT({P})", source, filters, None, self.result, word= "project"
         )
 
 
@@ -646,7 +664,7 @@ class Equal(ConstraintTemplate):
         variables = [self.first, self.second]
         source = Source(variables)
         filters = [SameLength(variables), SameType(variables)]
-        super().__init__("equal", "{O1} = {O2}", source, filters)
+        super().__init__("equal", "{O1} = {O2}", source, filters, word="equal")
 
 
 class EqualGroup(ConstraintTemplate):

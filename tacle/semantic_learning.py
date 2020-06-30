@@ -6,6 +6,7 @@ import random
 from spacy.tokens import Doc
 from typing import List
 from table_logger import TableLogger
+from collections import OrderedDict
 
 from .indexing import Table, Orientation, Range, Block
 from .core.solutions import Solutions
@@ -86,6 +87,12 @@ class WhitespaceTokenizer(object):
         return Doc(self.vocab, words=words, spaces=spaces)
 
 
+class DefaultListOrderedDict(OrderedDict):
+    def __missing__(self, k):
+        self[k] = []
+        return self[k]
+
+
 nlp = spacy.load("en_core_web_lg")
 nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
 
@@ -99,10 +106,37 @@ def clean(str):
 
 def get_template_nlp(templates):
     for template in templates:
-        nlp_dictionary[template] = nlp("".join(clean(template.name)))
+        nlp_dictionary[template] = nlp("".join(clean(template.word)))
+
+
+def random_templates(header, templates):
+    """This function is ranking template list based based on random score"""
+    # TODO handle multiple row header
+    # template_name = list(clean(template.name) for template in templates)
+    # print("The word is: {} \n The list is this: {}".format(header, template_name))
+    dictionary = dict()
+    ordered = []
+
+    if header:
+        word_token = nlp(header)
+    else:
+        return templates
+
+    for template in templates:
+        dictionary[template] = random.randint(1, len(templates))
+
+    sorted_dictionary = ((k, dictionary[k]) for k in sorted(dictionary, key=dictionary.get, reverse=True))
+
+    for k, v in sorted_dictionary:
+        # print(k, v)
+        ordered.append(k)
+    templates = ordered
+
+    return templates
 
 
 def rank_templates(header, templates):
+    """"This function is ranking template list based on the word similarity with header word and template.name"""
     # TODO handle multiple row header
     #template_name = list(clean(template.name) for template in templates)
     # print("The word is: {} \n The list is this: {}".format(header, template_name))
@@ -115,6 +149,18 @@ def rank_templates(header, templates):
         return templates
 
     if word_token and word_token.vector_norm:
+        for token in word_token:
+            if token.dep_ == "amod":
+                for template in templates:
+                    template_tokens = nlp_dictionary[template]
+                    dictionary[template] = template_tokens.similarity(word_token)
+                break
+            elif token.dep_ == "ROOT":
+                for template in templates:
+                    template_tokens = nlp_dictionary[template]
+                    dictionary[template] = template_tokens.similarity(word_token)
+
+        """
         for template in templates:
             template_tokens = nlp_dictionary[template]
             # if not a noun phrase
@@ -125,16 +171,8 @@ def rank_templates(header, templates):
                 count = 0
                 for chunk in template_tokens.noun_chunks:
                     count += 1
-                    #print(
-                    #chunk.text,
-                    #chunk.has_vector,
-                    #chunk.similarity(nlp("total")),
-                    #chunk.vector_norm,
-                    #chunk.root.text,
-                    #chunk.root.dep_,
-                    #chunk.root.head.text)
                     dictionary[template] = (dictionary[template]+chunk.similarity(word_token))/count
-
+        """
         sorted_dictionary = ((k, dictionary[k]) for k in sorted(dictionary, key=dictionary.get, reverse=True))
 
         for k, v in sorted_dictionary:
@@ -182,6 +220,7 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
     )  # solutions = {}; properties = {}; canon_map = dict(); constraints = []  # type: List[Constraint]
 
     #t_origin = time.time()
+    word_templates = dict()
 
     supported = []
     unsupported_assignment = []
@@ -246,7 +285,8 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
             )
 
             o_start = time.time()
-            ordered = rank_templates(header, supported)
+            # ordered = random_templates(header, supported)
+            ordered = rank_templates(header, supported) # the original semantic tacle ordering
             # randomly picked one constraint
             # ordered = [random.choice(supported)]
             # hand_engineered for magic_ice_cream.csv
@@ -254,7 +294,9 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
             o_stop = time.time()
             o_time = o_stop - o_start
 
-            logger.debug("{}--> {}".format(header, list(order.name for order in ordered)))
+            print("{}--> {}".format(header, list(order.name for order in ordered)))
+
+            word_templates[header] = list(template.word for template in ordered)
 
             # Adapting blocks by removing current column
             new_blocks = []
@@ -272,6 +314,9 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
                 logger.debug(
                     "Searching for template of type {}".format(template.name)
                 )
+
+                # word_templates[header].append(template.word)
+
                 t_start = time.time()
 
                 partial_assignment = {}
@@ -309,10 +354,10 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
                                     solve=t_end - t_assign)
                 )
 
-                tbl_assign = t_assign - t_start
-                tbl_wi_assign = t_assign - t_initial_assign
-                tbl_solve = t_end - t_assign
-                tbl(header, template.name, domain, found, tbl_assign, tbl_wi_assign, tbl_solve)
+                #tbl_assign = t_assign - t_start
+                #tbl_wi_assign = t_assign - t_initial_assign
+                #tbl_solve = t_end - t_assign
+                #tbl(header, template.name, domain, found, tbl_assign, tbl_wi_assign, tbl_solve)
 
                 if len(found) > 0:
                     # TODO handle when two constraint exist in one row
@@ -340,9 +385,17 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
             order_time += o_time
             #print for random/hand engineered constaint
             #tbl(header, ordered[0].name, c_time, o_time, c_assign, c_wi_assign, c_solve)
-            tbl(header, "", c_time, o_time, c_assign, c_wi_assign, c_solve)
+            #tbl(header, "", c_time, o_time, c_assign, c_wi_assign, c_solve)
 
     total_time = time.time() - t_origin
+
+    f = open("C:/Users/safat/OneDrive/Desktop/Thesis/Ranking_based_automation/sementic-tacle/word_dump.txt", "a+")
+    for word, templates_list in word_templates.items():
+        print("I am printing in word_dump")
+        f.write("{}:\t {}\t\n".format(word, templates_list))
+        # f.write("{}:\t {}\t\n".format(word, templates_list))
+    f.close()
+
     logger.debug(
         "Total: {0:.3f} (Assign: {1:.3f}, Post Initial Assign {1:.3f}, Solve: {2:.3f}, Add: {3:.3f})".format(
             total_time, assign, post, solve, add
@@ -350,5 +403,8 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
     )
 
     logger.info("Total time {0:.3f}".format(total_time))
-    print("Total time {0:.3f}, without ordering {1:.3f}".format(total_time, (total_time - order_time)))
+    print("Total time {0:.3f},\n"
+          "Time without ordering {1:.3f},\n"
+          "Assign Time {2:3f},\n"
+          "Solve time {3:3f}".format(total_time, (total_time - order_time), assign, solve))
     return solutions

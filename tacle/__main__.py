@@ -1,5 +1,6 @@
 import argparse
 import logging
+import time
 
 from .indexing import Orientation
 from tacle import learn_from_file, filter_constraints, tables_from_csv, save_json_file
@@ -33,6 +34,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-s", "--semantic", help="Run in semantic mode", action="store_true"
+    )
+    parser.add_argument(
+        "-r", "--random", help="Run in random mode", action="store_true"
     )
     parser.add_argument(
         "-v", "--verbose", help="Increase the verbosity level", action="store_true"
@@ -82,7 +86,9 @@ if __name__ == "__main__":
 
     if args.verbose or args.debug or args.tables_only:
         for table in tables:
-            print("Table {}, {} \nHeader {}".format(table.name, table.range, table.header_ranges))
+            print("Table {}, {} \nHeader {} \nHeader Data{}".format(table.name, table.range, table.header_ranges,
+                                                                    table.header_data))
+            print(table.orientations)
             for orientation in table.orientations:
                 print(
                     ", ".join(

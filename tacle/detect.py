@@ -82,25 +82,26 @@ def detect_table_ranges(
         cells = 0
 
         if orientation is None or orientation == Orientation.vertical:
-            for column_header in range(t_range.columns):
+            for column_header in range(t_range.columns):#header for each column
                 row_header = max(column_headers[column_header:])
-                cell_score = (t_range.rows - row_header) * (
-                    t_range.columns - column_header
-                )
+                cell_score = (t_range.rows - row_header) * (t_range.columns - column_header)
                 if cell_score > cells:
                     cells = cell_score
                     headers = (column_header, row_header)
+                    print(f"column's header: {headers}")
+                    # print(f"printing column_header {column_header}, row_header {row_header}")
 
         if orientation is None or orientation == Orientation.horizontal:
-            for row_header in range(t_range.rows):
+            for row_header in range(t_range.rows): #header for each row
                 column_header = max(row_headers[row_header:])
-                cell_score = (t_range.rows - row_header) * (
-                    t_range.columns - column_header
-                )
+                cell_score = (t_range.rows - row_header) * (t_range.columns - column_header)
                 if cell_score > cells:
                     cells = cell_score
                     headers = (column_header, row_header)
+                    print(f"row's header: {headers}")
+                    # print(f"printing column_header {column_header}, row_header {row_header}")
 
+        print(headers)
         # TODO Is this correct?
         selected = Range(
             t_range.x0 + headers[0],
@@ -108,6 +109,7 @@ def detect_table_ranges(
             t_range.columns - headers[0],
             t_range.rows - headers[1],
         )
+
         t_r = t_range.intersect(selected)
         t_h = {
             Orientation.horizontal: Range(
@@ -123,8 +125,6 @@ def detect_table_ranges(
                 t_range.rows - headers[1],
             ),
         }
-
-        # t_range.minus(selected)
 
         if (
             (min_cells is None or t_r.columns * t_r.rows >= min_cells)

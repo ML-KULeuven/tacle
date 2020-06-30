@@ -37,27 +37,26 @@ logger = logging.getLogger(__name__)
 def get_default_templates():
     constraint_list = [
         Equal(),
-        # EqualGroup(),
-        Permutation(),
-        Series(),
-        AllDifferent(),
+        # Permutation(),
+        # Series(),
+        # AllDifferent(),
         Projection(),
-        Rank(),
-        ForeignKey(),
-        Lookup(),
-        FuzzyLookup(),
-        RunningTotal(),
-        ForeignProduct(),
-        Product(),
-        Diff(),
-        PercentualDiff(),
-        SumProduct(),
-        Ordered(),
-        MutualExclusiveVector(),
+        # Rank(),
+        # ForeignKey(),
+        # Lookup(),
+        # FuzzyLookup(),
+        # RunningTotal(),
+        # ForeignProduct(),
+        # Product(),
+        # Diff(),
+        # PercentualDiff(),
+        # SumProduct(),
+        # Ordered(),
+        # MutualExclusiveVector(),
     ]
-    constraint_list += MutualExclusivity.instances()
+    # constraint_list += MutualExclusivity.instances()
     constraint_list += Aggregate.instances()
-    constraint_list += ConditionalAggregate.instances()
+    # constraint_list += ConditionalAggregate.instances()
     return constraint_list
 
 
@@ -153,7 +152,7 @@ def main(tables, templates=None, solve_timeout=None):
 
     total_time = time.time() - t_origin
     logger.debug(
-        "Total: {0:.3f} (Assign: {1:.3f}, Solve: {2:.3f}, Add: {3:.3f})".format(
+        "Total: {0:.4f} (Assign: {1:.4f}, Solve: {2:.4f}, Add: {3:.4f})".format(
             total_time, assign, solve, add
         )
     )
