@@ -137,6 +137,25 @@ def detect_table_ranges(
             ),
         }
 
+
+        # if no horizontal or vertical header fetch header from previous 1D table
+        if table_ranges:
+            if t_h[Orientation.horizontal].cells == 0:
+                t_r_last, t_h_last = table_ranges[-1]
+                t_r_last2, t_h_last2 = table_ranges[-2] if len(table_ranges) >= 2 else (None, None)
+                if t_r_last.columns == t_r.columns and t_r_last.height == 1:
+                    t_h[Orientation.horizontal] = t_r_last
+                elif t_r_last2 and t_r_last2.columns == t_r.columns and t_r_last2.height == 1:
+                    t_h[Orientation.horizontal] = t_r_last2
+
+            if t_h[Orientation.vertical].cells == 0:
+                t_r_last, t_h_last = table_ranges[-1]
+                t_r_last2, t_h_last2 = table_ranges[-2] if len(table_ranges) >= 2 else (None, None)
+                if t_r_last.rows == t_r.rows and t_r_last.width == 1:
+                    t_h[Orientation.vertical] = t_r_last
+                elif t_r_last2 and t_r_last2.rows == t_r.rows and t_r_last2.width == 1:
+                    t_h[Orientation.vertical] = t_r_last2
+
         if (
             (min_cells is None or t_r.columns * t_r.rows >= min_cells)
             and (min_rows is None or t_r.rows >= min_rows)
