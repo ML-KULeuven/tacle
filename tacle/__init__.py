@@ -48,9 +48,15 @@ def save_heaeder(templates, text_dict):
     f.close()
 
 
-def save_json_file(templates, text_dict, csv_file):
+def save_json_file(templates, text_dict, csv_file, orientation=None, min_cells=None, min_rows=None, min_columns=None):
     import json
     lst = []
+    settings = [{
+        "orientation": orientation,
+        "min_cells": min_cells,
+        "min_rows": min_rows,
+        "min_columns": min_columns
+    }]
 
     for template in templates:
         target = template.template.target.name \
@@ -75,10 +81,14 @@ def save_json_file(templates, text_dict, csv_file):
         dictionary = {
                 "word": "{}".format(str(header)),
                 "template": "{}".format(template.template.name),
+                "FalsePositive": "{}".format("Yes" if template.template.word in ['equal'] else "No"),
                 "location": "{}".format(template.assignment)
         }
-        lst.append(dictionary)
-    dictionary = {"header": lst}
+        if template.template.name != 'equal':
+            lst.append(dictionary)
+
+    dictionary = {"settings": settings,
+                  "header": lst}
 
     import os
     base = os.path.splitext(csv_file)[0]
