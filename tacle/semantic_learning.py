@@ -142,7 +142,7 @@ def rank_templates(header, templates):
     # print("The word is: {} \n The list is this: {}".format(header, template_name))
     dictionary = dict()
     ordered = []
-
+    header = clean(header.strip())
     if header:
         word_token = nlp(header)
     else:
@@ -199,10 +199,19 @@ def make_column_block(table, column):
     )
 
 
+def make_row_block(table, row):
+    block_range = Range(0, row, table.range.width, 1)
+    horizontal = Orientation.horizontal
+    return Block(
+        table, block_range, horizontal, [table.get_vector_type(row, horizontal)]
+    )
+
+
 def split_block(block, index):
     blocks = []
     if block.vector_count() == 1:
-        blocks = [block]
+        # blocks = [block]
+        pass
     elif index == 0:
         blocks = [block.sub_block(index + 1, block.vector_count() - 1 - index)]
     elif index == block.vector_count() - 1:
@@ -260,140 +269,264 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
     blocks = [block for table in tables for block in table.blocks]
 
     for table in tables:
-        if Orientation.vertical not in table.orientations:
-            continue
-
-        header_data = table.header_data[Orientation.horizontal]
-        print(
-            "Table - {}".format(table.name),
-            header_data,
-            table.header_ranges[Orientation.horizontal],
-        )
-
-        # For each column in the table
-        for i in range(table.columns):
-            c_start = time.time()
-            c_assign = assign
-            c_post = post
-            c_solve = solve
-            c_add = add
-
-            target = make_column_block(table, i)
-            # print("{}--> {}".format(headers[0][i],table.get_vector_data(i, Orientation.vertical)))
-            header = "\n".join(
-                [str(header_data[j, i]) for j in range(header_data.shape[0])]
+        if Orientation.horizontal in table.orientations:
+            header_data = table.header_data[Orientation.vertical]
+            print(
+                "Table - {}".format(table.name),
+                header_data,
+                table.header_ranges[Orientation.vertical],
             )
 
-            o_start = time.time()
-            # ordered = random_templates(header, supported)
-            ordered = rank_templates(header, supported) # the original semantic tacle ordering
-            # randomly picked one constraint
-            # ordered = [random.choice(supported)]
-            # hand_engineered for magic_ice_cream.csv
-            # ordered = hand_engineering(header, supported)
-            o_stop = time.time()
-            o_time = o_stop - o_start
+            # For each row in the table
+            for i in range(table.rows):
+                r_start = time.time()
+                r_assign = assign
+                r_post = post
+                r_solve = solve
+                r_add = add
 
-            print("{}--> {}".format(header, list(order.name for order in ordered)))
-
-            word_templates[header] = list(template.word for template in ordered)
-
-            # Adapting blocks by removing current column
-            new_blocks = []
-            for block in blocks:
-                new_blocks.append(block)
-                if block.is_sub_block(target):
-                    relative_index = target.vector_index() - block.vector_index()
-                    splited_blocks = split_block(block, relative_index)
-                    new_blocks.remove(block)
-                    for b in splited_blocks:
-                        new_blocks.append(b)
-
-            # print(f"Block after: {new_blocks}")
-            for template in ordered:
-                logger.debug(
-                    "Searching for template of type {}".format(template.name)
+                target = make_row_block(table, i)
+                # print("{}--> {}".format(headers[0][i],table.get_vector_data(i, Orientation.vertical)))
+                header = "\n".join(
+                    [str(header_data[i, j]) for j in range(header_data.shape[1])]
                 )
 
-                # word_templates[header].append(template.word)
+                o_start = time.time()
+                # ordered = random_templates(header, supported)
+                ordered = rank_templates(header, supported)  # the original semantic tacle ordering
+                # randomly picked one constraint
+                # ordered = [random.choice(supported)]
+                # hand_engineered for magic_ice_cream.csv
+                # ordered = hand_engineering(header, supported)
+                o_stop = time.time()
+                o_time = o_stop - o_start
 
-                t_start = time.time()
+                # print("{}--> {}".format(header, list(order.name for order in ordered)))
 
-                partial_assignment = {}
-                if template.target:
-                    # pre-check type consistency
-                    domain = target if any(st in template.target.types for st in target.vector_types) else None
+                word_templates[header] = list(template.word for template in ordered)
+
+                # Adapting blocks by removing current column
+                new_blocks = []
+                for block in blocks:
+
+                    if block.is_sub_block(target):
+                        if target.orientation == block.orientation:
+                            relative_index = target.vector_index() - block.vector_index()
+                            splited_blocks = split_block(block, relative_index)
+                            for b in splited_blocks:
+                                new_blocks.append(b)
+                    else:
+                        new_blocks.append(block)
+                # print(f"Block after: {new_blocks}")
+                for template in ordered:
                     logger.debug(
-                        "The target for template {}".format(domain)
+                        "Searching for template of type {}".format(template.name)
                     )
-                    if domain is None:
-                        continue
-                    partial_assignment = {template.target.name: target}
 
-                #logger.debug("The target for template {}".format(domain))
-                t_initial_assign = time.time()
+                    # word_templates[header].append(template.word)
 
-                assignments = manager.find_assignments(
-                    template, new_blocks, solutions, [partial_assignment]
-                )
-                t_assign = time.time()
-                found = list(manager.find_solutions(template, assignments, solutions))
-                logger.debug("found solution: {}".format(found))
+                    t_start = time.time()
 
-                t_end = time.time()
-                assign += t_assign - t_start
-                post += t_assign - t_initial_assign
-                solve += t_end - t_assign
-                add += time.time() - t_end
+                    partial_assignment = {}
+                    if template.target:
+                        # pre-check type consistency
+                        domain = target if any(st in template.target.types for st in target.vector_types) else None
+                        logger.debug(
+                            "The target for template {}".format(domain)
+                        )
+                        if domain is None:
+                            continue
+                        partial_assignment = {template.target.name: target}
 
-                f_string = "Assignment time: {assign:.3f}, " \
-                           "Without initial Assignment time: {after_initial:.3f}, " \
-                           "solving time: {solve:.3f}] "
+                    # logger.debug("The target for template {}".format(domain))
+                    t_initial_assign = time.time()
+
+                    assignments = manager.find_assignments(
+                        template, new_blocks, solutions, [partial_assignment]
+                    )
+                    t_assign = time.time()
+                    found = list(manager.find_solutions(template, assignments, solutions))
+                    logger.debug("found solution: {}".format(found))
+
+                    t_end = time.time()
+                    assign += t_assign - t_start
+                    post += t_assign - t_initial_assign
+                    solve += t_end - t_assign
+                    add += time.time() - t_end
+
+                    f_string = "Assignment time: {assign:.3f}, " \
+                               "Without initial Assignment time: {after_initial:.3f}, " \
+                               "solving time: {solve:.3f}] "
+                    logger.debug(
+                        f_string.format(assign=t_assign - t_start, after_initial=t_assign - t_initial_assign,
+                                        solve=t_end - t_assign)
+                    )
+
+                    # tbl_assign = t_assign - t_start
+                    # tbl_wi_assign = t_assign - t_initial_assign
+                    # tbl_solve = t_end - t_assign
+                    # tbl(header, template.name, domain, found, tbl_assign, tbl_wi_assign, tbl_solve)
+
+                    if len(found) > 0:
+                        # TODO handle when two constraint exist in one row
+                        # e.g. all-different, sum(row) for column 6
+                        solutions.add(template, found)
+                        break
+
+                r_end = time.time()
+                r_time = r_end - r_start
+                """
                 logger.debug(
-                    f_string.format(assign=t_assign - t_start, after_initial=t_assign - t_initial_assign,
-                                    solve=t_end - t_assign)
+                    "Column time: {0:.3f}"
+                    " (NLP time: {1:.3f}, "
+                    "Assign: {2:.3f}, "
+                    "Post Initial Assign {3:.3f}, "
+                    "Solve: {4:.3f}, "
+                    "Add: {5:.3f})".format(
+                        r_time, o_time, assign - r_assign, post - c_post, solve - c_solve, add - c_add
+                    )
                 )
 
-                #tbl_assign = t_assign - t_start
-                #tbl_wi_assign = t_assign - t_initial_assign
-                #tbl_solve = t_end - t_assign
-                #tbl(header, template.name, domain, found, tbl_assign, tbl_wi_assign, tbl_solve)
+                c_assign = assign - c_assign
+                c_wi_assign = post - c_post
+                c_solve = solve - c_solve
 
-                if len(found) > 0:
-                    # TODO handle when two constraint exist in one row
-                    # e.g. all-different, sum(row) for column 6
-                    solutions.add(template, found)
-                    break
+                order_time += o_time
+                # print for random/hand engineered constaint
+                # tbl(header, ordered[0].name, c_time, o_time, c_assign, c_wi_assign, c_solve)
+                # tbl(header, "", c_time, o_time, c_assign, c_wi_assign, c_solve)
+                """
+        else:
 
-            c_end = time.time()
-            c_time = c_end - c_start
-            logger.debug(
-                "Column time: {0:.3f}"
-                " (NLP time: {1:.3f}, "
-                "Assign: {2:.3f}, "
-                "Post Initial Assign {3:.3f}, "
-                "Solve: {4:.3f}, "
-                "Add: {5:.3f})".format(
-                    c_time, o_time, assign - c_assign, post - c_post, solve - c_solve, add - c_add
-                )
+            header_data = table.header_data[Orientation.horizontal]
+            print(
+                "Table - {}".format(table.name),
+                header_data,
+                table.header_ranges[Orientation.horizontal],
             )
 
-            c_assign = assign - c_assign
-            c_wi_assign = post - c_post
-            c_solve = solve - c_solve
+            # For each column in the table
+            for i in range(table.columns):
+                c_start = time.time()
+                c_assign = assign
+                c_post = post
+                c_solve = solve
+                c_add = add
 
-            order_time += o_time
-            #print for random/hand engineered constaint
-            #tbl(header, ordered[0].name, c_time, o_time, c_assign, c_wi_assign, c_solve)
-            #tbl(header, "", c_time, o_time, c_assign, c_wi_assign, c_solve)
+                target = make_column_block(table, i)
+                # print("{}--> {}".format(headers[0][i],table.get_vector_data(i, Orientation.vertical)))
+                header = "\n".join(
+                    [str(header_data[j, i]) for j in range(header_data.shape[0])]
+                )
+
+                o_start = time.time()
+                # ordered = random_templates(header, supported)
+                ordered = rank_templates(header, supported) # the original semantic tacle ordering
+                # randomly picked one constraint
+                # ordered = [random.choice(supported)]
+                # hand_engineered for magic_ice_cream.csv
+                # ordered = hand_engineering(header, supported)
+                o_stop = time.time()
+                o_time = o_stop - o_start
+
+                # print("{}--> {}".format(header, list(order.name for order in ordered)))
+
+                word_templates[header] = list(template.word for template in ordered)
+
+                # Adapting blocks by removing current column
+                new_blocks = []
+                for block in blocks:
+                    new_blocks.append(block)
+                    if block.is_sub_block(target):
+                        relative_index = target.vector_index() - block.vector_index()
+                        splited_blocks = split_block(block, relative_index)
+                        new_blocks.remove(block)
+                        for b in splited_blocks:
+                            new_blocks.append(b)
+
+                # print(f"Block after: {new_blocks}")
+                for template in ordered:
+                    logger.debug(
+                        "Searching for template of type {}".format(template.name)
+                    )
+
+                    # word_templates[header].append(template.word)
+
+                    t_start = time.time()
+
+                    partial_assignment = {}
+                    if template.target:
+                        # pre-check type consistency
+                        domain = target if any(st in template.target.types for st in target.vector_types) else None
+                        logger.debug(
+                            "The target for template {}".format(domain)
+                        )
+                        if domain is None:
+                            continue
+                        partial_assignment = {template.target.name: target}
+
+                    #logger.debug("The target for template {}".format(domain))
+                    t_initial_assign = time.time()
+
+                    assignments = manager.find_assignments(
+                        template, new_blocks, solutions, [partial_assignment]
+                    )
+                    t_assign = time.time()
+                    found = list(manager.find_solutions(template, assignments, solutions))
+                    logger.debug("found solution: {}".format(found))
+
+                    t_end = time.time()
+                    assign += t_assign - t_start
+                    post += t_assign - t_initial_assign
+                    solve += t_end - t_assign
+                    add += time.time() - t_end
+
+                    f_string = "Assignment time: {assign:.3f}, " \
+                               "Without initial Assignment time: {after_initial:.3f}, " \
+                               "solving time: {solve:.3f}] "
+                    logger.debug(
+                        f_string.format(assign=t_assign - t_start, after_initial=t_assign - t_initial_assign,
+                                        solve=t_end - t_assign)
+                    )
+
+                    #tbl_assign = t_assign - t_start
+                    #tbl_wi_assign = t_assign - t_initial_assign
+                    #tbl_solve = t_end - t_assign
+                    #tbl(header, template.name, domain, found, tbl_assign, tbl_wi_assign, tbl_solve)
+
+                    if len(found) > 0:
+                        # TODO handle when two constraint exist in one row
+                        # e.g. all-different, sum(row) for column 6
+                        solutions.add(template, found)
+                        break
+
+                c_end = time.time()
+                c_time = c_end - c_start
+                logger.debug(
+                    "Column time: {0:.3f}"
+                    " (NLP time: {1:.3f}, "
+                    "Assign: {2:.3f}, "
+                    "Post Initial Assign {3:.3f}, "
+                    "Solve: {4:.3f}, "
+                    "Add: {5:.3f})".format(
+                        c_time, o_time, assign - c_assign, post - c_post, solve - c_solve, add - c_add
+                    )
+                )
+
+                c_assign = assign - c_assign
+                c_wi_assign = post - c_post
+                c_solve = solve - c_solve
+
+                order_time += o_time
+                #print for random/hand engineered constaint
+                #tbl(header, ordered[0].name, c_time, o_time, c_assign, c_wi_assign, c_solve)
+                #tbl(header, "", c_time, o_time, c_assign, c_wi_assign, c_solve)
 
     total_time = time.time() - t_origin
 
     f = open("C:/Users/safat/OneDrive/Desktop/Thesis/Ranking_based_automation/sementic-tacle/word_dump.txt", "a+")
     for word, templates_list in word_templates.items():
-        print("I am printing in word_dump")
         f.write("{}:\t {}\t\n".format(word, templates_list))
-        # f.write("{}:\t {}\t\n".format(word, templates_list))
     f.close()
 
     logger.debug(
