@@ -1,9 +1,9 @@
-from typing import List, Tuple, Any, Union, Optional, Dict
+from typing import List, Tuple, Union, Optional, Dict
 
 import numpy
 import numpy as np
 
-from .indexing import Typing, Range, Orientation, Table, OrientationType
+from .indexing import Typing, Range, Orientation, OrientationType
 
 
 def get_headers_count(table_range: Range, table_type_data, orientation):
@@ -30,7 +30,7 @@ def get_headers_count(table_range: Range, table_type_data, orientation):
 
 
 def get_type_data(data):
-    data = numpy.array(data, dtype=object)
+    data = numpy.array(data, dtype=object, ndmin=2)
     return numpy.vectorize(Typing.detect_type)(data)
 
 
