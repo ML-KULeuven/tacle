@@ -16,7 +16,7 @@ from tacle.core.template import (
     MutualExclusiveVector,
     Product,
     Diff,
-)
+    DateDifference)
 
 
 class UnsupportedFormula(BaseException):
@@ -108,6 +108,9 @@ def evaluate_template(template, assignment):
 
         x = assignment[Rank.x].squeeze()
         return np.array(rank_data(x))
+
+    elif isinstance(template, DateDifference):
+        pass
 
     elif template.target:
         raise UnsupportedFormula(template)

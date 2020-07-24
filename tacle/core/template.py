@@ -657,3 +657,12 @@ class EqualGroup(ConstraintTemplate):
         source = Source(variables)
         filters = [SizeFilter(variables, vectors=2)]
         super().__init__("equal-group", "EQUAL({X})", source, filters)
+
+
+class DateDifference(VectorOperation):
+    def __init__(self):
+        variables = self.list_variables()
+        source = Source(variables)
+        filters = [SameLength(variables)]
+        super().__init__("date-difference", "DIFF({Date1}, {Date2}) = {Difference}", source, filters, symmetric=True)
+

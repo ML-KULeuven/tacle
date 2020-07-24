@@ -2,6 +2,8 @@ import re
 from typing import Any, Optional, List, Dict
 
 import numpy as np
+from dateutil.parser import parse
+from openpyxl.utils import datetime
 
 
 class Typing(object):
@@ -9,6 +11,7 @@ class Typing(object):
     int = "int"
     float = "float"
     string = "string"
+    date = "date"
     currency = "currency"
     percentage = "percentage"
     nested_index = "nested_index"
@@ -31,6 +34,7 @@ class Typing(object):
             Typing.currency: Typing.float,
             Typing.percentage: Typing.float,
             Typing.nested_index: Typing.string,
+            # Typing.date: Typing.string,  # Should date be subtype of string?
         }
 
     @staticmethod
@@ -45,7 +49,7 @@ class Typing(object):
         hierarchy = Typing.hierarchy()
         return (
             Typing.soft_root(hierarchy[cell_type])
-            if cell_type not in [Typing.int, Typing.string, Typing.float]
+            if cell_type not in [Typing.int, Typing.string, Typing.float, Typing.date]
             and cell_type in hierarchy
             else cell_type
         )
@@ -147,7 +151,11 @@ class Typing(object):
                 raise RuntimeError("Unclear how to deal with NaN here")
             return Typing.int if float(value) == int(value) else Typing.float
         except ValueError:
-            return Typing.string
+            try:
+                parse(value)
+                return Typing.date
+            except ValueError:
+                return Typing.string
 
     @staticmethod
     def cast(cell_type, value):
@@ -163,7 +171,6 @@ class Typing(object):
             except ValueError:
                 print("Could not convert percentage {}".format(value))
                 raise
-
         elif cell_type == Typing.currency:
             return Typing.cast(
                 Typing.float, re.sub(Typing.currency_symbols, "", str(value))
@@ -181,6 +188,8 @@ class Typing(object):
             if cell_type == Typing.int and not np.isnan(converted):
                 converted = int(converted)
             return converted
+        elif cell_type == Typing.date:
+            return parse(value)
         elif cell_type == Typing.unknown:
             return "#?"
         raise ValueError("Unexpected cell type: " + cell_type)
