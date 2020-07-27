@@ -26,7 +26,7 @@ def clean(string):
 
 
 def create_word_vector(file):
-    vector_file = open('C:/Users/safat/OneDrive/Desktop/Thesis/Ranking_based_automation/sementic-tacle/word_vector.csv', 'a+')
+    vector_file = open('ML/word_vector.csv', 'a+')
 
     with open(file, "r") as reader:
         for line in reader.readlines():

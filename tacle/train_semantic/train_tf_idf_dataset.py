@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from sklearn.feature_extraction.text import TfidfVectorizer
-from ml_models import train_knn, train_logisticReg, train_naiveBayes, train_decisionTree
+#from ml_models import train_knn, train_logisticReg, train_naiveBayes, train_decisionTree
 
 
 def create_tf_idf_vector(file):
@@ -18,6 +18,8 @@ def create_tf_idf_vector(file):
     X = df['text']
     y = df['template_class']
 
+
+    """
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=.3, stratify=y)
 
     tv = TfidfVectorizer(max_features=300)
@@ -28,6 +30,12 @@ def create_tf_idf_vector(file):
     X_test = pd.DataFrame(X_test.toarray(), columns=tv.get_feature_names()).add_prefix('TFIDF_')
 
     return X_train, X_test, y_train, y_test
+    """
+    tv = TfidfVectorizer(max_features=17)
+    X = tv.fit_transform(X)
+    X = pd.DataFrame(X.toarray(), columns=tv.get_feature_names()).add_prefix('TFIDF_')
+
+    return X, y
 
 
 if __name__ == '__main__':
