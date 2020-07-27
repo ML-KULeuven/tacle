@@ -31,22 +31,25 @@ class DefaultListOrderedDict(OrderedDict):
         return self[k]
 
 
-def main(directory, semantic=True, min_rows=None, min_columns=None, min_cells=None, orientation=None):
+def main(directory, semantic=False, min_rows=None, min_columns=None, min_cells=None, orientation=None, csv_list=None):
     time_per_file = []
     ctime = 0
     count_file = 0
 
+    mycwd = os.getcwd()
     os.chdir(directory)
-    for csv_file in glob.glob("*.csv"):
+    if not csv_list:
+        csv_list = list(glob.glob("*.csv"))
+
+    for csv_file in csv_list:
         start_time = time.time()
         count_file += 1
         if len(time_per_file) < count_file:
             time_per_file.append({'file': csv_file, 'time': 0})
-        print(csv_file)
 
         json_file = (os.path.basename(csv_file.rstrip(os.sep)).split("."))[-2]
-
-        truth_location = directory+"/truth/"
+        #truth_location = directory+"/truth/"
+        truth_location = "truth/"
 
         with open(truth_location + json_file + '.json') as f:
             data = json.load(f)
@@ -121,7 +124,7 @@ def main(directory, semantic=True, min_rows=None, min_columns=None, min_cells=No
 
         text_dict = DefaultListOrderedDict()
         save_json_file(constraints, text_dict, csv_file)
-        print(*list(map(str, constraints)), sep="\n")
+        # logger.debug(*list(map(str, constraints)), sep="\n")
 
         end_time = time.time()
         ctime += (end_time - start_time)
@@ -134,9 +137,10 @@ def main(directory, semantic=True, min_rows=None, min_columns=None, min_cells=No
         destination = directory + "/Accept/" + csv_file
         shutil.move(current, destination)
         """
-    print(f"Average time {ctime / count_file}")
-    # print(time_per_file)
 
+    logger.debug(f"Average time {ctime / count_file}")
+    # print(time_per_file)
+    os.chdir(mycwd)
     return time_per_file
 
 
@@ -170,7 +174,7 @@ if __name__ == '__main__':
     for index, file in enumerate(dictionary):
         file['time'] = file_average_time[index]
 
-    print(dictionary)
+    logger.debug(dictionary)
 
     # main(**vars(arg_parser().parse_args()))  # run through the whole directory of data
 

@@ -47,7 +47,7 @@ def main(directory):
 
     f = open("../dictionary.txt", "w+")
     for k in text_dict.keys():
-        # f.write("{}:\t {}\t\n".format(k, list(set(text_dict[k]))))
+        # f.write("{}:\t {}\t\k".format(k, list(set(text_dict[k]))))
         f.write("{}:\t {}\t\n".format(k, text_dict[k]))
     f.close()
 

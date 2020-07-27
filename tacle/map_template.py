@@ -18,8 +18,19 @@ class DefaultListOrderedDict(OrderedDict):
         return self[k]
 
 
-def main(directory):
+def main(directory, file_list=None):
     text_dict = DefaultListOrderedDict()
+    mycwd = os.getcwd()
+
+    if not file_list:
+        json_list = list(glob.glob("*.json"))
+    else:
+        json_list = []
+        for csv_file in file_list:
+            file = (os.path.basename(csv_file.rstrip(os.sep)).split("."))[-2]
+            file = file + ".json"
+            json_list.append(file)
+
     with open('dictionary.txt', 'r+') as reader:
         for line in reader.readlines():
             text = line.split("\t")
@@ -31,8 +42,9 @@ def main(directory):
                 text_dict[key].append(t)
 
     os.chdir(directory)
-    for json_file in glob.glob("*.json"):
-        print(json_file)
+    os.chdir("truth")
+    for json_file in json_list:
+        # print(json_file)
 
         with open(json_file) as f:
             data = json.load(f)
@@ -41,7 +53,9 @@ def main(directory):
                 if header['FalsePositive'] == "No":
                     text_dict[header['template']].append(re.sub('[- ]', '_', header['word']))
 
-    f = open("../../dictionary.txt", "w+")
+    os.chdir(mycwd)
+
+    f = open("dictionary.txt", "w+")
     for k in text_dict.keys():
         f.write("{}:\t {}\t\n".format(k, text_dict[k]))
     f.close()

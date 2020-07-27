@@ -90,7 +90,7 @@ def clean_text(string):
 
 
 def clean(string):
-    string = string.replace('\\n', ' ')
+    string = string.replace('\\k', ' ')
     string = re.sub('[- ]', '_', string)
     string = re.sub('[\W]+', '', string)
     string = re.sub('[_]+', ' ', string)

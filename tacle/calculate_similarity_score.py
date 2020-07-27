@@ -28,7 +28,7 @@ template_lst = []
 word_lst = []
 
 
-def read_dictionary(dictionary= "dictionary.txt"):
+def read_dictionary(dictionary):
     with open(dictionary, 'r+') as reader:
         for line in reader.readlines():
             # reading the keys
@@ -50,7 +50,7 @@ def read_dictionary(dictionary= "dictionary.txt"):
     print(word_lst)
 
 
-def calculate_simirarity():
+def rank_template():
     nlp = spacy.load("en_core_web_lg")
     nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
 
@@ -91,7 +91,7 @@ def store_in_csv():
     writer = csv.DictWriter(open("chunk_sim.csv", 'w'), fieldnames=fieldnames, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     writer.writeheader()
 
-    word_dict = calculate_simirarity()
+    word_dict = rank_template()
 
     #Calculating ranking score
     with open('dictionary.txt', 'r+') as reader:
@@ -128,5 +128,5 @@ def store_in_csv():
 
 
 if __name__ == "__main__":
-    read_dictionary()
+    read_dictionary("dictionary.txt")
     store_in_csv()

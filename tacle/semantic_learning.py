@@ -113,7 +113,7 @@ def random_templates(header, templates):
     """This function is ranking template list based based on random score"""
     # TODO handle multiple row header
     # template_name = list(clean(template.name) for template in templates)
-    # print("The word is: {} \n The list is this: {}".format(header, template_name))
+    # print("The word is: {} \k The list is this: {}".format(header, template_name))
     dictionary = dict()
     ordered = []
 
@@ -139,7 +139,7 @@ def rank_templates(header, templates):
     """"This function is ranking template list based on the word similarity with header word and template.name"""
     # TODO handle multiple row header
     #template_name = list(clean(template.name) for template in templates)
-    # print("The word is: {} \n The list is this: {}".format(header, template_name))
+    # print("The word is: {} \k The list is this: {}".format(header, template_name))
     dictionary = dict()
     ordered = []
     header = clean(header.strip())
@@ -180,7 +180,7 @@ def rank_templates(header, templates):
             ordered.append(k)
         templates = ordered
     else:
-        print("Can't rank templates for {}".format(header))
+        logger.debug("Can't rank templates for {}".format(header))
     return templates
 
 
@@ -271,7 +271,7 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
     for table in tables:
         if Orientation.horizontal in table.orientations:
             header_data = table.header_data[Orientation.vertical]
-            print(
+            logger.debug(
                 "Table - {}".format(table.name),
                 header_data,
                 table.header_ranges[Orientation.vertical],
@@ -399,7 +399,7 @@ def learn(tables: List[Table], templates=None, solve_timeout=None):
         else:
 
             header_data = table.header_data[Orientation.horizontal]
-            print(
+            logger.debug(
                 "Table - {}".format(table.name),
                 header_data,
                 table.header_ranges[Orientation.horizontal],
