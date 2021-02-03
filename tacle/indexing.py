@@ -133,7 +133,7 @@ class Typing(object):
         elif isinstance(value, float):
             return Typing.float
 
-        value = str(value)
+        value = str(value).strip()
         if value == "":
             return Typing.any
         if value == "#?":
@@ -148,14 +148,18 @@ class Typing(object):
         try:
             value = float(value.replace(",", ""))
             if np.isnan(value):
-                raise RuntimeError("Unclear how to deal with NaN here")
+                return Typing.any
             return Typing.int if float(value) == int(value) else Typing.float
         except ValueError:
-            try:
-                parse(value)
-                return Typing.date
-            except ValueError:
-                return Typing.string
+            pass
+
+        try:
+            parse(value)
+            return Typing.date
+        except ValueError:
+            pass
+
+        return Typing.string
 
     @staticmethod
     def cast(cell_type, value):
