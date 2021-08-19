@@ -302,6 +302,8 @@ class Range(object):
 
     @property
     def cells(self):
+        if self.rows < 0 or self.columns < 0:
+            return 0
         return self.rows * self.columns
 
     def get_data(self, data):
