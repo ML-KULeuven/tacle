@@ -196,6 +196,8 @@ class Typing(object):
             return parse(value)
         elif cell_type == Typing.unknown:
             return "#?"
+        elif cell_type == Typing.any:
+            return value
         raise ValueError("Unexpected cell type: " + cell_type)
 
     # @staticmethod
