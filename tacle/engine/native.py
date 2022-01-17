@@ -2,6 +2,7 @@ import functools
 import itertools
 
 import math
+from collections import defaultdict
 
 from tacle.engine import evaluate
 from tacle.core.virtual_template import VirtualLookup, VirtualConditionalAggregate
@@ -69,6 +70,8 @@ class InternalCSPStrategy(AssignmentStrategy):
         for c in MutualExclusivity.instances():
             self.add_constraint(c)
         self.add_constraint(MutualExclusiveVector())
+        for c in GroupedAggregate.instances():
+            self.add_constraint(c)
 
     def add_constraint(self, constraint: ConstraintTemplate):
         self._constraints.add(constraint)
@@ -688,6 +691,30 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
             return results
 
+        def grouped_aggregate(c: GroupedAggregate, assignments, _):
+
+            print("Grouped aggregate")
+
+            def is_grouped_aggregate(k1_v, k2_v, v_v):
+                i1 = k1_v.relative_range.vector_index(k1_v.orientation)
+                i2 = k2_v.relative_range.vector_index(k2_v.orientation)
+                if i1 != i2 - 1:
+                    return False
+                k1, k2, v = to_single_vector_data(k1_v, k2_v, v_v)
+                print(k1, k2, v)
+                grouped = defaultdict(list)
+                for i in range(len(k1)):
+                    key = (k1[i], k2[i])
+                    grouped[key].append(v[i])
+                print(grouped)
+                for val in grouped.values():
+                    if not equal(smart_round(c.operation.aggregate(numpy.array(val[:-1])), val[-1]), val[-1]):
+                        return False
+                return True
+
+            keys = [c.k1, c.k2, c.v]
+            return self._generate_test_vectors(assignments, keys, is_grouped_aggregate)
+
         self.add_strategy(Equal(), equality)
         # self.add_strategy(EqualGroup(), equal_group)
         self.add_strategy(Series(), series)
@@ -715,6 +742,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         for c in MutualExclusivity.instances():
             self.add_strategy(c, xor)
         self.add_strategy(MutualExclusiveVector(), xor_vector)
+        for c_instance in GroupedAggregate.instances():
+            self.add_strategy(c_instance, grouped_aggregate)
 
     @staticmethod
     def _generate_test_vectors(assignments, keys, test_groups):

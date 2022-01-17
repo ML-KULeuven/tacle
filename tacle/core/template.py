@@ -15,7 +15,7 @@ from .assignment import (
     SizeFilter,
     Not,
     NotPartial,
-    Partial,
+    Partial, Neighbors, SatisfiesConstraint,
 )
 from tacle.indexing import Orientation, Typing, Block
 
@@ -212,6 +212,46 @@ class Aggregate(ConstraintTemplate):
         return list(
             cls.instance(o, op) for o in Orientation.all() for op in Operation
         )  # if not op == Operation.PRODUCT)
+
+
+class GroupedAggregate(ConstraintTemplate):
+    k1 = Variable("K1", vector=True, types=discrete)
+    k2 = Variable("K2", vector=True, types=discrete)
+    v = Variable("V", vector=True, types=numeric)
+
+    def __init__(self, operation: Operation):
+        self._operation = operation
+        name = operation.name
+        variables = [self.k1, self.k2, self.v]
+        filters = [
+            SameLength([self.k1, self.k2, self.v]),
+            SameTable([self.k1, self.k2, self.v]),
+            NotPartial([self.k1, self.k2, self.v]),
+            SameOrientation([self.k1, self.k2, self.v]),
+            Neighbors([self.k1, self.k2]),
+            # Not(SatisfiesConstraint([self.k1], AllDifferent(), {self.k1.name: AllDifferent.x.name})),
+            # Not(SatisfiesConstraint([self.k2], AllDifferent(), {self.k2.name: AllDifferent.x.name})),
+        ]
+        p_format = name.upper() + "({V}, GROUP-BY: {K1}, {K2})"
+        super().__init__(
+            "{}-group-by2".format(name.lower()),
+            p_format,
+            Source(variables),
+            filters,
+            {AllDifferent()},
+        )
+
+    @property
+    def operation(self) -> Operation:
+        return self._operation
+
+    @classmethod
+    def instance(cls, operation: Operation):
+        return GroupedAggregate(operation)
+
+    @classmethod
+    def instances(cls):
+        return list(cls.instance(op) for op in Operation if not op == Operation.PRODUCT)
 
 
 # TODO Same table, different orientation, overlapping bounds => prune assignment already

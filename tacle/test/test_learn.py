@@ -16,7 +16,7 @@ from tacle.core.template import (
     MutualExclusiveVector,
     Product,
     MutualExclusivity,
-    SumProduct,
+    SumProduct, GroupedAggregate, Operation,
 )
 from tacle.indexing import Table, Range, Typing, Orientation
 from tacle import learn_constraints, filter_constraints
@@ -144,17 +144,45 @@ def test_sum_product():
     assert_constraints(constraints, [(SumProduct, 1), (AllDifferent, 2)])
 
 
+def test_grouped_average():
+    constraints = learn(
+        [
+            [
+                ["a", 1, "1.2"],
+                ["a", 2, "2.2"],
+                ["a", 2, "2.3"],
+                ["a", 1, "2.2"],
+                ["a", 1, "3.4"],
+                ["a", 2, "4.5"],
+                ["b", 2, "4.5"],
+                ["b", 2, "7.2"],
+                ["b", 1, "2.2"],
+                ["b", 1, "2.2"],
+                ["b", 2, "11.7"],
+            ]
+        ],
+        templates=[AllDifferent(), GroupedAggregate(Operation.SUM)]
+    ).constraints
+
+    assert_constraints(constraints, [(GroupedAggregate, 1)])
+
+
 def assert_constraints(constraints, template_count_pairs):
     print(*[str(c) for c in constraints], sep="\n")
 
     total = 0
     for template, count in template_count_pairs:
         total += count
-        assert len(filter_constraints(constraints, template)) == count
+        assert len(filter_constraints(constraints, template)) == count, \
+            "Expected {} {} constraints, found {}".format(
+                count,
+                template.__name__,
+                len(filter_constraints(constraints, template))
+            )
     assert len(constraints) == total
 
 
-def learn(data_arrays):
+def learn(data_arrays, templates=None):
     data_arrays = [np.array(arr) for arr in data_arrays]
     total_columns = sum(arr.shape[1] + 1 for arr in data_arrays) - 1
     max_rows = max(arr.shape[0] for arr in data_arrays)
@@ -182,4 +210,4 @@ def learn(data_arrays):
                 [Orientation.vertical],
             )
         )
-    return learn_constraints(data, tables)
+    return learn_constraints(data, tables, templates=templates)

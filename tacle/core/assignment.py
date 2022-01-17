@@ -392,3 +392,35 @@ class SatisfiesConstraint(Filter):
             variables,
             {assignment[self.mapping[v.name]] for v in variables},
         )
+
+
+class Neighbors(Filter):
+    def test(self, assignment: Dict[str, Block], solutions):
+        if not SameTable(self.variables).test(assignment, solutions):
+            return False
+        if not SameOrientation(self.variables).test(assignment, solutions):
+            return False
+
+        block = assignment[self.variables[0].name]
+        index = block.relative_range.vector_index(block.orientation)
+        for i in range(1, len(self.variables)):
+            new_block = assignment[self.variables[i].name]
+            print("neighbors {} and {}? {}".format(block, new_block, new_block.relative_range.vector_index(block.orientation) == index + i))
+            if new_block.relative_range.vector_index(block.orientation) != index + i:
+                return False
+        return True
+
+    def test_relaxed(self, assignment, solutions):
+        if not SameTable(self.variables).test(assignment, solutions):
+            return False
+        if not SameOrientation(self.variables).test(assignment, solutions):
+            return False
+
+        if len(self.variables) == 2:
+            blocks = [assignment[v.name] for v in self.variables]  # type: List[Block]
+            return (blocks[0].vector_count() == 2 and blocks[0] == blocks[1]) or (
+                blocks[0].vector_index() + blocks[0].vector_count() == blocks[1].vector_index()
+            )
+
+        return True
+
