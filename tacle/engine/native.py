@@ -708,7 +708,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     grouped[key].append(v[i])
                 print(grouped)
                 for val in grouped.values():
-                    if not equal(smart_round(c.operation.aggregate(numpy.array(val[:-1])), val[-1]), val[-1]):
+                    if not equal(smart_round(c.operation.aggregate(numpy.array(val[:-1]), partial=False), val[-1]), val[-1]):
                         return False
                 return True
 
