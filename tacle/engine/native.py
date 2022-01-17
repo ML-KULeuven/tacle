@@ -693,20 +693,16 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
         def grouped_aggregate(c: GroupedAggregate, assignments, _):
 
-            print("Grouped aggregate")
-
             def is_grouped_aggregate(k1_v, k2_v, v_v):
                 i1 = k1_v.relative_range.vector_index(k1_v.orientation)
                 i2 = k2_v.relative_range.vector_index(k2_v.orientation)
                 if i1 != i2 - 1:
                     return False
                 k1, k2, v = to_single_vector_data(k1_v, k2_v, v_v)
-                print(k1, k2, v)
                 grouped = defaultdict(list)
                 for i in range(len(k1)):
                     key = (k1[i], k2[i])
                     grouped[key].append(v[i])
-                print(grouped)
                 for val in grouped.values():
                     if not equal(smart_round(c.operation.aggregate(numpy.array(val[:-1]), partial=False), val[-1]), val[-1]):
                         return False
