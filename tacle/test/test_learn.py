@@ -16,7 +16,10 @@ from tacle.core.template import (
     MutualExclusiveVector,
     Product,
     MutualExclusivity,
-    SumProduct, GroupedAggregate, Operation,
+    SumProduct,
+    GroupedAggregate,
+    Operation,
+    ConditionalAggregate2,
 )
 from tacle.indexing import Table, Range, Typing, Orientation
 from tacle import learn_constraints, filter_constraints
@@ -159,12 +162,37 @@ def test_grouped_average():
                 ["b", 1, "2.2"],
                 ["b", 1, "2.2"],
                 ["b", 2, "11.7"],
-            ]
+            ],
         ],
         templates=[AllDifferent(), GroupedAggregate(Operation.SUM)]
     ).constraints
 
     assert_constraints(constraints, [(GroupedAggregate, 1)])
+
+
+def test_conditional_aggregate2():
+    constraints = learn(
+        [
+            [
+                ["a", 1, "1.2"],
+                ["a", 2, "2.2"],
+                ["a", 2, "2.3"],
+                ["a", 1, "2.2"],
+                ["b", 2, "4.5"],
+                ["b", 2, "7.2"],
+                ["b", 1, "2.2"],
+            ],
+            [
+                ["a", 1, "3.4"],
+                ["a", 2, "4.5"],
+                ["b", 1, "2.2"],
+                ["b", 2, "11.7"],
+            ]
+        ],
+        templates=[AllDifferent(), ConditionalAggregate2(Operation.SUM)]
+    ).constraints
+
+    assert_constraints(constraints, [(ConditionalAggregate2, 1)])
 
 
 def assert_constraints(constraints, template_count_pairs):

@@ -15,7 +15,8 @@ from .assignment import (
     SizeFilter,
     Not,
     NotPartial,
-    Partial, Neighbors, SatisfiesConstraint,
+    Partial,
+    Neighbors,
 )
 from tacle.indexing import Orientation, Typing, Block
 
@@ -117,6 +118,7 @@ class Operation(Enum):
     @property
     def aggregate(self):
         def apply(data, axis=None, partial=True):
+            data = numpy.array(data)
             if axis == 1:
                 data = data.T
 
@@ -436,6 +438,62 @@ class ConditionalAggregate(ConstraintTemplate):
     @classmethod
     def instances(cls):
         return list(cls.instance(op) for op in Operation if not op == Operation.PRODUCT)
+
+
+class ConditionalAggregate2(ConstraintTemplate):
+    ok1 = Variable("OK1", vector=True, types=discrete)
+    ok2 = Variable("OK2", vector=True, types=discrete)
+    result = Variable("R", vector=True, types=numeric)
+    fk1 = Variable("FK1", vector=True, types=discrete)
+    fk2 = Variable("FK2", vector=True, types=discrete)
+    values = Variable("V", vector=True, types=numeric)
+
+    def __init__(self, operation: Operation, default=0):
+        self._default = default
+        self._operation = operation
+        name = operation.name
+        variables = [self.ok1, self.ok2, self.result, self.fk1, self.fk2, self.values]
+        source = Source(variables)
+
+        filters = [
+            SameLength([self.ok1, self.ok2, self.result]),
+            SameTable([self.ok1, self.ok2, self.result]),
+            SameOrientation([self.ok1, self.ok2, self.result]),
+            Neighbors([self.ok1, self.ok2]),
+
+            SameLength([self.fk1, self.fk2, self.values]),
+            SameTable([self.fk1, self.fk2, self.values]),
+            SameOrientation([self.fk1, self.fk2, self.values]),
+            Neighbors([self.fk1, self.fk2]),
+
+            Not(SameTable([self.ok1, self.fk1])),
+
+            NotPartial([self.ok1, self.ok2, self.fk1, self.fk2]),
+            SameType([self.ok1, self.fk1]),
+            SameType([self.ok2, self.fk2]),
+        ]
+
+        p_format = "{R} = " + name.upper() + "IF({FK1},{FK2}={OK1},{OK2}, {V})"
+        super().__init__(
+            "{}-if2".format(name.lower()),
+            p_format,
+            source,
+            filters,
+            None,
+            self.result,
+        )
+
+    @property
+    def operation(self) -> Operation:
+        return self._operation
+
+    @property
+    def default(self):
+        return self._default
+
+    @classmethod
+    def instances(cls):
+        return list(cls(op) for op in Operation if not op == Operation.PRODUCT)
 
 
 class RunningTotal(ConstraintTemplate):

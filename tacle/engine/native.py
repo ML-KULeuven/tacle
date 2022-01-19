@@ -4,6 +4,8 @@ import itertools
 import math
 from collections import defaultdict
 
+import numpy
+
 from tacle.engine import evaluate
 from tacle.core.virtual_template import VirtualLookup, VirtualConditionalAggregate
 from tacle.core.template import *
@@ -56,6 +58,8 @@ class InternalCSPStrategy(AssignmentStrategy):
         for c in VirtualConditionalAggregate.instances():
             self.add_constraint(c)
         for c in ConditionalAggregate.instances():
+            self.add_constraint(c)
+        for c in ConditionalAggregate2.instances():
             self.add_constraint(c)
         self.add_constraint(RunningTotal())
         self.add_constraint(ForeignProduct())
@@ -364,6 +368,52 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 return any_match
 
             return self._generate_test_vectors(assignments, keys, is_aggregate)
+
+        def are_neighbors(vec1: Block, vec2: Block):
+            return vec1.vector_index() == vec2.vector_index() - 1
+
+        def conditional_aggregate2(c: ConditionalAggregate2, assignments, _):
+            agg = c.operation.aggregate
+
+            def is_grouped_aggregate(ok1_v, ok2_v, result_v, fk1_v, fk2_v, values_v):
+                if not are_neighbors(ok1_v, ok2_v) or not are_neighbors(fk1_v, fk2_v):
+                    return False  # Fail because keys are not neighbors
+
+                ok1, ok2, r, fk1, fk2, v = to_single_vector_data(ok1_v, ok2_v, result_v, fk1_v, fk2_v, values_v)
+                ok_map = dict()
+
+                for i in range(len(ok1)):
+                    key = (ok1[i], ok2[i])
+                    if key in ok_map:
+                        return False  # Fail because ok-pairs are not unique
+                    ok_map[key] = r[i]
+
+                fk_grouped = defaultdict(list)
+
+                for i in range(len(fk1)):
+                    key = (fk1[i], fk2[i])
+                    fk_grouped[key].append(v[i])
+
+                all_keys = set(ok_map.keys()) | set(fk_grouped.keys())
+
+                for key in all_keys:
+                    if key in ok_map:
+                        # If the key is in the ok_map we have to check it,
+                        # otherwise it only occurs in the fk and we can ignore it (no completeness assumption)
+                        res = ok_map[key]
+                        if key in fk_grouped:
+                            # Check that result matches with computed result
+                            if not equal_smart_round(agg(fk_grouped[key], partial=False), res):
+                                return False
+                        else:
+                            # Check that res is None, nan or 0
+                            if res is not None and not numpy.isnan(res) and not equal_smart_round(0, res):
+                                return False
+
+                return True
+
+            keys = [c.ok1, c.ok2, c.result, c.fk1, c.fk2, c.values]
+            return self._generate_test_vectors(assignments, keys, is_grouped_aggregate)
 
         def running_total(c: RunningTotal, assignments, solutions):
             def is_running_diff(acc_v, pos_v, neg_v):
@@ -723,6 +773,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         # self.add_strategy(FuzzyLookup(), fuzzy_lookup)
         for c_instance in ConditionalAggregate.instances():
             self.add_strategy(c_instance, conditional_aggregate)
+        for c_instance in ConditionalAggregate2.instances():
+            self.add_strategy(c_instance, conditional_aggregate2)
         # for c_instance in VirtualConditionalAggregate.instances():
         #     self.add_strategy(c_instance, conditional_aggregate)
         self.add_strategy(RunningTotal(), running_total)
@@ -782,6 +834,17 @@ def equal(x, y, scale=False):
         return (numpy.isnan(x) and numpy.isnan(y)) or abs(x - y) < delta
     else:
         return x == y
+
+
+def equal_smart_round(computed, expected):
+    if computed is None or expected is None:
+        return computed is expected
+
+    if numpy.isnan(computed) and numpy.isnan(expected):
+        return True
+
+    delta = pow(10, -10)
+    return abs(smart_round(computed, expected) - expected) < delta
 
 
 @functools.lru_cache(maxsize=None)
