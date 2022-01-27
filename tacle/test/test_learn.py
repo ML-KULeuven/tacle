@@ -147,7 +147,7 @@ def test_sum_product():
     assert_constraints(constraints, [(SumProduct, 1), (AllDifferent, 2)])
 
 
-def test_grouped_average():
+def test_grouped_sum():
     constraints = learn(
         [
             [
@@ -157,6 +157,32 @@ def test_grouped_average():
                 ["a", 1, "2.2"],
                 ["a", 1, "3.4"],
                 ["a", 2, "4.5"],
+                ["b", 2, "4.5"],
+                ["b", 2, "7.2"],
+                ["b", 1, "2.2"],
+                ["b", 1, "2.2"],
+                ["b", 2, "11.7"],
+            ],
+        ],
+        templates=[AllDifferent(), GroupedAggregate(Operation.SUM)]
+    ).constraints
+
+    assert_constraints(constraints, [(GroupedAggregate, 1)])
+
+
+def test_grouped_sum__empty():
+    constraints = learn(
+        [
+            [
+                ["a", 1, "1.2"],
+                ["a", 2, "2.2"],
+                ["a", 2, "2.3"],
+                ["a", 3, ""],
+                ["a", 1, "2.2"],
+                ["a", 1, "3.4"],
+                ["a", 3, ""],
+                ["a", 2, "4.5"],
+                ["a", 3, ""],
                 ["b", 2, "4.5"],
                 ["b", 2, "7.2"],
                 ["b", 1, "2.2"],
@@ -185,6 +211,34 @@ def test_conditional_aggregate2():
             [
                 ["a", 1, "3.4"],
                 ["a", 2, "4.5"],
+                ["b", 1, "2.2"],
+                ["b", 2, "11.7"],
+            ]
+        ],
+        templates=[AllDifferent(), ConditionalAggregate2(Operation.SUM)]
+    ).constraints
+
+    assert_constraints(constraints, [(ConditionalAggregate2, 1)])
+
+
+def test_conditional_aggregate2__empty():
+    constraints = learn(
+        [
+            [
+                ["a", 1, "1.2"],
+                ["a", 2, "2.2"],
+                ["a", 3, ""],
+                ["a", 2, "2.3"],
+                ["a", 1, "2.2"],
+                ["a", 3, ""],
+                ["b", 2, "4.5"],
+                ["b", 2, "7.2"],
+                ["b", 1, "2.2"],
+            ],
+            [
+                ["a", 1, "3.4"],
+                ["a", 2, "4.5"],
+                ["a", 3, ""],
                 ["b", 1, "2.2"],
                 ["b", 2, "11.7"],
             ]

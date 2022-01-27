@@ -228,7 +228,7 @@ class GroupedAggregate(ConstraintTemplate):
         filters = [
             SameLength([self.k1, self.k2, self.v]),
             SameTable([self.k1, self.k2, self.v]),
-            NotPartial([self.k1, self.k2, self.v]),
+            NotPartial([self.k1, self.k2]),
             SameOrientation([self.k1, self.k2, self.v]),
             Neighbors([self.k1, self.k2]),
             # Not(SatisfiesConstraint([self.k1], AllDifferent(), {self.k1.name: AllDifferent.x.name})),

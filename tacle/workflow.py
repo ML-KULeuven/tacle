@@ -28,6 +28,7 @@ from .core.template import (
     MutualExclusivity,
     MutualExclusiveVector,
     ConstraintTemplate,
+    ConditionalAggregate2,
 )
 from .engine.native import InternalCSPStrategy, InternalSolvingStrategy
 
@@ -58,6 +59,7 @@ def get_default_templates():
     constraint_list += MutualExclusivity.instances()
     constraint_list += Aggregate.instances()
     constraint_list += ConditionalAggregate.instances()
+    constraint_list += ConditionalAggregate2.instances()
     return constraint_list
 
 

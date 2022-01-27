@@ -354,6 +354,9 @@ class NotPartial(Filter):
     def test(self, assignment: Dict[str, Block], solutions):
         return not any([self.has_blanks(assignment[v.name]) for v in self.variables])
 
+    def test_relaxed(self, assignment, solutions):
+        return True
+
 
 class Partial(Filter):
     def test(self, assignment: Dict[str, Block], solutions):
