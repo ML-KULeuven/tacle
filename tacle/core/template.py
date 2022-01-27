@@ -69,7 +69,7 @@ class ConstraintTemplate:
 
 
 integer = {Typing.int}
-numeric = {Typing.int, Typing.float}
+numeric = {Typing.int, Typing.float, Typing.numeric}
 textual = {Typing.string}
 discrete = {Typing.string, Typing.int}
 
