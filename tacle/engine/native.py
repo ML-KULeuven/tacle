@@ -841,7 +841,7 @@ def equal_smart_round(computed, expected):
     if computed is None or expected is None:
         return computed is expected
 
-    if numpy.isnan(computed) and numpy.isnan(expected):
+    if (numpy.isnan(computed) and numpy.isnan(expected)) or numpy.isnan(expected):
         return True
 
     delta = pow(10, -10)
