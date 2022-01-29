@@ -65,6 +65,50 @@ def test_min():
     assert "min" in str(constraints[0]).lower()
 
 
+def test_sum__rounded_to_int():
+    constraints = learn(
+        [
+            [
+                ["a", 1.1, 4.4, 3.3, 9],
+                ["b", 5.5, 3.3, 6.6, 15],
+                ["b", 2.2, 2.2, 4.4, 9],
+            ]
+        ]
+    ).constraints
+
+    assert_constraints(constraints, [(Aggregate, 1)])
+    assert "sum" in str(constraints[0]).lower()
+
+
+def test_sum__partial_result():
+    constraints = learn(
+        [
+            [
+                ["a", 1.1, 4.4, 3.3, 9],
+                ["b", 5.5, 3.3, 6.6, ""],
+                ["b", 2.2, 2.2, 4.4, 9],
+            ]
+        ]
+    ).constraints
+
+    assert_constraints(constraints, [(Aggregate, 1)])
+    assert "sum" in str(constraints[0]).lower()
+
+
+def test_sum__empty_result():
+    constraints = learn(
+        [
+            [
+                ["a", 1.1, 4.4, 3.3, ""],
+                ["b", 5.5, 3.3, 6.6, ""],
+                ["b", 2.2, 2.2, 4.4, ""],
+            ]
+        ]
+    ).constraints
+
+    assert_constraints(constraints, [(Aggregate, 0)])
+
+
 def test_permutation():
     constraints = learn([[[3], [1], [2]]]).constraints
     assert_constraints(constraints, [(Permutation, 1), (AllDifferent, 1)])
@@ -164,7 +208,7 @@ def test_grouped_sum():
                 ["b", 2, "11.7"],
             ],
         ],
-        templates=[AllDifferent(), GroupedAggregate(Operation.SUM)]
+        templates=[AllDifferent(), GroupedAggregate(Operation.SUM)],
     ).constraints
 
     assert_constraints(constraints, [(GroupedAggregate, 1)])
@@ -190,7 +234,7 @@ def test_grouped_sum__empty():
                 ["b", 2, "11.7"],
             ],
         ],
-        templates=[AllDifferent(), GroupedAggregate(Operation.SUM)]
+        templates=[AllDifferent(), GroupedAggregate(Operation.SUM)],
     ).constraints
 
     assert_constraints(constraints, [(GroupedAggregate, 1)])
@@ -213,9 +257,9 @@ def test_conditional_aggregate2():
                 ["a", 2, "4.5"],
                 ["b", 1, "2.2"],
                 ["b", 2, "11.7"],
-            ]
+            ],
         ],
-        templates=[AllDifferent(), ConditionalAggregate2(Operation.SUM)]
+        templates=[AllDifferent(), ConditionalAggregate2(Operation.SUM)],
     ).constraints
 
     assert_constraints(constraints, [(ConditionalAggregate2, 1)])
@@ -241,9 +285,9 @@ def test_conditional_aggregate2__empty():
                 ["a", 3, ""],
                 ["b", 1, "2.2"],
                 ["b", 2, "11.7"],
-            ]
+            ],
         ],
-        templates=[AllDifferent(), ConditionalAggregate2(Operation.SUM)]
+        templates=[AllDifferent(), ConditionalAggregate2(Operation.SUM)],
     ).constraints
 
     assert_constraints(constraints, [(ConditionalAggregate2, 1)])
@@ -255,13 +299,14 @@ def assert_constraints(constraints, template_count_pairs):
     total = 0
     for template, count in template_count_pairs:
         total += count
-        assert len(filter_constraints(constraints, template)) == count, \
-            "Expected {} {} constraints, found {}".format(
-                count,
-                template.__name__,
-                len(filter_constraints(constraints, template))
-            )
-    assert len(constraints) == total
+        assert (
+            len(filter_constraints(constraints, template)) == count
+        ), "Expected {} {} constraints, found {}".format(
+            count, template.__name__, len(filter_constraints(constraints, template))
+        )
+    assert (
+        len(constraints) == total
+    ), f"Expected {total} constraints in total, found {len(constraints)}: {constraints}"
 
 
 def learn(data_arrays, templates=None):
@@ -288,7 +333,7 @@ def learn(data_arrays, templates=None):
                 r.get_data(data),
                 r.get_data(type_data),
                 r,
-                "T{}".format(i+1),
+                "T{}".format(i + 1),
                 [Orientation.vertical],
             )
         )

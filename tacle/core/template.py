@@ -17,6 +17,7 @@ from .assignment import (
     NotPartial,
     Partial,
     Neighbors,
+    NotEmpty,
 )
 from tacle.indexing import Orientation, Typing, Block
 
@@ -189,7 +190,7 @@ class Aggregate(ConstraintTemplate):
             if Orientation.is_vertical(orientation)
             else SizeFilter([self.x], cols=self.min_size)
         )
-        filters = [x_size_filter, filter_class(variables)]
+        filters = [x_size_filter, filter_class(variables), NotEmpty(variables)]
         format_s = "{Y} = " + op_string.upper() + "({X}, " + or_string + ")"
         name = "{} ({})".format(op_string.lower(), or_string)
         # TODO Dependency only min max average
@@ -460,14 +461,11 @@ class ConditionalAggregate2(ConstraintTemplate):
             SameTable([self.ok1, self.ok2, self.result]),
             SameOrientation([self.ok1, self.ok2, self.result]),
             Neighbors([self.ok1, self.ok2]),
-
             SameLength([self.fk1, self.fk2, self.values]),
             SameTable([self.fk1, self.fk2, self.values]),
             SameOrientation([self.fk1, self.fk2, self.values]),
             Neighbors([self.fk1, self.fk2]),
-
             Not(SameTable([self.ok1, self.fk1])),
-
             NotPartial([self.ok1, self.ok2, self.fk1, self.fk2]),
             SameType([self.ok1, self.fk1]),
             SameType([self.ok2, self.fk2]),
@@ -762,5 +760,10 @@ class DateDifference(VectorOperation):
         variables = self.list_variables()
         source = Source(variables)
         filters = [SameLength(variables)]
-        super().__init__("date-difference", "DIFF({Date1}, {Date2}) = {Difference}", source, filters, symmetric=True)
-
+        super().__init__(
+            "date-difference",
+            "DIFF({Date1}, {Date2}) = {Difference}",
+            source,
+            filters,
+            symmetric=True,
+        )

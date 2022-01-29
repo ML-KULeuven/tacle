@@ -117,7 +117,11 @@ class Typing(object):
         if Typing.root(cell_type) == Typing.numeric is not None:
             return lambda e: not np.isnan(e)
         else:
-            return lambda e: e is not None
+            return lambda e: e is not None and e != ""
+
+    @staticmethod
+    def np_blanks(cell_type, data):
+        return ~np.vectorize(Typing.blank_detector(cell_type))(data)
 
     @staticmethod
     def get_blank(cell_type):
@@ -199,6 +203,10 @@ class Typing(object):
         elif cell_type == Typing.any:
             return value
         raise ValueError("Unexpected cell type: " + cell_type)
+
+    @staticmethod
+    def np_cast(cell_type, data):
+        return np.vectorize(lambda v: Typing.cast(cell_type, v))(data)
 
     # @staticmethod
     # def as_legacy_type(cell_type):
@@ -353,6 +361,9 @@ class Range(object):
             sub_range.height,
         )
 
+    def dimension_range(self):
+        return Range(0, 0, self.width, self.height)
+
     def vector_count(self, orientation):
         return self.columns if orientation == Orientation.vertical else self.rows
 
@@ -442,14 +453,14 @@ class DataSheet(object):
 
 class Table(object):
     def __init__(
-            self,
-            data: np.ndarray,
-            type_data: np.ndarray,
-            t_range: Range,
-            name: Optional[str] = None,
-            orientations: List[OrientationType] = None,
-            header_ranges: Dict[OrientationType, Range] = None,
-            header_data: Dict[OrientationType, np.ndarray] = None
+        self,
+        data: np.ndarray,
+        type_data: np.ndarray,
+        t_range: Range,
+        name: Optional[str] = None,
+        orientations: List[OrientationType] = None,
+        header_ranges: Dict[OrientationType, Range] = None,
+        header_data: Dict[OrientationType, np.ndarray] = None,
     ):
         if any(
             orientation not in [None, Orientation.vertical, Orientation.horizontal]
@@ -619,33 +630,33 @@ class Block(object):
         self.virtual = virtual
 
         if virtual is False:
-            self.vector_types = [] if not vector_types else vector_types
-            self.vector_data = []
-            for i in range(relative_range.vector_count(orientation)):
-                if vector_types is None:
-                    v_type = Typing.max(
-                        relative_range.vector_range(i, orientation).get_data(
-                            table.type_data
-                        )
-                    )
-                    self.vector_types.append(v_type)
-                else:
-                    v_type = vector_types[i]
+            if not vector_types:
+                vector_types = [
+                    Typing.max(self.vector_range(i).get_data(table.type_data))
+                    for i in range(self.vector_count())
+                ]
+            self.type = Typing.max(vector_types)
+            self.vector_types = [
+                t if t != Typing.any else self.type for t in vector_types
+            ]
 
-                v_data = relative_range.vector_range(i, orientation).get_data(
-                    table.data
-                )
-                self.vector_data.append(
-                    np.vectorize(lambda v: Typing.cast(v_type, v))(v_data.flatten())
-                )
+            self.vector_data = [
+                Typing.np_cast(vt, self.vector_range(i).get_data(table.data).flatten())
+                for i, vt in enumerate(self.vector_types)
+            ]
 
-            self.type = Typing.max(self.vector_types)
-            self.data = np.vectorize(lambda v: Typing.cast(self.type, v))(
-                relative_range.get_data(table.data)
-            )
-            self.has_blanks = not np.all(
-                np.vectorize(Typing.blank_detector(self.type))(self.data)
-            )
+            self.data = Typing.np_cast(self.type, relative_range.get_data(table.data))
+
+            blanks = Typing.np_blanks(self.type, self.data)
+            self.vector_empty = [
+                np.all(
+                    self.relative_range.dimension_range()
+                    .vector_range(i, self.orientation)
+                    .get_data(blanks)
+                )
+                for i in range(self.vector_count())
+            ]
+            self.has_blanks = np.any(blanks)
         else:
             v_type, blanks = virtual
             self.vector_types = [v_type]
@@ -715,6 +726,9 @@ class Block(object):
 
     def vector(self, vector_index):
         return self.sub_block(vector_index)
+
+    def vector_range(self, vector_index):
+        return self.relative_range.vector_range(vector_index, self.orientation)
 
     def set_data(self, data):
         raise NotImplementedError()

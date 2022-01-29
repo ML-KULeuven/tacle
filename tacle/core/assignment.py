@@ -363,6 +363,22 @@ class Partial(Filter):
         return all([NotPartial.has_blanks(assignment[v.name]) for v in self.variables])
 
 
+class Empty(Filter):
+    def test_relaxed(self, assignment: Dict[str, Block], solutions):
+        return all([any(assignment[v.name].vector_empty) for v in self.variables])
+
+    def test(self, assignment: Dict[str, Block], solutions):
+        return all([all(assignment[v.name].vector_empty) for v in self.variables])
+
+
+class NotEmpty(Filter):
+    def test_relaxed(self, assignment: Dict[str, Block], solutions):
+        return all([not all(assignment[v.name].vector_empty) for v in self.variables])
+
+    def test(self, assignment: Dict[str, Block], solutions):
+        return all([not any(assignment[v.name].vector_empty) for v in self.variables])
+
+
 class NotSubgroup(Filter):
     def test(self, assignment: Dict[str, Block], solutions):
         if len(self.variables) != 2:
@@ -408,7 +424,14 @@ class Neighbors(Filter):
         index = block.relative_range.vector_index(block.orientation)
         for i in range(1, len(self.variables)):
             new_block = assignment[self.variables[i].name]
-            print("neighbors {} and {}? {}".format(block, new_block, new_block.relative_range.vector_index(block.orientation) == index + i))
+            print(
+                "neighbors {} and {}? {}".format(
+                    block,
+                    new_block,
+                    new_block.relative_range.vector_index(block.orientation)
+                    == index + i,
+                )
+            )
             if new_block.relative_range.vector_index(block.orientation) != index + i:
                 return False
         return True
@@ -422,8 +445,8 @@ class Neighbors(Filter):
         if len(self.variables) == 2:
             blocks = [assignment[v.name] for v in self.variables]  # type: List[Block]
             return (blocks[0].vector_count() == 2 and blocks[0] == blocks[1]) or (
-                blocks[0].vector_index() + blocks[0].vector_count() == blocks[1].vector_index()
+                blocks[0].vector_index() + blocks[0].vector_count()
+                == blocks[1].vector_index()
             )
 
         return True
-

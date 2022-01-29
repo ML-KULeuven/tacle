@@ -4,7 +4,7 @@ import itertools
 import math
 from collections import defaultdict
 
-import numpy
+import numpy as np
 
 from tacle.engine import evaluate
 from tacle.core.virtual_template import VirtualLookup, VirtualConditionalAggregate
@@ -39,7 +39,6 @@ class MaxRange:
                     end -= 1
 
 
-# TODO Sum IF with Nones
 class InternalCSPStrategy(AssignmentStrategy):
     def __init__(self):
         super().__init__()
@@ -93,13 +92,13 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
         def series(c: Series, assignments, solutions):
             def test_series(x_v):
-                x, = to_single_vector_data(x_v)
+                (x,) = to_single_vector_data(x_v)
                 for i in range(len(x)):
                     if not x[i] == i + 1:
                         return False
                 return True
 
-            return self._generate_test_vectors(assignments, [c.x], test_series)
+            return generate_test_vectors(assignments, [c.x], test_series)
 
         def all_different(c: AllDifferent, assignments, solutions):
             def test_all_different(x_v):
@@ -109,7 +108,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 ):
                     return False
 
-                x, = to_single_vector_data(x_v)
+                (x,) = to_single_vector_data(x_v)
                 seen = set()
                 for i in range(len(x)):
                     if x[i] in seen:
@@ -117,11 +116,11 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     seen.add(x[i])
                 return True
 
-            return self._generate_test_vectors(assignments, [c.x], test_all_different)
+            return generate_test_vectors(assignments, [c.x], test_all_different)
 
         def permutation(c: Permutation, assignments, solutions):
             def test_permutation(x_v):
-                x, = to_single_vector_data(x_v)
+                (x,) = to_single_vector_data(x_v)
                 number_set = set(range(1, len(x) + 1))
 
                 for i in range(len(x)):
@@ -130,7 +129,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     number_set.remove(x[i])
                 return len(number_set) == 0
 
-            return self._generate_test_vectors(assignments, [c.x], test_permutation)
+            return generate_test_vectors(assignments, [c.x], test_permutation)
 
         def rank(c: Rank, assignments, solutions):
             # TODO Speed up by using local inconsistencies: check some random elements and check consistency of rank
@@ -152,7 +151,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 # Check if not equal
                 return not found_equal(y_v, x_v, solutions)
 
-            return self._generate_test_vectors(assignments, [c.y, c.x], is_rank)
+            return generate_test_vectors(assignments, [c.y, c.x], is_rank)
 
         def foreign_keys(constraint, assignments, solutions):
 
@@ -161,21 +160,21 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 pk_block = assignment[constraint.pk.name]
                 for pk_v in pk_block:
                     if pk_v not in pks:
-                        pk, = to_single_vector_data(pk_v)
+                        (pk,) = to_single_vector_data(pk_v)
                         pks[pk_v] = set(pk)
 
             keys = [constraint.pk, constraint.fk]
 
             def test_foreign_key(pk_v, fk_v):
                 blank_f = blank_filter(fk_v.data)[1]
-                fk, = to_single_vector_data(fk_v)
+                (fk,) = to_single_vector_data(fk_v)
                 pk_set = pks[pk_v]
                 for i in range(len(fk)):
                     if blank_f(fk[i]) and fk[i] not in pk_set:
                         return False
                 return True
 
-            return self._generate_test_vectors(assignments, keys, test_foreign_key)
+            return generate_test_vectors(assignments, keys, test_foreign_key)
 
         def lookups(c: Lookup, assignments, solutions):
             # TODO redundant lookups
@@ -259,7 +258,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     and not found_equal(ov_v, fv_v, solutions)
                 )
 
-            return self._generate_test_vectors(assignments, keys, test_equal)
+            return generate_test_vectors(assignments, keys, test_equal)
 
         def conditional_aggregate(
             c: ConditionalAggregate, assignments, solutions: Solutions
@@ -367,7 +366,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         return False
                 return any_match
 
-            return self._generate_test_vectors(assignments, keys, is_aggregate)
+            return generate_test_vectors(assignments, keys, is_aggregate)
 
         def are_neighbors(vec1: Block, vec2: Block):
             return vec1.vector_index() == vec2.vector_index() - 1
@@ -379,7 +378,9 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 if not are_neighbors(ok1_v, ok2_v) or not are_neighbors(fk1_v, fk2_v):
                     return False  # Fail because keys are not neighbors
 
-                ok1, ok2, r, fk1, fk2, v = to_single_vector_data(ok1_v, ok2_v, result_v, fk1_v, fk2_v, values_v)
+                ok1, ok2, r, fk1, fk2, v = to_single_vector_data(
+                    ok1_v, ok2_v, result_v, fk1_v, fk2_v, values_v
+                )
                 ok_map = dict()
 
                 for i in range(len(ok1)):
@@ -403,17 +404,23 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         res = ok_map[key]
                         if key in fk_grouped:
                             # Check that result matches with computed result
-                            if not equal_smart_round(agg(fk_grouped[key], partial=False), res):
+                            if not equal_smart_round(
+                                agg(fk_grouped[key], partial=False), res
+                            ):
                                 return False
                         else:
                             # Check that res is None, nan or 0
-                            if res is not None and not numpy.isnan(res) and not equal_smart_round(0, res):
+                            if (
+                                res is not None
+                                and not numpy.isnan(res)
+                                and not equal_smart_round(0, res)
+                            ):
                                 return False
 
                 return True
 
             keys = [c.ok1, c.ok2, c.result, c.fk1, c.fk2, c.values]
-            return self._generate_test_vectors(assignments, keys, is_grouped_aggregate)
+            return generate_test_vectors(assignments, keys, is_grouped_aggregate)
 
         def running_total(c: RunningTotal, assignments, solutions):
             def is_running_diff(acc_v, pos_v, neg_v):
@@ -427,8 +434,8 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     return False
                 return True
 
-            return self._generate_test_vectors(
-                assignments, [c.acc, c.pos, c.neg], is_running_diff
+            return generate_test_vectors(
+                assignments, [c.acc, c.pos, c.neg], is_running_diff, c.filters
             )
 
         def foreign_operation(c: ForeignOperation, assignments, solutions):
@@ -442,7 +449,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         return False
                 return True
 
-            return self._generate_test_vectors(assignments, keys, is_foreign_product)
+            return generate_test_vectors(assignments, keys, is_foreign_product)
 
         def aggregate(
             c: Aggregate, assignments: List[Dict[str, Block]], solutions: Solutions
@@ -472,7 +479,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                         x_group.data, 0 if o_column else 1, x_group.has_blanks
                     )
                     for y_vector_group in y_group:
-                        y_vector_data, = to_single_vector_data(y_vector_group)
+                        (y_vector_data,) = to_single_vector_data(y_vector_group)
                         match = pattern_finder(sums, y_vector_data)
                         x_match = [x_group.sub_block(m, y_length) for m in match]
                         for x in x_match:
@@ -484,12 +491,12 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
                     def check(start, end):
                         d1, d2 = x_data.shape
-                        y_vector = y_group.vector_data[y_i]
+
                         for i in range(0, d2):
                             result = c.operation.aggregate(
                                 x_data[start:end, i], 0, x_group.has_blanks
                             )
-                            if not equal_v(result, y_vector.data[i]).all():
+                            if not equal_smart_round(result, y_vector.data[i]):
                                 return False
                         x_subgroup = x_group.sub_block(start, end - start)
                         y_subgroup = y_group.sub_block(y_i, 1)
@@ -498,6 +505,10 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
                     max_range = MaxRange(check)
                     for y_i in range(y_group.vector_count()):
+                        y_vector = y_group.vector_data[y_i]
+                        if all(np.isnan(val) for val in y_vector):
+                            continue
+
                         if y_group == x_group:
                             max_range.find(0, y_i, c.min_vectors)
                             max_range.find(
@@ -535,7 +546,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 # cache.add((r_v, o1_v, o2_v))
                 return True
 
-            return self._generate_test_vectors(assignments, keys, is_product)
+            return generate_test_vectors(assignments, keys, is_product, c.filters)
 
         def diff(c: Diff, assignments, solutions):
             def is_diff(r_v, o1_v, o2_v):
@@ -549,7 +560,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 return all(not equal_v(v, 0).all() for v in (r, o1, o2))
 
             keys = [c.result, c.first, c.second]
-            return self._generate_test_vectors(assignments, keys, is_diff)
+            return generate_test_vectors(assignments, keys, is_diff, c.filters)
 
         def percent_diff(c: PercentualDiff, assignments, solutions):
             def is_diff(r_v, o1_v, o2_v):
@@ -567,7 +578,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 return True
 
             keys = [c.result, c.first, c.second]
-            return self._generate_test_vectors(assignments, keys, is_diff)
+            return generate_test_vectors(assignments, keys, is_diff)
 
         def sum_product(c: Product, assignments, solutions):
             keys = [c.result, c.first, c.second]
@@ -583,7 +594,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     r, numpy.sum(numpy.vectorize(Operation.PRODUCT.func)(o1, o2))
                 ).all()
 
-            return self._generate_test_vectors(assignments, keys, is_sum_product)
+            return generate_test_vectors(assignments, keys, is_sum_product)
 
         def project(c: Projection, assignments, _):
             solutions = []
@@ -591,20 +602,28 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             size = 2
 
             for assignment in assignments:
-                r_group, p_group = [assignment[v.name] for v in [c.result, c.projected]]  # type: Block
+                r_group, p_group = [
+                    assignment[v.name] for v in [c.result, c.projected]
+                ]  # type: Block
                 if p_group not in masks:
                     bool_mask = numpy.vectorize(blank_filter(p_group.data)[1])(
                         p_group.data
                     )
                     masks[p_group] = numpy.vectorize(lambda e: 1 if e else 0)(bool_mask)
-                p_masked = masks[p_group] if p_group.orientation == Orientation.horizontal else masks[p_group].T
+                p_masked = (
+                    masks[p_group]
+                    if p_group.orientation == Orientation.horizontal
+                    else masks[p_group].T
+                )
 
                 def check(start, end):
                     result = numpy.sum(p_masked[start:end, :], 0)
                     if numpy.vectorize(lambda e: e == 1)(result).all():
                         p_subgroup = p_group.sub_block(start, end - start)
                         p_data = (
-                            p_subgroup.data if p_subgroup.orientation == Orientation.horizontal else p_subgroup.data.T
+                            p_subgroup.data
+                            if p_subgroup.orientation == Orientation.horizontal
+                            else p_subgroup.data.T
                         )
                         if equal_v(
                             r_group.vector(r_i),
@@ -661,7 +680,7 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     equal_map[y_v] = x_v
                 return True
 
-            return self._generate_test_vectors(assignments, [c.first, c.second], test)
+            return generate_test_vectors(assignments, [c.first, c.second], test)
 
         def equal_group(c: EqualGroup, assignments, solutions: Solutions):
             result = []
@@ -681,16 +700,16 @@ class InternalSolvingStrategy(DictSolvingStrategy):
 
         def ordered_constraint(c: Ordered, assignments, solutions):
             def test_ordering(x_v):
-                x, = to_single_vector_data(x_v)
+                (x,) = to_single_vector_data(x_v)
                 for i in range(1, len(x)):
                     if x[i] <= x[i - 1]:
                         return False
                 return True
 
-            return self._generate_test_vectors(assignments, [c.x], test_ordering)
+            return generate_test_vectors(assignments, [c.x], test_ordering, c.filters)
 
         def xor_vector(c: MutualExclusiveVector, assignments, solutions):
-            return self._generate_test_vectors(
+            return generate_test_vectors(
                 assignments, [c.x], lambda xb: c.test_data(*to_single_vector_data(xb))
             )
 
@@ -742,7 +761,6 @@ class InternalSolvingStrategy(DictSolvingStrategy):
             return results
 
         def grouped_aggregate(c: GroupedAggregate, assignments, _):
-
             def is_grouped_aggregate(k1_v, k2_v, v_v):
                 i1 = k1_v.relative_range.vector_index(k1_v.orientation)
                 i2 = k2_v.relative_range.vector_index(k2_v.orientation)
@@ -754,13 +772,15 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                     key = (k1[i], k2[i])
                     grouped[key].append(v[i])
                 for val in grouped.values():
-                    computed = c.operation.aggregate(numpy.array(val[:-1]), partial=False)
+                    computed = c.operation.aggregate(
+                        numpy.array(val[:-1]), partial=False
+                    )
                     if not equal_smart_round(computed, val[-1]):
                         return False
                 return True
 
             keys = [c.k1, c.k2, c.v]
-            return self._generate_test_vectors(assignments, keys, is_grouped_aggregate)
+            return generate_test_vectors(assignments, keys, is_grouped_aggregate)
 
         self.add_strategy(Equal(), equality)
         # self.add_strategy(EqualGroup(), equal_group)
@@ -794,16 +814,22 @@ class InternalSolvingStrategy(DictSolvingStrategy):
         for c_instance in GroupedAggregate.instances():
             self.add_strategy(c_instance, grouped_aggregate)
 
-    @staticmethod
-    def _generate_test_vectors(assignments, keys, test_groups):
-        # FIXME Improve code by avoiding to test overlapping subgroups multiple times
-        for assignment in assignments:
-            for vectors in itertools.product(*[assignment[k.name] for k in keys]):
-                if not any(
-                    g1.overlaps_with(g2)
-                    for g1, g2 in itertools.combinations(vectors, 2)
-                ) and (test_groups is None or test_groups(*vectors)):
-                    yield dict(zip([k.name for k in keys], vectors))
+
+def generate_test_vectors(assignments, keys, test_groups, filters=None):
+    for assignment in assignments:
+        for vectors in itertools.product(*[assignment[k.name] for k in keys]):
+            if any(
+                g1.overlaps_with(g2) for g1, g2 in itertools.combinations(vectors, 2)
+            ):
+                continue
+
+            if filters:
+                assignment = {k.name: v for k, v in zip(keys, vectors)}
+                if not all(f.test(assignment, []) for f in filters):
+                    continue
+
+            if test_groups is None or test_groups(*vectors):
+                yield dict(zip([k.name for k in keys], vectors))
 
 
 def rank_data(a):
