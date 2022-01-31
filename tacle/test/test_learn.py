@@ -119,6 +119,14 @@ def test_rank():
     assert_constraints(constraints, [(Permutation, 1), (Rank, 1), (AllDifferent, 2)])
 
 
+def test_rank__not_found_because_partial():
+    constraints = learn([[[3, ""], [1, 500], [2, 420]]]).constraints
+    assert_constraints(constraints, [(Permutation, 1), (AllDifferent, 2)])
+
+    constraints = learn([[[3, 340], ["", 500], [2, 420]]]).constraints
+    assert_constraints(constraints, [(AllDifferent, 2)])
+
+
 def test_series():
     constraints = learn([[[3, 1], [1, 2], [2, 3]]]).constraints
     assert_constraints(

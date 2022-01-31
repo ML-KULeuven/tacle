@@ -61,9 +61,9 @@ class Typing(object):
         if cell_type1 is None or cell_type2 is None:
             return None
         if cell_type1 == Typing.any or cell_type1 == Typing.unknown:
-            return cell_type2 if cell_type2 != Typing.int else Typing.float
+            return cell_type2
         if cell_type2 == Typing.any or cell_type2 == Typing.unknown:
-            return cell_type1 if cell_type1 != Typing.int else Typing.float
+            return cell_type1
         if (
             Typing.root(cell_type1) == Typing.numeric
             and cell_type2 == Typing.nested_index
@@ -194,7 +194,7 @@ class Typing(object):
             else:
                 converted = np.nan
             if cell_type == Typing.int and not np.isnan(converted):
-                converted = int(converted)
+                converted = float(int(converted))
             return converted
         elif cell_type == Typing.date:
             return parse(value)

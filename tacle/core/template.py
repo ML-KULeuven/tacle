@@ -291,7 +291,7 @@ class AllDifferent(ConstraintTemplate):
 
     def __init__(self):
         variables = [self.x]
-        filters = [NotPartial(variables), SizeFilter(variables, length=2)]
+        filters = [SizeFilter(variables, length=2)]
         super().__init__(
             "all-different", "ALLDIFFERENT({X})", Source(variables), filters
         )

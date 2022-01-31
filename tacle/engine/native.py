@@ -151,7 +151,9 @@ class InternalSolvingStrategy(DictSolvingStrategy):
                 # Check if not equal
                 return not found_equal(y_v, x_v, solutions)
 
-            return generate_test_vectors(assignments, [c.y, c.x], is_rank)
+            return generate_test_vectors(
+                assignments, [c.y, c.x], is_rank, filters=c.filters
+            )
 
         def foreign_keys(constraint, assignments, solutions):
 
