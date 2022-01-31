@@ -29,9 +29,12 @@ def get_headers_count(table_range: Range, table_type_data, orientation):
     return headers
 
 
-def get_type_data(data):
+def get_type_data(data, allow_dates=True):
     data = numpy.array(data, dtype=object, ndmin=2)
-    return numpy.vectorize(Typing.detect_type)(data)
+    type_data = numpy.vectorize(Typing.detect_type)(data)
+    if not allow_dates:
+        type_data[type_data == Typing.date] = Typing.string
+    return type_data
 
 
 def detect_table_ranges(
@@ -99,7 +102,11 @@ def detect_table_ranges(
         headers = None
         cells = 0
 
-        orientations = [Orientation.vertical, Orientation.horizontal] if orientation is None else [orientation]
+        orientations = (
+            [Orientation.vertical, Orientation.horizontal]
+            if orientation is None
+            else [orientation]
+        )
 
         # Choose headers that maximize the number of non-header cells
         for o in orientations:
@@ -109,7 +116,9 @@ def detect_table_ranges(
                 else:
                     candidate_headers = (max(row_headers[header:]), header)
 
-                cell_score = (t_range.columns - candidate_headers[0]) * (t_range.rows - candidate_headers[1])
+                cell_score = (t_range.columns - candidate_headers[0]) * (
+                    t_range.rows - candidate_headers[1]
+                )
                 if cell_score > cells:
                     cells = cell_score
                     headers = candidate_headers

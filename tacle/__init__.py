@@ -24,14 +24,23 @@ def learn_from_file(
 
 
 def learn_from_cells(
-    data, filters=None, virtual=None, orientation=None, solve_timeout=None, tables=None, templates=None
+    data,
+    filters=None,
+    virtual=None,
+    orientation=None,
+    solve_timeout=None,
+    tables=None,
+    templates=None,
+    allow_dates=True,
 ):
     data = np.array(data, dtype=object)
-    type_data = get_type_data(data)
+    type_data = get_type_data(data, allow_dates)
     tables = tables or get_tables(
         data, type_data, detect_table_ranges(type_data, orientation=orientation)
     )
-    constraints = learn_constraints(data, tables, virtual, solve_timeout, templates=templates).constraints
+    constraints = learn_constraints(
+        data, tables, virtual, solve_timeout, templates=templates
+    ).constraints
     if virtual:
         # constraints = [c for c in constraints if c.template.target and
         #                (Range.from_legacy_bounds(c.assignment[c.template.target.name].bounds).row == -1
